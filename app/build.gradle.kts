@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -5,9 +6,9 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.ksp)
     alias(libs.plugins.compose)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -34,7 +35,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.bernaferrari.sdkmonitor"
+        applicationId = "com.bernaferrari.calculator"
         minSdk = 28
         targetSdk = 36
         versionCode = 15
@@ -57,8 +58,10 @@ android {
         }
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
+    kotlin {
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_17
+        }
     }
 
     compileOptions {
@@ -80,7 +83,7 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
-    namespace = "com.bernaferrari.sdkmonitor"
+    namespace = "com.bernaferrari.calculator"
     lint {
         abortOnError = false
     }

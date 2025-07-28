@@ -5,14 +5,14 @@
 [![API](https://img.shields.io/badge/API-24%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=24)
 [![Kotlin](https://img.shields.io/badge/Kotlin-100%25-blue.svg)](https://kotlinlang.org)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![F-Droid](https://img.shields.io/f-droid/v/com.bernaferrari.sdkmonitor.svg)](https://f-droid.org/packages/com.bernaferrari.sdkmonitor/)
+[![F-Droid](https://img.shields.io/f-droid/v/com.bernaferrari.calculator.svg)](https://f-droid.org/packages/com.bernaferrari.calculator/)
 
 **SDK Monitor** shows you which Android API levels your installed apps are targeting. Since 2017 Google requires apps to target recent API levels for better security and privacy, this tool helps you see how up-to-date your apps really are.
 
 
 ## 📱 Get it
 
-[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="80">](https://f-droid.org/packages/com.bernaferrari.sdkmonitor/)
+[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="80">](https://f-droid.org/packages/com.bernaferrari.calculator/)
 
 [Download from GitHub](https://github.com/bernaferrari/SDKMonitor/releases/latest)
 
@@ -132,7 +132,7 @@ Want to help? Check out our [Contributing Guidelines](CONTRIBUTING.md) for:
 
 - **Bug reports**: [GitHub Issues](https://github.com/bernaferrari/SDKMonitor/issues)
 - **Questions**: [GitHub Discussions](https://github.com/bernaferrari/SDKMonitor/discussions)
-- **F-Droid**: [Package page](https://f-droid.org/packages/com.bernaferrari.sdkmonitor/)
+- **F-Droid**: [Package page](https://f-droid.org/packages/com.bernaferrari.calculator/)
 
 ## 📄 License
 

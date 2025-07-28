@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">SDK Monitor</string>
+    <string name="app_name">Calculator++</string>
 
     <!-- Theme Mode -->
     <string name="theme_system">System</string>
@@ -251,5 +251,10 @@
     <string name="enable_notifications">Enable Notifications</string>
     <string name="notifications_help_background_sync">Notifications help keep your apps updated in the background</string>
     <string name="allow_notifications">Allow Notifications</string>
+
+    <!-- Battery Optimization Strings -->
+    <string name="battery_optimization_active">Battery Optimization Active</string>
+    <string name="battery_optimization_may_delay_sync">Battery optimization may delay or prevent background sync from running</string>
+    <string name="disable_optimization">Disable Optimization</string>
 
 </resources>
