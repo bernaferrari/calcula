@@ -1,25 +1,3 @@
-/*
- * Copyright 2013 serso aka se.solovyev
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * Contact details
- *
- * Email: se.solovyev@gmail.com
- * Site:  http://se.solovyev.org
- */
-
 package org.solovyev.android.calculator
 
 import android.app.Activity
@@ -34,15 +12,14 @@ import jscl.math.function.CustomFunction
 import org.solovyev.android.Check
 import org.solovyev.android.calculator.about.AboutActivity
 import org.solovyev.android.calculator.functions.CppFunction
-import org.solovyev.android.calculator.functions.EditFunctionFragment
 import org.solovyev.android.calculator.functions.FunctionsActivity
 import org.solovyev.android.calculator.history.HistoryActivity
 import org.solovyev.android.calculator.operators.OperatorsActivity
 import org.solovyev.android.calculator.plot.ExpressionFunction
 import org.solovyev.android.calculator.plot.PlotActivity
 import org.solovyev.android.calculator.preferences.PreferencesActivity
+import org.solovyev.android.calculator.preferences.SettingsDestination
 import org.solovyev.android.calculator.variables.CppVariable
-import org.solovyev.android.calculator.variables.EditVariableFragment
 import org.solovyev.android.calculator.variables.VariablesActivity
 import org.solovyev.android.plotter.PlotFunction
 import org.solovyev.android.plotter.Plotter
@@ -93,7 +70,7 @@ class ActivityLauncher @Inject constructor() {
     fun showWidgetSettings() {
         show(
             context,
-            PreferencesActivity.makeIntent(context, R.xml.preferences_widget, R.string.cpp_widget)
+            PreferencesActivity.makeIntent(context, SettingsDestination.WIDGET)
         )
     }
 
@@ -209,10 +186,12 @@ class ActivityLauncher @Inject constructor() {
             notifier.showMessage(R.string.not_valid_result)
             return
         }
-        EditVariableFragment.showDialog(
-            CppVariable.builder("").withValue(state.text).build(),
-            context
-        )
+        val variable = CppVariable.builder("").withValue(state.text).build()
+        val intent = Intent(context, VariablesActivity.getClass(context)).apply {
+            putExtra(VariablesActivity.EXTRA_VARIABLE, variable)
+            App.addIntentFlags(this, context !is Activity, context)
+        }
+        context.startActivity(intent)
     }
 
     fun showFunctionEditor() {
@@ -229,7 +208,11 @@ class ActivityLauncher @Inject constructor() {
             }
         }
 
-        EditFunctionFragment.show(builder.build(), context)
+        val intent = Intent(context, FunctionsActivity.getClass(context)).apply {
+            putExtra(FunctionsActivity.EXTRA_FUNCTION, builder.build())
+            App.addIntentFlags(this, context !is Activity, context)
+        }
+        context.startActivity(intent)
     }
 
     private companion object {

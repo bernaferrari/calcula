@@ -15,7 +15,7 @@ class BracketedExpression private constructor() : Parser<ExpressionVariable> {
         try {
             result = ExpressionParser.parser.parse(p, previousSumElement)
         } catch (e: ParseException) {
-            p.position.setValue(pos0)
+            p.position.value = pos0
             throw e
         }
 

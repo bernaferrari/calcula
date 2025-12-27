@@ -315,8 +315,8 @@ internal open class ArrayPolynomialGeneric : Polynomial {
         return a as Array<Generic>
     }
 
-    override fun compareTo(polynomial: Polynomial): Int {
-        val q = polynomial as ArrayPolynomialGeneric
+    override fun compareTo(other: Polynomial): Int {
+        val q = other as ArrayPolynomialGeneric
         var i1 = _size
         var i2 = q._size
         var m1: Monomial? = if (i1 == 0) null else monomial[--i1]

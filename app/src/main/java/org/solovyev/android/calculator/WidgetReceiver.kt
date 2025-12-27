@@ -3,7 +3,10 @@ package org.solovyev.android.calculator
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.Build
+import android.os.VibrationEffect
 import android.os.Vibrator
+import android.os.VibratorManager
 import android.text.TextUtils
 import dagger.hilt.android.AndroidEntryPoint
 import org.solovyev.android.calculator.buttons.CppButton
@@ -48,8 +51,13 @@ class WidgetReceiver : BroadcastReceiver() {
         if (!keyboard.vibrateOnKeypress.value) {
             return
         }
-        val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator ?: return
-        vibrator.vibrate(10)
+        val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            context.getSystemService(VibratorManager::class.java)?.defaultVibrator
+        } else {
+            context.getSystemService(Vibrator::class.java)
+        } ?: return
+        val effect = VibrationEffect.createOneShot(10, VibrationEffect.DEFAULT_AMPLITUDE)
+        vibrator.vibrate(effect)
     }
 
     private class MyRunnable(

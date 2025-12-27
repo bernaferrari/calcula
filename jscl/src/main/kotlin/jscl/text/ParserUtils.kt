@@ -70,7 +70,7 @@ object ParserUtils {
     fun makeParseException(p: Parser.Parameters, pos0: Int, messageId: String): ParseException {
         val position = p.position
         val parseException = p.exceptionsPool.obtain(position.toInt(), p.expression, messageId, emptyList<Any>())
-        position.setValue(pos0)
+        position.value = pos0
         return parseException
     }
 
@@ -79,7 +79,7 @@ object ParserUtils {
     fun throwParseException(p: Parser.Parameters, pos0: Int, messageId: String, parameter: Any) {
         val position = p.position
         val parseException = p.exceptionsPool.obtain(position.toInt(), p.expression, messageId, listOf(parameter))
-        position.setValue(pos0)
+        position.value = pos0
         throw parseException
     }
 
@@ -93,7 +93,7 @@ object ParserUtils {
     fun makeParseException(p: Parser.Parameters, pos0: Int, messageId: String, vararg parameters: Any?): ParseException {
         val position = p.position
         val parseException = p.exceptionsPool.obtain(position.toInt(), p.expression, messageId, parameters)
-        position.setValue(pos0)
+        position.value = pos0
         return parseException
     }
 
@@ -110,7 +110,7 @@ object ParserUtils {
         try {
             result = parser.parse(p, previousSumParser)
         } catch (e: ParseException) {
-            p.position.setValue(initialPosition)
+            p.position.value = initialPosition
             throw e
         }
 

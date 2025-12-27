@@ -124,7 +124,7 @@ class Simplification private constructor() {
     }
 
     fun subProcess(c: Constraint) {
-        for (v in c.generic!!.variables()) {
+        for (v in requireNotNull(c.generic).variables()) {
             if (constraints.contains(Constraint(v))) {
                 continue
             }
@@ -133,16 +133,16 @@ class Simplification private constructor() {
 
             when (v) {
                 is Fraction -> {
-                    val parameters = v.getParameters()
-                    result = Constraint(v, v.expressionValue().multiply(parameters!![1]).subtract(parameters!![0]), false)
+                    val parameters = requireNotNull(v.getParameters())
+                    result = Constraint(v, v.expressionValue().multiply(parameters[1]).subtract(parameters[0]), false)
                 }
                 is Sqrt -> {
                     if (linear) {
                         result = linearConstraint(v)
                     }
                     if (result == null) {
-                        val parameters = v.getParameters()
-                        result = Constraint(v, v.expressionValue().pow(2).subtract(parameters!![0]), true)
+                        val parameters = requireNotNull(v.getParameters())
+                        result = Constraint(v, v.expressionValue().pow(2).subtract(parameters[0]), true)
                     }
                 }
                 is Cubic -> {
@@ -150,8 +150,8 @@ class Simplification private constructor() {
                         result = linearConstraint(v)
                     }
                     if (result == null) {
-                        val parameters = v.getParameters()
-                        result = Constraint(v, v.expressionValue().pow(3).subtract(parameters!![0]), true)
+                        val parameters = requireNotNull(v.getParameters())
+                        result = Constraint(v, v.expressionValue().pow(3).subtract(parameters[0]), true)
                     }
                 }
                 is Pow -> {
@@ -164,8 +164,8 @@ class Simplification private constructor() {
                         }
 
                         if (result == null) {
-                            val parameters = r.getParameters()
-                            result = Constraint(v, v.expressionValue().pow(d).subtract(parameters!![0].negate()), d > 1)
+                            val parameters = requireNotNull(r.getParameters())
+                            result = Constraint(v, v.expressionValue().pow(d).subtract(parameters[0].negate()), d > 1)
                         }
                     } catch (e: NotRootException) {
                         result = linearConstraint(v)
@@ -182,8 +182,8 @@ class Simplification private constructor() {
                         }
 
                         if (result == null) {
-                            val parameters = r.getParameters()
-                            result = Constraint(v, Root.sigma(parameters!!, d - n).multiply(JsclInteger.valueOf(-1).pow(d - n)).multiply(parameters!![d]).subtract(parameters!![n]), d > 1)
+                            val parameters = requireNotNull(r.getParameters())
+                            result = Constraint(v, Root.sigma(parameters, d - n).multiply(JsclInteger.valueOf(-1).pow(d - n)).multiply(parameters[d]).subtract(parameters[n]), d > 1)
                         }
                     } catch (e: NotIntegerException) {
                         result = linearConstraint(v)

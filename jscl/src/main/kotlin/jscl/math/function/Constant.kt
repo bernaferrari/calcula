@@ -74,14 +74,14 @@ open class Constant(name: String, private val prime: Int, private val subscripts
         return !isIdentity(variable)
     }
 
-    override fun compareTo(other: Variable): Int {
-        if (this === other) {
+    override fun compareTo(variable: Variable): Int {
+        if (this === variable) {
             return 0
         }
 
-        var c = comparator.compare(this, other)
+        var c = comparator.compare(this, variable)
         if (c == 0) {
-            val that = other as Constant
+            val that = variable as Constant
             c = name.compareTo(that.name)
             if (c == 0) {
                 @Suppress("UNCHECKED_CAST")

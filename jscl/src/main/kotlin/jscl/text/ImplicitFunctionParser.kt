@@ -17,7 +17,7 @@ class ImplicitFunctionParser private constructor() : Parser<Function> {
 
         val name = ParserUtils.parseWithRollback(CompoundIdentifier.parser, pos0, previousSumElement, p)
         if (FunctionsRegistry.getInstance().getNames().contains(name) || OperatorsRegistry.getInstance().getNames().contains(name)) {
-            p.position.setValue(pos0)
+            p.position.value = pos0
             throw p.exceptionsPool.obtain(p.position.toInt(), p.expression, Messages.msg_6, listOf(name))
         }
 
@@ -41,7 +41,7 @@ class ImplicitFunctionParser private constructor() : Parser<Function> {
         try {
             a = ParameterListParser.parser1.parse(p, previousSumElement)
         } catch (e: ParseException) {
-            p.position.setValue(pos0)
+            p.position.value = pos0
             throw e
         }
 
@@ -90,7 +90,7 @@ internal class SuperscriptList private constructor() : Parser<IntArray> {
         try {
             result.add(IntegerParser.parser.parse(p, previousSumElement))
         } catch (e: ParseException) {
-            p.position.setValue(pos0)
+            p.position.value = pos0
             throw e
         }
 

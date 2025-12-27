@@ -10,6 +10,7 @@ java {
 
 dependencies {
     api(libs.bignum)
+    implementation(libs.kotlinx.atomicfu)
 
     testImplementation(libs.junit)
     testImplementation(libs.opencsv)

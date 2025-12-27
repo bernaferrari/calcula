@@ -1,25 +1,3 @@
-/*
- * Copyright 2013 serso aka se.solovyev
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * Contact details
- *
- * Email: se.solovyev@gmail.com
- * Site:  http://se.solovyev.org
- */
-
 package org.solovyev.android.calculator.floating
 
 import android.app.NotificationChannel
@@ -28,32 +6,32 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Build
 import android.os.IBinder
 import android.util.DisplayMetrics
 import android.view.WindowManager
 import androidx.core.app.NotificationCompat
-import com.squareup.otto.Bus
-import com.squareup.otto.Subscribe
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import org.solovyev.android.Check
 import org.solovyev.android.calculator.App
 import org.solovyev.android.calculator.Display
 import org.solovyev.android.calculator.Editor
-import org.solovyev.android.calculator.Preferences
 import org.solovyev.android.calculator.R
 import org.solovyev.android.calculator.ga.Ga
+import org.solovyev.android.calculator.di.AppPreferences
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class FloatingCalculatorService : Service(), FloatingViewListener,
-    SharedPreferences.OnSharedPreferenceChangeListener {
+class FloatingCalculatorService : Service(), FloatingViewListener {
 
     private var view: FloatingCalculatorView? = null
-
-    @Inject
-    lateinit var bus: Bus
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private var observing = false
 
     @Inject
     lateinit var editor: Editor
@@ -65,22 +43,22 @@ class FloatingCalculatorService : Service(), FloatingViewListener,
     lateinit var ga: Ga
 
     @Inject
-    lateinit var preferences: SharedPreferences
+    lateinit var appPreferences: AppPreferences
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
         super.onCreate()
         // Hilt @AndroidEntryPoint handles injection automatically
+        observeStateChanges()
     }
 
     override fun onDestroy() {
         view?.let {
-            preferences.unregisterOnSharedPreferenceChangeListener(this)
-            bus.unregister(this)
             it.hide()
             view = null
         }
+        scope.cancel()
         super.onDestroy()
     }
 
@@ -112,10 +90,8 @@ class FloatingCalculatorService : Service(), FloatingViewListener,
 
         val wm = getSystemService(Context.WINDOW_SERVICE) as WindowManager
         val dm = resources.displayMetrics
-        val dd = wm.defaultDisplay
-
-        @Suppress("DEPRECATION")
-        val maxWidth = 2 * minOf(dd.width, dd.height) / 3
+        val screenSize = calculateScreenSize(wm, dm)
+        val maxWidth = 2 * minOf(screenSize.first, screenSize.second) / 3
         val desiredWidth = App.toPixels(dm, 300f)
 
         val width = minOf(maxWidth, desiredWidth)
@@ -124,14 +100,25 @@ class FloatingCalculatorService : Service(), FloatingViewListener,
         val state = FloatingCalculatorView.State(width, height, -1, -1)
         view = FloatingCalculatorView(this, state, this)
         view?.show()
-        view?.updateEditorState(editor.getState())
-        view?.updateDisplayState(display.getState())
+        view?.updateEditorState(editor.state)
+        view?.updateDisplayState(display.stateFlow.value)
 
-        bus.register(this)
-        preferences.registerOnSharedPreferenceChangeListener(this)
+        observeThemeChanges()
     }
 
     private fun getHeight(width: Int): Int = 4 * width / 3
+
+    private fun calculateScreenSize(wm: WindowManager, dm: DisplayMetrics): Pair<Int, Int> {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val bounds = wm.currentWindowMetrics.bounds
+            dm.widthPixels = bounds.width()
+            dm.heightPixels = bounds.height()
+            dm.widthPixels to dm.heightPixels
+        } else {
+            dm.setTo(resources.displayMetrics)
+            dm.widthPixels to dm.heightPixels
+        }
+    }
 
     private fun isShowWindowIntent(intent: Intent): Boolean =
         intent.action == SHOW_WINDOW_ACTION
@@ -188,30 +175,38 @@ class FloatingCalculatorService : Service(), FloatingViewListener,
         nm.notify(NOTIFICATION_ID, builder.build())
     }
 
-    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
-        Check.isNotNull(view)
-        if (Preferences.Gui.theme.isSameKey(key ?: "") || Preferences.Onscreen.theme.isSameKey(key ?: "")) {
-            stopSelf()
-            show(this)
+    private fun observeThemeChanges() {
+        scope.launch {
+            appPreferences.settings.theme.collect {
+                restartForThemeChange()
+            }
+        }
+        scope.launch {
+            appPreferences.settings.onscreenTheme.collect {
+                restartForThemeChange()
+            }
         }
     }
 
-    @Subscribe
-    fun onEditorChanged(e: Editor.ChangedEvent) {
+    private fun restartForThemeChange() {
         Check.isNotNull(view)
-        view?.updateEditorState(e.newState)
+        stopSelf()
+        show(this)
     }
 
-    @Subscribe
-    fun onCursorMoved(e: Editor.CursorMovedEvent) {
-        Check.isNotNull(view)
-        view?.updateEditorState(e.state)
-    }
-
-    @Subscribe
-    fun onDisplayChanged(e: Display.ChangedEvent) {
-        Check.isNotNull(view)
-        view?.updateDisplayState(e.newState)
+    private fun observeStateChanges() {
+        if (observing) return
+        observing = true
+        scope.launch {
+            editor.stateFlow.collect { state ->
+                view?.updateEditorState(state)
+            }
+        }
+        scope.launch {
+            display.stateFlow.collect { state ->
+                view?.updateDisplayState(state)
+            }
+        }
     }
 
     companion object {

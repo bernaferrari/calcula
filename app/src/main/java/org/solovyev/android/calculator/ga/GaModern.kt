@@ -1,15 +1,14 @@
 package org.solovyev.android.calculator.ga
 
 import android.app.Application
-import android.content.SharedPreferences
 import android.text.TextUtils
-import androidx.core.content.edit
 import androidx.core.os.bundleOf
 import com.google.firebase.analytics.FirebaseAnalytics
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.*
 import org.solovyev.android.calculator.Preferences
+import org.solovyev.android.calculator.di.AppPreferences
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -20,8 +19,8 @@ import javax.inject.Singleton
 @Singleton
 class GaModern @Inject constructor(
     application: Application,
-    private val preferences: SharedPreferences
-) : SharedPreferences.OnSharedPreferenceChangeListener {
+    private val appPreferences: AppPreferences
+) {
 
     private val analytics: FirebaseAnalytics = FirebaseAnalytics.getInstance(application)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -42,22 +41,22 @@ class GaModern @Inject constructor(
     val buttonClicks: SharedFlow<String> = _buttonClicks.asSharedFlow()
 
     init {
-        preferences.registerOnSharedPreferenceChangeListener(this)
-
         // Initialize current values
-        _layoutMode.value = Preferences.Gui.mode.getPreferenceNoError(preferences) ?: Preferences.Gui.Mode.simple
-        _theme.value = Preferences.Gui.theme.getPreferenceNoError(preferences) ?: Preferences.Gui.Theme.material_theme
+        _layoutMode.value = appPreferences.settings.getModeBlocking()
+        _theme.value = appPreferences.settings.getThemeBlocking()
 
         // Collect and report layout changes
         scope.launch {
-            layoutMode.drop(1).collect { mode ->
+            appPreferences.settings.mode.drop(1).collect { mode ->
+                _layoutMode.value = mode
                 reportLayout(mode)
             }
         }
 
         // Collect and report theme changes
         scope.launch {
-            theme.drop(1).collect { theme ->
+            appPreferences.settings.theme.drop(1).collect { theme ->
+                _theme.value = theme
                 reportTheme(theme)
             }
         }
@@ -86,24 +85,11 @@ class GaModern @Inject constructor(
         }
     }
 
-    override fun onSharedPreferenceChanged(preferences: SharedPreferences, key: String?) {
-        when (key) {
-            Preferences.Gui.mode.key -> {
-                _layoutMode.value = Preferences.Gui.mode.getPreferenceNoError(preferences) ?: Preferences.Gui.Mode.simple
-            }
-            Preferences.Gui.theme.key -> {
-                _theme.value = Preferences.Gui.theme.getPreferenceNoError(preferences) ?: Preferences.Gui.Theme.material_theme
-            }
-        }
-    }
-
-    fun reportInitially(preferences: SharedPreferences) {
-        val mode = Preferences.Gui.mode.getPreferenceNoError(preferences) ?: Preferences.Gui.Mode.simple
-        val theme = Preferences.Gui.theme.getPreferenceNoError(preferences) ?: Preferences.Gui.Theme.material_theme
-
+    fun reportInitially() {
+        val mode = appPreferences.settings.getModeBlocking()
+        val theme = appPreferences.settings.getThemeBlocking()
         _layoutMode.value = mode
         _theme.value = theme
-
         reportLayout(mode)
         reportTheme(theme)
     }
@@ -116,22 +102,17 @@ class GaModern @Inject constructor(
      * Update preferences using modern Kotlin extensions
      */
     fun updateMode(mode: Preferences.Gui.Mode) {
-        preferences.edit {
-            putString(Preferences.Gui.mode.key, mode.name)
-        }
+        scope.launch { appPreferences.settings.setMode(mode) }
     }
 
     /**
      * Update theme using modern Kotlin extensions
      */
     fun updateTheme(theme: Preferences.Gui.Theme) {
-        preferences.edit {
-            putString(Preferences.Gui.theme.key, theme.name)
-        }
+        scope.launch { appPreferences.settings.setTheme(theme) }
     }
 
     fun cleanup() {
-        preferences.unregisterOnSharedPreferenceChangeListener(this)
         scope.cancel()
     }
 }

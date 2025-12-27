@@ -1,33 +1,8 @@
-/*
- * Copyright 2013 serso aka se.solovyev
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * Contact details
- *
- * Email: se.solovyev@gmail.com
- * Site:  http://se.solovyev.org
- */
-
 package org.solovyev.android.calculator.history
 
 import android.app.Application
-import android.content.SharedPreferences
 import android.os.Handler
 import com.google.common.base.Strings
-import com.squareup.otto.Bus
-import com.squareup.otto.Subscribe
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -44,25 +19,23 @@ import org.solovyev.android.calculator.Display
 import org.solovyev.android.calculator.DisplayState
 import org.solovyev.android.calculator.Editor
 import org.solovyev.android.calculator.EditorState
-import org.solovyev.android.calculator.Engine
 import org.solovyev.android.calculator.ErrorReporter
+import org.solovyev.android.calculator.di.AppPreferences
 import org.solovyev.android.calculator.di.AppCoroutineScope
 import org.solovyev.android.calculator.di.AppDirectories
 import org.solovyev.android.calculator.di.AppDispatchers
 import org.solovyev.android.calculator.json.Json
 import org.solovyev.android.io.FileSystem
-import java.io.File
 import java.io.IOException
-import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
+import okio.Path
 
 @Singleton
 class History @Inject constructor(
     private val application: Application,
-    private val bus: Bus,
     private val handler: Handler,
-    private val preferences: SharedPreferences,
+    private val appPreferences: AppPreferences,
     private val editor: Editor,
     private val display: Display,
     private val errorReporter: ErrorReporter,
@@ -87,14 +60,17 @@ class History @Inject constructor(
 
     fun init() {
         Check.isMainThread()
-        bus.register(this)
+        appScope.launchMain {
+            display.changedEvents.collect { event ->
+                onDisplayChanged(event)
+            }
+        }
         appScope.launchIO {
             initAsync()
         }
     }
 
     private suspend fun initAsync() {
-        migrateOldHistory()
         val recentStates = tryLoadStates(recentHistoryFile)
         val savedStates = tryLoadStates(savedHistoryFile)
         withContext(dispatchers.main) {
@@ -118,7 +94,7 @@ class History @Inject constructor(
         whenLoadedRunnables.clear()
     }
 
-    private suspend fun tryLoadStates(file: File): List<HistoryState> {
+    private suspend fun tryLoadStates(file: Path): List<HistoryState> {
         return try {
             Json.load(file, fileSystem, HistoryState.JSON_CREATOR)
         } catch (e: Exception) {
@@ -129,21 +105,6 @@ class History @Inject constructor(
                 }
                 else -> throw e
             }
-        }
-    }
-
-    private suspend fun migrateOldHistory() {
-        try {
-            val xml = preferences.getString(OLD_HISTORY_PREFS_KEY, null)
-            if (xml.isNullOrEmpty()) {
-                return
-            }
-            val states = convertOldHistory(xml) ?: return
-            val json = Json.toJson(states)
-            fileSystem.write(savedHistoryFile, json.toString())
-            preferences.edit().remove(OLD_HISTORY_PREFS_KEY).apply()
-        } catch (e: Exception) {
-            errorReporter.onException(e)
         }
     }
 
@@ -171,7 +132,6 @@ class History @Inject constructor(
 
     private fun onRecentChanged(event: HistoryEvent) {
         postRecentWrite()
-        bus.post(event)
         appScope.launch(dispatchers.main) {
             _recentEvents.emit(event)
         }
@@ -184,7 +144,6 @@ class History @Inject constructor(
 
     private fun onSavedChanged(event: HistoryEvent) {
         postSavedWrite()
-        bus.post(event)
         appScope.launch(dispatchers.main) {
             _savedEvents.emit(event)
         }
@@ -200,7 +159,7 @@ class History @Inject constructor(
     private fun getRecent(forUi: Boolean): List<HistoryState> {
         Check.isMainThread()
         val result = mutableListOf<HistoryState>()
-        val separator = Engine.Preferences.Output.separator.getPreference(preferences) ?: '\u0000'
+        val separator = appPreferences.settings.getOutputSeparatorBlocking()
         val states = recent.asList()
         val statesCount = states.size
         var streak = 0
@@ -265,7 +224,6 @@ class History @Inject constructor(
         onSavedChanged(RemovedEvent(state, false))
     }
 
-    @Subscribe
     fun onDisplayChanged(e: Display.ChangedEvent) {
         val editorState = editor.state
         val displayState = e.newState
@@ -301,10 +259,10 @@ class History @Inject constructor(
         }
     }
 
-    private val recentHistoryFile: File
+    private val recentHistoryFile: Path
         get() = directories.getFile("history-recent.json")
 
-    private val savedHistoryFile: File
+    private val savedHistoryFile: Path
         get() = directories.getFile("history-saved.json")
 
     sealed class HistoryEvent {

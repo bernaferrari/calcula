@@ -1,3 +1,5 @@
+@file:Suppress("UNCHECKED_CAST")
+
 package jscl.math.operator
 
 import jscl.math.Generic
@@ -182,17 +184,17 @@ abstract class AbstractFunction protected constructor(name: String, parameters: 
         return result.toString()
     }
 
-    override fun compareTo(that: Variable): Int {
-        if (this === that) return 0
+    override fun compareTo(variable: Variable): Int {
+        if (this === variable) return 0
 
-        var c = comparator.compare(this, that)
+        var c = comparator.compare(this, variable)
 
         return if (c < 0) {
             -1
         } else if (c > 0) {
             1
         } else {
-            val thatFunction = that as AbstractFunction
+            val thatFunction = variable as AbstractFunction
             c = name.compareTo(thatFunction.name)
             if (c < 0) {
                 -1

@@ -390,7 +390,7 @@ abstract class Polynomial internal constructor(
         element.appendChild(e1)
     }
 
-    open fun getConstants(): Set<out Constant> {
+    open fun getConstants(): Set<Constant> {
         return emptySet()
     }
 

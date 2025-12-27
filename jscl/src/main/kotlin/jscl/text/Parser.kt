@@ -26,12 +26,12 @@ interface Parser<T> {
         var expression: String,
         val context: MathContext
     ) {
-        val position = MutableInt(0)
+        val position = Position(0)
         val exceptions = ArrayList<ParseException>()
         val exceptionsPool = ExceptionsPool()
 
         fun reset() {
-            position.setValue(0)
+            position.value = 0
             exceptions.clear()
         }
 

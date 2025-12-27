@@ -18,7 +18,7 @@ class MatrixParser private constructor() : Parser<Matrix> {
         try {
             vectors.add(VectorParser.parser.parse(p, previousSumElement))
         } catch (e: ParseException) {
-            p.position.setValue(pos0)
+            p.position.value = pos0
             throw e
         }
 

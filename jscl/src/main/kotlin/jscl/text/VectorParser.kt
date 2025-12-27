@@ -18,7 +18,7 @@ class VectorParser private constructor() : Parser<JsclVector> {
         try {
             result.add(ExpressionParser.parser.parse(p, previousSumElement))
         } catch (e: ParseException) {
-            p.position.setValue(pos0)
+            p.position.value = pos0
             throw e
         }
 

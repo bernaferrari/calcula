@@ -1,25 +1,3 @@
-/*
- * Copyright 2013 serso aka se.solovyev
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * Contact details
- *
- * Email: se.solovyev@gmail.com
- * Site:  http://se.solovyev.org
- */
-
 package org.solovyev.android.calculator
 
 import android.app.Activity
@@ -29,7 +7,6 @@ import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Color
@@ -50,12 +27,14 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import androidx.annotation.ColorInt
 import androidx.appcompat.view.ContextThemeWrapper
+import androidx.core.content.pm.PackageInfoCompat
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
+import kotlinx.atomicfu.atomic
 import org.solovyev.android.Check
+import org.solovyev.android.calculator.di.AppPreferences
 import org.solovyev.android.calculator.floating.FloatingCalculatorService
-import java.util.concurrent.atomic.AtomicInteger
 
 object App {
 
@@ -65,26 +44,25 @@ object App {
     private lateinit var application: Application
 
     @Volatile
-    private lateinit var preferences: SharedPreferences
+    private lateinit var appPreferences: AppPreferences
 
-    fun init(application: Application, prefs: SharedPreferences) {
+    fun init(application: Application, appPreferences: AppPreferences) {
         App.application = application
-        App.preferences = prefs
+        App.appPreferences = appPreferences
     }
 
     fun getTheme(): Preferences.Gui.Theme {
-        return Preferences.Gui.getTheme(preferences)
+        return appPreferences.settings.getThemeBlocking()
     }
 
     fun getWidgetTheme(): Preferences.SimpleTheme {
-        return Preferences.Widget.getTheme(preferences)
+        return appPreferences.settings.getWidgetThemeBlocking()
     }
 
     fun getThemeFor(context: Context): Preferences.Gui.Theme {
         return if (isFloatingCalculator(context)) {
-            val p = preferences
-            val onscreenTheme = Preferences.Onscreen.getTheme(p)
-            val appTheme = Preferences.Gui.getTheme(p)
+            val onscreenTheme = appPreferences.settings.getOnscreenThemeBlocking()
+            val appTheme = appPreferences.settings.getThemeBlocking()
             onscreenTheme.resolveThemeFor(appTheme).getAppTheme()!!
         } else {
             getTheme()
@@ -125,7 +103,7 @@ object App {
         return spannable.toString()
     }
 
-    private val sNextViewId = AtomicInteger(1)
+    private val nextViewId = atomic(1)
 
     fun generateViewId(): Int {
         Check.isMainThread()
@@ -135,14 +113,14 @@ object App {
             // Backwards compatible version, as given by fantouchx@gmail.com in
             // http://stackoverflow.com/questions/6790623/#21000252
             while (true) {
-                val result = sNextViewId.get()
+                val result = nextViewId.value
                 // aapt-generated IDs have the high byte non-zero. Clamp to the
                 // range below that.
                 var newValue = result + 1
                 if (newValue > 0x00FFFFFF) {
                     newValue = 1
                 }
-                if (sNextViewId.compareAndSet(result, newValue)) {
+                if (nextViewId.compareAndSet(result, newValue)) {
                     return result
                 }
             }
@@ -205,7 +183,8 @@ object App {
     }
 
     fun getAppVersionCode(context: Context, appPackageName: String): Int {
-        return context.packageManager.getPackageInfo(appPackageName, 0).versionCode
+        val info = context.packageManager.getPackageInfo(appPackageName, 0)
+        return PackageInfoCompat.getLongVersionCode(info).toInt()
     }
 
     fun isUiThread(): Boolean {
@@ -292,22 +271,14 @@ object App {
         }
     }
 
-    fun <T> makeSimpleSpinnerAdapter(context: Context): ArrayAdapter<T> {
-        return ArrayAdapter(context, androidx.appcompat.R.layout.support_simple_spinner_dropdown_item)
-    }
+
 
     fun interface ViewProcessor<V> {
         fun process(view: V)
     }
 
-    @Suppress("DEPRECATION")
     fun getScreenOrientation(activity: Activity): Int {
-        val display = activity.windowManager.defaultDisplay
-        return if (display.width <= display.height) {
-            Configuration.ORIENTATION_PORTRAIT
-        } else {
-            Configuration.ORIENTATION_LANDSCAPE
-        }
+        return activity.resources.configuration.orientation
     }
 
     fun addIntentFlags(intent: Intent, detached: Boolean, context: Context) {

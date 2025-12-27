@@ -16,7 +16,7 @@ internal class PowerExponentParser private constructor() : Parser<Generic> {
         try {
             PowerParser.parser.parse(p, previousSumElement)
         } catch (e: ParseException) {
-            p.position.setValue(pos0)
+            p.position.value = pos0
             throw e
         }
 
@@ -24,7 +24,7 @@ internal class PowerExponentParser private constructor() : Parser<Generic> {
         try {
             result = ExponentParser.parser.parse(p, previousSumElement)
         } catch (e: ParseException) {
-            p.position.setValue(pos0)
+            p.position.value = pos0
             throw e
         }
 

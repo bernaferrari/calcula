@@ -29,7 +29,7 @@ class NumericWrapper : Generic, INumeric<NumericWrapper> {
     constructor(matrix: Matrix) {
         val elements = Array(matrix.rows) { i ->
             Array<Numeric>(matrix.cols) { j ->
-                (matrix.elements!![i][j]!!.numeric() as NumericWrapper).content()
+                (matrix.elements[i][j]!!.numeric() as NumericWrapper).content()
             }
         }
         content = jscl.math.numeric.Matrix(elements)

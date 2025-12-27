@@ -1,25 +1,3 @@
-/*
- * Copyright 2013 serso aka se.solovyev
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * Contact details
- *
- * Email: se.solovyev@gmail.com
- * Site:  http://se.solovyev.org
- */
-
 package org.solovyev.android.calculator.ui.compose.components
 
 import android.content.ClipData
@@ -29,6 +7,7 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -105,6 +84,18 @@ class CalculatorViewModel : ViewModel() {
         }
     }
 
+    fun onEquals() {
+        // Trigger evaluation
+    }
+
+    fun onSimplify() {
+        // Trigger simplify
+    }
+
+    fun onPlot() {
+        // Trigger plotting
+    }
+
     /**
      * Example method to evaluate an expression
      * In a real implementation, this would use the Calculator engine
@@ -161,16 +152,20 @@ private fun CalculatorContent(
     CalculatorScreen(
         displayState = displayState,
         editorState = editorState,
-        onCopyResult = {
-            // Note: In a real implementation, you'd need to pass context
-            // viewModel.onCopyResult(context)
-        },
-        onEditorTextChange = { newText ->
+        onEditorTextChange = { newText, newSelection ->
             viewModel.onTextChanged(newText)
+            viewModel.onSelectionChanged(newSelection)
         },
         onEditorSelectionChange = { newSelection ->
             viewModel.onSelectionChanged(newSelection)
-        }
+        },
+        keyboard = { modifier ->
+            Surface(modifier = modifier) {}
+        },
+        onEquals = { viewModel.onEquals() },
+        onSimplify = { viewModel.onSimplify() },
+        onPlot = { viewModel.onPlot() },
+        overlayContent = {}
     )
 }
 
@@ -211,14 +206,13 @@ fun IndividualComponentsExample() {
 
     // Use just the display
     CalculatorDisplay(
-        state = displayState,
-        onCopy = { /* handle copy */ }
+        state = displayState
     )
 
     // Or use just the editor
     CalculatorEditor(
         state = editorState,
-        onTextChange = { /* handle text change */ },
+        onTextChange = { _, _ -> /* handle text change */ },
         onSelectionChange = { /* handle selection change */ }
     )
 
@@ -226,9 +220,15 @@ fun IndividualComponentsExample() {
     CalculatorScreen(
         displayState = displayState,
         editorState = editorState,
-        onCopyResult = { /* handle copy */ },
-        onEditorTextChange = { /* handle text change */ },
-        onEditorSelectionChange = { /* handle selection change */ }
+        onEditorTextChange = { _, _ -> /* handle text change */ },
+        onEditorSelectionChange = { /* handle selection change */ },
+        keyboard = { modifier ->
+            Surface(modifier = modifier) {}
+        },
+        onEquals = { /* handle equals */ },
+        onSimplify = { /* handle simplify */ },
+        onPlot = { /* handle plot */ },
+        overlayContent = {}
     )
 }
 
@@ -251,8 +251,8 @@ fun StateManagementExample() {
 
     CalculatorEditor(
         state = localEditorState,
-        onTextChange = { newText ->
-            localEditorState = EditorState.create(newText, newText.length)
+        onTextChange = { newText, newSelection ->
+            localEditorState = EditorState.create(newText, newSelection)
         },
         onSelectionChange = { newSelection ->
             localEditorState = EditorState.forNewSelection(localEditorState, newSelection)

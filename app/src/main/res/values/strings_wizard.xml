@@ -2,6 +2,7 @@
 <resources>
     <string name="cpp_wizard_next">Next</string>
     <string name="cpp_wizard_back">Back</string>
+    <string name="cpp_wizard_title">Wizard</string>
     <string name="cpp_wizard_start">Start wizard</string>
     <string name="cpp_wizard_finish">Done</string>
     <string name="cpp_mode_simple">Simple</string>

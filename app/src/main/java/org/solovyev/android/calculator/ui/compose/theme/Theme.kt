@@ -1,177 +1,95 @@
-/*
- * Copyright 2013 serso aka se.solovyev
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * Contact details
- *
- * Email: se.solovyev@gmail.com
- * Site:  http://se.solovyev.org
- */
-
 package org.solovyev.android.calculator.ui.compose.theme
 
 import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import com.materialkolor.PaletteStyle
+import com.materialkolor.rememberDynamicMaterialThemeState
+import org.solovyev.android.calculator.Preferences
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Blue850,
-    onPrimary = CppButtonText,
-    primaryContainer = Blue900,
-    onPrimaryContainer = Grey100,
-    secondary = Teal500,
-    onSecondary = CppButtonText,
-    secondaryContainer = Teal600,
-    onSecondaryContainer = Grey100,
-    tertiary = Pink900,
-    onTertiary = CppButtonText,
-    error = RedA700,
-    onError = CppButtonText,
-    errorContainer = Red300,
-    onErrorContainer = Grey900,
-    background = CppBg,
-    onBackground = CppText,
-    surface = CppEditorBg,
-    onSurface = CppText,
-    surfaceVariant = Grey850,
-    onSurfaceVariant = Grey300,
-    outline = Grey600,
-    outlineVariant = Grey800,
-    scrim = Black,
-    inverseSurface = Grey100,
-    inverseOnSurface = Grey900,
-    inversePrimary = Blue800,
-    surfaceDim = Grey950,
-    surfaceBright = Grey800,
-    surfaceContainerLowest = Grey965,
-    surfaceContainerLow = Grey950,
-    surfaceContainer = Grey900,
-    surfaceContainerHigh = Grey850,
-    surfaceContainerHighest = Grey800
-)
+// Seed colors for theming
+private val BlueSeed = Color(0xFF1565C0)       // Blue 800
+private val DeepBlueSeed = Color(0xFF0A3980)   // Deep Blue
+private val TealSeed = Color(0xFF009688)       // Teal 500
+private val GreenSeed = Color(0xFF2E7D32)      // Green 800
+private val PurpleSeed = Color(0xFF7B1FA2)     // Purple 700
+private val BlackSeed = Color(0xFF212121)      // Grey 900
 
-private val LightColorScheme = lightColorScheme(
-    primary = Blue800,
-    onPrimary = CppButtonText,
-    primaryContainer = Blue900,
-    onPrimaryContainer = CppButtonText,
-    secondary = Teal500,
-    onSecondary = CppButtonText,
-    secondaryContainer = Teal400,
-    onSecondaryContainer = Grey900,
-    tertiary = Pink900,
-    onTertiary = CppButtonText,
-    error = RedA700,
-    onError = CppButtonText,
-    errorContainer = Red300,
-    onErrorContainer = Grey900,
-    background = CppBgLight,
-    onBackground = CppTextInverse,
-    surface = Grey100,
-    onSurface = CppTextInverse,
-    surfaceVariant = Grey300,
-    onSurfaceVariant = Grey800,
-    outline = Grey600,
-    outlineVariant = Grey300,
-    scrim = Black,
-    inverseSurface = Grey900,
-    inverseOnSurface = Grey100,
-    inversePrimary = Blue850,
-    surfaceDim = Grey300,
-    surfaceBright = Grey100,
-    surfaceContainerLowest = Grey100,
-    surfaceContainerLow = Grey100,
-    surfaceContainer = Grey100,
-    surfaceContainerHigh = Grey300,
-    surfaceContainerHighest = Grey300
-)
-
-// Material dark theme variant (deep blue)
-private val MaterialDarkColorScheme = darkColorScheme(
-    primary = DeepBlue850,
-    onPrimary = CppButtonText,
-    primaryContainer = DeepBlue900,
-    onPrimaryContainer = Grey100,
-    secondary = Teal500,
-    onSecondary = CppButtonText,
-    secondaryContainer = Teal600,
-    onSecondaryContainer = Grey100,
-    tertiary = Pink900,
-    onTertiary = CppButtonText,
-    error = RedA700,
-    onError = CppButtonText,
-    errorContainer = Red300,
-    onErrorContainer = Grey900,
-    background = DeepBlue900,
-    onBackground = CppText,
-    surface = DeepBlue800,
-    onSurface = CppText,
-    surfaceVariant = DeepBlue850,
-    onSurfaceVariant = Grey300,
-    outline = Grey600,
-    outlineVariant = Grey800,
-    scrim = Black,
-    inverseSurface = Grey100,
-    inverseOnSurface = DeepBlue900,
-    inversePrimary = Blue800
-)
-
-enum class CalculatorTheme {
-    MATERIAL_DARK,
-    MATERIAL_LIGHT,
-    METRO_DARK,
-    METRO_LIGHT
-}
-
+/**
+ * Main theme composable that accepts the app's Preferences.Gui.Theme enum.
+ * 
+ * @param theme The theme preference from settings (defaults to material_theme)
+ * @param useDynamicColor If true, uses Material You (system) colors on Android 12+
+ * @param content The content to display
+ */
 @Composable
 fun CalculatorTheme(
-    theme: CalculatorTheme = CalculatorTheme.METRO_DARK,
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = false,
+    theme: Preferences.Gui.Theme? = null,
+    useDynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
+    val context = LocalContext.current
+    val systemDarkTheme = isSystemInDarkTheme()
+    
+    // Use provided theme or default based on system dark mode
+    val resolvedTheme = theme ?: if (systemDarkTheme) {
+        Preferences.Gui.Theme.material_theme
+    } else {
+        Preferences.Gui.Theme.material_light_theme
+    }
+    
+    // Determine if this theme is light or dark
+    val isLightTheme = resolvedTheme.light
+    
     val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        // Material You - use system dynamic colors
+        useDynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+            if (isLightTheme) {
+                dynamicLightColorScheme(context)
+            } else {
+                dynamicDarkColorScheme(context)
+            }
         }
-        theme == CalculatorTheme.MATERIAL_DARK -> MaterialDarkColorScheme
-        theme == CalculatorTheme.MATERIAL_LIGHT -> LightColorScheme
-        theme == CalculatorTheme.METRO_LIGHT -> LightColorScheme
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+        // Use materialkolor to generate harmonious color scheme
+        else -> {
+            val (seedColor, isDark) = when (resolvedTheme) {
+                Preferences.Gui.Theme.material_theme -> DeepBlueSeed to true
+                Preferences.Gui.Theme.material_black_theme -> BlackSeed to true
+                Preferences.Gui.Theme.material_light_theme -> BlueSeed to false
+                Preferences.Gui.Theme.metro_blue_theme -> BlueSeed to !systemDarkTheme.not()
+                Preferences.Gui.Theme.metro_green_theme -> GreenSeed to !systemDarkTheme.not()
+                Preferences.Gui.Theme.metro_purple_theme -> PurpleSeed to !systemDarkTheme.not()
+                Preferences.Gui.Theme.default_theme -> BlueSeed to systemDarkTheme
+                Preferences.Gui.Theme.violet_theme -> PurpleSeed to true
+                Preferences.Gui.Theme.light_blue_theme -> TealSeed to true
+            }
+            
+            rememberDynamicMaterialThemeState(
+                seedColor = seedColor,
+                isDark = isDark,
+                isAmoled = resolvedTheme == Preferences.Gui.Theme.material_black_theme,
+                style = PaletteStyle.TonalSpot,
+            ).colorScheme
+        }
     }
 
+    // Update status bar appearance
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.primary.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+            val windowInsetsController = WindowCompat.getInsetsController(window, view)
+            windowInsetsController.isAppearanceLightStatusBars = isLightTheme
+            windowInsetsController.isAppearanceLightNavigationBars = isLightTheme
         }
     }
 

@@ -1,8 +1,13 @@
 package org.solovyev.android.wizard
 
 import android.content.Context
-import android.content.SharedPreferences
-import android.preference.PreferenceManager
+import dagger.hilt.android.EntryPointAccessors
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import org.solovyev.android.calculator.di.AppEntryPoint
+import org.solovyev.android.calculator.di.AppPreferences
 
 class BaseWizard(
     override val name: String,
@@ -10,38 +15,35 @@ class BaseWizard(
     override val flow: WizardFlow
 ) : Wizard {
 
-    private val preferences: SharedPreferences
-        get() = PreferenceManager.getDefaultSharedPreferences(context)
+    private val appPreferences: AppPreferences by lazy {
+        EntryPointAccessors.fromApplication(
+            context.applicationContext,
+            AppEntryPoint::class.java
+        ).appPreferences()
+    }
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override val lastSavedStepName: String?
-        get() = preferences.getString(makeLastStepPreferenceKey(name), null)
+        get() = appPreferences.wizard.getLastStepBlocking(name)
 
     override val isFinished: Boolean
-        get() = preferences.getBoolean(makeFinishedPreferenceKey(name), false)
+        get() = appPreferences.wizard.getFinishedBlocking(name)
 
     override val isStarted: Boolean
         get() = lastSavedStepName != null
 
     override fun saveLastStep(step: WizardStep) {
-        preferences.edit()
-            .putString(makeLastStepPreferenceKey(name), step.name)
-            .apply()
+        scope.launch {
+            appPreferences.wizard.setLastStep(name, step.name)
+        }
     }
 
     override fun saveFinished(step: WizardStep, forceFinish: Boolean) {
-        preferences.edit()
-            .putBoolean(makeFinishedPreferenceKey(name), forceFinish || flow.getNextStep(step) == null)
-            .apply()
-    }
-
-    companion object {
-        private const val FLOW = "flow"
-        private const val FLOW_FINISHED = "flow_finished"
-
-        private fun makeFinishedPreferenceKey(flowName: String): String =
-            "$FLOW_FINISHED:$flowName"
-
-        private fun makeLastStepPreferenceKey(flowName: String): String =
-            "$FLOW:$flowName"
+        scope.launch {
+            appPreferences.wizard.setFinished(
+                name,
+                forceFinish || flow.getNextStep(step) == null
+            )
+        }
     }
 }

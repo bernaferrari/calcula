@@ -46,8 +46,8 @@ class Rand : Operator, TimeDependent {
         return -1
     }
 
-    override fun compareTo(other: Variable): Int {
-        if (this === other) return 0
+    override fun compareTo(variable: Variable): Int {
+        if (this === variable) return 0
         return -1
     }
 

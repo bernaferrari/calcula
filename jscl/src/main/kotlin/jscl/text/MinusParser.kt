@@ -19,7 +19,7 @@ internal class MinusParser private constructor() : Parser<Boolean> {
             p.position.increment()
             true
         } else {
-            p.position.setValue(pos0)
+            p.position.value = pos0
             false
         }
     }

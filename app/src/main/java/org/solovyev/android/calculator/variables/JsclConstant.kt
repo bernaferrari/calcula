@@ -45,15 +45,15 @@ internal class JsclConstant(private var variable: CppVariable) : IConstant {
 
     override fun isIdDefined(): Boolean = variable.id != CppVariable.NO_ID
 
-    override fun copy(o: MathEntity) {
-        require(o is IConstant) { "Trying to make a copy of unsupported type: ${o::class.java}" }
+    override fun copy(that: MathEntity) {
+        require(that is IConstant) { "Trying to make a copy of unsupported type: ${that::class.java}" }
 
         variable = variable.copy(
-            name = o.name,
-            value = o.getValue().orEmpty(),
-            description = o.getDescription().orEmpty(),
-            system = o.isSystem(),
-            id = if (o.isIdDefined()) o.getId() else CppVariable.NO_ID
+            name = that.name,
+            value = that.getValue().orEmpty(),
+            description = that.getDescription().orEmpty(),
+            system = that.isSystem(),
+            id = if (that.isIdDefined()) that.getId() else CppVariable.NO_ID
         )
         doubleValue = null
         constant = null

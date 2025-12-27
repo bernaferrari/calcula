@@ -1,6 +1,11 @@
 package org.solovyev.android.calculator
 
 import android.content.SharedPreferences
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import org.solovyev.android.calculator.di.AppPreferences
 import org.solovyev.android.prefs.BooleanPreference
 import org.solovyev.android.prefs.IntegerPreference
 import org.solovyev.android.prefs.Preference
@@ -8,15 +13,23 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class UiPreferences @Inject constructor() {
+class UiPreferences @Inject constructor(
+    private val appPreferences: AppPreferences
+) {
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     @set:JvmName("showFixableErrorDialogProperty")
-    var showFixableErrorDialog: Boolean = true
+    var showFixableErrorDialog: Boolean = appPreferences.ui.getShowFixableErrorDialogBlocking()
+        private set
 
     fun isShowFixableErrorDialog(): Boolean = showFixableErrorDialog
 
     fun setShowFixableErrorDialog(showFixableErrorDialog: Boolean) {
         this.showFixableErrorDialog = showFixableErrorDialog
+        scope.launch {
+            appPreferences.ui.setShowFixableErrorDialog(showFixableErrorDialog)
+        }
     }
 
     object Converter {

@@ -1,93 +1,119 @@
-/*
- * Copyright 2013 serso aka se.solovyev
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * Contact details
- *
- * Email: se.solovyev@gmail.com
- * Site:  http://se.solovyev.org
- */
-
 package org.solovyev.android.calculator.errors
 
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.core.content.IntentCompat
+import androidx.core.os.BundleCompat
+import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import org.solovyev.android.calculator.App
+import org.solovyev.android.calculator.R
+import org.solovyev.android.calculator.di.AppPreferences
 import org.solovyev.android.calculator.UiPreferences
+import org.solovyev.android.calculator.ui.compose.theme.CalculatorTheme
 import org.solovyev.common.msg.Message
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class FixableErrorsActivity : AppCompatActivity() {
+class FixableErrorsActivity : ComponentActivity() {
 
     @Inject
-    lateinit var preferences: SharedPreferences
+    lateinit var appPreferences: AppPreferences
 
     @Inject
     lateinit var uiPreferences: UiPreferences
 
-    private var errors: ArrayList<FixableError>? = null
+    private var errorsState: ArrayList<FixableError>? = null
 
-    override fun onCreate(state: Bundle?) {
-        super.onCreate(state)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
-        errors = state?.getParcelableArrayList(STATE_ERRORS)
-            ?: intent?.getParcelableArrayListExtra(EXTRA_ERRORS)
+        val initialErrors = savedInstanceState?.let {
+            BundleCompat.getParcelableArrayList(it, STATE_ERRORS, FixableError::class.java)
+        } ?: intent?.let {
+            IntentCompat.getParcelableArrayListExtra(it, EXTRA_ERRORS, FixableError::class.java)
+        }
 
-        if (errors == null) {
+        if (initialErrors == null || initialErrors.isEmpty()) {
             finish()
             return
         }
+        errorsState = ArrayList(initialErrors)
 
-        if (state == null) {
-            showNextError()
+        setContent {
+            CalculatorTheme {
+                var errors by remember { mutableStateOf(initialErrors.toList()) }
+                val current = errors.firstOrNull()
+
+                if (current == null || !uiPreferences.showFixableErrorDialog) {
+                    finish()
+                } else {
+                    AlertDialog(
+                        onDismissRequest = {
+                            errors = errors.drop(1)
+                            errorsState = ArrayList(errors)
+                            if (errors.isEmpty()) finish()
+                        },
+                        title = { Text(text = getString(R.string.cpp_fixable_error_title)) },
+                        text = { Text(text = current.message) },
+                        confirmButton = {
+                            val error = current.error
+                            if (error != null) {
+                                TextButton(
+                                    onClick = {
+                                        lifecycleScope.launch {
+                                            error.fix(appPreferences.settings)
+                                        }
+                                        errors = errors.drop(1)
+                                        errorsState = ArrayList(errors)
+                                        if (errors.isEmpty()) finish()
+                                    }
+                                ) {
+                                    Text(text = getString(R.string.fix))
+                                }
+                            }
+                        },
+                        dismissButton = {
+                            androidx.compose.foundation.layout.Row {
+                                TextButton(
+                                    onClick = {
+                                        uiPreferences.setShowFixableErrorDialog(false)
+                                        finish()
+                                    }
+                                ) {
+                                    Text(text = getString(R.string.cpp_dont_show_again))
+                                }
+                                TextButton(
+                                    onClick = {
+                                        errors = errors.drop(1)
+                                        errorsState = ArrayList(errors)
+                                        if (errors.isEmpty()) finish()
+                                    }
+                                ) {
+                                    Text(text = getString(R.string.close))
+                                }
+                            }
+                        }
+                    )
+                }
+            }
         }
     }
 
-    override fun onSaveInstanceState(out: Bundle) {
-        super.onSaveInstanceState(out)
-        out.putParcelableArrayList(STATE_ERRORS, errors)
-    }
-
-    fun showNextError() {
-        val errors = this.errors
-        if (errors == null || errors.isEmpty()) {
-            finish()
-            return
-        }
-
-        if (!uiPreferences.showFixableErrorDialog) {
-            finish()
-            return
-        }
-
-        val fixableError = errors.removeAt(0)
-        FixableErrorFragment.show(fixableError, supportFragmentManager)
-    }
-
-    fun onDialogClosed() {
-        val fragment = supportFragmentManager.findFragmentByTag(FixableErrorFragment.FRAGMENT_TAG)
-        if (fragment == null) {
-            // activity is closing
-            return
-        }
-        showNextError()
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        errorsState?.let { outState.putParcelableArrayList(STATE_ERRORS, it) }
     }
 
     companion object {

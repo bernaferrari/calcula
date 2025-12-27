@@ -1,64 +1,41 @@
-/*
- * Copyright 2013 serso aka se.solovyev
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * Contact details
- *
- * Email: se.solovyev@gmail.com
- * Site:  http://se.solovyev.org
- */
-
 package org.solovyev.android.calculator.ui.compose.components
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
@@ -68,8 +45,13 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import kotlinx.coroutines.delay
+import kotlin.math.roundToInt
 import org.solovyev.android.calculator.EditorState
+import org.solovyev.android.calculator.ui.compose.theme.CalculatorFontFamily
+import org.solovyev.android.calculator.R
 
 /**
  * Calculator editor component that shows the input expression with a modern Material3 design.
@@ -94,22 +76,28 @@ import org.solovyev.android.calculator.EditorState
 @Composable
 fun CalculatorEditor(
     state: EditorState,
-    onTextChange: (String) -> Unit,
+    onTextChange: (String, Int) -> Unit,
     onSelectionChange: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    highlightExpressions: Boolean = true,
     minTextSize: TextUnit = 24.sp,
     maxTextSize: TextUnit = 36.sp
 ) {
     val scrollState = rememberScrollState()
     var textFieldValue by remember { mutableStateOf(TextFieldValue()) }
     var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
+    var fieldWidthPx by remember { mutableStateOf(0) }
+    val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
 
-    // Update text field when state changes externally
-    LaunchedEffect(state.sequence) {
+    // Update text field when state changes externally without clobbering selection ranges.
+    LaunchedEffect(state.sequence, state.text, state.selection) {
         val newText = state.text.toString()
         val newSelection = state.selection.coerceIn(0, newText.length)
+        val textChanged = textFieldValue.text != newText
+        val shouldUpdateSelection = textChanged || textFieldValue.selection.collapsed
 
-        if (textFieldValue.text != newText || textFieldValue.selection.start != newSelection) {
+        if (textChanged || (shouldUpdateSelection && textFieldValue.selection.start != newSelection)) {
             textFieldValue = TextFieldValue(
                 text = newText,
                 selection = TextRange(newSelection)
@@ -117,17 +105,30 @@ fun CalculatorEditor(
         }
     }
 
-    // Auto-scroll to cursor position with smooth animation
-    LaunchedEffect(textFieldValue.selection, textLayoutResult) {
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+        keyboardController?.hide()
+    }
+
+    // Auto-scroll to keep cursor visible without forcing it to the end.
+    LaunchedEffect(textFieldValue.selection, textLayoutResult, fieldWidthPx) {
         delay(50) // Small delay to ensure layout is complete
-        val layout = textLayoutResult
-        if (layout != null && textFieldValue.text.isNotEmpty()) {
-            val cursorPosition = textFieldValue.selection.start
-            if (cursorPosition in 0..textFieldValue.text.length) {
-                // Scroll to show cursor
-                scrollState.animateScrollTo(scrollState.maxValue)
-            }
+        val layout = textLayoutResult ?: return@LaunchedEffect
+        val textLength = textFieldValue.text.length
+        if (fieldWidthPx == 0 || textLength == 0) {
+            return@LaunchedEffect
         }
+        val cursorPosition = textFieldValue.selection.end.coerceIn(0, textLength - 1)
+        val cursorRect = layout.getCursorRect(cursorPosition)
+        val current = scrollState.value.toFloat()
+        val minVisible = current
+        val maxVisible = current + fieldWidthPx
+        val target = when {
+            cursorRect.left < minVisible -> cursorRect.left
+            cursorRect.right > maxVisible -> cursorRect.right - fieldWidthPx
+            else -> current
+        }.coerceIn(0f, scrollState.maxValue.toFloat())
+        scrollState.animateScrollTo(target.roundToInt())
     }
 
     // Calculate dynamic font size based on text length
@@ -150,83 +151,70 @@ fun CalculatorEditor(
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 16.dp, vertical = 12.dp),
-        contentAlignment = Alignment.CenterEnd
+        contentAlignment = Alignment.TopStart
     ) {
         CompositionLocalProvider(LocalTextSelectionColors provides customTextSelectionColors) {
-            if (state.text.isEmpty()) {
-                // Show standalone blinking cursor when empty
-                BlinkingCursor(
-                    modifier = Modifier.align(Alignment.CenterEnd),
-                    color = MaterialTheme.colorScheme.primary
-                )
-            } else {
-                BasicTextField(
-                    value = textFieldValue,
-                    onValueChange = { newValue ->
-                        textFieldValue = newValue
-                        onTextChange(newValue.text)
-                        if (newValue.selection.start == newValue.selection.end) {
-                            onSelectionChange(newValue.selection.start)
+            BasicTextField(
+                value = textFieldValue,
+                onValueChange = { newValue ->
+                    textFieldValue = newValue
+                    if (newValue.text != state.text.toString()) {
+                        onTextChange(newValue.text, newValue.selection.start)
+                    }
+                    if (newValue.selection.start == newValue.selection.end &&
+                        newValue.selection.start != state.selection
+                    ) {
+                        onSelectionChange(newValue.selection.start)
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(scrollState)
+                    .focusRequester(focusRequester)
+                    .onFocusChanged { state ->
+                        if (state.isFocused) {
+                            keyboardController?.hide()
                         }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(scrollState),
-                    textStyle = TextStyle(
-                        color = MaterialTheme.colorScheme.onBackground,
-                        fontSize = fontSize,
-                        fontWeight = FontWeight.Normal,
-                        textAlign = TextAlign.End
-                    ),
-                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                    onTextLayout = { textLayoutResult = it },
-                    decorationBox = { innerTextField ->
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.CenterEnd
-                        ) {
-                            innerTextField()
-                        }
-                    },
-                    // Enable visual transformation for syntax highlighting
-                    visualTransformation = SyntaxHighlightingVisualTransformation(
+                    }
+                    .onSizeChanged { fieldWidthPx = it.width },
+                textStyle = TextStyle(
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontSize = fontSize,
+                    fontWeight = FontWeight.Normal,
+                    textAlign = TextAlign.Start,
+                    fontFamily = CalculatorFontFamily
+                ),
+                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                readOnly = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Ascii,
+                    imeAction = ImeAction.None,
+                    autoCorrectEnabled = false,
+                    showKeyboardOnFocus = false
+                ),
+                singleLine = true,
+                onTextLayout = { textLayoutResult = it },
+                decorationBox = { innerTextField ->
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.TopStart
+                    ) { innerTextField() }
+                },
+                // Enable visual transformation for syntax highlighting
+                visualTransformation = if (highlightExpressions) {
+                    SyntaxHighlightingVisualTransformation(
                         primaryColor = MaterialTheme.colorScheme.primary,
                         secondaryColor = MaterialTheme.colorScheme.secondary,
                         tertiaryColor = MaterialTheme.colorScheme.tertiary,
                         baseColor = MaterialTheme.colorScheme.onBackground,
                         surfaceVariantColor = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                )
-            }
+                } else {
+                    VisualTransformation.None
+                }
+            )
         }
     }
-}
-
-/**
- * Blinking cursor animation for empty editor or standalone cursor indicator.
- */
-@Composable
-private fun BlinkingCursor(
-    modifier: Modifier = Modifier,
-    color: androidx.compose.ui.graphics.Color
-) {
-    val infiniteTransition = rememberInfiniteTransition(label = "CursorBlink")
-    val alpha by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 0f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 530, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "CursorAlpha"
-    )
-
-    Box(
-        modifier = modifier
-            .width(2.dp)
-            .height(32.dp)
-            .background(color.copy(alpha = alpha))
-    )
 }
 
 /**

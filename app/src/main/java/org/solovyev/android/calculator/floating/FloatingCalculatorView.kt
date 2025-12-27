@@ -1,46 +1,12 @@
-/*
- * Copyright 2013 serso aka se.solovyev
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * Contact details
- *
- * Email: se.solovyev@gmail.com
- * Site:  http://se.solovyev.org
- */
-
 package org.solovyev.android.calculator.floating
 
-import android.annotation.SuppressLint
 import android.content.Context
-import android.content.SharedPreferences
-import android.content.res.Resources
 import android.graphics.PixelFormat
-import android.graphics.Typeface
-import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Parcel
 import android.os.Parcelable
 import android.util.DisplayMetrics
-import android.view.ContextThemeWrapper
 import android.view.Gravity
-import android.view.HapticFeedbackConstants
-import android.view.HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING
-import android.view.HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING
-import android.view.HapticFeedbackConstants.KEYBOARD_TAP
-import android.view.HapticFeedbackConstants.LONG_PRESS
-import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.view.WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
@@ -48,22 +14,31 @@ import android.view.WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
 import android.view.WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
 import android.view.WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
 import android.view.WindowManager.LayoutParams.TYPE_SYSTEM_ALERT
-import android.widget.ImageView
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import dagger.hilt.android.EntryPointAccessors
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import org.solovyev.android.calculator.App
-import org.solovyev.android.calculator.BaseActivity
+import org.solovyev.android.calculator.Display
 import org.solovyev.android.calculator.DisplayState
-import org.solovyev.android.calculator.DisplayView
 import org.solovyev.android.calculator.Editor
 import org.solovyev.android.calculator.EditorState
-import org.solovyev.android.calculator.EditorView
 import org.solovyev.android.calculator.Keyboard
 import org.solovyev.android.calculator.Preferences
 import org.solovyev.android.calculator.R
-import org.solovyev.android.calculator.buttons.CppButton
 import org.solovyev.android.calculator.di.AppEntryPoint
-import org.solovyev.android.calculator.keyboard.BaseKeyboardUi
-import org.solovyev.android.views.Adjuster
+import org.solovyev.android.calculator.di.AppPreferences
+import org.solovyev.android.calculator.ui.compose.components.KeyboardActions
+import org.solovyev.android.calculator.ui.compose.components.KeyboardMode
+import org.solovyev.android.calculator.ui.compose.floating.FloatingCalculatorOverlay
+import org.solovyev.android.calculator.ui.compose.theme.CalculatorTheme
 import kotlin.math.abs
 
 class FloatingCalculatorView(
@@ -72,25 +47,23 @@ class FloatingCalculatorView(
     private val listener: FloatingViewListener
 ) {
     private val context: Context
-    private val root: View
+    private val root: ComposeView
     private val state: State
-    private var content: View? = null
-    private var header: View? = null
-    private var headerTitle: ImageView? = null
-    private var headerTitleDrawable: Drawable? = null
-    private var editorView: EditorView? = null
-    private var displayView: DisplayView? = null
-    private var minimized = false
     private var attached = false
-    private var folded = false
     private var initialized = false
+    private var minimized = false
     private var shown = false
 
     private val keyboard: Keyboard
     private val editor: Editor
-    private val preferences: SharedPreferences
-    private val typeface: Typeface
-    private val myPreferences: SharedPreferences
+    private val display: Display
+    private val appPreferences: AppPreferences
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+
+    private val displayStateFlow = MutableStateFlow(DisplayState.empty())
+    private val editorStateFlow = MutableStateFlow(EditorState.empty())
+    private val foldedState = MutableStateFlow(false)
+    private var headerHeightPx = 0
 
     init {
         val entryPoint = EntryPointAccessors.fromApplication(
@@ -99,135 +72,101 @@ class FloatingCalculatorView(
         )
         keyboard = entryPoint.keyboard()
         editor = entryPoint.editor()
-        preferences = entryPoint.preferences()
-        typeface = entryPoint.typeface()
-        myPreferences = entryPoint.floatingPreferences()
+        display = entryPoint.display()
+        appPreferences = entryPoint.appPreferences()
+        this.context = context
+        root = ComposeView(context).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
+        }
 
-        val theme = Preferences.Onscreen.theme.getPreferenceNoError(preferences) ?: Preferences.SimpleTheme.default_theme
-        val appTheme = Preferences.Gui.theme.getPreferenceNoError(preferences) ?: Preferences.Gui.Theme.material_theme
-        val resolvedTheme = theme.resolveThemeFor(appTheme)
-        this.context = ContextThemeWrapper(
-            context,
-            if (resolvedTheme.light) R.style.Cpp_Theme_Light else R.style.Cpp_Theme
-        )
-        this.root = View.inflate(this.context, resolvedTheme.getOnscreenLayout(appTheme), null)
-        BaseActivity.fixFonts(this.root, typeface)
-
-        val persistedState = State.fromPrefs(myPreferences)
+        val persistedState = appPreferences.floating.getWidthBlocking()?.let { width ->
+            val height = appPreferences.floating.getHeightBlocking() ?: return@let null
+            val x = appPreferences.floating.getXBlocking() ?: 0
+            val y = appPreferences.floating.getYBlocking() ?: 0
+            State(width, height, x, y)
+        }
         this.state = persistedState ?: initialState
+
+        val dm = context.resources.displayMetrics
+        headerHeightPx = App.toPixels(dm, 56f)
     }
 
     fun updateDisplayState(displayState: DisplayState) {
-        checkInit()
-        displayView?.setState(displayState)
-    }
-
-    private fun checkInit() {
-        check(initialized) { "init() must be called!" }
+        displayStateFlow.value = displayState
     }
 
     fun updateEditorState(editorState: EditorState) {
-        checkInit()
-        editorView?.setState(editorState)
+        editorStateFlow.value = editorState
     }
 
     private fun setHeight(height: Int) {
-        checkInit()
-
         val params = root.layoutParams as WindowManager.LayoutParams
         params.height = height
         windowManager.updateViewLayout(root, params)
     }
 
     private fun init() {
-        if (initialized) {
-            return
-        }
+        if (initialized) return
 
-        for (widgetButton in CppButton.values()) {
-            val button = root.findViewById<View>(widgetButton.id) ?: continue
-
-            button.setOnClickListener {
-                if (keyboard.buttonPressed(widgetButton.action)) {
-                    if (keyboard.vibrateOnKeypress.value) {
-                        it.performHapticFeedback(
-                            KEYBOARD_TAP,
-                            FLAG_IGNORE_GLOBAL_SETTING or FLAG_IGNORE_VIEW_SETTING
-                        )
-                    }
-                }
-                if (widgetButton == CppButton.app) {
-                    minimize()
-                }
-            }
-
-            button.setOnLongClickListener {
-                if (keyboard.buttonPressed(widgetButton.actionLong)) {
-                    if (keyboard.vibrateOnKeypress.value) {
-                        it.performHapticFeedback(
-                            LONG_PRESS,
-                            FLAG_IGNORE_GLOBAL_SETTING or FLAG_IGNORE_VIEW_SETTING
-                        )
-                    }
-                }
-                true
-            }
-
-            if (widgetButton == CppButton.erase && button is ImageView) {
-                Adjuster.adjustImage(button, BaseKeyboardUi.IMAGE_SCALE_ERASE)
+        root.setContent {
+            val displayState by displayStateFlow.collectAsState()
+            val editorState by editorStateFlow.collectAsState()
+            val themePreference by appPreferences.settings.theme.collectAsState(
+                initial = appPreferences.settings.getThemeBlocking()
+            )
+            val modePreference by appPreferences.settings.mode.collectAsState(
+                initial = appPreferences.settings.getModeBlocking()
+            )
+            val folded by foldedState.collectAsState()
+            val highlightExpressions by appPreferences.settings.highlightExpressions.collectAsState(
+                initial = appPreferences.settings.getHighlightExpressionsBlocking()
+            )
+            val highContrast by appPreferences.settings.highContrast.collectAsState(
+                initial = appPreferences.settings.getHighContrastBlocking()
+            )
+            val vibrateOnKeypress by appPreferences.settings.vibrateOnKeypress.collectAsState(
+                initial = appPreferences.settings.vibrateOnKeypressBlocking()
+            )
+            val keyboardMode = if (modePreference == Preferences.Gui.Mode.engineer) {
+                KeyboardMode.ENGINEER
             } else {
-                BaseKeyboardUi.adjustButton(button)
+                KeyboardMode.SIMPLE
+            }
+            val actions = remember { FloatingKeyboardActions(keyboard) }
+
+            CalculatorTheme(theme = themePreference) {
+                FloatingCalculatorOverlay(
+                    displayState = displayState,
+                    editorState = editorState,
+                    keyboardMode = keyboardMode,
+                    highlightExpressions = highlightExpressions,
+                    highContrast = highContrast,
+                    hapticsEnabled = vibrateOnKeypress,
+                    keyboardActions = actions,
+                    onEditorTextChange = { text, selection -> editor.setText(text, selection) },
+                    onEditorSelectionChange = { selection -> editor.setSelection(selection) },
+                    onToggleFold = { toggleFold() },
+                    onMinimize = { minimize() },
+                    onClose = { hide() },
+                    isFolded = folded,
+                    onDrag = { dx, dy -> updatePositionBy(dx, dy) },
+                    onHeaderHeightChanged = { height -> updateHeaderHeight(height) },
+                    title = context.getString(R.string.cpp_app_name)
+                )
             }
         }
-
-        val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-
-        header = root.findViewById(R.id.onscreen_header)
-        headerTitle = header?.findViewById(R.id.onscreen_title)
-        headerTitleDrawable = headerTitle?.drawable
-        headerTitle?.setImageDrawable(null)
-        content = root.findViewById(R.id.onscreen_content)
-
-        displayView = root.findViewById(R.id.calculator_display)
-
-        editorView = root.findViewById<EditorView>(R.id.calculator_editor)?.apply {
-            setEditor(editor)
-        }
-
-        root.findViewById<View>(R.id.onscreen_fold_button)?.setOnClickListener {
-            if (folded) {
-                unfold()
-            } else {
-                fold()
-            }
-        }
-
-        root.findViewById<View>(R.id.onscreen_minimize_button)?.setOnClickListener {
-            minimize()
-        }
-
-        root.findViewById<View>(R.id.onscreen_close_button)?.setOnClickListener {
-            hide()
-        }
-
-        headerTitle?.setOnTouchListener(MyTouchListener(wm, root))
 
         initialized = true
     }
 
     fun show() {
-        if (shown) {
-            return
-        }
+        if (shown) return
         init()
         attach()
         shown = true
     }
 
     private fun attach() {
-        checkInit()
-
-        val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         if (!attached) {
             val params = makeLayoutParams().apply {
                 width = state.width
@@ -236,44 +175,49 @@ class FloatingCalculatorView(
                 y = state.y
                 gravity = Gravity.TOP or Gravity.LEFT
             }
-            wm.addView(root, params)
+            windowManager.addView(root, params)
             attached = true
         }
     }
 
-    private fun fold() {
-        if (!folded) {
-            headerTitle?.setImageDrawable(headerTitleDrawable)
-            val r = header?.resources
-            val newHeight = (header?.height ?: 0) + 2 * (r?.getDimensionPixelSize(
-                R.dimen.cpp_onscreen_main_padding
-            ) ?: 0)
-            content?.visibility = View.GONE
-            setHeight(newHeight)
-            folded = true
-        }
-    }
-
-    private fun unfold() {
-        if (folded) {
-            headerTitle?.setImageDrawable(null)
-            content?.visibility = View.VISIBLE
-            setHeight(state.height)
-            folded = false
-        }
-    }
-
     private fun detach() {
-        checkInit()
-
         if (attached) {
             windowManager.removeView(root)
             attached = false
         }
     }
 
+    private fun toggleFold() {
+        if (foldedState.value) {
+            unfold()
+        } else {
+            fold()
+        }
+    }
+
+    private fun fold() {
+        if (!foldedState.value) {
+            foldedState.value = true
+            setHeight(headerHeightPx)
+        }
+    }
+
+    private fun unfold() {
+        if (foldedState.value) {
+            foldedState.value = false
+            setHeight(state.height)
+        }
+    }
+
+    private fun updateHeaderHeight(height: Int) {
+        if (height <= 0) return
+        headerHeightPx = height
+        if (foldedState.value) {
+            setHeight(headerHeightPx)
+        }
+    }
+
     private fun minimize() {
-        checkInit()
         if (!minimized) {
             saveState()
             detach()
@@ -283,10 +227,7 @@ class FloatingCalculatorView(
     }
 
     fun hide() {
-        checkInit()
-        if (!shown) {
-            return
-        }
+        if (!shown) return
         saveState()
         detach()
         listener.onViewHidden()
@@ -294,117 +235,40 @@ class FloatingCalculatorView(
     }
 
     private fun saveState() {
-        val editor = myPreferences.edit()
-        getState().save(editor)
-        editor.apply()
+        val current = getState()
+        scope.launch {
+            appPreferences.floating.setSize(current.width, current.height)
+            appPreferences.floating.setPosition(current.x, current.y)
+        }
     }
 
-    private val windowManager: WindowManager
-        get() = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+    private fun updatePositionBy(dx: Float, dy: Float) {
+        if (abs(dx) < 0.5f && abs(dy) < 0.5f) return
+        val params = root.layoutParams as WindowManager.LayoutParams
+        val dm = DisplayMetrics()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val bounds = windowManager.currentWindowMetrics.bounds
+            dm.widthPixels = bounds.width()
+            dm.heightPixels = bounds.height()
+        } else {
+            dm.setTo(context.resources.displayMetrics)
+        }
+        params.x = (params.x + dx).toInt().coerceIn(0, dm.widthPixels - params.width)
+        params.y = (params.y + dy).toInt().coerceIn(0, dm.heightPixels - params.height)
+        windowManager.updateViewLayout(root, params)
+    }
 
     private fun getState(): State {
         val params = root.layoutParams as WindowManager.LayoutParams
-        return if (!folded) {
+        return if (!foldedState.value) {
             State(params.width, params.height, params.x, params.y)
         } else {
             State(state.width, state.height, params.x, params.y)
         }
     }
 
-    private class MyTouchListener(
-        private val wm: WindowManager,
-        private val view: View
-    ) : View.OnTouchListener {
-        private var orientation: Int = 0
-        private var x0 = 0f
-        private var y0 = 0f
-        private var lastMoveTime = 0L
-        private val dm = DisplayMetrics()
-
-        init {
-            onDisplayChanged()
-        }
-
-        private fun onDisplayChanged() {
-            val dd = wm.defaultDisplay
-            @Suppress("DEPRECATION")
-            orientation = dd.orientation
-            dd.getMetrics(dm)
-        }
-
-        @SuppressLint("ClickableViewAccessibility")
-        override fun onTouch(v: View, event: MotionEvent): Boolean {
-            @Suppress("DEPRECATION")
-            if (orientation != wm.defaultDisplay.orientation) {
-                // orientation has changed => we need to check display width/height each time window moved
-                onDisplayChanged()
-            }
-
-            val x1 = event.rawX
-            val y1 = event.rawY
-
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    x0 = x1
-                    y0 = y1
-                    return true
-                }
-                MotionEvent.ACTION_MOVE -> {
-                    val now = System.currentTimeMillis()
-                    if (now - lastMoveTime >= TIME_EPS) {
-                        lastMoveTime = now
-                        processMove(x1, y1)
-                    }
-                    return true
-                }
-            }
-
-            return false
-        }
-
-        private fun processMove(x1: Float, y1: Float) {
-            val Δx = x1 - x0
-            val Δy = y1 - y0
-
-            val params = view.layoutParams as WindowManager.LayoutParams
-
-            val xInBounds = isDistanceInBounds(Δx)
-            val yInBounds = isDistanceInBounds(Δy)
-            if (xInBounds || yInBounds) {
-                if (xInBounds) {
-                    params.x = (params.x + Δx).toInt()
-                }
-
-                if (yInBounds) {
-                    params.y = (params.y + Δy).toInt()
-                }
-
-                params.x = params.x.coerceIn(0, dm.widthPixels - params.width)
-                params.y = params.y.coerceIn(0, dm.heightPixels - params.height)
-
-                wm.updateViewLayout(view, params)
-
-                if (xInBounds) {
-                    x0 = x1
-                }
-
-                if (yInBounds) {
-                    y0 = y1
-                }
-            }
-        }
-
-        private fun isDistanceInBounds(δ: Float): Boolean {
-            val distance = abs(δ)
-            return distance >= DIST_EPS && distance < DIST_MAX
-        }
-
-        companion object {
-            private const val DIST_EPS = 0f
-            private const val DIST_MAX = 100000f
-            private const val TIME_EPS = 0L
-        }
-    }
+    private val windowManager: WindowManager
+        get() = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
     data class State(
         var width: Int,
@@ -420,13 +284,6 @@ class FloatingCalculatorView(
             parcel.readInt()
         )
 
-        private constructor(prefs: SharedPreferences) : this(
-            prefs.getInt("width", 200),
-            prefs.getInt("height", 400),
-            prefs.getInt("x", 0),
-            prefs.getInt("y", 0)
-        )
-
         override fun writeToParcel(parcel: Parcel, flags: Int) {
             parcel.writeInt(width)
             parcel.writeInt(height)
@@ -436,24 +293,93 @@ class FloatingCalculatorView(
 
         override fun describeContents(): Int = 0
 
-        fun save(editor: SharedPreferences.Editor) {
-            editor.putInt("width", width)
-            editor.putInt("height", height)
-            editor.putInt("x", x)
-            editor.putInt("y", y)
-        }
-
         companion object CREATOR : Parcelable.Creator<State> {
             override fun createFromParcel(parcel: Parcel): State = State(parcel)
             override fun newArray(size: Int): Array<State?> = arrayOfNulls(size)
+        }
+    }
 
-            fun fromPrefs(prefs: SharedPreferences): State? {
-                return if (!prefs.contains("width")) {
-                    null
-                } else {
-                    State(prefs)
-                }
-            }
+    private class FloatingKeyboardActions(
+        private val keyboard: Keyboard
+    ) : KeyboardActions {
+        override fun onNumberClick(number: String) {
+            keyboard.buttonPressed(number)
+        }
+
+        override fun onOperatorClick(operator: String) {
+            keyboard.buttonPressed(operator)
+        }
+
+        override fun onFunctionClick(function: String) {
+            keyboard.buttonPressed(function)
+        }
+
+        override fun onSpecialClick(action: String) {
+            keyboard.buttonPressed(action)
+        }
+
+        override fun onClear() {
+            keyboard.buttonPressed(org.solovyev.android.calculator.buttons.CppSpecialButton.clear.action)
+        }
+
+        override fun onDelete() {
+            keyboard.buttonPressed(org.solovyev.android.calculator.buttons.CppSpecialButton.erase.action)
+        }
+
+        override fun onEquals() {
+            keyboard.buttonPressed(org.solovyev.android.calculator.buttons.CppSpecialButton.equals.action)
+        }
+
+        override fun onMemoryRecall() {
+            keyboard.buttonPressed(org.solovyev.android.calculator.buttons.CppSpecialButton.memory.action)
+        }
+
+        override fun onMemoryPlus() {
+            keyboard.buttonPressed(org.solovyev.android.calculator.buttons.CppSpecialButton.memory_plus.action)
+        }
+
+        override fun onMemoryMinus() {
+            keyboard.buttonPressed(org.solovyev.android.calculator.buttons.CppSpecialButton.memory_minus.action)
+        }
+
+        override fun onMemoryClear() {
+            keyboard.buttonPressed(org.solovyev.android.calculator.buttons.CppSpecialButton.memory_clear.action)
+        }
+
+        override fun onCursorLeft() {
+            keyboard.buttonPressed(org.solovyev.android.calculator.buttons.CppSpecialButton.cursor_left.action)
+        }
+
+        override fun onCursorRight() {
+            keyboard.buttonPressed(org.solovyev.android.calculator.buttons.CppSpecialButton.cursor_right.action)
+        }
+
+        override fun onCursorToStart() {
+            keyboard.buttonPressed(org.solovyev.android.calculator.buttons.CppSpecialButton.cursor_to_start.action)
+        }
+
+        override fun onCursorToEnd() {
+            keyboard.buttonPressed(org.solovyev.android.calculator.buttons.CppSpecialButton.cursor_to_end.action)
+        }
+
+        override fun onCopy() {
+            keyboard.buttonPressed(org.solovyev.android.calculator.buttons.CppSpecialButton.copy.action)
+        }
+
+        override fun onPaste() {
+            keyboard.buttonPressed(org.solovyev.android.calculator.buttons.CppSpecialButton.paste.action)
+        }
+
+        override fun onOpenVars() {
+            keyboard.buttonPressed(org.solovyev.android.calculator.buttons.CppSpecialButton.vars.action)
+        }
+
+        override fun onOpenFunctions() {
+            keyboard.buttonPressed(org.solovyev.android.calculator.buttons.CppSpecialButton.functions.action)
+        }
+
+        override fun onOpenHistory() {
+            keyboard.buttonPressed(org.solovyev.android.calculator.buttons.CppSpecialButton.history.action)
         }
     }
 
@@ -474,12 +400,7 @@ class FloatingCalculatorView(
 
         private fun makeLayoutParams(): WindowManager.LayoutParams {
             return WindowManager.LayoutParams(
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    TYPE_APPLICATION_OVERLAY
-                } else {
-                    @Suppress("DEPRECATION")
-                    TYPE_SYSTEM_ALERT
-                },
+                TYPE_APPLICATION_OVERLAY,
                 FLAG_NOT_FOCUSABLE or FLAG_NOT_TOUCH_MODAL or FLAG_WATCH_OUTSIDE_TOUCH,
                 PixelFormat.TRANSLUCENT
             )

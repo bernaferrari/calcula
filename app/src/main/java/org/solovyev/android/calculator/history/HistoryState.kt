@@ -13,7 +13,7 @@ import org.solovyev.android.calculator.json.Json
 import org.solovyev.android.calculator.json.Jsonable
 
 @Parcelize
-data class HistoryState internal constructor(
+data class HistoryState(
     val id: Int,
     val editor: EditorState,
     val display: DisplayState,

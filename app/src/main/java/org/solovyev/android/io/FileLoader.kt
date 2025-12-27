@@ -1,15 +1,18 @@
 package org.solovyev.android.io
 
-import java.io.File
-import java.io.FileInputStream
-import java.io.InputStream
+import okio.FileSystem
+import okio.Path
+import okio.Source
 
-class FileLoader(private val file: File) : BaseIoLoader() {
+class FileLoader(
+    private val file: Path,
+    private val fileSystem: FileSystem = FileSystem.SYSTEM
+) : BaseIoLoader() {
 
-    override suspend fun getInputStream(): InputStream? =
-        if (file.exists()) FileInputStream(file) else null
+    override suspend fun getSource(): Source? =
+        if (fileSystem.exists(file)) fileSystem.source(file) else null
 
     companion object {
-        suspend fun load(file: File): CharSequence? = FileLoader(file).load()
+        suspend fun load(file: Path): CharSequence? = FileLoader(file).load()
     }
 }

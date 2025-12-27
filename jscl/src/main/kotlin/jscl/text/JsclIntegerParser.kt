@@ -17,7 +17,7 @@ class JsclIntegerParser private constructor() : Parser<JsclInteger> {
         try {
             number = Digits(nb).parse(p, previousSumElement)
         } catch (e: ParseException) {
-            p.position.setValue(pos0)
+            p.position.value = pos0
             throw e
         }
 

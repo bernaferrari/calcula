@@ -71,7 +71,7 @@ internal class Superscript private constructor() : Parser<Int> {
         try {
             result = IntegerParser.parser.parse(p, previousSumElement)
         } catch (e: ParseException) {
-            p.position.setValue(pos0)
+            p.position.value = pos0
             throw e
         }
 

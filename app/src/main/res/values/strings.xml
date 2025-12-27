@@ -38,8 +38,21 @@
     <string name="c_copy_result">Copy result</string>
     <string name="c_history_expression">Value</string>
     <string name="c_history_comment">Comment</string>
+    <string name="cpp_status">Status</string>
+    <string name="cpp_not_saved">Not saved</string>
     <string name="cpp_history_tab_saved">Saved</string>
     <string name="cpp_history_tab_recent">Recent</string>
+    <string name="cpp_history_empty">No history yet</string>
+    <string name="cpp_back">Back</string>
+    <string name="cpp_entities_empty">Nothing here yet</string>
+    <string name="cpp_fixable_error_title">Fixable error</string>
+    <string name="cpp_parameters">Parameters</string>
+    <string name="cpp_add_parameter">Add parameter</string>
+    <string name="cpp_converter">Converter</string>
+    <string name="cpp_dimension">Dimension</string>
+    <string name="cpp_from">From</string>
+    <string name="cpp_to">To</string>
+    <string name="cpp_swap">Swap</string>
     <string name="c_first_start_text">Thank you for choosing Calculator++!\n\nCalculator++ is a powerful tool for making everyday calculations.</string>
     <string name="c_calc_show_release_notes_title">Show release notes</string>
     <string name="c_calc_use_back_button_as_prev_title">Use Back button for previous history</string>
@@ -67,11 +80,18 @@
     <string name="cpp_continue_without_permissions">Continue without permission</string>
     <string name="cpp_widget">Widget</string>
     <string name="cpp_plotter">Function plotter</string>
+    <string name="cpp_plot_functions">Plot functions</string>
     <string name="cpp_plot_function_line_color">Line color</string>
     <string name="cpp_plot_function_line_width">Line width</string>
     <string name="cpp_plot_empty_function_error">Unable to plot empty function!</string>
     <string name="cpp_plot_too_many_variables">Unable to plot: too many variables!</string>
     <string name="cpp_plot_range">Graph range</string>
+    <string name="cpp_plot_mode_2d" translatable="false">2D</string>
+    <string name="cpp_plot_mode_3d" translatable="false">3D</string>
+    <string name="cpp_plot_x_min">X min</string>
+    <string name="cpp_plot_x_max">X max</string>
+    <string name="cpp_plot_y_min">Y min</string>
+    <string name="cpp_plot_y_max">Y max</string>
     <string name="cpp_continue">Continue</string>
   <string name="cpp_purchase_text">Supporting the project is easy and secure: purchase process is provided by Google
 		and all you need is a properly configured Google account.\n\n
@@ -84,6 +104,7 @@
     <string name="cpp_clear_history">Clear</string>
     <string name="cpp_new_in_version">New in %1$s version</string>
     <string name="cpp_release_notes_choose_theme">Do you want to try new Material themes? Choose them from the list:</string>
+    <string name="cpp_release_notes">Release notes</string>
     <string name="cpp_radix">Radix</string>
     <string name="cpp_numeral_system">Numeral system</string>
     <string name="cpp_number_format_dec">Decimal</string>

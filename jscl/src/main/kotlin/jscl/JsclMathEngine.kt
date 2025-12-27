@@ -82,8 +82,8 @@ open class JsclMathEngine : MathEngine {
         return angleUnits
     }
 
-    override fun setAngleUnits(angleUnits: AngleUnit) {
-        this.angleUnits = angleUnits
+    override fun setAngleUnits(defaultAngleUnits: AngleUnit) {
+        this.angleUnits = defaultAngleUnits
     }
 
     override fun getNumeralBase(): NumeralBase {

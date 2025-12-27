@@ -20,7 +20,7 @@ class IntegerParser private constructor() : Parser<Int> {
             result = StringBuilder()
             result.append(c)
         } else {
-            p.position.setValue(pos0)
+            p.position.value = pos0
             throw p.exceptionsPool.obtain(p.position.toInt(), p.expression, Messages.msg_7)
         }
 

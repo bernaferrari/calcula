@@ -1,38 +1,28 @@
 package org.solovyev.android.views.dragbutton
 
-import android.graphics.PointF
-import android.view.View
+import androidx.compose.ui.geometry.Offset
 import kotlin.math.acos
 import kotlin.math.pow
 import kotlin.math.sqrt
 
+/**
+ * Utility object for drag gesture calculations.
+ */
 object Drag {
 
-    @JvmStatic
-    fun distance(start: PointF, end: PointF): Float {
+    fun distance(start: Offset, end: Offset): Float {
         return norm(end.x - start.x, end.y - start.y)
     }
 
-    @JvmStatic
-    fun subtract(p1: PointF, p2: PointF): PointF {
-        return PointF(p1.x - p2.x, p1.y - p2.y)
+    fun subtract(p1: Offset, p2: Offset): Offset {
+        return Offset(p1.x - p2.x, p1.y - p2.y)
     }
 
-    @JvmStatic
-    fun hasDirectionText(view: View, direction: DragDirection): Boolean {
-        if (view is DirectionDragView) {
-            return view.getText(direction).hasValue()
-        }
-        return false
+    fun sum(p1: Offset, p2: Offset): Offset {
+        return Offset(p1.x + p2.x, p1.y + p2.y)
     }
 
-    @JvmStatic
-    fun sum(p1: PointF, p2: PointF): PointF {
-        return PointF(p1.x + p2.x, p1.y + p2.y)
-    }
-
-    @JvmStatic
-    fun norm(point: PointF): Float {
+    fun norm(point: Offset): Float {
         return norm(point.x, point.y)
     }
 
@@ -40,11 +30,10 @@ object Drag {
         return sqrt(x.pow(2) + y.pow(2))
     }
 
-    @JvmStatic
     fun getAngle(
-        start: PointF,
-        axisEnd: PointF,
-        end: PointF,
+        start: Offset,
+        axisEnd: Offset,
+        end: Offset,
         right: BooleanArray?
     ): Float {
         val axisVector = subtract(axisEnd, start)
@@ -59,5 +48,29 @@ object Drag {
         right?.set(0, axisVector.x * vector.y - axisVector.y * vector.x < 0)
 
         return acos((-a2 + b2 + c2) / (2 * b * c))
+    }
+
+    private val AXIS = Offset(0f, 1f)
+
+    /**
+     * Determines the drag direction based on the start and end points.
+     * Returns null if the gesture doesn't match any direction.
+     */
+    fun getDirection(start: Offset, end: Offset): DragDirection? {
+        val right = BooleanArray(1)
+        val angle = Math.toDegrees(getAngle(start, sum(start, AXIS), end, right).toDouble()).toFloat()
+        
+        for (direction in DragDirection.entries) {
+            if (direction == DragDirection.left && right[0]) {
+                continue
+            }
+            if (direction == DragDirection.right && !right[0]) {
+                continue
+            }
+            if (direction.angleFrom <= angle && angle <= direction.angleTo) {
+                return direction
+            }
+        }
+        return null
     }
 }

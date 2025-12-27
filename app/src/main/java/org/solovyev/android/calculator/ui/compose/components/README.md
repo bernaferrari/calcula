@@ -8,18 +8,12 @@ This package contains Jetpack Compose components for the Android Calculator++ ap
 Shows the calculation result with the following features:
 - **Auto-resizing text**: Dynamically adjusts font size based on content length
 - **Error state**: Displays errors in red color when `DisplayState.valid` is false
-- **Copy button**: Animated copy button appears for valid results
-- **Result animations**: Smooth slide-in/slide-out animations when results change
-- **Horizontal scrolling**: Supports long results that don't fit on screen
+- **Static layout**: Legacy-style display without extra chrome
 
 **Usage:**
 ```kotlin
 CalculatorDisplay(
     state = displayState,
-    onCopy = {
-        // Handle copy to clipboard
-        clipboard.setText(displayState.text)
-    },
     minTextSize = 20.sp,
     maxTextSize = 48.sp
 )
@@ -41,9 +35,9 @@ Shows the input expression with syntax highlighting:
 ```kotlin
 CalculatorEditor(
     state = editorState,
-    onTextChange = { newText ->
-        // Handle text changes
-        editor.setText(newText)
+    onTextChange = { newText, selection ->
+        // Handle text and cursor changes together
+        editor.setText(newText, selection)
     },
     onSelectionChange = { position ->
         // Handle cursor movement
@@ -54,27 +48,32 @@ CalculatorEditor(
 
 ### 3. CalculatorScreen.kt
 The main calculator screen that combines all components:
-- Display at top (result)
-- Editor in middle (input)
+- Editor at top (input)
+- Display row with equals button
 - Keyboard at bottom (buttons)
-- Proper Material 3 theming and elevation
-- Responsive layout with proper constraints
+- Material 3 theming with legacy layout proportions
 
 **Usage:**
 ```kotlin
 CalculatorScreen(
     displayState = displayState,
     editorState = editorState,
-    onCopyResult = {
-        clipboard.setText(displayState.text)
-        showToast("Copied to clipboard")
-    },
-    onEditorTextChange = { newText ->
-        editor.setText(newText)
+    onEditorTextChange = { newText, selection ->
+        editor.setText(newText, selection)
     },
     onEditorSelectionChange = { position ->
         editor.setSelection(position)
-    }
+    },
+    keyboard = { modifier ->
+        CalculatorKeyboard(
+            actions = keyboardActions,
+            modifier = modifier
+        )
+    },
+    onEquals = { keyboardActions.onEquals() },
+    onSimplify = { keyboardActions.onSpecialClick("≡") },
+    onPlot = { keyboardActions.onSpecialClick("\ue009") },
+    topBar = {}
 )
 ```
 
@@ -100,9 +99,21 @@ class CalculatorActivity : BaseActivity() {
                 CalculatorScreen(
                     displayState = displayState,
                     editorState = editorState,
-                    onCopyResult = { copyToClipboard(displayState.text) },
-                    onEditorTextChange = { viewModel.onTextChanged(it) },
-                    onEditorSelectionChange = { viewModel.onSelectionChanged(it) }
+                    onEditorTextChange = { text, selection ->
+                        viewModel.onTextChanged(text)
+                        viewModel.onSelectionChanged(selection)
+                    },
+                    onEditorSelectionChange = { viewModel.onSelectionChanged(it) },
+                    keyboard = { modifier ->
+                        CalculatorKeyboard(
+                            actions = keyboardActions,
+                            modifier = modifier
+                        )
+                    },
+                    onEquals = { keyboardActions.onEquals() },
+                    onSimplify = { keyboardActions.onSpecialClick("≡") },
+                    onPlot = { keyboardActions.onSpecialClick("\ue009") },
+                    topBar = {}
                 )
             }
         }
@@ -131,9 +142,7 @@ Colors used:
 ## Animations
 
 ### Display Animations
-- **Result changes**: Slide up with spring animation
-- **Copy button**: Expand/collapse with fade
-- **Auto-scroll**: Smooth animation to end of text
+- None (legacy-style static display)
 
 ### Editor Animations
 - **Cursor blink**: 500ms infinite fade animation
@@ -143,7 +152,6 @@ Colors used:
 
 These components require:
 - Jetpack Compose (Material 3)
-- `androidx.compose.material:material-icons-extended` (for ContentCopy icon)
 - Existing calculator models (`DisplayState`, `EditorState`)
 
 ## Future Improvements

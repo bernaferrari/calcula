@@ -1,24 +1,18 @@
 package org.solovyev.android.calculator
 
-import com.google.common.base.Strings
 import jscl.JsclMathEngine
 import jscl.math.function.IConstant
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.runBlocking
-import org.simpleframework.xml.core.Persister
 import org.solovyev.android.Check
 import org.solovyev.android.calculator.entities.BaseEntitiesRegistry
 import org.solovyev.android.calculator.entities.Category
 import org.solovyev.android.calculator.entities.Entities
-import org.solovyev.android.calculator.json.Json
 import org.solovyev.android.calculator.json.Jsonable
 import org.solovyev.android.calculator.variables.CppVariable
-import org.solovyev.android.calculator.variables.OldVars
 import org.solovyev.android.calculator.variables.VariableCategory
-import org.solovyev.android.io.FileSaver
-import java.io.File
+import okio.Path
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -53,21 +47,19 @@ class VariablesRegistry @Inject constructor(
     fun addOrUpdate(newVariable: IConstant, oldVariable: IConstant?) {
         val variable = addOrUpdate(newVariable)
         if (oldVariable == null) {
-            bus.post(AddedEvent(variable))
+            _addedEvents.tryEmit(AddedEvent(variable))
         } else {
-            bus.post(ChangedEvent(oldVariable, variable))
+            _changedEvents.tryEmit(ChangedEvent(oldVariable, variable))
         }
     }
 
     override fun remove(variable: IConstant) {
         super.remove(variable)
-        bus.post(RemovedEvent(variable))
+        _removedEvents.tryEmit(RemovedEvent(variable))
     }
 
     override fun onInit() {
         Check.isNotMainThread()
-
-        migrateOldVariables()
 
         for (variable in loadEntities(CppVariable.JSON_CREATOR)) {
             addSafely(variable.toJsclConstant())
@@ -79,32 +71,12 @@ class VariablesRegistry @Inject constructor(
         addSafely("j")
     }
 
-    private fun migrateOldVariables() {
-        val xml = preferences.getString(OldVars.PREFS_KEY, null)
-        if (Strings.isNullOrEmpty(xml)) {
-            return
-        }
-        try {
-            val serializer = Persister()
-            val oldVariables = serializer.read(OldVars::class.java, xml)
-            if (oldVariables != null) {
-                val variables = OldVars.toCppVariables(oldVariables)
-                runBlocking {
-                    FileSaver.save(getEntitiesFile()!!, Json.toJson(variables).toString())
-                }
-            }
-            preferences.edit().remove(OldVars.PREFS_KEY).apply()
-        } catch (e: Exception) {
-            errorReporter.onException(e)
-        }
-    }
-
-    override fun getEntitiesFile(): File {
+    override fun getEntitiesFile(): Path {
         return directories.getFile("variables.json")
     }
 
-    override fun toJsonable(constant: IConstant): Jsonable? {
-        return CppVariable.builder(constant).build()
+    override fun toJsonable(entity: IConstant): Jsonable? {
+        return CppVariable.builder(entity).build()
     }
 
     private fun addSafely(name: String) {
@@ -122,8 +94,8 @@ class VariablesRegistry @Inject constructor(
         }
     }
 
-    override fun getCategory(variable: IConstant): Category<IConstant> {
-        return Entities.getCategory(variable, VariableCategory.values())!!
+    override fun getCategory(entity: IConstant): Category<IConstant> {
+        return Entities.getCategory(entity, VariableCategory.values())!!
     }
 
     data class AddedEvent(val variable: IConstant)

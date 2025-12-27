@@ -7,7 +7,7 @@ import jscl.mathml.MathML
 import jscl.text.ParseException
 import org.solovyev.common.math.MathEntity
 
-abstract open class Variable(
+abstract class Variable(
     override var name: String
 ) : Comparable<Any>, MathEntity {
 

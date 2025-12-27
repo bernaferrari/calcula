@@ -24,17 +24,18 @@
         android:hardwareAccelerated="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/cpp_app_name"
+        android:localeConfig="@xml/locales_config"
         android:theme="@style/Cpp.Theme.Material"
         tools:ignore="GoogleAppIndexingWarning,UnusedAttribute">
+
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="@string/admob_app_id" />
 
         <property
             android:name="android.adservices.AD_SERVICES_CONFIG"
             android:resource="@xml/gma_ad_services_config"
             tools:replace="android:resource" />
-
-        <meta-data
-            android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-9736972200639245~6870320906"/>
 
         <activity
             android:exported="true"
@@ -187,7 +188,7 @@
 
         <receiver
             android:exported="true"
-            android:name=".widget.CalculatorWidget"
+            android:name=".widget.CalculatorGlanceWidgetReceiver"
             android:icon="@drawable/ic_launcher"
             android:label="@string/cpp_app_name">
 

@@ -40,11 +40,7 @@ internal class ListPolynomial(
             var t1: Term? = if (it1.hasPrevious()) it1.previous() as Term else null
             var t2: Term? = if (it2.hasPrevious()) it2.previous() as Term else null
             while (t2 != null) {
-                val c = when {
-                    t1 == null -> 1
-                    t2 == null -> -1
-                    else -> -ordering.compare(t1.monomial(), t2.monomial())
-                }
+                val c = if (t1 == null) 1 else -ordering.compare(t1.monomial(), t2.monomial())
                 if (c < 0) {
                     t1 = if (it1.hasPrevious()) it1.previous() as Term else null
                 } else {
@@ -77,11 +73,7 @@ internal class ListPolynomial(
             var t1: Term? = if (it1.hasPrevious()) it1.previous() as Term else null
             var t2: Term? = if (it2.hasPrevious()) (it2.previous() as Term).multiply(generic) else null
             while (t2 != null) {
-                val c = when {
-                    t1 == null -> 1
-                    t2 == null -> -1
-                    else -> -ordering.compare(t1.monomial(), t2.monomial())
-                }
+                val c = if (t1 == null) 1 else -ordering.compare(t1.monomial(), t2.monomial())
                 if (c < 0) {
                     t1 = if (it1.hasPrevious()) it1.previous() as Term else null
                 } else {
@@ -115,11 +107,7 @@ internal class ListPolynomial(
             var t1: Term? = if (it1.hasPrevious()) it1.previous() as Term else null
             var t2: Term? = if (it2.hasPrevious()) (it2.previous() as Term).multiply(monomial, generic) else null
             while (t2 != null) {
-                val c = when {
-                    t1 == null -> 1
-                    t2 == null -> -1
-                    else -> -ordering.compare(t1.monomial(), t2.monomial())
-                }
+                val c = if (t1 == null) 1 else -ordering.compare(t1.monomial(), t2.monomial())
                 if (c < 0) {
                     t1 = if (it1.hasPrevious()) it1.previous() as Term else null
                 } else {

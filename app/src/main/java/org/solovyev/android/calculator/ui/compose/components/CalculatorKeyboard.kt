@@ -1,37 +1,17 @@
-/*
- * Copyright 2013 serso aka se.solovyev
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * Contact details
- *
- * Email: se.solovyev@gmail.com
- * Site:  http://se.solovyev.org
- */
-
 package org.solovyev.android.calculator.ui.compose.components
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import org.solovyev.android.calculator.R
 
 /**
  * Keyboard mode - simple or engineer
@@ -77,50 +57,82 @@ fun CalculatorKeyboard(
     actions: KeyboardActions,
     modifier: Modifier = Modifier
 ) {
+    when (mode) {
+        KeyboardMode.SIMPLE -> SimpleCalculatorKeyboard(
+            actions = actions,
+            modifier = modifier
+        )
+        KeyboardMode.ENGINEER -> EngineerCalculatorKeyboard(
+            actions = actions,
+            modifier = modifier
+        )
+    }
+}
+
+@Composable
+private fun EngineerCalculatorKeyboard(
+    actions: KeyboardActions,
+    modifier: Modifier = Modifier
+) {
+    val glyphLeft = glyphString(R.string.cpp_glyph_left)
+    val glyphRight = glyphString(R.string.cpp_glyph_right)
+    val glyphCopy = glyphString(R.string.cpp_glyph_copy)
+    val glyphPaste = glyphString(R.string.cpp_glyph_paste)
+    val glyphFastBack = glyphString(R.string.cpp_glyph_fast_back)
+    val glyphFastForward = glyphString(R.string.cpp_glyph_fast_forward)
+    val glyphHistory = glyphString(R.string.cpp_glyph_history)
+    val glyphUndo = glyphString(R.string.cpp_glyph_undo)
+    val glyphRedo = glyphString(R.string.cpp_glyph_redo)
+    val glyphBackspace = glyphString(R.string.cpp_glyph_backspace)
+    val variablesLabel = stringResource(R.string.cpp_kb_variables)
+    val functionsLabel = stringResource(R.string.cpp_kb_functions)
+    val memoryPlus = stringResource(R.string.cpp_kb_memory_plus)
+    val memoryMinus = stringResource(R.string.cpp_kb_memory_minus)
+    val memoryClear = stringResource(R.string.cpp_kb_memory_clear)
+    val clearLabel = stringResource(R.string.cpp_kb_clear)
+
+    fun swipeAction(text: String?): (() -> Unit)? =
+        text?.takeIf { it.isNotEmpty() }?.let { { actions.onSpecialClick(it) } }
+
     Column(
-        modifier = modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.SpaceEvenly
+        modifier = modifier.fillMaxSize()
     ) {
         // Row 1: Left, Right, %, Erase, Clear
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            // Left arrow
+                .weight(1f)
+            ) {
             CalculatorButton(
-                text = "◁",
+                text = glyphLeft,
                 buttonType = ButtonType.CONTROL,
                 directionTexts = DirectionTexts(
-                    up = "<<",
-                    down = "\uE001" // copy glyph
+                    up = glyphFastBack,
+                    down = glyphCopy
                 ),
                 onClick = { actions.onCursorLeft() },
-                onSwipeUp = { actions.onCursorToStart() },
-                onSwipeDown = { actions.onCopy() },
+                onSwipeUp = swipeAction(glyphFastBack),
+                onSwipeDown = swipeAction(glyphCopy),
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
             )
 
-            // Right arrow
             CalculatorButton(
-                text = "▷",
+                text = glyphRight,
                 buttonType = ButtonType.CONTROL,
                 directionTexts = DirectionTexts(
-                    up = ">>",
-                    down = "\uE000" // paste glyph
+                    up = glyphFastForward,
+                    down = glyphPaste
                 ),
                 onClick = { actions.onCursorRight() },
-                onSwipeUp = { actions.onCursorToEnd() },
-                onSwipeDown = { actions.onPaste() },
+                onSwipeUp = swipeAction(glyphFastForward),
+                onSwipeDown = swipeAction(glyphPaste),
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
             )
 
-            // Percent
             CalculatorButton(
                 text = "%",
                 buttonType = ButtonType.OPERATION,
@@ -130,9 +142,8 @@ fun CalculatorKeyboard(
                     .fillMaxHeight()
             )
 
-            // Erase/Backspace
             CalculatorButton(
-                text = "\uE004", // backspace glyph
+                text = glyphBackspace,
                 buttonType = ButtonType.OPERATION_HIGHLIGHTED,
                 onClick = { actions.onDelete() },
                 onLongClick = { actions.onClear() },
@@ -141,11 +152,15 @@ fun CalculatorKeyboard(
                     .fillMaxHeight()
             )
 
-            // Clear
             CalculatorButton(
-                text = "C",
-                buttonType = ButtonType.OPERATION_HIGHLIGHTED,
+                text = clearLabel,
+                buttonType = ButtonType.CONTROL,
+                directionTexts = DirectionTexts(
+                    up = memoryClear
+                ),
+                fontWeight = FontWeight.Bold,
                 onClick = { actions.onClear() },
+                onSwipeUp = swipeAction(memoryClear),
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
@@ -156,10 +171,8 @@ fun CalculatorKeyboard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            // 7
+                .weight(1f)
+            ) {
             CalculatorButton(
                 text = "7",
                 buttonType = ButtonType.DIGIT,
@@ -169,51 +182,44 @@ fun CalculatorKeyboard(
                     left = "0b:"
                 ),
                 onClick = { actions.onNumberClick("7") },
-                onSwipeUp = { actions.onFunctionClick("i") },
-                onSwipeDown = { actions.onOperatorClick("!") },
-                onSwipeLeft = { actions.onSpecialClick("0b:") },
+                onSwipeUp = swipeAction("i"),
+                onSwipeDown = swipeAction("!"),
+                onSwipeLeft = swipeAction("0b:"),
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
             )
 
-            // 8
             CalculatorButton(
                 text = "8",
                 buttonType = ButtonType.DIGIT,
                 directionTexts = DirectionTexts(
-                    up = "π",
-                    down = "n!",
-                    left = "0x:"
+                    up = "ln",
+                    down = "lg",
+                    left = "0d:"
                 ),
                 onClick = { actions.onNumberClick("8") },
-                onSwipeUp = { actions.onFunctionClick("π") },
-                onSwipeDown = { actions.onFunctionClick("n!") },
-                onSwipeLeft = { actions.onSpecialClick("0x:") },
+                onSwipeUp = swipeAction("ln"),
+                onSwipeDown = swipeAction("lg"),
+                onSwipeLeft = swipeAction("0d:"),
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
             )
 
-            // 9
             CalculatorButton(
                 text = "9",
                 buttonType = ButtonType.DIGIT,
                 directionTexts = DirectionTexts(
-                    up = "e",
-                    down = "|",
-                    left = "0o:"
+                    left = "0x:"
                 ),
                 onClick = { actions.onNumberClick("9") },
-                onSwipeUp = { actions.onFunctionClick("e") },
-                onSwipeDown = { actions.onOperatorClick("|") },
-                onSwipeLeft = { actions.onSpecialClick("0o:") },
+                onSwipeLeft = swipeAction("0x:"),
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
             )
 
-            // Division
             CalculatorButton(
                 text = "/",
                 buttonType = ButtonType.OPERATION,
@@ -221,24 +227,23 @@ fun CalculatorKeyboard(
                     up = "√"
                 ),
                 onClick = { actions.onOperatorClick("/") },
-                onSwipeUp = { actions.onFunctionClick("√") },
+                onSwipeUp = swipeAction("√"),
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
             )
 
-            // Memory
             CalculatorButton(
-                text = "M",
+                text = stringResource(R.string.cpp_kb_memory_recall),
                 buttonType = ButtonType.CONTROL,
                 directionTexts = DirectionTexts(
-                    up = "M+",
-                    down = "M-"
+                    up = memoryPlus,
+                    down = memoryMinus
                 ),
                 fontWeight = FontWeight.Bold,
                 onClick = { actions.onMemoryRecall() },
-                onSwipeUp = { actions.onMemoryPlus() },
-                onSwipeDown = { actions.onMemoryMinus() },
+                onSwipeUp = swipeAction(memoryPlus),
+                onSwipeDown = swipeAction(memoryMinus),
                 onLongClick = { actions.onMemoryClear() },
                 modifier = Modifier
                     .weight(1f)
@@ -250,10 +255,8 @@ fun CalculatorKeyboard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            // 4
+                .weight(1f)
+            ) {
             CalculatorButton(
                 text = "4",
                 buttonType = ButtonType.DIGIT,
@@ -263,15 +266,14 @@ fun CalculatorKeyboard(
                     left = "D"
                 ),
                 onClick = { actions.onNumberClick("4") },
-                onSwipeUp = { actions.onFunctionClick("x") },
-                onSwipeDown = { actions.onFunctionClick("y") },
-                onSwipeLeft = { actions.onFunctionClick("D") },
+                onSwipeUp = swipeAction("x"),
+                onSwipeDown = swipeAction("y"),
+                onSwipeLeft = swipeAction("D"),
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
             )
 
-            // 5
             CalculatorButton(
                 text = "5",
                 buttonType = ButtonType.DIGIT,
@@ -281,33 +283,29 @@ fun CalculatorKeyboard(
                     left = "E"
                 ),
                 onClick = { actions.onNumberClick("5") },
-                onSwipeUp = { actions.onFunctionClick("t") },
-                onSwipeDown = { actions.onFunctionClick("j") },
-                onSwipeLeft = { actions.onFunctionClick("E") },
+                onSwipeUp = swipeAction("t"),
+                onSwipeDown = swipeAction("j"),
+                onSwipeLeft = swipeAction("E"),
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
             )
 
-            // 6
             CalculatorButton(
                 text = "6",
                 buttonType = ButtonType.DIGIT,
                 directionTexts = DirectionTexts(
-                    up = "∞",
-                    down = "&",
+                    up = "E",
                     left = "F"
                 ),
                 onClick = { actions.onNumberClick("6") },
-                onSwipeUp = { actions.onFunctionClick("∞") },
-                onSwipeDown = { actions.onOperatorClick("&") },
-                onSwipeLeft = { actions.onFunctionClick("F") },
+                onSwipeUp = swipeAction("E"),
+                onSwipeLeft = swipeAction("F"),
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
             )
 
-            // Multiplication
             CalculatorButton(
                 text = "×",
                 buttonType = ButtonType.OPERATION,
@@ -316,18 +314,23 @@ fun CalculatorKeyboard(
                     down = "^2"
                 ),
                 onClick = { actions.onOperatorClick("×") },
-                onSwipeUp = { actions.onOperatorClick("^") },
-                onSwipeDown = { actions.onOperatorClick("^2") },
+                onSwipeUp = swipeAction("^"),
+                onSwipeDown = swipeAction("^2"),
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
             )
 
-            // Variables
             CalculatorButton(
-                text = "π",
+                text = variablesLabel,
                 buttonType = ButtonType.CONTROL,
+                directionTexts = DirectionTexts(
+                    up = "π",
+                    down = "e"
+                ),
                 onClick = { actions.onOpenVars() },
+                onSwipeUp = swipeAction("π"),
+                onSwipeDown = swipeAction("e"),
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
@@ -338,10 +341,8 @@ fun CalculatorKeyboard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            // 1
+                .weight(1f)
+            ) {
             CalculatorButton(
                 text = "1",
                 buttonType = ButtonType.DIGIT,
@@ -351,15 +352,14 @@ fun CalculatorKeyboard(
                     left = "A"
                 ),
                 onClick = { actions.onNumberClick("1") },
-                onSwipeUp = { actions.onFunctionClick("sin") },
-                onSwipeDown = { actions.onFunctionClick("asin") },
-                onSwipeLeft = { actions.onFunctionClick("A") },
+                onSwipeUp = swipeAction("sin"),
+                onSwipeDown = swipeAction("asin"),
+                onSwipeLeft = swipeAction("A"),
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
             )
 
-            // 2
             CalculatorButton(
                 text = "2",
                 buttonType = ButtonType.DIGIT,
@@ -369,15 +369,14 @@ fun CalculatorKeyboard(
                     left = "B"
                 ),
                 onClick = { actions.onNumberClick("2") },
-                onSwipeUp = { actions.onFunctionClick("cos") },
-                onSwipeDown = { actions.onFunctionClick("acos") },
-                onSwipeLeft = { actions.onFunctionClick("B") },
+                onSwipeUp = swipeAction("cos"),
+                onSwipeDown = swipeAction("acos"),
+                onSwipeLeft = swipeAction("B"),
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
             )
 
-            // 3
             CalculatorButton(
                 text = "3",
                 buttonType = ButtonType.DIGIT,
@@ -387,31 +386,25 @@ fun CalculatorKeyboard(
                     left = "C"
                 ),
                 onClick = { actions.onNumberClick("3") },
-                onSwipeUp = { actions.onFunctionClick("tan") },
-                onSwipeDown = { actions.onFunctionClick("atan") },
-                onSwipeLeft = { actions.onFunctionClick("C") },
+                onSwipeUp = swipeAction("tan"),
+                onSwipeDown = swipeAction("atan"),
+                onSwipeLeft = swipeAction("C"),
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
             )
 
-            // Minus
             CalculatorButton(
                 text = "−",
                 buttonType = ButtonType.OPERATION,
-                directionTexts = DirectionTexts(
-                    up = "∂"
-                ),
                 onClick = { actions.onOperatorClick("−") },
-                onSwipeUp = { actions.onOperatorClick("∂") },
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
             )
 
-            // Functions
             CalculatorButton(
-                text = "ƒ",
+                text = functionsLabel,
                 buttonType = ButtonType.CONTROL,
                 directionTexts = DirectionTexts(
                     up = "+ƒ",
@@ -419,8 +412,8 @@ fun CalculatorKeyboard(
                 ),
                 fontStyle = FontStyle.Italic,
                 onClick = { actions.onOpenFunctions() },
-                onSwipeUp = { actions.onSpecialClick("add_function") },
-                onSwipeDown = { actions.onSpecialClick("add_var") },
+                onSwipeUp = swipeAction("+ƒ"),
+                onSwipeDown = swipeAction("+π"),
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
@@ -431,10 +424,8 @@ fun CalculatorKeyboard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            // Round brackets
+                .weight(1f)
+            ) {
             CalculatorButton(
                 text = "( )",
                 buttonType = ButtonType.DIGIT,
@@ -444,49 +435,43 @@ fun CalculatorKeyboard(
                     left = "(…)"
                 ),
                 onClick = { actions.onSpecialClick("()") },
-                onSwipeUp = { actions.onSpecialClick("(") },
-                onSwipeDown = { actions.onSpecialClick(")") },
-                onSwipeLeft = { actions.onSpecialClick("(…)") },
+                onSwipeUp = swipeAction("("),
+                onSwipeDown = swipeAction(")"),
+                onSwipeLeft = swipeAction("(…)"),
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
             )
 
-            // 0
             CalculatorButton(
                 text = "0",
                 buttonType = ButtonType.DIGIT,
                 directionTexts = DirectionTexts(
-                    up = "ln",
-                    down = "lg",
-                    left = "°"
+                    up = "000",
+                    down = "00"
                 ),
                 onClick = { actions.onNumberClick("0") },
-                onSwipeUp = { actions.onFunctionClick("ln") },
-                onSwipeDown = { actions.onFunctionClick("lg") },
-                onSwipeLeft = { actions.onOperatorClick("°") },
+                onSwipeUp = swipeAction("000"),
+                onSwipeDown = swipeAction("00"),
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
             )
 
-            // Period/Decimal point
             CalculatorButton(
                 text = ".",
                 buttonType = ButtonType.DIGIT,
                 directionTexts = DirectionTexts(
-                    up = ",",
-                    down = "≈"
+                    up = ","
                 ),
                 onClick = { actions.onNumberClick(".") },
-                onSwipeUp = { actions.onOperatorClick(",") },
-                onSwipeDown = { actions.onOperatorClick("≈") },
+                onSwipeUp = swipeAction(","),
+                directionTextScale = 0.6f,
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
             )
 
-            // Plus
             CalculatorButton(
                 text = "+",
                 buttonType = ButtonType.OPERATION,
@@ -494,23 +479,23 @@ fun CalculatorKeyboard(
                     up = "°"
                 ),
                 onClick = { actions.onOperatorClick("+") },
-                onSwipeUp = { actions.onOperatorClick("°") },
+                onSwipeUp = swipeAction("°"),
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
             )
 
-            // History
             CalculatorButton(
-                text = "\uE005", // history glyph
+                text = glyphHistory,
                 buttonType = ButtonType.CONTROL,
                 directionTexts = DirectionTexts(
-                    up = "↶",
-                    down = "↷"
+                    up = glyphUndo,
+                    down = glyphRedo
                 ),
                 onClick = { actions.onOpenHistory() },
-                onSwipeUp = { actions.onSpecialClick("undo") },
-                onSwipeDown = { actions.onSpecialClick("redo") },
+                onSwipeUp = swipeAction(glyphUndo),
+                onSwipeDown = swipeAction(glyphRedo),
+                directionTextScale = 0.5f,
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
@@ -528,42 +513,95 @@ fun SimpleCalculatorKeyboard(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.SpaceEvenly
+        modifier = modifier.fillMaxSize()
     ) {
-        // Row 1: Clear, Erase
+        val clearLabel = stringResource(R.string.cpp_kb_clear)
+        val variablesLabel = stringResource(R.string.cpp_kb_variables)
+        val functionsLabel = stringResource(R.string.cpp_kb_functions)
+        val operatorsLabel = stringResource(R.string.cpp_kb_operators)
+        val settingsLabel = stringResource(R.string.cpp_settings)
+        val historyLabel = stringResource(R.string.c_history)
+
+        // Row 1: %, Left, Right, Settings, Erase, Clear
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
+                .weight(1f)
+            ) {
             CalculatorButton(
-                text = "C",
-                buttonType = ButtonType.OPERATION_HIGHLIGHTED,
-                onClick = { actions.onClear() },
+                text = "%",
+                buttonType = ButtonType.OPERATION,
+                onClick = { actions.onOperatorClick("%") },
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
             )
 
             CalculatorButton(
-                text = "\uE004",
+                text = "",
+                buttonType = ButtonType.CONTROL,
+                icon = painterResource(R.drawable.ic_keyboard_arrow_left_white_48dp),
+                onClick = { actions.onCursorLeft() },
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            )
+
+            CalculatorButton(
+                text = "",
+                buttonType = ButtonType.CONTROL,
+                icon = painterResource(R.drawable.ic_keyboard_arrow_right_white_48dp),
+                onClick = { actions.onCursorRight() },
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            )
+
+            CalculatorButton(
+                text = settingsLabel,
+                buttonType = ButtonType.CONTROL,
+                icon = painterResource(R.drawable.ic_settings_white_48dp),
+                onClick = { actions.onSpecialClick("settings") },
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            )
+
+            CalculatorButton(
+                text = "",
                 buttonType = ButtonType.OPERATION_HIGHLIGHTED,
+                icon = painterResource(R.drawable.ic_backspace_white_48dp),
                 onClick = { actions.onDelete() },
+                onLongClick = { actions.onClear() },
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            )
+
+            CalculatorButton(
+                text = clearLabel,
+                buttonType = ButtonType.CONTROL,
+                fontWeight = FontWeight.Bold,
+                onClick = { actions.onClear() },
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
             )
         }
 
-        // Row 2: 7, 8, 9, /
+        // Row 2: Functions, 7, 8, 9, /, Copy
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
+                .weight(1f)
+            ) {
+            CalculatorButton(
+                text = functionsLabel,
+                buttonType = ButtonType.CONTROL,
+                fontStyle = FontStyle.Italic,
+                onClick = { actions.onOpenFunctions() },
+                modifier = Modifier.weight(1f).fillMaxHeight()
+            )
             CalculatorButton(
                 text = "7",
                 buttonType = ButtonType.DIGIT,
@@ -588,15 +626,27 @@ fun SimpleCalculatorKeyboard(
                 onClick = { actions.onOperatorClick("/") },
                 modifier = Modifier.weight(1f).fillMaxHeight()
             )
+            CalculatorButton(
+                text = "",
+                buttonType = ButtonType.CONTROL,
+                icon = painterResource(R.drawable.ic_content_copy_white_48dp),
+                onClick = { actions.onCopy() },
+                modifier = Modifier.weight(1f).fillMaxHeight()
+            )
         }
 
-        // Row 3: 4, 5, 6, *
+        // Row 3: Vars, 4, 5, 6, ×, Paste
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
+                .weight(1f)
+            ) {
+            CalculatorButton(
+                text = variablesLabel,
+                buttonType = ButtonType.CONTROL,
+                onClick = { actions.onOpenVars() },
+                modifier = Modifier.weight(1f).fillMaxHeight()
+            )
             CalculatorButton(
                 text = "4",
                 buttonType = ButtonType.DIGIT,
@@ -621,15 +671,27 @@ fun SimpleCalculatorKeyboard(
                 onClick = { actions.onOperatorClick("×") },
                 modifier = Modifier.weight(1f).fillMaxHeight()
             )
+            CalculatorButton(
+                text = "",
+                buttonType = ButtonType.CONTROL,
+                icon = painterResource(R.drawable.ic_content_paste_white_48dp),
+                onClick = { actions.onPaste() },
+                modifier = Modifier.weight(1f).fillMaxHeight()
+            )
         }
 
-        // Row 4: 1, 2, 3, -
+        // Row 4: Operators, 1, 2, 3, -, History
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
+                .weight(1f)
+            ) {
+            CalculatorButton(
+                text = operatorsLabel,
+                buttonType = ButtonType.CONTROL,
+                onClick = { actions.onSpecialClick("operators") },
+                modifier = Modifier.weight(1f).fillMaxHeight()
+            )
             CalculatorButton(
                 text = "1",
                 buttonType = ButtonType.DIGIT,
@@ -654,15 +716,33 @@ fun SimpleCalculatorKeyboard(
                 onClick = { actions.onOperatorClick("−") },
                 modifier = Modifier.weight(1f).fillMaxHeight()
             )
+            CalculatorButton(
+                text = "app",
+                buttonType = ButtonType.CONTROL,
+                icon = painterResource(R.drawable.ic_launch_white_48dp),
+                onClick = { actions.onSpecialClick("open_app") },
+                modifier = Modifier.weight(1f).fillMaxHeight()
+            )
         }
 
-        // Row 5: 0, ., =, +
+        // Row 5: ^, ( ), 0, ., +, History
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
+                .weight(1f)
+            ) {
+            CalculatorButton(
+                text = "^",
+                buttonType = ButtonType.OPERATION,
+                onClick = { actions.onOperatorClick("^") },
+                modifier = Modifier.weight(1f).fillMaxHeight()
+            )
+            CalculatorButton(
+                text = "( )",
+                buttonType = ButtonType.DIGIT,
+                onClick = { actions.onSpecialClick("()") },
+                modifier = Modifier.weight(1f).fillMaxHeight()
+            )
             CalculatorButton(
                 text = "0",
                 buttonType = ButtonType.DIGIT,
@@ -676,15 +756,16 @@ fun SimpleCalculatorKeyboard(
                 modifier = Modifier.weight(1f).fillMaxHeight()
             )
             CalculatorButton(
-                text = "=",
-                buttonType = ButtonType.OPERATION_HIGHLIGHTED,
-                onClick = { actions.onEquals() },
-                modifier = Modifier.weight(1f).fillMaxHeight()
-            )
-            CalculatorButton(
                 text = "+",
                 buttonType = ButtonType.OPERATION,
                 onClick = { actions.onOperatorClick("+") },
+                modifier = Modifier.weight(1f).fillMaxHeight()
+            )
+            CalculatorButton(
+                text = historyLabel,
+                buttonType = ButtonType.CONTROL,
+                icon = painterResource(R.drawable.ic_history_white_48dp),
+                onClick = { actions.onOpenHistory() },
                 modifier = Modifier.weight(1f).fillMaxHeight()
             )
         }

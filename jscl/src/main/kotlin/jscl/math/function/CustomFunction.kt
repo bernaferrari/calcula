@@ -1,3 +1,5 @@
+@file:Suppress("UNCHECKED_CAST")
+
 package jscl.math.function
 
 import jscl.CustomFunctionCalculationException
@@ -9,7 +11,7 @@ import jscl.text.msg.JsclMessage
 import jscl.text.msg.Messages
 import org.solovyev.common.math.MathEntity
 import org.solovyev.common.msg.MessageType
-import java.util.concurrent.atomic.AtomicInteger
+import kotlinx.atomicfu.atomic
 
 class CustomFunction : Function, IFunction {
 
@@ -112,12 +114,12 @@ class CustomFunction : Function, IFunction {
         return parameterConstants!!
     }
 
-    override fun copy(mathEntity: MathEntity) {
-        super.copy(mathEntity)
-        if (mathEntity is CustomFunction) {
-            content = mathEntity.content
-            parameterNames = mathEntity.parameterNames.toMutableList()
-            description = mathEntity.description
+    override fun copy(that: MathEntity) {
+        super.copy(that)
+        if (that is CustomFunction) {
+            content = that.content
+            parameterNames = that.parameterNames.toMutableList()
+            description = that.description
         }
     }
 
@@ -301,6 +303,6 @@ class CustomFunction : Function, IFunction {
     }
 
     companion object {
-        private val counter = AtomicInteger(0)
+        private val counter = atomic(0)
     }
 }

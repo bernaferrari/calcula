@@ -1,24 +1,24 @@
 package org.solovyev.android.io
 
-import java.io.File
-import java.io.FileOutputStream
+import okio.FileSystem
+import okio.Path
+import okio.Sink
 
 class FileSaver private constructor(
-    private val file: File,
-    data: CharSequence
+    private val file: Path,
+    data: CharSequence,
+    private val fileSystem: FileSystem = FileSystem.SYSTEM
 ) : BaseIoSaver(data) {
 
-    override suspend fun getOutputStream(): FileOutputStream {
-        file.parentFile?.let { dir ->
-            if (!dir.exists()) {
-                dir.mkdirs()
-            }
+    override suspend fun getSink(): Sink {
+        file.parent?.let { dir ->
+            fileSystem.createDirectories(dir)
         }
-        return FileOutputStream(file)
+        return fileSystem.sink(file)
     }
 
     companion object {
-        suspend fun save(file: File, data: CharSequence) {
+        suspend fun save(file: Path, data: CharSequence) {
             FileSaver(file, data).save()
         }
     }

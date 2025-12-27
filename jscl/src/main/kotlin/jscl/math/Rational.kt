@@ -27,8 +27,8 @@ class Rational(
 
     internal fun reduce(): Rational {
         var gcd = numerator.gcd(denominator)
-        if (gcd.signum().toInt() != denominator.signum().toInt()) gcd = gcd.negate()
-        return if (gcd.signum().toInt() == 0) this else Rational(numerator.divide(gcd), denominator.divide(gcd))
+        if (gcd.signum() != denominator.signum()) gcd = gcd.negate()
+        return if (gcd.signum() == 0) this else Rational(numerator.divide(gcd), denominator.divide(gcd))
     }
 
     override fun add(that: Generic): Generic {
@@ -97,7 +97,7 @@ class Rational(
 
     override fun negate(): Generic = Rational(numerator.negate(), denominator)
 
-    override fun signum(): Int = numerator.signum().toInt()
+    override fun signum(): Int = numerator.signum()
 
     override fun degree(): Int = 0
 

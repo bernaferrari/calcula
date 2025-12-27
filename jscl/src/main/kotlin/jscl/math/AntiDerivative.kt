@@ -104,17 +104,16 @@ class AntiDerivative internal constructor(variable: Variable) {
         val rs = pd.remainderSequence(pa)
         val fact = Polynomial.factory(t) as UnivariatePolynomial
         for (i in rs.indices) {
-            if (rs[i] != null) {
-                rs[i] = fact.valueOf(if (i > 0) rs[i]!!.normalize() else rs[i]) as UnivariatePolynomial
-            }
+            val value = rs[i]
+            rs[i] = fact.valueOf(if (i > 0) value.normalize() else value) as UnivariatePolynomial
         }
-        val q = rs[0]!!.squarefreeDecomposition()
+        val q = rs[0].squarefreeDecomposition()
         val m = q.size - 1
         var s: Generic = JsclInteger.valueOf(0)
         for (i in 1..m) {
             for (j in 0 until q[i].degree()) {
                 val a2 = Root(q[i], j).selfExpand()
-                s = s.add(a2.multiply(Ln(if (i == pd.degree()) d else rs[i]!!.substitute(a2)).selfExpand()))
+                s = s.add(a2.multiply(Ln(if (i == pd.degree()) d else rs[i].substitute(a2)).selfExpand()))
             }
         }
         return s

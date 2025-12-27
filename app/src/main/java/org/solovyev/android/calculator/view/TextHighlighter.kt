@@ -24,7 +24,7 @@ class TextHighlighter(
     private val blue: Int = color.blue
     private val dark: Int = if (isDark(red, green, blue)) 1 else -1
 
-    override fun process(text: String): TextProcessorEditorResult {
+    override fun process(from: String): TextProcessorEditorResult {
         val sb = SpannableStringBuilder()
         val nb: BaseNumberBuilder = if (!formatNumber) {
             LiteNumberBuilder(engine)
@@ -38,8 +38,8 @@ class TextHighlighter(
         var openGroupsCount = 0
 
         var i = 0
-        while (i < text.length) {
-            MathType.getType(text, i, nb.isHexMode(), result, engine)
+        while (i < from.length) {
+            MathType.getType(from, i, nb.isHexMode(), result, engine)
 
             offset += nb.process(sb, result)
 
@@ -48,11 +48,11 @@ class TextHighlighter(
                 MathType.open_group_symbol -> {
                     openGroupsCount++
                     groupsCount = maxOf(groupsCount, openGroupsCount)
-                    sb.append(text[i])
+                    sb.append(from[i])
                 }
                 MathType.close_group_symbol -> {
                     openGroupsCount--
-                    sb.append(text[i])
+                    sb.append(from[i])
                 }
                 MathType.operator -> {
                     i += append(sb, match)
@@ -67,7 +67,7 @@ class TextHighlighter(
                 }
                 else -> {
                     if (result.type == MathType.text || match.length <= 1) {
-                        sb.append(text[i])
+                        sb.append(from[i])
                     } else {
                         i += append(sb, match)
                     }

@@ -7,22 +7,22 @@ class Identifier private constructor() : Parser<String> {
 
     @Throws(ParseException::class)
     override fun parse(p: Parser.Parameters, previousSumElement: Generic?): String {
-        val pos0 = p.position.toInt()
+        val pos0 = p.position.value
 
         ParserUtils.skipWhitespaces(p)
 
         val result: StringBuilder
-        if (p.position.toInt() < p.expression.length && isValidFirstCharacter(p.expression[p.position.toInt()])) {
+        if (p.position.value < p.expression.length && isValidFirstCharacter(p.expression[p.position.value])) {
             result = StringBuilder()
-            result.append(p.expression[p.position.toInt()])
-            p.position.increment()
+            result.append(p.expression[p.position.value])
+            p.position.value++
         } else {
             throw ParserUtils.makeParseException(p, pos0, Messages.msg_5)
         }
 
-        while (p.position.toInt() < p.expression.length && isValidNotFirstCharacter(p.expression, p.position)) {
-            result.append(p.expression[p.position.toInt()])
-            p.position.increment()
+        while (p.position.value < p.expression.length && isValidNotFirstCharacter(p.expression, p.position)) {
+            result.append(p.expression[p.position.value])
+            p.position.value++
         }
 
         return result.toString()
@@ -37,8 +37,8 @@ class Identifier private constructor() : Parser<String> {
             return Character.isLetter(ch) || allowedCharacters.contains(ch)
         }
 
-        private fun isValidNotFirstCharacter(string: String, position: MutableInt): Boolean {
-            val ch = string[position.toInt()]
+        private fun isValidNotFirstCharacter(string: String, position: Position): Boolean {
+            val ch = string[position.value]
             return Character.isLetter(ch) || Character.isDigit(ch) || ch == '_'
         }
     }

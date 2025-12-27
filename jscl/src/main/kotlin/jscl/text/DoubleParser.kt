@@ -77,7 +77,7 @@ internal class FloatingPointLiteral private constructor() : Parser<Double> {
             point = true
         } catch (e: ParseException) {
             if (!digits) {
-                p.position.setValue(pos0)
+                p.position.value = pos0
                 throw e
             } else {
                 p.exceptionsPool.release(e)
@@ -92,7 +92,7 @@ internal class FloatingPointLiteral private constructor() : Parser<Double> {
             result.append(digitsParser.parse(p, previousSumElement))
         } catch (e: ParseException) {
             if (!digits) {
-                p.position.setValue(pos0)
+                p.position.value = pos0
                 throw e
             } else {
                 p.exceptionsPool.release(e)
@@ -104,7 +104,7 @@ internal class FloatingPointLiteral private constructor() : Parser<Double> {
             exponent = true
         } catch (e: ParseException) {
             if (!point) {
-                p.position.setValue(pos0)
+                p.position.value = pos0
                 throw e
             } else {
                 p.exceptionsPool.release(e)
@@ -168,7 +168,7 @@ internal class ExponentPart private constructor() : Parser<String> {
         try {
             result.append(SignedInteger.parser.parse(p, previousSumElement))
         } catch (e: ParseException) {
-            p.position.setValue(pos0)
+            p.position.value = pos0
             throw e
         }
 
@@ -200,7 +200,7 @@ internal class SignedInteger private constructor() : Parser<String> {
         try {
             result.append(IntegerParser.parser.parse(p, previousSumElement))
         } catch (e: ParseException) {
-            p.position.setValue(pos0)
+            p.position.value = pos0
             throw e
         }
 

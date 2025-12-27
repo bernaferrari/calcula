@@ -1,35 +1,17 @@
-/*
- * Copyright 2013 serso aka se.solovyev
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * Contact details
- *
- * Email: se.solovyev@gmail.com
- * Site:  http://se.solovyev.org
- */
-
 package org.solovyev.android.calculator
 
 import android.app.Application
-import android.content.Context
-import com.squareup.otto.Bus
-import com.squareup.otto.Subscribe
 import dagger.Lazy
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import org.solovyev.android.Check
 import org.solovyev.android.calculator.calculations.CalculationCancelledEvent
 import org.solovyev.android.calculator.calculations.CalculationFailedEvent
@@ -37,31 +19,37 @@ import org.solovyev.android.calculator.calculations.CalculationFinishedEvent
 import org.solovyev.android.calculator.calculations.ConversionFailedEvent
 import org.solovyev.android.calculator.calculations.ConversionFinishedEvent
 import org.solovyev.android.calculator.errors.FixableErrorsActivity
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class Display @Inject constructor(
-    private val bus: Bus,
     private val application: Application,
-    private val engine: Engine,
     private val clipboard: Lazy<Clipboard>,
     private val notifier: Lazy<Notifier>,
-    private val uiPreferences: Lazy<UiPreferences>
+    private val uiPreferences: Lazy<UiPreferences>,
+    private val calculator: Calculator
 ) {
 
-    private var view: DisplayView? = null
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val initialized = AtomicBoolean(false)
 
     private val _stateFlow = MutableStateFlow(DisplayState.empty())
     val stateFlow: StateFlow<DisplayState> = _stateFlow.asStateFlow()
 
-    init {
-        bus.register(this)
-    }
+    private val _changedEvents = MutableSharedFlow<ChangedEvent>()
+    val changedEvents: SharedFlow<ChangedEvent> = _changedEvents.asSharedFlow()
 
-    @Subscribe
-    fun onCopy(o: CopyOperation) {
-        copy()
+    fun init() {
+        if (!initialized.compareAndSet(false, true)) {
+            return
+        }
+        scope.launch { calculator.calculationFinished.collect(::onCalculationFinished) }
+        scope.launch { calculator.calculationCancelled.collect(::onCalculationCancelled) }
+        scope.launch { calculator.calculationFailed.collect(::onCalculationFailed) }
+        scope.launch { calculator.conversionFinished.collect(::onConversionFinished) }
+        scope.launch { calculator.conversionFailed.collect(::onConversionFailed) }
     }
 
     fun copy() {
@@ -73,26 +61,39 @@ class Display @Inject constructor(
         notifier.get().showMessage(R.string.cpp_text_copied)
     }
 
-    @Subscribe
     fun onCalculationFinished(e: CalculationFinishedEvent) {
         if (e.sequence < _stateFlow.value.sequence) return
         setState(DisplayState.createValid(e.operation, e.result, e.stringResult, e.sequence))
         if (e.messages.isNotEmpty() && uiPreferences.get().showFixableErrorDialog) {
-            val context: Context = view?.context ?: application
-            FixableErrorsActivity.show(context, e.messages)
+            FixableErrorsActivity.show(application, e.messages)
         }
     }
 
-    @Subscribe
     fun onCalculationCancelled(e: CalculationCancelledEvent) {
         if (e.sequence < _stateFlow.value.sequence) return
         val error = CalculatorMessages.getBundle().getString(CalculatorMessages.syntax_error)
         setState(DisplayState.createError(e.operation, error, e.sequence))
     }
 
-    @Subscribe
     fun onCalculationFailed(e: CalculationFailedEvent) {
         if (e.sequence < _stateFlow.value.sequence) return
+        if (calculator.isCalculateOnFly() && e.exception is ParseException) {
+            val previous = _stateFlow.value
+            if (previous.valid && previous.text.isNotEmpty()) {
+                setState(
+                    DisplayState(
+                        text = previous.text,
+                        valid = false,
+                        sequence = e.sequence,
+                        operation = e.operation,
+                        result = previous.result
+                    )
+                )
+                return
+            }
+            setState(DisplayState.createError(e.operation, "", e.sequence))
+            return
+        }
         val error = if (e.exception is ParseException) {
             Utils.getErrorMessage(e.exception)
         } else {
@@ -101,7 +102,6 @@ class Display @Inject constructor(
         setState(DisplayState.createError(e.operation, error, e.sequence))
     }
 
-    @Subscribe
     fun onConversionFinished(e: ConversionFinishedEvent) {
         if (e.state.sequence != _stateFlow.value.sequence) return
         val result = e.numeralBase.getJsclPrefix() + e.result
@@ -115,7 +115,6 @@ class Display @Inject constructor(
         )
     }
 
-    @Subscribe
     fun onConversionFailed(e: ConversionFailedEvent) {
         if (e.state.sequence != _stateFlow.value.sequence) return
         setState(
@@ -125,22 +124,6 @@ class Display @Inject constructor(
                 e.state.sequence
             )
         )
-    }
-
-    fun clearView(view: DisplayView) {
-        Check.isMainThread()
-        if (this.view != view) {
-            return
-        }
-        this.view?.onDestroy()
-        this.view = null
-    }
-
-    fun setView(view: DisplayView) {
-        Check.isMainThread()
-        this.view = view
-        this.view?.setState(_stateFlow.value)
-        this.view?.setEngine(engine)
     }
 
     fun getState(): DisplayState {
@@ -153,11 +136,10 @@ class Display @Inject constructor(
 
         val oldState = _stateFlow.value
         _stateFlow.value = newState
-        view?.setState(newState)
-        bus.post(ChangedEvent(oldState, newState))
+        scope.launch {
+            _changedEvents.emit(ChangedEvent(oldState, newState))
+        }
     }
-
-    class CopyOperation
 
     data class ChangedEvent(
         val oldState: DisplayState,

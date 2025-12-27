@@ -2,6 +2,7 @@ package org.solovyev.android.calculator.release
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
+import org.solovyev.android.calculator.wizard.WizardPlaceholderFragment
 
 class ChooseThemeReleaseNoteStep : ReleaseNoteStep {
 
@@ -9,7 +10,7 @@ class ChooseThemeReleaseNoteStep : ReleaseNoteStep {
     constructor(arguments: Bundle) : super(arguments)
 
     override val fragmentClass: Class<out Fragment>
-        get() = ChooseThemeReleaseNoteFragment::class.java
+        get() = WizardPlaceholderFragment::class.java
 
     companion object {
         const val VERSION_CODE = 137

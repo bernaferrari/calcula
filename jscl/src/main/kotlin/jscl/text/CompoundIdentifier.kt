@@ -16,7 +16,7 @@ class CompoundIdentifier private constructor() : Parser<String> {
             result = StringBuilder()
             result.append(identifier)
         } catch (e: ParseException) {
-            p.position.setValue(pos0)
+            p.position.value = pos0
             throw e
         }
 
@@ -52,7 +52,7 @@ internal class DotAndIdentifier private constructor() : Parser<String> {
         try {
             result = Identifier.parser.parse(p, previousSumElement)
         } catch (e: ParseException) {
-            p.position.setValue(pos0)
+            p.position.value = pos0
             throw e
         }
 

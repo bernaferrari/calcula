@@ -1,25 +1,3 @@
-/*
- * Copyright 2013 serso aka se.solovyev
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * Contact details
- *
- * Email: se.solovyev@gmail.com
- * Site:  http://se.solovyev.org
- */
-
 package org.solovyev.android.calculator.ui.compose.components
 
 import androidx.compose.foundation.layout.Column
@@ -92,7 +70,6 @@ private fun PreviewDisplayEmpty() {
     CalculatorTheme {
         CalculatorDisplay(
             state = DisplayState.empty(),
-            onCopy = {},
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -109,7 +86,6 @@ private fun PreviewDisplayValid() {
                 stringResult = "42",
                 sequence = 1L
             ),
-            onCopy = {},
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -126,7 +102,6 @@ private fun PreviewDisplayLong() {
                 stringResult = "3.141592653589793238462643383279",
                 sequence = 2L
             ),
-            onCopy = {},
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -142,7 +117,6 @@ private fun PreviewDisplayError() {
                 errorMessage = "Division by zero",
                 sequence = 3L
             ),
-            onCopy = {},
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -156,7 +130,6 @@ private fun PreviewDisplayAll(
     CalculatorTheme {
         CalculatorDisplay(
             state = state,
-            onCopy = {},
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -172,7 +145,7 @@ private fun PreviewEditorEmpty() {
     CalculatorTheme {
         CalculatorEditor(
             state = EditorState.empty(),
-            onTextChange = {},
+            onTextChange = { _, _ -> },
             onSelectionChange = {},
             modifier = Modifier.fillMaxWidth()
         )
@@ -185,7 +158,7 @@ private fun PreviewEditorSimple() {
     CalculatorTheme {
         CalculatorEditor(
             state = EditorState.create("6 × 7", 5),
-            onTextChange = {},
+            onTextChange = { _, _ -> },
             onSelectionChange = {},
             modifier = Modifier.fillMaxWidth()
         )
@@ -198,7 +171,7 @@ private fun PreviewEditorFunction() {
     CalculatorTheme {
         CalculatorEditor(
             state = EditorState.create("sin(π/2) + cos(0)", 17),
-            onTextChange = {},
+            onTextChange = { _, _ -> },
             onSelectionChange = {},
             modifier = Modifier.fillMaxWidth()
         )
@@ -211,7 +184,7 @@ private fun PreviewEditorComplex() {
     CalculatorTheme {
         CalculatorEditor(
             state = EditorState.create("log(100) + ln(e) × sqrt(16)", 27),
-            onTextChange = {},
+            onTextChange = { _, _ -> },
             onSelectionChange = {},
             modifier = Modifier.fillMaxWidth()
         )
@@ -226,7 +199,7 @@ private fun PreviewEditorAll(
     CalculatorTheme {
         CalculatorEditor(
             state = state,
-            onTextChange = {},
+            onTextChange = { _, _ -> },
             onSelectionChange = {},
             modifier = Modifier.fillMaxWidth()
         )
@@ -249,12 +222,11 @@ private fun PreviewCombinedNormal() {
                     stringResult = "42",
                     sequence = 1L
                 ),
-                onCopy = {},
                 modifier = Modifier.fillMaxWidth()
             )
             CalculatorEditor(
                 state = EditorState.create("6 × 7", 5),
-                onTextChange = {},
+                onTextChange = { _, _ -> },
                 onSelectionChange = {},
                 modifier = Modifier
                     .fillMaxWidth()
@@ -275,12 +247,11 @@ private fun PreviewCombinedError() {
                     errorMessage = "Syntax error",
                     sequence = 1L
                 ),
-                onCopy = {},
                 modifier = Modifier.fillMaxWidth()
             )
             CalculatorEditor(
                 state = EditorState.create("2 + + 3", 5),
-                onTextChange = {},
+                onTextChange = { _, _ -> },
                 onSelectionChange = {},
                 modifier = Modifier
                     .fillMaxWidth()
@@ -302,12 +273,11 @@ private fun PreviewCombinedLong() {
                     stringResult = "3.141592653589793238462643383279",
                     sequence = 1L
                 ),
-                onCopy = {},
                 modifier = Modifier.fillMaxWidth()
             )
             CalculatorEditor(
                 state = EditorState.create("π × 1.0000000000000", 18),
-                onTextChange = {},
+                onTextChange = { _, _ -> },
                 onSelectionChange = {},
                 modifier = Modifier
                     .fillMaxWidth()
@@ -332,7 +302,8 @@ private fun PreviewCalculatorScreen() {
 @Preview(name = "Calculator Screen - Dark", showBackground = true, heightDp = 800)
 @Composable
 private fun PreviewCalculatorScreenDark() {
-    CalculatorTheme(darkTheme = true) {
+    CalculatorTheme(theme = org.solovyev.android.calculator.Preferences.Gui.Theme.material_theme) {
         CalculatorScreenPreview()
     }
 }
+

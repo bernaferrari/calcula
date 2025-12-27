@@ -126,13 +126,13 @@ open class Root : Algebraic {
         return NumericWrapper.root(subscript.integerValue().toInt(), parameters!!)
     }
 
-    override fun compareTo(other: Variable): Int {
-        if (this === other) return 0
-        var c = comparator.compare(this, other)
+    override fun compareTo(variable: Variable): Int {
+        if (this === variable) return 0
+        var c = comparator.compare(this, variable)
         if (c < 0) return -1
         else if (c > 0) return 1
         else {
-            val v = other as Root
+            val v = variable as Root
             @Suppress("UNCHECKED_CAST")
             c = ArrayComparator.comparator.compare(parameters as Array<Comparable<*>?>, v.parameters as Array<Comparable<*>?>)
             if (c < 0) return -1

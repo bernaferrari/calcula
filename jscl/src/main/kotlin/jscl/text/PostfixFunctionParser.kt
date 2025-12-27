@@ -15,7 +15,7 @@ open class PostfixFunctionParser(
             p.position.add(name.length)
             name
         } else {
-            p.position.setValue(pos0)
+            p.position.value = pos0
             null
         }
     }

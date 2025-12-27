@@ -1,32 +1,8 @@
-/*
- * Copyright 2013 serso aka se.solovyev
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * Contact details
- *
- * Email: se.solovyev@gmail.com
- * Site:  http://se.solovyev.org
- */
-
 package org.solovyev.android.calculator.entities
 
 import android.app.Application
-import android.content.SharedPreferences
 import android.os.Handler
 import androidx.annotation.StringRes
-import com.squareup.otto.Bus
 import org.solovyev.android.Check
 import org.solovyev.android.calculator.EntitiesRegistry
 import org.solovyev.android.calculator.ErrorReporter
@@ -38,9 +14,9 @@ import org.solovyev.android.io.FileSaver
 import org.solovyev.android.io.FileSystem
 import org.solovyev.common.math.MathEntity
 import org.solovyev.common.math.MathRegistry
-import java.io.File
 import java.io.IOException
 import javax.inject.Inject
+import okio.Path
 
 abstract class BaseEntitiesRegistry<T : MathEntity>(
     private val mathRegistry: MathRegistry<T>
@@ -52,13 +28,7 @@ abstract class BaseEntitiesRegistry<T : MathEntity>(
     lateinit var handler: Handler
 
     @Inject
-    lateinit var preferences: SharedPreferences
-
-    @Inject
     lateinit var application: Application
-
-    @Inject
-    lateinit var bus: Bus
 
     @Inject
     lateinit var errorReporter: ErrorReporter
@@ -138,8 +108,8 @@ abstract class BaseEntitiesRegistry<T : MathEntity>(
 
     override fun getSystemEntities(): List<T> = mathRegistry.getSystemEntities()
 
-    override fun addOrUpdate(entity: T): T {
-        val result = mathRegistry.addOrUpdate(entity)
+    override fun addOrUpdate(t: T): T {
+        val result = mathRegistry.addOrUpdate(t)
         if (!result.isSystem() && isInitialized()) {
             save()
         }
@@ -155,8 +125,8 @@ abstract class BaseEntitiesRegistry<T : MathEntity>(
         }
     }
 
-    override fun remove(entity: T) {
-        mathRegistry.remove(entity)
+    override fun remove(variable: T) {
+        mathRegistry.remove(variable)
         save()
     }
 
@@ -170,7 +140,7 @@ abstract class BaseEntitiesRegistry<T : MathEntity>(
 
     protected abstract fun toJsonable(entity: T): Jsonable?
 
-    protected abstract fun getEntitiesFile(): File?
+    protected abstract fun getEntitiesFile(): Path?
 
     private inner class WriteTask : Runnable {
         override fun run() {

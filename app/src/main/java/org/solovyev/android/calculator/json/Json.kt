@@ -1,13 +1,12 @@
 package org.solovyev.android.calculator.json
 
-import android.text.TextUtils
 import android.util.Log
 import kotlinx.coroutines.runBlocking
+import okio.Path
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import org.solovyev.android.io.FileSystem
-import java.io.File
 import java.io.IOException
 
 object Json {
@@ -43,12 +42,12 @@ object Json {
     }
 
     @Throws(IOException::class, JSONException::class)
-    fun <T> load(file: File, fileSystem: FileSystem, creator: Creator<T>): List<T> {
-        if (!file.exists()) {
+    fun <T> load(file: Path, fileSystem: FileSystem, creator: Creator<T>): List<T> {
+        if (!fileSystem.exists(file)) {
             return emptyList()
         }
         val json = runBlocking { fileSystem.read(file) }
-        if (TextUtils.isEmpty(json)) {
+        if (json.isNullOrEmpty()) {
             return emptyList()
         }
         return fromJson(JSONArray(json.toString()), creator)

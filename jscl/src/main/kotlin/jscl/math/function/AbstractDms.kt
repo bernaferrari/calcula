@@ -26,7 +26,7 @@ abstract class AbstractDms protected constructor(
 
     override fun bodyToMathML(element: MathML, fenced: Boolean) {
         val child = element.element(name)
-        parameters!![0].toMathML(child, null)
+        requireNotNull(parameters)[0].toMathML(child, null)
         // todo serso: add other parameters
         element.appendChild(child)
     }
@@ -44,17 +44,14 @@ abstract class AbstractDms protected constructor(
     }
 
     override fun selfNumeric(): Generic {
-        var degrees = parameters!![0]
+        val params = requireNotNull(parameters)
+        var degrees = params[0]
 
-        if (parameters!!.size > 1 && parameters!![1] != null) {
-            val minutes = parameters!![1]
-            degrees = degrees.add(minutes.divide(JsclInteger.valueOf(60)))
-        }
+        val minutes = params[1]
+        degrees = degrees.add(minutes.divide(JsclInteger.valueOf(60)))
 
-        if (parameters!!.size > 2 && parameters!![2] != null) {
-            val seconds = parameters!![2]
-            degrees = degrees.add(seconds.divide(JsclInteger.valueOf(60 * 60)))
-        }
+        val seconds = params[2]
+        degrees = degrees.add(seconds.divide(JsclInteger.valueOf(60 * 60)))
 
         return degrees
     }

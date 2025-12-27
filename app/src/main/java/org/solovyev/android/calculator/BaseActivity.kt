@@ -1,67 +1,41 @@
 package org.solovyev.android.calculator
 
-import android.content.SharedPreferences
 import android.content.pm.ActivityInfo
-import android.graphics.Insets
 import android.graphics.Typeface
-import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowInsets
 import android.widget.TextView
+import androidx.activity.compose.setContent
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
-import androidx.annotation.DrawableRes
-import androidx.annotation.LayoutRes
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
-import androidx.core.view.WindowInsetsCompat
-import com.google.android.material.appbar.AppBarLayout
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-import dagger.Lazy
+import androidx.compose.runtime.Composable
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import dagger.hilt.android.AndroidEntryPoint
-import org.solovyev.android.Check
-import org.solovyev.android.calculator.ga.Ga
+import kotlinx.coroutines.launch
+import org.solovyev.android.calculator.di.AppPreferences
 import org.solovyev.android.calculator.language.Language
 import org.solovyev.android.calculator.language.Languages
-import org.solovyev.android.calculator.view.Tabs
-import org.solovyev.android.views.dragbutton.DirectionDragImageButton
 import javax.inject.Inject
 
 @AndroidEntryPoint
 abstract class BaseActivity(
-    @LayoutRes private val layoutId: Int,
     @StringRes private val titleId: Int
-) : AppCompatActivity(), SharedPreferences.OnSharedPreferenceChangeListener {
-
-    constructor(@StringRes titleId: Int) : this(R.layout.activity_tabs, titleId)
+) : AppCompatActivity() {
 
     @Inject
-    lateinit var preferences: SharedPreferences
+    lateinit var appPreferences: AppPreferences
 
     @Inject
     lateinit var languages: Languages
 
     @Inject
-    lateinit var editor: Editor
-
-    @Inject
     lateinit var calculator: Calculator
-
-    @Inject
-    lateinit var ga: Lazy<Ga>
-
-    @Inject
-    lateinit var typeface: Typeface
-
-    protected val tabs = Tabs(this)
-    protected lateinit var mainView: ViewGroup
-    protected var toolbar: Toolbar? = null
-    protected var fab: FloatingActionButton? = null
 
     private var theme = Preferences.Gui.Theme.material_theme
     private var mode = Preferences.Gui.Mode.engineer
@@ -72,115 +46,45 @@ abstract class BaseActivity(
         get() = mode
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        onPreCreate()
         super.onCreate(savedInstanceState)
+        onPreCreate()
 
         languages.updateContextLocale(this, false)
 
-        createView()
-
-        updateOrientation()
-        updateKeepScreenOn()
-
-        preferences.registerOnSharedPreferenceChangeListener(this)
-    }
-
-    private fun createView() {
-        setContentView(layoutId)
-        val contentView = findViewById<View>(android.R.id.content)
-        mainView = contentView.findViewById(R.id.main)
-        toolbar = contentView.findViewById(R.id.toolbar)
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            mainView.setOnApplyWindowInsetsListener { v, windowInsets ->
-                val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-                val lp = v.layoutParams as ViewGroup.MarginLayoutParams
-                lp.topMargin = insets.top
-                lp.bottomMargin = insets.bottom
-                v.layoutParams = lp
-                WindowInsets.CONSUMED
-            }
-        }
-
-        fab = contentView.findViewById(R.id.fab)
-        bindViews(contentView)
-
-        // title must be updated as if a non-system language is used the value from AndroidManifest
-        // might be cached
         if (titleId != 0) {
             setTitle(titleId)
         }
 
-        fixFonts(mainView, typeface)
-        initToolbar()
-        populateTabs(tabs)
-        tabs.onCreate()
-    }
+        observeSettings()
 
-    protected open fun bindViews(contentView: View) {
-        // Override in subclasses
-    }
-
-    private fun initToolbar() {
-        toolbar?.let {
-            if (this !is CalculatorActivity) {
-                setSupportActionBar(it)
-                supportActionBar?.apply {
-                    Check.isNotNull(this)
-                    setDisplayHomeAsUpEnabled(true)
-                }
-
-                if (App.isTablet(this)) {
-                    val lp = it.layoutParams
-                    if (lp is AppBarLayout.LayoutParams) {
-                        lp.scrollFlags = 0
-                        it.layoutParams = lp
-                    }
-                }
-            }
+        setContent {
+            Content()
         }
     }
+
+    @Composable
+    protected abstract fun Content()
 
     private fun onPreCreate() {
-        theme = Preferences.Gui.getTheme(preferences)
+        theme = appPreferences.settings.getThemeBlocking()
         setTheme(theme.getThemeFor(this))
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-            val scrimColor = theme.getScrimColorFor(this)
-            enableEdgeToEdge(
-                if (theme.light) {
-                    SystemBarStyle.light(scrimColor, scrimColor)
-                } else {
-                    SystemBarStyle.dark(scrimColor)
-                }
-            )
-        }
+        val scrimColor = theme.getScrimColorFor(this)
+        enableEdgeToEdge(
+            if (theme.light) {
+                SystemBarStyle.light(scrimColor, scrimColor)
+            } else {
+                SystemBarStyle.dark(scrimColor)
+            }
+        )
 
-        mode = Preferences.Gui.getMode(preferences)
-        language = languages.getCurrent()
+        mode = appPreferences.settings.getModeBlocking()
+        language = languages.get(appPreferences.settings.getLanguageBlocking())
     }
 
-    protected open fun populateTabs(tabs: Tabs) {
-        // Override in subclasses
-    }
 
     override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_MENU && event?.repeatCount == 0) {
-            return toggleMenu()
-        }
         return super.onKeyUp(keyCode, event)
-    }
-
-    protected open fun toggleMenu(): Boolean {
-        toolbar?.let {
-            if (it.isOverflowMenuShowing) {
-                it.hideOverflowMenu()
-            } else {
-                it.showOverflowMenu()
-            }
-            return true
-        }
-        return false
     }
 
     override fun onResume() {
@@ -193,45 +97,15 @@ abstract class BaseActivity(
 
     override fun onPause() {
         paused = true
-        tabs.onPause()
         super.onPause()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        preferences.unregisterOnSharedPreferenceChangeListener(this)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            android.R.id.home -> {
-                finish()
-                return true
-            }
-        }
-        return super.onOptionsItemSelected(item)
-    }
-
-    override fun onSharedPreferenceChanged(preferences: SharedPreferences?, key: String?) {
-        key?.let {
-            when {
-                Preferences.Gui.rotateScreen.isSameKey(it) -> updateOrientation()
-                Preferences.Gui.keepScreenOn.isSameKey(it) -> updateKeepScreenOn()
-            }
-
-            if (paused) {
-                return
-            }
-
-            when {
-                Preferences.Gui.theme.isSameKey(it) -> restartIfThemeChanged()
-                Preferences.Gui.language.isSameKey(it) -> restartIfLanguageChanged()
-            }
-        }
     }
 
     fun restartIfModeChanged(): Boolean {
-        val newMode = Preferences.Gui.mode.getPreference(preferences)
+        val newMode = appPreferences.settings.getModeBlocking()
         if (newMode != mode) {
             App.restartActivity(this)
             return true
@@ -240,7 +114,7 @@ abstract class BaseActivity(
     }
 
     fun restartIfThemeChanged(): Boolean {
-        val newTheme = Preferences.Gui.theme.getPreferenceNoError(preferences) ?: return false
+        val newTheme = appPreferences.settings.getThemeBlocking()
         val themeId = theme.getThemeFor(this)
         val newThemeId = newTheme.getThemeFor(this)
         if (themeId != newThemeId) {
@@ -251,7 +125,7 @@ abstract class BaseActivity(
     }
 
     fun restartIfLanguageChanged(): Boolean {
-        val current = languages.getCurrent()
+        val current = languages.get(appPreferences.settings.getLanguageBlocking())
         if (current != language) {
             App.restartActivity(this)
             return true
@@ -259,17 +133,17 @@ abstract class BaseActivity(
         return false
     }
 
-    private fun updateOrientation() {
-        requestedOrientation = if (Preferences.Gui.rotateScreen.getPreference(preferences) == true) {
+    private fun updateOrientation(enabled: Boolean) {
+        requestedOrientation = if (enabled) {
             ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
         } else {
             ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
     }
 
-    private fun updateKeepScreenOn() {
+    private fun updateKeepScreenOn(enabled: Boolean) {
         window?.let {
-            if (Preferences.Gui.keepScreenOn.getPreference(preferences) == true) {
+            if (enabled) {
                 it.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             } else {
                 it.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -277,28 +151,54 @@ abstract class BaseActivity(
         }
     }
 
-    fun withFab(@DrawableRes icon: Int, listener: View.OnClickListener) {
-        fab?.let {
-            it.visibility = View.VISIBLE
-            it.setImageResource(icon)
-            it.setOnClickListener(listener)
-        } ?: Check.shouldNotHappen()
+    private fun observeSettings() {
+        updateOrientation(appPreferences.settings.getRotateScreenBlocking())
+        updateKeepScreenOn(appPreferences.settings.getKeepScreenOnBlocking())
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    appPreferences.settings.rotateScreen.collect { enabled ->
+                        updateOrientation(enabled)
+                    }
+                }
+                launch {
+                    appPreferences.settings.keepScreenOn.collect { enabled ->
+                        updateKeepScreenOn(enabled)
+                    }
+                }
+                launch {
+                    appPreferences.settings.theme.collect { newTheme ->
+                        if (paused) return@collect
+                        if (newTheme != theme) {
+                            theme = newTheme
+                            restartIfThemeChanged()
+                        }
+                    }
+                }
+                launch {
+                    appPreferences.settings.language.collect { newLanguage ->
+                        if (paused) return@collect
+                        val resolved = languages.get(newLanguage)
+                        if (resolved != language) {
+                            language = resolved
+                            restartIfLanguageChanged()
+                        }
+                    }
+                }
+            }
+        }
     }
 
     companion object {
         fun setFont(view: View, newTypeface: Typeface) {
-            when (view) {
-                is TextView -> {
-                    val oldTypeface = view.typeface
-                    if (oldTypeface != null && oldTypeface == newTypeface) {
-                        return
-                    }
-                    val style = oldTypeface?.style ?: Typeface.NORMAL
-                    view.setTypeface(newTypeface, style)
+            if (view is TextView) {
+                val oldTypeface = view.typeface
+                if (oldTypeface != null && oldTypeface == newTypeface) {
+                    return
                 }
-                is DirectionDragImageButton -> {
-                    view.setTypeface(newTypeface)
-                }
+                val style = oldTypeface?.style ?: Typeface.NORMAL
+                view.setTypeface(newTypeface, style)
             }
         }
 
@@ -313,3 +213,4 @@ abstract class BaseActivity(
         }
     }
 }
+

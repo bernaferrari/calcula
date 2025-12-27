@@ -1,44 +1,20 @@
-/*
- * Copyright 2013 serso aka se.solovyev
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * Contact details
- *
- * Email: se.solovyev@gmail.com
- * Site:  http://se.solovyev.org
- */
-
 package org.solovyev.android.calculator.functions
 
-import android.text.TextUtils
 import jscl.JsclMathEngine
 import jscl.math.function.CustomFunction
 import jscl.math.function.Function
 import jscl.math.function.IFunction
-import org.simpleframework.xml.Serializer
-import org.simpleframework.xml.core.Persister
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import org.solovyev.android.Check
 import org.solovyev.android.calculator.R
 import org.solovyev.android.calculator.entities.BaseEntitiesRegistry
 import org.solovyev.android.calculator.entities.Category
 import org.solovyev.android.calculator.entities.Entities
-import org.solovyev.android.calculator.json.Json
 import org.solovyev.android.calculator.json.Jsonable
-import org.solovyev.android.io.FileSaver
 import org.solovyev.common.text.Strings
-import java.io.File
+import okio.Path
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -46,6 +22,9 @@ import javax.inject.Singleton
 class FunctionsRegistry @Inject constructor(
     mathEngine: JsclMathEngine
 ) : BaseEntitiesRegistry<Function>(mathEngine.getFunctionsRegistry()) {
+
+    private val _events = MutableSharedFlow<Event>(extraBufferCapacity = 1)
+    val events: SharedFlow<Event> = _events.asSharedFlow()
 
     init {
         addDescription("sin", R.string.c_fun_description_sin)
@@ -79,15 +58,14 @@ class FunctionsRegistry @Inject constructor(
     fun addOrUpdate(newFunction: Function, oldFunction: Function?) {
         val function = addOrUpdate(newFunction)
         if (oldFunction == null) {
-            bus.post(AddedEvent(function))
+            _events.tryEmit(AddedEvent(function))
         } else {
-            bus.post(ChangedEvent(oldFunction, function))
+            _events.tryEmit(ChangedEvent(oldFunction, function))
         }
     }
 
     override fun onInit() {
         Check.isNotMainThread()
-        migrateOldFunctions()
 
         val functions = mutableListOf<CustomFunction.Builder>()
         functions.add(
@@ -157,9 +135,9 @@ class FunctionsRegistry @Inject constructor(
         }
     }
 
-    override fun remove(entity: Function) {
-        super.remove(entity)
-        bus.post(RemovedEvent(entity))
+    override fun remove(variable: Function) {
+        super.remove(variable)
+        _events.tryEmit(RemovedEvent(variable))
     }
 
     override fun toJsonable(entity: Function): Jsonable? {
@@ -169,25 +147,7 @@ class FunctionsRegistry @Inject constructor(
         return null
     }
 
-    private fun migrateOldFunctions() {
-        val xml = preferences.getString(OldFunctions.PREFS_KEY, null)
-        if (TextUtils.isEmpty(xml)) {
-            return
-        }
-        try {
-            val serializer: Serializer = Persister()
-            val oldFunctions = serializer.read(OldFunctions::class.java, xml)
-            if (oldFunctions != null) {
-                val functions = OldFunctions.toCppFunctions(oldFunctions)
-                getEntitiesFile().writeText(Json.toJson(functions).toString())
-            }
-            preferences.edit().remove(OldFunctions.PREFS_KEY).apply()
-        } catch (e: Exception) {
-            errorReporter.onException(e)
-        }
-    }
-
-    override fun getEntitiesFile(): File {
+    override fun getEntitiesFile(): Path {
         return directories.getFile("functions.json")
     }
 
@@ -209,12 +169,14 @@ class FunctionsRegistry @Inject constructor(
         return super.getDescription(name)
     }
 
-    data class RemovedEvent(val function: Function)
+    sealed class Event
 
-    data class AddedEvent(val function: Function)
+    data class RemovedEvent(val function: Function) : Event()
+
+    data class AddedEvent(val function: Function) : Event()
 
     data class ChangedEvent(
         val oldFunction: Function,
         val newFunction: Function
-    )
+    ) : Event()
 }

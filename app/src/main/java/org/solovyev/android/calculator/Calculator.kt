@@ -1,44 +1,21 @@
-/*
- * Copyright 2013 serso aka se.solovyev
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * Contact details
- *
- * Email: se.solovyev@gmail.com
- * Site:  http://se.solovyev.org
- */
-
 package org.solovyev.android.calculator
 
-import android.content.SharedPreferences
 import android.text.TextUtils
-import android.util.Log
 import androidx.annotation.VisibleForTesting
-import com.squareup.otto.Bus
-import com.squareup.otto.Subscribe
 import jscl.JsclArithmeticException
 import jscl.MathEngine
 import jscl.NumeralBase
 import jscl.math.Generic
 import jscl.math.function.Constants
 import jscl.text.ParseInterruptedException
-import kotlinx.coroutines.channels.BufferOverflow
+import jscl.text.ParseException as JsclParseException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import org.solovyev.android.Check
+import kotlinx.coroutines.launch
 import org.solovyev.android.calculator.calculations.CalculationCancelledEvent
 import org.solovyev.android.calculator.calculations.CalculationFailedEvent
 import org.solovyev.android.calculator.calculations.CalculationFinishedEvent
@@ -46,79 +23,58 @@ import org.solovyev.android.calculator.calculations.ConversionFailedEvent
 import org.solovyev.android.calculator.calculations.ConversionFinishedEvent
 import org.solovyev.android.calculator.functions.FunctionsRegistry
 import org.solovyev.android.calculator.jscl.JsclOperation
+import org.solovyev.android.calculator.di.AppPreferences
 import org.solovyev.android.calculator.variables.CppVariable
 import org.solovyev.common.msg.ListMessageRegistry
 import org.solovyev.common.msg.Message
 import org.solovyev.common.msg.MessageRegistry
 import org.solovyev.common.msg.MessageType
-import com.ionspin.kotlin.bignum.integer.BigInteger
-import java.util.concurrent.Executor
-import java.util.concurrent.atomic.AtomicLong
+import kotlinx.atomicfu.atomic
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
-import javax.measure.converter.ConversionException
 
 @Singleton
 class Calculator @Inject constructor(
-    private val preferences: SharedPreferences,
-    internal val bus: Bus
-) : SharedPreferences.OnSharedPreferenceChangeListener {
+    private val appPreferences: AppPreferences,
+    private val engine: Engine,
+    private val preprocessor: ToJsclTextProcessor,
+    private val editor: Editor,
+    private val functionsRegistry: FunctionsRegistry,
+    private val variablesRegistry: VariablesRegistry
+) {
 
-    @Inject
-    lateinit var editor: Editor
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val mainScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
-    @Inject
-    lateinit var engine: Engine
-
-    @Inject
-    lateinit var preprocessor: ToJsclTextProcessor
-
-    private val executor = TaskExecutor()
+    @VisibleForTesting
+    private var synchronous = false
 
     @Volatile
     private var calculateOnFly = true
+    private val initialized = AtomicBoolean(false)
 
-    private val _calculationEvents = MutableSharedFlow<CalculationEvent>(
-        replay = 0,
-        extraBufferCapacity = 1,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
-    )
+    private val _calculationFinished = MutableSharedFlow<CalculationFinishedEvent>(replay = 1)
+    val calculationFinished: SharedFlow<CalculationFinishedEvent> = _calculationFinished.asSharedFlow()
+
+    private val _calculationFailed = MutableSharedFlow<CalculationFailedEvent>(replay = 1)
+    val calculationFailed: SharedFlow<CalculationFailedEvent> = _calculationFailed.asSharedFlow()
+
+    private val _calculationCancelled = MutableSharedFlow<CalculationCancelledEvent>(replay = 1)
+    val calculationCancelled: SharedFlow<CalculationCancelledEvent> = _calculationCancelled.asSharedFlow()
+
+    private val _conversionFinished = MutableSharedFlow<ConversionFinishedEvent>(replay = 1)
+    val conversionFinished: SharedFlow<ConversionFinishedEvent> = _conversionFinished.asSharedFlow()
+
+    private val _conversionFailed = MutableSharedFlow<ConversionFailedEvent>(replay = 1)
+    val conversionFailed: SharedFlow<ConversionFailedEvent> = _conversionFailed.asSharedFlow()
+
+    private val _calculationEvents = MutableSharedFlow<CalculationEvent>(extraBufferCapacity = 1)
     val calculationEvents: SharedFlow<CalculationEvent> = _calculationEvents.asSharedFlow()
-
-    init {
-        bus.register(this)
-        preferences.registerOnSharedPreferenceChangeListener(this)
-    }
 
     @VisibleForTesting
     fun setSynchronous() {
-        executor.setSynchronous()
-    }
-
-    fun evaluate() {
-        val state = editor.getState()
-        evaluate(JsclOperation.numeric, state.getTextString(), state.sequence)
-    }
-
-    fun simplify() {
-        val state = editor.getState()
-        evaluate(JsclOperation.simplify, state.getTextString(), state.sequence)
-    }
-
-    fun evaluate(
-        operation: JsclOperation,
-        expression: String,
-        sequence: Long
-    ): Long {
-        executor.execute({
-            evaluateAsync(sequence, operation, expression)
-        }, true)
-        return sequence
-    }
-
-    fun init(init: Executor) {
-        engine.init(init)
-        setCalculateOnFly(Preferences.Calculations.calculateOnFly.getPreference(preferences) ?: true)
+        synchronous = true
     }
 
     /**
@@ -126,8 +82,14 @@ class Calculator @Inject constructor(
      * Call from a background coroutine scope.
      */
     suspend fun initAsync() {
+        if (!initialized.compareAndSet(false, true)) {
+            return
+        }
         engine.initAsync()
-        setCalculateOnFly(Preferences.Calculations.calculateOnFly.getPreference(preferences) ?: true)
+        setCalculateOnFly(appPreferences.settings.getCalculateOnFlyBlocking())
+        observeCalculateOnFly()
+        observeEditorChanges()
+        observeRegistryChanges()
     }
 
     fun isCalculateOnFly(): Boolean = calculateOnFly
@@ -139,6 +101,31 @@ class Calculator @Inject constructor(
                 evaluate()
             }
         }
+    }
+
+    fun evaluate() {
+        val state = editor.state
+        evaluate(JsclOperation.numeric, state.getTextString(), state.sequence)
+    }
+
+    fun simplify() {
+        val state = editor.state
+        evaluate(JsclOperation.simplify, state.getTextString(), state.sequence)
+    }
+
+    fun evaluate(
+        operation: JsclOperation,
+        expression: String,
+        sequence: Long
+    ): Long {
+        if (synchronous) {
+            evaluateAsync(sequence, operation, expression)
+        } else {
+            scope.launch {
+                evaluateAsync(sequence, operation, expression)
+            }
+        }
+        return sequence
     }
 
     private fun evaluateAsync(sequence: Long, operation: JsclOperation, expression: String) {
@@ -154,8 +141,7 @@ class Calculator @Inject constructor(
         val expression = expressionRaw.trim()
         if (TextUtils.isEmpty(expression)) {
             val event = CalculationFinishedEvent(operation, expression, sequence)
-            bus.post(event)
-            _calculationEvents.tryEmit(CalculationEvent.Finished(event))
+            emitCalculationFinished(event)
             return
         }
 
@@ -164,7 +150,7 @@ class Calculator @Inject constructor(
             preparedExpression = prepare(expression)
 
             try {
-                val mathEngine = engine.getMathEngine()
+                val mathEngine: MathEngine = engine.getMathEngine()
                 mathEngine.setMessageRegistry(messageRegistry)
 
                 val result = operation.evaluateGeneric(preparedExpression.value, mathEngine)
@@ -177,13 +163,11 @@ class Calculator @Inject constructor(
                     operation, expression, sequence, result, stringResult,
                     collectMessages(messageRegistry)
                 )
-                bus.post(event)
-                _calculationEvents.tryEmit(CalculationEvent.Finished(event))
+                emitCalculationFinished(event)
 
             } catch (exception: JsclArithmeticException) {
                 val event = CalculationFailedEvent(operation, expression, sequence, exception)
-                bus.post(event)
-                _calculationEvents.tryEmit(CalculationEvent.Failed(event))
+                emitCalculationFailed(event)
             }
         } catch (exception: ArithmeticException) {
             onException(
@@ -198,43 +182,24 @@ class Calculator @Inject constructor(
                 sequence, operation, expression, messageRegistry, preparedExpression,
                 ParseException(expression, CalculatorMessage(CalculatorMessages.msg_002, MessageType.error))
             )
-        } catch (exception: jscl.text.ParseException) {
-            onException(sequence, operation, expression, messageRegistry, preparedExpression, ParseException(exception))
         } catch (exception: ParseInterruptedException) {
             val event = CalculationCancelledEvent(operation, expression, sequence)
-            bus.post(event)
-            _calculationEvents.tryEmit(CalculationEvent.Cancelled(event))
+            emitCalculationCancelled(event)
+        } catch (exception: JsclParseException) {
+            onException(
+                sequence,
+                operation,
+                expression,
+                messageRegistry,
+                preparedExpression,
+                ParseException(exception)
+            )
         } catch (exception: ParseException) {
             onException(sequence, operation, expression, messageRegistry, preparedExpression, exception)
-        } catch (exception: RuntimeException) {
-            onException(
-                sequence, operation, expression, messageRegistry, preparedExpression,
-                ParseException(expression, CalculatorMessage(CalculatorMessages.syntax_error, MessageType.error))
-            )
         }
     }
 
-    private fun collectMessages(messageRegistry: MessageRegistry): List<Message> {
-        if (!messageRegistry.hasMessage()) {
-            return emptyList()
-        }
-
-        return try {
-            buildList {
-                while (messageRegistry.hasMessage()) {
-                    add(messageRegistry.getMessage())
-                }
-            }
-        } catch (exception: Throwable) {
-            // Several threads might use the same instance of MessageRegistry, as no proper synchronization is done
-            Log.e("Calculator", exception.message, exception)
-            emptyList()
-        }
-    }
-
-    fun prepare(expression: String): PreparedExpression {
-        return preprocessor.process(expression)
-    }
+    fun prepare(expression: String): PreparedExpression = preprocessor.process(expression)
 
     private fun onException(
         sequence: Long,
@@ -244,33 +209,36 @@ class Calculator @Inject constructor(
         preparedExpression: PreparedExpression?,
         parseException: ParseException
     ) {
-        if (operation == JsclOperation.numeric &&
-            preparedExpression != null &&
-            preparedExpression.hasUndefinedVariables()) {
+        if (operation == JsclOperation.numeric && preparedExpression?.hasUndefinedVariables() == true) {
             evaluateAsync(sequence, JsclOperation.simplify, expression, messageRegistry)
             return
         }
         val event = CalculationFailedEvent(operation, expression, sequence, parseException)
-        bus.post(event)
-        _calculationEvents.tryEmit(CalculationEvent.Failed(event))
+        emitCalculationFailed(event)
     }
 
     fun convert(state: DisplayState, to: NumeralBase) {
-        val value = state.getResult()
-        Check.isNotNull(value)
+        val value = state.result ?: return
         val from = engine.getMathEngine().getNumeralBase()
-        if (from == to) {
-            return
-        }
+        if (from == to) return
 
-        executor.execute({
+        if (synchronous) {
             try {
-                val result = convert(value!!, to)
-                bus.post(ConversionFinishedEvent(result, to, state))
+                val result = convert(value, to)
+                emitConversionFinished(ConversionFinishedEvent(result, to, state))
             } catch (e: ConversionException) {
-                bus.post(ConversionFailedEvent(state))
+                emitConversionFailed(ConversionFailedEvent(state))
             }
-        }, false)
+        } else {
+            scope.launch {
+                try {
+                    val result = convert(value, to)
+                    emitConversionFinished(ConversionFinishedEvent(result, to, state))
+                } catch (e: ConversionException) {
+                    emitConversionFailed(ConversionFailedEvent(state))
+                }
+            }
+        }
     }
 
     fun canConvert(generic: Generic, from: NumeralBase, to: NumeralBase): Boolean {
@@ -285,34 +253,8 @@ class Calculator @Inject constructor(
         }
     }
 
-    @Subscribe
-    fun onEditorChanged(e: Editor.ChangedEvent) {
-        if (!calculateOnFly) {
-            return
-        }
-        if (!e.shouldEvaluate()) {
-            return
-        }
-        evaluate(JsclOperation.numeric, e.newState.getTextString(), e.newState.sequence)
-    }
-
-    @Subscribe
-    fun onDisplayChanged(e: Display.ChangedEvent) {
-        val newState = e.newState
-        if (!newState.valid) {
-            return
-        }
-        val text = newState.text
-        if (TextUtils.isEmpty(text)) {
-            return
-        }
-        updateAnsVariable(text)
-    }
-
     internal fun updateAnsVariable(value: String) {
-        val variablesRegistry = engine.variablesRegistry
         val variable = variablesRegistry.get(Constants.ANS)
-
         val builder = if (variable != null) {
             CppVariable.builder(variable)
         } else {
@@ -326,60 +268,102 @@ class Calculator @Inject constructor(
         variablesRegistry.addOrUpdate(builder.build().toJsclConstant(), variable)
     }
 
-    @Subscribe
-    fun onFunctionAdded(event: FunctionsRegistry.AddedEvent) {
-        evaluate()
-    }
-
-    @Subscribe
-    fun onFunctionsChanged(event: FunctionsRegistry.ChangedEvent) {
-        evaluate()
-    }
-
-    @Subscribe
-    fun onFunctionsRemoved(event: FunctionsRegistry.RemovedEvent) {
-        evaluate()
-    }
-
-    @Subscribe
-    fun onVariableRemoved(e: VariablesRegistry.RemovedEvent) {
-        evaluate()
-    }
-
-    @Subscribe
-    fun onVariableAdded(e: VariablesRegistry.AddedEvent) {
-        evaluate()
-    }
-
-    @Subscribe
-    fun onVariableChanged(e: VariablesRegistry.ChangedEvent) {
-        if (e.newVariable.name != Constants.ANS) {
-            evaluate()
+    private fun emitCalculationFinished(event: CalculationFinishedEvent) {
+        _calculationFinished.tryEmit(event)
+        _calculationEvents.tryEmit(CalculationEvent.Finished(event))
+        if (event.result != null && event.stringResult.isNotEmpty()) {
+            updateAnsVariable(event.stringResult)
         }
     }
 
-    override fun onSharedPreferenceChanged(prefs: SharedPreferences, key: String?) {
-        if (Preferences.Calculations.calculateOnFly.key == key) {
-            setCalculateOnFly(Preferences.Calculations.calculateOnFly.getPreference(prefs) ?: true)
+    private fun emitCalculationFailed(event: CalculationFailedEvent) {
+        _calculationFailed.tryEmit(event)
+        _calculationEvents.tryEmit(CalculationEvent.Failed(event))
+    }
+
+    private fun emitCalculationCancelled(event: CalculationCancelledEvent) {
+        _calculationCancelled.tryEmit(event)
+        _calculationEvents.tryEmit(CalculationEvent.Cancelled(event))
+    }
+
+    private fun emitConversionFinished(event: ConversionFinishedEvent) {
+        _conversionFinished.tryEmit(event)
+    }
+
+    private fun emitConversionFailed(event: ConversionFailedEvent) {
+        _conversionFailed.tryEmit(event)
+    }
+
+    private fun observeCalculateOnFly() {
+        mainScope.launch {
+            appPreferences.settings.calculateOnFly.collect { enabled ->
+                setCalculateOnFly(enabled)
+            }
         }
     }
 
-    companion object {
-        const val NO_SEQUENCE = -1L
-
-        private val SEQUENCER = AtomicLong(NO_SEQUENCE)
-
-        private fun convert(generic: Generic, to: NumeralBase): String {
-            val value = generic.toBigInteger() ?: throw ConversionException()
-            return to.toString(value)
+    private fun observeEditorChanges() {
+        mainScope.launch {
+            editor.changedEvents.collect { event ->
+                if (!calculateOnFly) return@collect
+                if (!event.shouldEvaluate()) return@collect
+                evaluate(JsclOperation.numeric, event.newState.getTextString(), event.newState.sequence)
+            }
         }
+    }
 
-        fun nextSequence(): Long = SEQUENCER.incrementAndGet()
+    private fun observeRegistryChanges() {
+        mainScope.launch {
+            functionsRegistry.events.collect {
+                evaluate()
+            }
+        }
+        mainScope.launch {
+            variablesRegistry.addedEvents.collect {
+                evaluate()
+            }
+        }
+        mainScope.launch {
+            variablesRegistry.removedEvents.collect {
+                evaluate()
+            }
+        }
+        mainScope.launch {
+            variablesRegistry.changedEvents.collect { event ->
+                if (event.newVariable.name != Constants.ANS) {
+                    evaluate()
+                }
+            }
+        }
+    }
+
+    private fun collectMessages(messageRegistry: MessageRegistry): List<Message> {
+        if (messageRegistry !is ListMessageRegistry) {
+            return emptyList()
+        }
+        val messages = mutableListOf<Message>()
+        while (messageRegistry.hasMessage()) {
+            messages.add(messageRegistry.getMessage())
+        }
+        return messages
     }
 
     sealed class CalculationEvent {
         data class Finished(val event: CalculationFinishedEvent) : CalculationEvent()
         data class Failed(val event: CalculationFailedEvent) : CalculationEvent()
         data class Cancelled(val event: CalculationCancelledEvent) : CalculationEvent()
+    }
+
+    companion object {
+        const val NO_SEQUENCE = -1L
+
+        private val sequencer = atomic(NO_SEQUENCE)
+
+        fun nextSequence(): Long = sequencer.incrementAndGet()
+
+        private fun convert(generic: Generic, to: NumeralBase): String {
+            val value = generic.toBigInteger() ?: throw ConversionException()
+            return to.toString(value)
+        }
     }
 }

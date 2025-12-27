@@ -1,32 +1,7 @@
-/*
- * Copyright 2013 serso aka se.solovyev
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * Contact details
- *
- * Email: se.solovyev@gmail.com
- * Site:  http://se.solovyev.org
- */
-
 package org.solovyev.android.calculator
 
-import android.content.SharedPreferences
 import android.text.Spannable
 import android.util.Log
-import com.squareup.otto.Bus
-import com.squareup.otto.Subscribe
 import dagger.Lazy
 import jscl.NumeralBase
 import jscl.math.Expression
@@ -37,21 +12,21 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import org.solovyev.android.Check
-import org.solovyev.android.calculator.Engine.Preferences.numeralBase
 import org.solovyev.android.calculator.buttons.CppSpecialButton
 import org.solovyev.android.calculator.ga.Ga
 import org.solovyev.android.calculator.history.History
 import org.solovyev.android.calculator.math.MathType
 import org.solovyev.android.calculator.memory.Memory
 import org.solovyev.android.calculator.text.NumberSpan
+import org.solovyev.android.calculator.di.AppPreferences
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class Keyboard @Inject constructor(
-    private val preferences: SharedPreferences,
-    private val bus: Bus,
+    private val appPreferences: AppPreferences,
     private val editor: Editor,
     private val display: Display,
     private val history: History,
@@ -61,28 +36,35 @@ class Keyboard @Inject constructor(
     private val ga: Lazy<Ga>,
     private val clipboard: Lazy<Clipboard>,
     private val launcher: ActivityLauncher
-) : SharedPreferences.OnSharedPreferenceChangeListener {
+) {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     private val mathType = MathType.Result()
 
     private val _vibrateOnKeypress = MutableStateFlow(
-        Preferences.Gui.vibrateOnKeypress.getPreference(preferences) ?: false
+        appPreferences.settings.vibrateOnKeypressBlocking()
     )
     val vibrateOnKeypress: StateFlow<Boolean> = _vibrateOnKeypress.asStateFlow()
 
-    private val _numberMode = MutableStateFlow(numeralBase.getPreference(preferences) ?: NumeralBase.dec)
+    private val _numberMode = MutableStateFlow(appPreferences.settings.getNumeralBaseBlocking())
     val numberMode: StateFlow<NumeralBase> = _numberMode.asStateFlow()
 
-    private val _highContrast = MutableStateFlow(
-        Preferences.Gui.highContrast.getPreference(preferences) ?: false
-    )
+    private val _highContrast = MutableStateFlow(appPreferences.settings.getHighContrastBlocking())
     val highContrast: StateFlow<Boolean> = _highContrast.asStateFlow()
 
     init {
-        bus.register(this)
-        preferences.registerOnSharedPreferenceChangeListener(this)
+        observePreferences()
+        scope.launch {
+            editor.changedEvents.collect { event ->
+                updateNumberMode(event.newState)
+            }
+        }
+        scope.launch {
+            editor.cursorMovedEvents.collect { event ->
+                updateNumberMode(event.state)
+            }
+        }
     }
 
     fun buttonPressed(text: String?): Boolean {
@@ -172,7 +154,7 @@ class Keyboard @Inject constructor(
                     editor.insert(text)
                 }
             }
-            CppSpecialButton.copy -> bus.post(Display.CopyOperation())
+            CppSpecialButton.copy -> display.copy()
             CppSpecialButton.brackets_wrap -> handleBracketsWrap()
             CppSpecialButton.equals -> equalsButtonPressed()
             CppSpecialButton.clear -> editor.clear()
@@ -184,18 +166,7 @@ class Keyboard @Inject constructor(
             CppSpecialButton.vars -> launcher.showVariables()
             CppSpecialButton.operators -> launcher.showOperators()
             CppSpecialButton.simplify -> calculator.simplify()
-            else -> Check.shouldNotHappen()
         }
-    }
-
-    @Subscribe
-    fun onCursorMoved(e: Editor.CursorMovedEvent) {
-        updateNumberMode(e.state)
-    }
-
-    @Subscribe
-    fun onEditorChanged(e: Editor.ChangedEvent) {
-        updateNumberMode(e.newState)
     }
 
     private fun updateNumberMode(state: EditorState) {
@@ -207,7 +178,7 @@ class Keyboard @Inject constructor(
             setNumberMode(NumeralBase.dec)
             return
         }
-        val text = state.text as Spannable
+        val text = state.text
         val spans = text.getSpans(state.selection, state.selection, NumberSpan::class.java)
         if (spans != null && spans.isNotEmpty()) {
             setNumberMode(spans[0].numeralBase)
@@ -221,7 +192,6 @@ class Keyboard @Inject constructor(
             return
         }
         _numberMode.value = newNumberMode
-        bus.post(NumberModeChangedEvent(newNumberMode))
     }
 
     private fun equalsButtonPressed() {
@@ -231,7 +201,9 @@ class Keyboard @Inject constructor(
         }
 
         val state = display.getState()
-        if (!state.valid) {
+        val editorState = editor.getState()
+        if (!state.valid || state.sequence != editorState.sequence || state.text.isEmpty()) {
+            calculator.evaluate()
             return
         }
         editor.setText(state.text)
@@ -272,19 +244,22 @@ class Keyboard @Inject constructor(
         return true
     }
 
-    override fun onSharedPreferenceChanged(preferences: SharedPreferences, key: String?) {
-        when {
-            Preferences.Gui.vibrateOnKeypress.isSameKey(key ?: "") -> {
-                _vibrateOnKeypress.value = Preferences.Gui.vibrateOnKeypress.getPreference(preferences) ?: false
+    private fun observePreferences() {
+        scope.launch {
+            appPreferences.settings.vibrateOnKeypress.collect { enabled ->
+                _vibrateOnKeypress.value = enabled
             }
-            numeralBase.isSameKey(key ?: "") -> {
-                setNumberMode(numeralBase.getPreference(preferences) ?: NumeralBase.dec)
+        }
+        scope.launch {
+            appPreferences.settings.numeralBase.collect { base ->
+                setNumberMode(base)
             }
-            Preferences.Gui.highContrast.isSameKey(key ?: "") -> {
-                _highContrast.value = Preferences.Gui.highContrast.getPreference(preferences) ?: false
+        }
+        scope.launch {
+            appPreferences.settings.highContrast.collect { enabled ->
+                _highContrast.value = enabled
             }
         }
     }
 
-    data class NumberModeChangedEvent(val mode: NumeralBase)
 }

@@ -13,8 +13,8 @@ class ToJsclTextProcessor @Inject constructor() : TextProcessor<PreparedExpressi
     @Inject
     lateinit var engine: Engine
 
-    override fun process(s: String): PreparedExpression {
-        return processWithDepth(s, 0, mutableListOf(), engine)
+    override fun process(from: String): PreparedExpression {
+        return processWithDepth(from, 0, mutableListOf(), engine)
     }
 
     companion object {

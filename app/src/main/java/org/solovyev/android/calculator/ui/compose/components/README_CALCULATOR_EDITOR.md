@@ -48,8 +48,8 @@ fun MyCalculatorScreen() {
 
     CalculatorEditor(
         state = editorState,
-        onTextChange = { newText ->
-            editorState = EditorState.create(newText, newText.length)
+        onTextChange = { newText, newSelection ->
+            editorState = EditorState.create(newText, newSelection)
         },
         onSelectionChange = { newSelection ->
             editorState = EditorState.forNewSelection(editorState, newSelection)
@@ -69,8 +69,8 @@ fun CustomSizedEditor() {
 
     CalculatorEditor(
         state = editorState,
-        onTextChange = { newText ->
-            editorState = EditorState.create(newText, newText.length)
+        onTextChange = { newText, newSelection ->
+            editorState = EditorState.create(newText, newSelection)
         },
         onSelectionChange = { newSelection ->
             editorState = EditorState.forNewSelection(editorState, newSelection)
@@ -93,8 +93,8 @@ fun IntegratedEditor(editor: Editor) {
 
     CalculatorEditor(
         state = editorState,
-        onTextChange = { newText ->
-            editor.setText(newText)
+        onTextChange = { newText, newSelection ->
+            editor.setText(newText, newSelection)
         },
         onSelectionChange = { newSelection ->
             editor.setSelection(newSelection)
@@ -110,7 +110,7 @@ fun IntegratedEditor(editor: Editor) {
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | `state` | `EditorState` | Yes | - | Current editor state (text and cursor position) |
-| `onTextChange` | `(String) -> Unit` | Yes | - | Callback invoked when text changes |
+| `onTextChange` | `(String, Int) -> Unit` | Yes | - | Callback invoked when text or cursor changes |
 | `onSelectionChange` | `(Int) -> Unit` | Yes | - | Callback invoked when cursor position changes |
 | `modifier` | `Modifier` | No | `Modifier` | Modifier to apply to the component |
 | `minTextSize` | `TextUnit` | No | `24.sp` | Minimum font size for long expressions |
@@ -225,7 +225,7 @@ fun PreviewEditorEmpty() {
     CalculatorTheme {
         CalculatorEditor(
             state = EditorState.empty(),
-            onTextChange = {},
+            onTextChange = { _, _ -> },
             onSelectionChange = {}
         )
     }
@@ -250,7 +250,7 @@ fun CalculatorScreen(editor: Editor) {
 
     CalculatorEditor(
         state = state,
-        onTextChange = { editor.setText(it) },
+        onTextChange = { text, selection -> editor.setText(text, selection) },
         onSelectionChange = { editor.setSelection(it) }
     )
 }

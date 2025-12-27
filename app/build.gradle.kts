@@ -12,12 +12,12 @@ plugins {
 
 android {
     namespace = "org.solovyev.android.calculator"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "org.solovyev.android.calculator"
-        minSdk = 21
-        targetSdk = 35
+        minSdk = 26
+        targetSdk = 36
         versionCode = 163
         versionName = "2.3.5"
 
@@ -38,13 +38,20 @@ android {
         }
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+            freeCompilerArgs.add("-Xannotation-default-target=param-property")
+        }
     }
 
     buildFeatures {
@@ -77,8 +84,6 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
-    implementation(libs.androidx.preference.ktx)
-    implementation(libs.androidx.viewpager)
 
     // Compose
     implementation(platform(libs.androidx.compose.bom))
@@ -89,10 +94,18 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.androidx.glance)
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.material3)
+    implementation(libs.materialkolor)
+
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.datetime)
+    implementation(libs.kotlinx.atomicfu)
+    implementation(libs.okio)
 
     // DataStore (modern SharedPreferences replacement)
     implementation(libs.androidx.datastore.preferences)
@@ -105,17 +118,13 @@ dependencies {
     implementation(project(":jscl"))
     implementation(project(":dragbutton"))
 
-    // javax.measure library (local JAR)
-    implementation(files("misc/libs/measure.jar"))
 
     // Legacy / External (to be removed in future)
-    implementation(libs.otto) // TODO: Remove after full Flow migration
-    implementation(libs.checkout)
+    implementation(libs.billing.ktx)
+    implementation(libs.play.services.ads)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.analytics)
-    implementation(libs.play.services.ads)
-    implementation(libs.guava)
     implementation(libs.simple.xml) {
         exclude(module = "stax")
         exclude(module = "stax-api")

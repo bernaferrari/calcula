@@ -1,21 +1,29 @@
 package org.solovyev.android.calculator.memory
 
-import android.os.Handler
 import android.text.TextUtils
 import android.util.Log
-import com.squareup.otto.Bus
 import jscl.math.Expression
 import jscl.math.Generic
 import jscl.math.JsclInteger
 import jscl.text.ParseException
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.solovyev.android.Check
 import org.solovyev.android.calculator.App
 import org.solovyev.android.calculator.Notifier
 import org.solovyev.android.calculator.ToJsclTextProcessor
-import org.solovyev.android.calculator.di.AppCoroutineScope
 import org.solovyev.android.calculator.di.AppDirectories
 import org.solovyev.android.calculator.di.AppDispatchers
 import org.solovyev.android.io.FileSystem
@@ -24,52 +32,97 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
+@OptIn(FlowPreview::class)
 class Memory @Inject constructor(
     private val fileSystem: FileSystem,
     private val directories: AppDirectories,
     private val dispatchers: AppDispatchers,
-    private val appScope: AppCoroutineScope,
-    private val handler: Handler
+    private val notifier: Notifier,
+    private val jsclProcessor: ToJsclTextProcessor
 ) {
-    @Inject
-    lateinit var notifier: Notifier
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
-    @Inject
-    lateinit var jsclProcessor: ToJsclTextProcessor
+    private val _valueState = MutableStateFlow(EMPTY)
+    val valueState: StateFlow<Generic> = _valueState.asStateFlow()
 
-    @Inject
-    lateinit var bus: Bus
+    private val _isLoaded = MutableStateFlow(false)
+    val isLoaded: StateFlow<Boolean> = _isLoaded.asStateFlow()
 
-    private var value: Generic = EMPTY
-    private var loaded = false
-    private val whenLoadedRunnables = mutableListOf<() -> Unit>()
-    private val writeTask = WriteTask()
+    private val _valueReadyEvents = MutableSharedFlow<String>(extraBufferCapacity = 1)
+    val valueReadyEvents: SharedFlow<String> = _valueReadyEvents.asSharedFlow()
+
+    private val writeChannel = MutableSharedFlow<Generic>(replay = 1)
 
     init {
-        // Initialize asynchronously using coroutines
-        appScope.launchIO {
-            initAsync()
+        scope.launch(dispatchers.io) {
+            val loadedValue = loadValue()
+            withContext(dispatchers.main) {
+                _valueState.value = loadedValue
+                _isLoaded.value = true
+            }
+        }
+
+        scope.launch {
+            writeChannel
+                .debounce(3000L)
+                .collect { value ->
+                    writeValue(value)
+                }
         }
     }
 
-    private suspend fun initAsync() {
-        Check.isNotMainThread()
-        val value = loadValue()
-        withContext(dispatchers.main) {
-            onLoaded(value)
+    fun add(that: Generic) {
+        scope.launch {
+            awaitLoaded()
+            try {
+                setValue(_valueState.value.add(that))
+            } catch (e: RuntimeException) {
+                notifier.showMessage(e)
+            }
         }
     }
 
-    private fun onLoaded(value: Generic) {
-        this.value = value
-        this.loaded = true
-        whenLoadedRunnables.forEach { it() }
-        whenLoadedRunnables.clear()
+    fun subtract(that: Generic) {
+        scope.launch {
+            awaitLoaded()
+            try {
+                setValue(_valueState.value.subtract(that))
+            } catch (e: RuntimeException) {
+                notifier.showMessage(e)
+            }
+        }
     }
 
-    private suspend fun loadValue(): Generic {
+    fun clear() {
+        scope.launch {
+            awaitLoaded()
+            setValue(EMPTY)
+        }
+    }
+
+    fun requestValue() {
+        scope.launch {
+            awaitLoaded()
+            _valueReadyEvents.emit(getValue())
+        }
+    }
+
+    fun requestShow() {
+        scope.launch {
+            awaitLoaded()
+            show()
+        }
+    }
+
+    private suspend fun awaitLoaded() {
+        if (!_isLoaded.value) {
+            _isLoaded.first { it }
+        }
+    }
+
+    private suspend fun loadValue(): Generic = withContext(dispatchers.io) {
         Check.isNotMainThread()
-        return try {
+        try {
             val value = fileSystem.read(getFile())
             if (TextUtils.isEmpty(value)) EMPTY else numeric(Expression.valueOf(value.toString()))
         } catch (e: IOException) {
@@ -81,59 +134,19 @@ class Memory @Inject constructor(
         }
     }
 
-    fun add(that: Generic) {
-        Check.isMainThread()
-        if (!loaded) {
-            postAdd(that)
-            return
-        }
-        try {
-            setValue(value.add(that))
-        } catch (e: RuntimeException) {
-            notifier.showMessage(e)
-        }
-    }
-
-    private fun postAdd(that: Generic) {
-        whenLoadedRunnables.add {
-            add(that)
-        }
-    }
-
-    fun subtract(that: Generic) {
-        Check.isMainThread()
-        if (!loaded) {
-            postSubtract(that)
-            return
-        }
-        try {
-            setValue(value.subtract(that))
-        } catch (e: RuntimeException) {
-            notifier.showMessage(e)
-        }
-    }
-
-    private fun postSubtract(that: Generic) {
-        whenLoadedRunnables.add {
-            subtract(that)
-        }
-    }
-
     private fun getValue(): String {
-        Check.isTrue(loaded)
         return try {
-            value.toString()
+            _valueState.value.toString()
         } catch (e: RuntimeException) {
             Log.w(App.TAG, e.message, e)
             ""
         }
     }
 
-    private fun setValue(newValue: Generic) {
-        Check.isTrue(loaded)
-        value = numeric(newValue)
-        handler.removeCallbacks(writeTask)
-        handler.postDelayed(writeTask, 3000L)
+    private suspend fun setValue(newValue: Generic) {
+        val numericValue = numeric(newValue)
+        _valueState.value = numericValue
+        writeChannel.emit(numericValue)
         show()
     }
 
@@ -141,71 +154,23 @@ class Memory @Inject constructor(
         notifier.showMessage(getValue())
     }
 
-    fun clear() {
-        Check.isMainThread()
-        if (!loaded) {
-            postClear()
-            return
-        }
-        setValue(EMPTY)
-    }
-
-    private fun postClear() {
-        whenLoadedRunnables.add {
-            clear()
-        }
-    }
-
     private fun getFile() = directories.getFile("memory.txt")
 
-    fun requestValue() {
-        if (!loaded) {
-            postValue()
-            return
+    private suspend fun writeValue(value: Generic) {
+        val text = try {
+            value.toString()
+        } catch (e: RuntimeException) {
+            Log.w(App.TAG, e.message, e)
+            ""
         }
-        bus.post(ValueReadyEvent(getValue()))
+        fileSystem.writeSilently(getFile(), prepareExpression(text))
     }
 
-    private fun postValue() {
-        whenLoadedRunnables.add {
-            requestValue()
-        }
-    }
-
-    fun requestShow() {
-        if (!loaded) {
-            postShow()
-            return
-        }
-        show()
-    }
-
-    private fun postShow() {
-        whenLoadedRunnables.add {
-            requestShow()
-        }
-    }
-
-    data class ValueReadyEvent(val value: String)
-
-    private inner class WriteTask : Runnable {
-        override fun run() {
-            Check.isMainThread()
-            if (!loaded) {
-                return
-            }
-            val value = getValue()
-            appScope.launchIO {
-                fileSystem.writeSilently(getFile(), prepareExpression(value))
-            }
-        }
-
-        private fun prepareExpression(value: String): String {
-            return try {
-                jsclProcessor.process(value).value
-            } catch (ignored: org.solovyev.android.calculator.ParseException) {
-                value
-            }
+    private fun prepareExpression(value: String): String {
+        return try {
+            jsclProcessor.process(value).value
+        } catch (ignored: org.solovyev.android.calculator.ParseException) {
+            value
         }
     }
 

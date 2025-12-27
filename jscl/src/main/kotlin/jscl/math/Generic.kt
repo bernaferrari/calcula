@@ -7,7 +7,7 @@ import jscl.text.ParserUtils
 import org.solovyev.common.math.MathRegistry
 import com.ionspin.kotlin.bignum.integer.BigInteger
 
-abstract open class Generic : Arithmetic<Generic>, Comparable<Any> {
+abstract class Generic : Arithmetic<Generic>, Comparable<Any> {
 
     open fun getUndefinedConstants(constantsRegistry: MathRegistry<IConstant>): Set<Constant> {
         val result = HashSet<Constant>()

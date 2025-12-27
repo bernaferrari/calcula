@@ -2,6 +2,7 @@ package org.solovyev.android.calculator.release
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
+import org.solovyev.android.calculator.wizard.WizardPlaceholderFragment
 import org.solovyev.android.wizard.WizardStep
 
 open class ReleaseNoteStep : WizardStep {
@@ -13,18 +14,18 @@ open class ReleaseNoteStep : WizardStep {
     }
 
     constructor(arguments: Bundle) {
-        this.version = arguments.getInt(ReleaseNoteFragment.ARG_VERSION, 0)
+        this.version = arguments.getInt(ARG_VERSION, 0)
     }
 
     override val fragmentTag: String
         get() = name
 
     override val fragmentClass: Class<out Fragment>
-        get() = ReleaseNoteFragment::class.java
+        get() = WizardPlaceholderFragment::class.java
 
     override val fragmentArgs: Bundle
         get() = Bundle().apply {
-            putInt(ReleaseNoteFragment.ARG_VERSION, version)
+            putInt(ARG_VERSION, version)
         }
 
     override val titleResId: Int
@@ -50,4 +51,8 @@ open class ReleaseNoteStep : WizardStep {
     }
 
     override fun hashCode(): Int = version
+
+    companion object {
+        const val ARG_VERSION = "release_note_version"
+    }
 }

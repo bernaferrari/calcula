@@ -1,3 +1,5 @@
+@file:Suppress("UNCHECKED_CAST")
+
 package jscl.math.operator
 
 import jscl.math.*

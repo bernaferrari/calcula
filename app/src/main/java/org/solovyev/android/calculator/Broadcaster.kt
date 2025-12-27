@@ -2,10 +2,7 @@ package org.solovyev.android.calculator
 
 import android.app.Application
 import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Handler
-import com.squareup.otto.Bus
-import com.squareup.otto.Subscribe
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -13,18 +10,21 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import org.solovyev.android.calculator.widget.CalculatorWidget
+import org.solovyev.android.calculator.widget.CalculatorGlanceWidgetReceiver
+import org.solovyev.android.calculator.di.AppPreferences
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class Broadcaster @Inject constructor(
     private val application: Application,
-    preferences: SharedPreferences,
-    bus: Bus,
-    private val handler: Handler
-) : SharedPreferences.OnSharedPreferenceChangeListener {
+    private val appPreferences: AppPreferences,
+    private val handler: Handler,
+    private val editor: Editor,
+    private val display: Display
+) {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
@@ -32,27 +32,34 @@ class Broadcaster @Inject constructor(
     val events: SharedFlow<BroadcastEvent> = _events.asSharedFlow()
 
     init {
-        preferences.registerOnSharedPreferenceChangeListener(this)
-        bus.register(this)
         handler.postDelayed({
             // we must update the widget when app starts
             sendInitIntent()
         }, 100)
+        observeThemeChanges()
+        observeEditorChanges()
+        observeDisplayChanges()
     }
 
-    @Subscribe
-    fun onEditorChanged(e: Editor.ChangedEvent) {
-        sendBroadcastIntent(ACTION_EDITOR_STATE_CHANGED)
+    private fun observeEditorChanges() {
+        scope.launch {
+            editor.changedEvents.collect {
+                sendBroadcastIntent(ACTION_EDITOR_STATE_CHANGED)
+            }
+        }
+        scope.launch {
+            editor.cursorMovedEvents.collect {
+                sendBroadcastIntent(ACTION_EDITOR_STATE_CHANGED)
+            }
+        }
     }
 
-    @Subscribe
-    fun onDisplayChanged(e: Display.ChangedEvent) {
-        sendBroadcastIntent(ACTION_DISPLAY_STATE_CHANGED)
-    }
-
-    @Subscribe
-    fun onCursorMoved(e: Editor.CursorMovedEvent) {
-        sendBroadcastIntent(ACTION_EDITOR_STATE_CHANGED)
+    private fun observeDisplayChanges() {
+        scope.launch {
+            display.changedEvents.collect {
+                sendBroadcastIntent(ACTION_DISPLAY_STATE_CHANGED)
+            }
+        }
     }
 
     fun sendInitIntent() {
@@ -61,7 +68,7 @@ class Broadcaster @Inject constructor(
 
     fun sendBroadcastIntent(action: String) {
         val intent = Intent(action).apply {
-            setClass(application, CalculatorWidget::class.java)
+            setClass(application, CalculatorGlanceWidgetReceiver::class.java)
         }
         application.sendBroadcast(intent)
 
@@ -70,9 +77,16 @@ class Broadcaster @Inject constructor(
         }
     }
 
-    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String?) {
-        if (key != null && (Preferences.Gui.theme.isSameKey(key) || Preferences.Widget.theme.isSameKey(key))) {
-            sendBroadcastIntent(ACTION_THEME_CHANGED)
+    private fun observeThemeChanges() {
+        scope.launch {
+            combine(
+                appPreferences.settings.theme,
+                appPreferences.settings.widgetTheme
+            ) { theme, widgetTheme ->
+                theme to widgetTheme
+            }.collect {
+                sendBroadcastIntent(ACTION_THEME_CHANGED)
+            }
         }
     }
 

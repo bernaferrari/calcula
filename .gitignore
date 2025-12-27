@@ -7,4 +7,6 @@ build
 local.properties
 captures
 calculatorpp.zip
-.gradle.kotlin/
+.gradle/
+.kotlin/
+.DS_Store

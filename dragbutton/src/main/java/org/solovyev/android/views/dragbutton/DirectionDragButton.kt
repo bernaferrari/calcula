@@ -1,71 +1,191 @@
 package org.solovyev.android.views.dragbutton
 
-import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Typeface
-import android.util.AttributeSet
-import androidx.annotation.ColorInt
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
-class DirectionDragButton @JvmOverloads constructor(
-    context: Context,
-    attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
-) : DragButton(context, attrs, defStyleAttr), DirectionDragView {
+/**
+ * Configuration for direction text display.
+ */
+data class DirectionTextConfig(
+    val text: String = "",
+    val visible: Boolean = true,
+    val scale: Float = 0.4f,
+    val alpha: Float = 0.4f,
+    val padding: Dp = 4.dp
+)
 
-    private val textView = DirectionTextView()
-
-    init {
-        textView.init(this, attrs)
+/**
+ * A button with directional text labels that supports click and drag gestures.
+ *
+ * @param text The main button text.
+ * @param onClick Callback invoked when clicked.
+ * @param onDrag Callback invoked with the drag direction. Return true to consume.
+ * @param modifier Modifier for the button.
+ * @param directionTexts Map of direction to text configuration.
+ * @param textStyle Style for the main text.
+ * @param enabled Whether the button is enabled.
+ * @param minDragDistance Minimum distance for drag recognition.
+ * @param vibrateOnDrag Whether to vibrate on successful drag.
+ * @param highContrast Whether to use high contrast colors.
+ * @param contentColor Color for the main content.
+ */
+@Composable
+fun DirectionDragButton(
+    text: String,
+    onClick: () -> Unit,
+    onDrag: (DragDirection) -> Boolean,
+    modifier: Modifier = Modifier,
+    directionTexts: Map<DragDirection, DirectionTextConfig> = emptyMap(),
+    textStyle: TextStyle = LocalTextStyle.current,
+    enabled: Boolean = true,
+    minDragDistance: Dp = DefaultMinDragDistance,
+    vibrateOnDrag: Boolean = true,
+    highContrast: Boolean = false,
+    contentColor: Color = LocalContentColor.current
+) {
+    DragButton(
+        onClick = onClick,
+        onDrag = onDrag,
+        modifier = modifier,
+        enabled = enabled,
+        minDragDistance = minDragDistance,
+        vibrateOnDrag = vibrateOnDrag
+    ) {
+        DirectionDragButtonContent(
+            text = text,
+            directionTexts = directionTexts,
+            textStyle = textStyle,
+            highContrast = highContrast,
+            contentColor = contentColor
+        )
     }
+}
 
-    override fun onDraw(canvas: Canvas) {
-        super.onDraw(canvas)
-        textView.draw(canvas)
-    }
+/**
+ * Content layout for DirectionDragButton with directional text labels.
+ */
+@Composable
+private fun BoxScope.DirectionDragButtonContent(
+    text: String,
+    directionTexts: Map<DragDirection, DirectionTextConfig>,
+    textStyle: TextStyle,
+    highContrast: Boolean,
+    contentColor: Color
+) {
+    // Main text in center
+    Text(
+        text = text,
+        style = textStyle,
+        color = contentColor
+    )
 
-    fun getTextValue(direction: DragDirection): String {
-        return getText(direction).value
-    }
+    // Direction texts
+    for (direction in DragDirection.entries) {
+        val config = directionTexts[direction]
+        if (config != null && config.visible && config.text.isNotEmpty()) {
+            val directionTextStyle = textStyle.copy(
+                fontSize = textStyle.fontSize * config.scale,
+                fontWeight = if (highContrast) FontWeight.Bold else FontWeight.Normal
+            )
+            val directionColor = if (highContrast) {
+                contentColor
+            } else {
+                contentColor.copy(alpha = config.alpha)
+            }
 
-    fun setText(direction: DragDirection, value: String): DirectionDragButton {
-        getText(direction).value = value
-        return this
-    }
-
-    override fun setTypeface(tf: Typeface?, style: Int) {
-        super.setTypeface(tf, style)
-        // might be called from constructor
-        textView.typeface = paint.typeface
-    }
-
-    override fun setTextSize(unit: Int, size: Float) {
-        super.setTextSize(unit, size)
-        // might be called from constructor
-        textView.textSize = paint.textSize
-    }
-
-    override fun getText(direction: DragDirection): DirectionText {
-        return textView.getText(direction)
-    }
-
-    fun setShowDirectionText(direction: DragDirection, show: Boolean) {
-        getText(direction).isVisible = show
-    }
-
-    fun setDirectionTextColor(@ColorInt color: Int) {
-        for (direction in DragDirection.values()) {
-            getText(direction).setColor(color)
+            Text(
+                text = config.text,
+                style = directionTextStyle,
+                color = directionColor,
+                modifier = Modifier
+                    .align(direction.toAlignment())
+                    .padding(config.padding)
+            )
         }
     }
+}
 
-    fun setDirectionTextAlpha(alpha: Float) {
-        for (direction in DragDirection.values()) {
-            getText(direction).alpha = alpha
+/**
+ * Maps DragDirection to Compose Alignment for positioning direction text.
+ */
+private fun DragDirection.toAlignment(): Alignment = when (this) {
+    DragDirection.up -> Alignment.TopEnd
+    DragDirection.down -> Alignment.BottomEnd
+    DragDirection.left -> Alignment.CenterStart
+    DragDirection.right -> Alignment.CenterEnd
+}
+
+/**
+ * Convenience composable for an image-based drag button.
+ */
+@Composable
+fun DirectionDragImageButton(
+    onClick: () -> Unit,
+    onDrag: (DragDirection) -> Boolean,
+    modifier: Modifier = Modifier,
+    directionTexts: Map<DragDirection, DirectionTextConfig> = emptyMap(),
+    textStyle: TextStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
+    enabled: Boolean = true,
+    minDragDistance: Dp = DefaultMinDragDistance,
+    vibrateOnDrag: Boolean = true,
+    highContrast: Boolean = false,
+    contentColor: Color = LocalContentColor.current,
+    image: @Composable BoxScope.() -> Unit
+) {
+    DragButton(
+        onClick = onClick,
+        onDrag = onDrag,
+        modifier = modifier,
+        enabled = enabled,
+        minDragDistance = minDragDistance,
+        vibrateOnDrag = vibrateOnDrag
+    ) {
+        // Image content
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            image()
         }
-    }
 
-    override fun setHighContrast(highContrast: Boolean) {
-        textView.setHighContrast(highContrast)
-        PaintCache.setHighContrast(paint, highContrast, textColors.defaultColor)
+        // Direction texts overlay
+        for (direction in DragDirection.entries) {
+            val config = directionTexts[direction]
+            if (config != null && config.visible && config.text.isNotEmpty()) {
+                val directionTextStyle = textStyle.copy(
+                    fontSize = textStyle.fontSize * config.scale,
+                    fontWeight = if (highContrast) FontWeight.Bold else FontWeight.Normal
+                )
+                val directionColor = if (highContrast) {
+                    contentColor
+                } else {
+                    contentColor.copy(alpha = config.alpha)
+                }
+
+                Text(
+                    text = config.text,
+                    style = directionTextStyle,
+                    color = directionColor,
+                    modifier = Modifier
+                        .align(direction.toAlignment())
+                        .padding(config.padding)
+                )
+            }
+        }
     }
 }

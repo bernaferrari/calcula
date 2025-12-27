@@ -19,7 +19,7 @@ class ParameterListParser(
             result.add(ExpressionParser.parser.parse(p, previousSumElement))
         } catch (e: ParseException) {
             if (minNumberOfParameters > 0) {
-                p.position.setValue(pos0)
+                p.position.value = pos0
                 throw e
             } else {
                 p.exceptionsPool.release(e)

@@ -1,41 +1,18 @@
-/*
- * Copyright 2013 serso aka se.solovyev
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * Contact details
- *
- * Email: se.solovyev@gmail.com
- * Site:  http://se.solovyev.org
- */
-
 package org.solovyev.android.calculator
 
 import android.app.Application
-import android.content.SharedPreferences
 import android.text.TextUtils
 import androidx.annotation.VisibleForTesting
-import androidx.lifecycle.ProcessLifecycleOwner
-import androidx.lifecycle.lifecycleScope
-import com.squareup.otto.Bus
-import com.squareup.otto.Subscribe
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -45,6 +22,7 @@ import org.solovyev.android.calculator.history.RecentHistory
 import org.solovyev.android.calculator.math.MathType
 import org.solovyev.android.calculator.memory.Memory
 import org.solovyev.android.calculator.text.TextProcessorEditorResult
+import org.solovyev.android.calculator.di.AppPreferences
 import org.solovyev.android.calculator.view.EditorTextProcessor
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -54,44 +32,40 @@ import kotlin.math.min
 @Singleton
 class Editor @Inject constructor(
     application: Application,
-    preferences: SharedPreferences,
-    private val engine: Engine
+    appPreferences: AppPreferences,
+    private val engine: Engine,
+    private val memory: Memory
 ) {
-
-    @Inject
-    lateinit var bus: Bus
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     @VisibleForTesting
-    var textProcessor: EditorTextProcessor? = EditorTextProcessor(application, preferences, engine)
+    var textProcessor: EditorTextProcessor? = EditorTextProcessor(application, appPreferences, engine)
 
     private var highlighterJob: Job? = null
-    private var view: EditorView? = null
-    private val coroutineScope: CoroutineScope
-        get() = ProcessLifecycleOwner.get().lifecycleScope
 
     private val _stateFlow = MutableStateFlow(EditorState.empty())
     val stateFlow: StateFlow<EditorState> = _stateFlow.asStateFlow()
+
+    private val _changedEvents = MutableSharedFlow<ChangedEvent>()
+    val changedEvents: SharedFlow<ChangedEvent> = _changedEvents.asSharedFlow()
+
+    private val _cursorMovedEvents = MutableSharedFlow<CursorMovedEvent>()
+    val cursorMovedEvents: SharedFlow<CursorMovedEvent> = _cursorMovedEvents.asSharedFlow()
 
     @get:JvmName("stateProperty")
     val state: EditorState
         get() = _stateFlow.value
 
     fun init() {
-        bus.register(this)
-    }
-
-    fun setView(view: EditorView) {
-        Check.isMainThread()
-        this.view = view
-        this.view?.setState(state)
-        this.view?.setEditor(this)
-    }
-
-    fun clearView(view: EditorView) {
-        Check.isMainThread()
-        if (this.view == view) {
-            this.view?.setEditor(null as Editor?)
-            this.view = null
+        scope.launch {
+            engine.changedEvents.collect {
+                onTextChanged(state, true)
+            }
+        }
+        scope.launch {
+            memory.valueReadyEvents.collect { value ->
+                insert(value)
+            }
         }
     }
 
@@ -118,12 +92,13 @@ class Editor @Inject constructor(
         val text = newState.getTextString()
 
         if (TextUtils.isEmpty(text) || processor == null) {
-            view?.setState(newState)
-            bus.post(ChangedEvent(oldState, newState, force))
+            scope.launch {
+                _changedEvents.emit(ChangedEvent(oldState, newState, force))
+            }
             return
         }
 
-        coroutineScope.launch {
+        scope.launch {
             cancelAsyncHighlightText()
 
             highlighterJob = launch {
@@ -134,8 +109,7 @@ class Editor @Inject constructor(
 
                 if (highlighterJob?.isActive == true) {
                     _stateFlow.value = processedState
-                    view?.setState(processedState)
-                    bus.post(ChangedEvent(oldState, processedState, force))
+                    _changedEvents.emit(ChangedEvent(oldState, processedState, force))
                     highlighterJob = null
                 }
             }
@@ -145,8 +119,9 @@ class Editor @Inject constructor(
     private fun onSelectionChanged(newState: EditorState): EditorState {
         Check.isMainThread()
         _stateFlow.value = newState
-        view?.setState(newState)
-        bus.post(CursorMovedEvent(newState))
+        scope.launch {
+            _cursorMovedEvents.emit(CursorMovedEvent(newState))
+        }
         return state
     }
 
@@ -247,18 +222,6 @@ class Editor @Inject constructor(
             return state
         }
         return onSelectionChanged(EditorState.forNewSelection(state, clamp(selection, state.text)))
-    }
-
-    @Subscribe
-    fun onEngineChanged(e: Engine.ChangedEvent) {
-        // this will effectively apply new formatting (if f.e. grouping separator has changed) and
-        // will start new evaluation
-        onTextChanged(getState(), true)
-    }
-
-    @Subscribe
-    fun onMemoryValueReady(e: Memory.ValueReadyEvent) {
-        insert(e.value)
     }
 
     fun onHistoryLoaded(history: RecentHistory) {

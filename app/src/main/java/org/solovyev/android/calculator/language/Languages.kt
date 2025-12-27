@@ -2,17 +2,23 @@ package org.solovyev.android.calculator.language
 
 import android.app.Application
 import android.content.Context
-import android.content.SharedPreferences
-import android.content.res.Configuration
 import android.util.Log
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import org.solovyev.android.Check
-import org.solovyev.android.calculator.Preferences
+import org.solovyev.android.calculator.di.AppPreferences
 import java.util.Locale
 
 class Languages(
     private val application: Application,
-    private val preferences: SharedPreferences
-) : SharedPreferences.OnSharedPreferenceChangeListener {
+    private val appPreferences: AppPreferences
+) {
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     private val list = mutableListOf<Language>()
 
@@ -20,7 +26,11 @@ class Languages(
      * This method should be called only when default values have been set to application's preferences
      */
     fun init() {
-        preferences.registerOnSharedPreferenceChangeListener(this)
+        scope.launch {
+            appPreferences.settings.language.collect { code ->
+                updateContextLocale(application, false, code)
+            }
+        }
     }
 
     fun getList(): List<Language> {
@@ -67,7 +77,7 @@ class Languages(
     }
 
     fun getCurrent(): Language {
-        return get(Preferences.Gui.language.getPreference(preferences) ?: SYSTEM_LANGUAGE_CODE)
+        return get(appPreferences.settings.getLanguageBlocking())
     }
 
     fun get(code: String): Language {
@@ -82,29 +92,20 @@ class Languages(
         return getList().find { it.code == code }
     }
 
-    override fun onSharedPreferenceChanged(p: SharedPreferences, key: String?) {
-        if (key != null && Preferences.Gui.language.isSameKey(key)) {
-            updateContextLocale(application, false)
-        }
-    }
-
-    fun updateContextLocale(context: Context, initial: Boolean) {
-        val language = getCurrent()
+    fun updateContextLocale(context: Context, initial: Boolean, code: String? = null) {
+        val language = code?.let { get(it) } ?: getCurrent()
         // we don't need to set system language while starting up the app
         if (initial && language.isSystem()) {
             return
         }
-        if (Locale.getDefault() != language.locale) {
-            Locale.setDefault(language.locale)
+        val localeList = if (language.isSystem()) {
+            LocaleListCompat.getEmptyLocaleList()
+        } else {
+            LocaleListCompat.create(language.locale)
         }
-
-        val resources = context.resources
-        val displayMetrics = resources.displayMetrics
-        val configuration = resources.configuration
-        if (configuration.locale == null || configuration.locale != language.locale) {
-            configuration.locale = language.locale
-            @Suppress("DEPRECATION")
-            resources.updateConfiguration(configuration, displayMetrics)
+        AppCompatDelegate.setApplicationLocales(localeList)
+        if (!language.isSystem() && Locale.getDefault() != language.locale) {
+            Locale.setDefault(language.locale)
         }
     }
 

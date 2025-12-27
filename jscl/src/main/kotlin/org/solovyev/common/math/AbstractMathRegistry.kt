@@ -1,25 +1,3 @@
-/*
- * Copyright 2013 serso aka se.solovyev
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * ---------------------------------------------------------------------
- * Contact details
- *
- * Email: se.solovyev@gmail.com
- * Site:  http://se.solovyev.org
- */
-
 package org.solovyev.common.math
 
 import org.solovyev.common.collections.SortedList
@@ -121,18 +99,18 @@ abstract class AbstractMathRegistry<T : MathEntity> : MathRegistry<T> {
         list.add(entity)
     }
 
-    override fun addOrUpdate(entity: T): T {
+    override fun addOrUpdate(t: T): T {
         synchronized(this) {
-            val existingEntity = if (entity.isIdDefined()) getById(entity.getId()) else get(entity.name)
+            val existingEntity = if (t.isIdDefined()) getById(t.getId()) else get(t.name)
             if (existingEntity == null) {
-                addEntity(entity, entities)
+                addEntity(t, entities)
                 this.entityNames = null
-                if (entity.isSystem()) {
-                    systemEntities.add(entity)
+                if (t.isSystem()) {
+                    systemEntities.add(t)
                 }
-                return entity
+                return t
             } else {
-                existingEntity.copy(entity)
+                existingEntity.copy(t)
                 this.entities.sort()
                 this.entityNames = null
                 this.systemEntities.sort()
@@ -141,10 +119,10 @@ abstract class AbstractMathRegistry<T : MathEntity> : MathRegistry<T> {
         }
     }
 
-    override fun remove(entity: T) {
+    override fun remove(variable: T) {
         synchronized(this) {
-            if (!entity.isSystem()) {
-                val removed = removeByName(entities, entity.name)
+            if (!variable.isSystem()) {
+                val removed = removeByName(entities, variable.name)
                 if (removed != null) {
                     this.entityNames = null
                 }

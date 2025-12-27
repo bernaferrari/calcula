@@ -73,13 +73,13 @@ class ImplicitFunction(
           return result;*/
     }
 
-    override fun compareTo(other: Variable): Int {
-        if (this === other) return 0
-        var c = comparator.compare(this, other)
+    override fun compareTo(variable: Variable): Int {
+        if (this === variable) return 0
+        var c = comparator.compare(this, variable)
         if (c < 0) return -1
         else if (c > 0) return 1
         else {
-            val v = other as ImplicitFunction
+            val v = variable as ImplicitFunction
             c = name.compareTo(v.name)
             if (c < 0) return -1
             else if (c > 0) return 1

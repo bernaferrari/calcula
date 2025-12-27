@@ -1,24 +1,38 @@
 package org.solovyev.android.calculator.ga
 
 import android.app.Application
-import android.content.SharedPreferences
 import android.text.TextUtils
 import androidx.core.os.bundleOf
 import com.google.firebase.analytics.FirebaseAnalytics
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import org.solovyev.android.calculator.Preferences
+import org.solovyev.android.calculator.di.AppPreferences
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class Ga @Inject constructor(
     application: Application,
-    preferences: SharedPreferences
-) : SharedPreferences.OnSharedPreferenceChangeListener {
+    private val appPreferences: AppPreferences
+) {
 
     private val analytics: FirebaseAnalytics = FirebaseAnalytics.getInstance(application)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     init {
-        preferences.registerOnSharedPreferenceChangeListener(this)
+        scope.launch {
+            appPreferences.settings.mode.collect { mode ->
+                reportLayout(mode)
+            }
+        }
+        scope.launch {
+            appPreferences.settings.theme.collect { theme ->
+                reportTheme(theme)
+            }
+        }
     }
 
     private fun reportLayout(mode: Preferences.Gui.Mode) {
@@ -36,20 +50,9 @@ class Ga @Inject constructor(
         analytics.logEvent("click", bundleOf("text" to text))
     }
 
-    override fun onSharedPreferenceChanged(preferences: SharedPreferences, key: String?) {
-        when (key) {
-            Preferences.Gui.mode.key -> {
-                reportLayout(Preferences.Gui.mode.getPreferenceNoError(preferences) ?: Preferences.Gui.Mode.simple)
-            }
-            Preferences.Gui.theme.key -> {
-                reportTheme(Preferences.Gui.theme.getPreferenceNoError(preferences) ?: Preferences.Gui.Theme.material_theme)
-            }
-        }
-    }
-
-    fun reportInitially(preferences: SharedPreferences) {
-        reportLayout(Preferences.Gui.mode.getPreferenceNoError(preferences) ?: Preferences.Gui.Mode.simple)
-        reportTheme(Preferences.Gui.theme.getPreferenceNoError(preferences) ?: Preferences.Gui.Theme.material_theme)
+    fun reportInitially() {
+        reportLayout(appPreferences.settings.getModeBlocking())
+        reportTheme(appPreferences.settings.getThemeBlocking())
     }
 
     fun onFloatingCalculatorOpened() {

@@ -1,25 +1,3 @@
-/*
- * Copyright 2013 serso aka se.solovyev
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * Contact details
- *
- * Email: se.solovyev@gmail.com
- * Site:  http://se.solovyev.org
- */
-
 package org.solovyev.android.calculator
 
 import android.app.Application
@@ -33,7 +11,6 @@ import android.util.SparseArray
 import android.view.ContextThemeWrapper
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
-import androidx.annotation.LayoutRes
 import androidx.annotation.StringRes
 import androidx.annotation.StyleRes
 import org.solovyev.android.Check
@@ -51,38 +28,47 @@ import org.solovyev.android.prefs.IntegerPreference
 import org.solovyev.android.prefs.NumberToStringPreference
 import org.solovyev.android.prefs.Preference
 import org.solovyev.android.prefs.StringPreference
+import org.solovyev.common.text.NumberKind
+import androidx.core.content.edit
 
 object Preferences {
+
+    private const val HAPTIC_FEEDBACK_ENABLED_SETTING = "haptic_feedback_enabled"
 
     private val version = IntegerPreference.of("version", 3)
 
     internal fun init(application: Application, preferences: SharedPreferences) {
         val currentVersion = getVersion(preferences)
         if (currentVersion == 0) {
-            val editor = preferences.edit()
-            setInitialDefaultValues(application, preferences, editor)
-            editor.apply()
+            preferences.edit {
+                setInitialDefaultValues(application, preferences, this)
+            }
         } else if (currentVersion == 1) {
-            val editor = preferences.edit()
-            if (!Gui.vibrateOnKeypress.isSet(preferences)) {
-                val hapticValue = Deleted.hapticFeedback.getPreference(preferences) ?: 0L
-                Gui.vibrateOnKeypress.putPreference(editor, hapticValue > 0)
+            preferences.edit {
+                if (!Gui.vibrateOnKeypress.isSet(preferences)) {
+                    val hapticValue = Deleted.hapticFeedback.getPreference(preferences) ?: 0L
+                    Gui.vibrateOnKeypress.putPreference(this, hapticValue > 0)
+                }
+                migratePreference(
+                    preferences,
+                    this,
+                    Gui.keepScreenOn,
+                    Deleted.preventScreenFromFading
+                )
+                migratePreference(preferences, this, Gui.theme, Deleted.theme)
+                migratePreference(preferences, this, Gui.useBackAsPrevious, Deleted.usePrevAsBack)
+                migratePreference(preferences, this, Gui.showReleaseNotes, Deleted.showReleaseNotes)
+                migratePreference(preferences, this, Gui.rotateScreen, Deleted.autoOrientation)
+                val layout = Deleted.layout.getPreference(preferences)
+                if (TextUtils.equals(layout, "main_calculator")) {
+                    Gui.mode.putPreference(this, Gui.Mode.engineer)
+                } else if (TextUtils.equals(layout, "simple")) {
+                    Gui.mode.putPreference(this, Gui.Mode.simple)
+                } else if (!Gui.mode.isSet(preferences)) {
+                    Gui.mode.putDefault(this)
+                }
+                version.putDefault(this)
             }
-            migratePreference(preferences, editor, Gui.keepScreenOn, Deleted.preventScreenFromFading)
-            migratePreference(preferences, editor, Gui.theme, Deleted.theme)
-            migratePreference(preferences, editor, Gui.useBackAsPrevious, Deleted.usePrevAsBack)
-            migratePreference(preferences, editor, Gui.showReleaseNotes, Deleted.showReleaseNotes)
-            migratePreference(preferences, editor, Gui.rotateScreen, Deleted.autoOrientation)
-            val layout = Deleted.layout.getPreference(preferences)
-            if (TextUtils.equals(layout, "main_calculator")) {
-                Gui.mode.putPreference(editor, Gui.Mode.engineer)
-            } else if (TextUtils.equals(layout, "simple")) {
-                Gui.mode.putPreference(editor, Gui.Mode.simple)
-            } else if (!Gui.mode.isSet(preferences)) {
-                Gui.mode.putDefault(editor)
-            }
-            version.putDefault(editor)
-            editor.apply()
         } else if (currentVersion == 2) {
             val editor = preferences.edit()
             Gui.highContrast.tryPutDefault(preferences, editor)
@@ -136,36 +122,21 @@ object Preferences {
 
         val cr: ContentResolver? = application.contentResolver
         if (cr != null) {
-            val vibrateOnKeyPress = Settings.System.getInt(cr, Settings.System.HAPTIC_FEEDBACK_ENABLED, 0) != 0
+            val vibrateOnKeyPress = Settings.System.getInt(cr, HAPTIC_FEEDBACK_ENABLED_SETTING, 0) != 0
             Gui.vibrateOnKeypress.putPreference(editor, vibrateOnKeyPress)
         }
     }
 
     enum class SimpleTheme(
-        @LayoutRes val onscreenLayout: Int,
-        @LayoutRes val widgetLayout: Int,
         private val appTheme: Gui.Theme?,
         val light: Boolean = false
     ) {
-        default_theme(0, 0, null),
-        metro_blue_theme(R.layout.onscreen_layout, R.layout.widget_layout, Gui.Theme.metro_blue_theme),
-        material_theme(R.layout.onscreen_layout_material, R.layout.widget_layout_material, Gui.Theme.material_theme),
-        material_light_theme(
-            R.layout.onscreen_layout_material_light,
-            R.layout.widget_layout_material_light,
-            Gui.Theme.material_light_theme,
-            true
-        );
+        default_theme(null),
+        metro_blue_theme(Gui.Theme.metro_blue_theme),
+        material_theme(Gui.Theme.material_theme),
+        material_light_theme(Gui.Theme.material_light_theme, true);
 
         private val cache = mutableMapOf<Gui.Theme, SimpleTheme>()
-
-        fun getOnscreenLayout(appTheme: Gui.Theme): Int {
-            return resolveThemeFor(appTheme).onscreenLayout
-        }
-
-        fun getWidgetLayout(appTheme: Gui.Theme): Int {
-            return resolveThemeFor(appTheme).widgetLayout
-        }
 
         fun resolveThemeFor(appTheme: Gui.Theme): SimpleTheme {
             if (this == default_theme) {
@@ -372,7 +343,7 @@ object Preferences {
         val appVersion = IntegerPreference.of("application.version", IntegerPreference.DEF_VALUE)
         val feedbackWindowShown = BooleanPreference.of("feedback_window_shown", false)
         val appOpenedCounter = IntegerPreference.of("app_opened_counter", 0)
-        val hapticFeedback = NumberToStringPreference.of("hapticFeedback", 60L, Long::class.java)
+        val hapticFeedback = NumberToStringPreference.of("hapticFeedback", 60L, NumberKind.Long)
         val colorDisplay = BooleanPreference.of("org.solovyev.android.calculator.CalculatorModel_color_display", true)
         val preventScreenFromFading = BooleanPreference.of("preventScreenFromFading", true)
         val theme = StringPreference.ofEnum(

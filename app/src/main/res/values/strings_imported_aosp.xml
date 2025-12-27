@@ -18,6 +18,8 @@
    <string name="cpp_enable">Enable</string>
    <string name="cpp_other">Other</string>
    <string name="cpp_high_contrast_text">High contrast text</string>
+   <string name="cpp_highlight_expressions">Highlight expressions</string>
+   <string name="cpp_highlight_expressions_summary">Toggles colouring and styling in calculator editor</string>
    <string name="cpp_edit">Edit</string>
    <string name="cpp_delete">Delete</string>
    <string name="cpp_done">Done</string>

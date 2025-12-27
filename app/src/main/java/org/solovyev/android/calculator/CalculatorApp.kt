@@ -1,11 +1,11 @@
 package org.solovyev.android.calculator
 
 import android.app.Application
-import android.content.SharedPreferences
 import android.os.Handler
-import android.preference.PreferenceManager
 import android.util.Log
+import com.google.android.gms.ads.MobileAds
 import dagger.hilt.android.HiltAndroidApp
+import org.solovyev.android.calculator.billing.BillingManager
 import org.solovyev.android.calculator.di.AppCoroutineScope
 import org.solovyev.android.calculator.di.AppDispatchers
 import org.solovyev.android.calculator.di.AppPreferences
@@ -17,7 +17,7 @@ import java.util.Locale
 import javax.inject.Inject
 
 @HiltAndroidApp
-class CalculatorApp : Application(), SharedPreferences.OnSharedPreferenceChangeListener {
+class CalculatorApp : Application() {
 
     @Inject
     lateinit var dispatchers: AppDispatchers
@@ -64,48 +64,41 @@ class CalculatorApp : Application(), SharedPreferences.OnSharedPreferenceChangeL
     @Inject
     lateinit var ga: dagger.Lazy<Ga>
 
-    // Legacy SharedPreferences - keep for backward compatibility during migration
     @Inject
-    lateinit var legacyPrefs: SharedPreferences
+    lateinit var billingManager: BillingManager
 
     override fun onCreate() {
         super.onCreate()
 
-        val prefs = PreferenceManager.getDefaultSharedPreferences(this)
-
         // Initialize App - needed for legacy code
-        App.init(this, prefs)
+        App.init(this, appPreferences)
 
-        // Set default preferences
-        Preferences.init(this, prefs)
-
-        // Initialize legacy UI preferences
-        val uiPrefs = getSharedPreferences("ui", MODE_PRIVATE)
-        UiPreferences.init(prefs, uiPrefs)
+        MobileAds.initialize(this)
+        billingManager.start()
 
         // Change application's theme/language if needed
-        val theme = Preferences.Gui.getTheme(prefs)
+        val theme = appPreferences.settings.getThemeBlocking()
         setTheme(theme.theme)
 
-        val language = languages.getCurrent()
+        val language = languages.get(appPreferences.settings.getLanguageBlocking())
         if (!language.isSystem() && language.locale != Locale.getDefault()) {
             Locale.setDefault(language.locale)
         }
 
-        onPostCreate(prefs)
+        onPostCreate()
     }
 
-    private fun onPostCreate(prefs: SharedPreferences) {
+    private fun onPostCreate() {
         languages.init()
-        prefs.registerOnSharedPreferenceChangeListener(this)
         languages.updateContextLocale(this, true)
 
         // Initialize components
         editor.init()
+        display.init()
         history.init()
 
-        // Initialize calculator with coroutine scope
-        appScope.launchIO {
+        // Initialize calculator on main for preference observers
+        appScope.launchMain {
             calculator.initAsync()
         }
 
@@ -116,7 +109,13 @@ class CalculatorApp : Application(), SharedPreferences.OnSharedPreferenceChangeL
         appScope.launchIO {
             val gaInstance = ga.get()
             handler.post {
-                gaInstance.reportInitially(prefs)
+                gaInstance.reportInitially()
+            }
+        }
+
+        appScope.launchMain {
+            appPreferences.settings.onscreenShowAppIcon.collect { show ->
+                App.enableComponent(this@CalculatorApp, FloatingCalculatorActivity::class.java, show)
             }
         }
     }
@@ -128,13 +127,6 @@ class CalculatorApp : Application(), SharedPreferences.OnSharedPreferenceChangeL
             mathEngine.evaluate("1*1")
         } catch (e: Throwable) {
             Log.e(App.TAG, e.message, e)
-        }
-    }
-
-    override fun onSharedPreferenceChanged(prefs: SharedPreferences, key: String?) {
-        if (key == Preferences.Onscreen.showAppIcon.key) {
-            val showAppIcon = Preferences.Onscreen.showAppIcon.getPreference(prefs) ?: false
-            App.enableComponent(this, FloatingCalculatorActivity::class.java, showAppIcon)
         }
     }
 

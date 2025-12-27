@@ -63,7 +63,7 @@ internal class ArrayPolynomialInteger : ArrayPolynomialGeneric {
                 m2 = if (i2 > 0) q.monomial[--i2] else null
             } else {
                 val a = intCoef[i1]!!.subtract(q.intCoef[i2]!!)
-                if (a.signum().toInt() != 0) {
+                if (a.signum() != 0) {
                     --i
                     p.monomial[i] = m1
                     p.intCoef[i] = a
@@ -109,7 +109,7 @@ internal class ArrayPolynomialInteger : ArrayPolynomialGeneric {
                 m2 = if (i2 > 0) q.monomial[--i2] else null
             } else {
                 val a = intCoef[i1]!!.subtract(q.intCoef[i2]!!.multiply(g))
-                if (a.signum().toInt() != 0) {
+                if (a.signum() != 0) {
                     --i
                     p.monomial[i] = m1
                     p.intCoef[i] = a
@@ -156,7 +156,7 @@ internal class ArrayPolynomialInteger : ArrayPolynomialGeneric {
                 m2 = if (i2 > 0) q.monomial[--i2]?.multiply(monomial) else null
             } else {
                 val a = intCoef[i1]!!.subtract(q.intCoef[i2]!!.multiply(g))
-                if (a.signum().toInt() != 0) {
+                if (a.signum() != 0) {
                     --i
                     p.monomial[i] = m1
                     p.intCoef[i] = a
@@ -221,7 +221,7 @@ internal class ArrayPolynomialInteger : ArrayPolynomialGeneric {
             a = a.gcd(intCoef[i]!!)
             if (a.compareTo(BigInteger.fromLong(1)) == 0) break
         }
-        return JsclInteger(if (a.signum().toInt() == signum()) a else a.negate())
+        return JsclInteger(if (a.signum() == signum()) a else a.negate())
     }
 
     override fun coefficient(generic: Generic): Generic {

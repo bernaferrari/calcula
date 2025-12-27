@@ -191,11 +191,11 @@ internal class PolynomialWrapper(internal val content: Polynomial) : Generic() {
         return content.compareTo(wrapper.content)
     }
 
-    override fun compareTo(other: Generic): Int {
-        return if (other is PolynomialWrapper) {
-            compareTo(other)
+    override fun compareTo(generic: Generic): Int {
+        return if (generic is PolynomialWrapper) {
+            compareTo(generic)
         } else {
-            compareTo(valueOf(other) as PolynomialWrapper)
+            compareTo(valueOf(generic) as PolynomialWrapper)
         }
     }
 

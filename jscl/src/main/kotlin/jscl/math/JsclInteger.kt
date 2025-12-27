@@ -86,11 +86,11 @@ class JsclInteger(private val content: BigInteger) : Generic() {
     }
 
     @Suppress("UNCHECKED_CAST")
-    override fun divideAndRemainder(that: Generic): Array<Generic> {
-        return if (that is JsclInteger) {
-            divideAndRemainder(that) as Array<Generic>
+    override fun divideAndRemainder(generic: Generic): Array<Generic> {
+        return if (generic is JsclInteger) {
+            divideAndRemainder(generic) as Array<Generic>
         } else {
-            that.valueOf(this).divideAndRemainder(that)
+            generic.valueOf(this).divideAndRemainder(generic)
         }
     }
 
@@ -122,7 +122,7 @@ class JsclInteger(private val content: BigInteger) : Generic() {
 
     override fun negate(): JsclInteger = JsclInteger(content.negate())
 
-    override fun signum(): Int = content.signum().toInt()
+    override fun signum(): Int = content.signum()
 
     override fun degree(): Int = 0
 
@@ -212,7 +212,7 @@ class JsclInteger(private val content: BigInteger) : Generic() {
     override fun valueOf(generic: Generic): Generic = JsclInteger((generic as JsclInteger).content)
 
     override fun sumValue(): Array<Generic> =
-        if (content.signum().toInt() == 0) emptyArray() else arrayOf(this)
+        if (content.signum() == 0) emptyArray() else arrayOf(this)
 
     @Throws(NotProductException::class)
     override fun productValue(): Array<Generic> =
@@ -220,7 +220,7 @@ class JsclInteger(private val content: BigInteger) : Generic() {
 
     @Throws(NotPowerException::class)
     override fun powerValue(): Power {
-        if (content.signum().toInt() < 0) throw NotPowerException()
+        if (content.signum() < 0) throw NotPowerException()
         return Power(this, 1)
     }
 

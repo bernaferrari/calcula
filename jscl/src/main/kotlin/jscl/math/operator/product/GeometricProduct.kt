@@ -1,3 +1,5 @@
+@file:Suppress("UNCHECKED_CAST")
+
 package jscl.math.operator.product
 
 import jscl.math.Generic
@@ -61,9 +63,9 @@ class GeometricProduct : VectorOperator {
             if (generic.signum() == 0) return null
             val v = generic.variableValue()
             if (v is ImplicitFunction) {
-                val g = v.getParameters()
-                val p = g!![0].integerValue().toInt()
-                val q = g!![1].integerValue().toInt()
+                val g = requireNotNull(v.getParameters())
+                val p = g[0].integerValue().toInt()
+                val q = g[1].integerValue().toInt()
                 if (v.compareTo(
                         ImplicitFunction(
                             "cl",

@@ -27,7 +27,8 @@ class Sqrt(parameter: Generic?) : Algebraic("√", if (parameter != null) arrayO
     }
 
     fun imaginary(): Boolean {
-        return parameters!![0] != null && parameters!![0].compareTo(JsclInteger.valueOf(-1)) == 0
+        val param = requireNotNull(parameters)[0]
+        return param.compareTo(JsclInteger.valueOf(-1)) == 0
     }
 
     override fun selfExpand(): Generic {
@@ -126,18 +127,14 @@ class Sqrt(parameter: Generic?) : Algebraic("√", if (parameter != null) arrayO
     }
 
     override fun toString(): String {
-        val parameter = parameters!![0]
-        if (parameter != null) {
-            try {
-                if (JsclInteger.ONE.negate() == parameter.integerValue()) {
-                    return Constants.I.name
-                } else {
-                    return super.toString()
-                }
-            } catch (e: NotIntegerException) {
-                return super.toString()
+        val parameter = requireNotNull(parameters)[0]
+        return try {
+            if (JsclInteger.ONE.negate() == parameter.integerValue()) {
+                Constants.I.name
+            } else {
+                super.toString()
             }
-        } else {
+        } catch (e: NotIntegerException) {
             return super.toString()
         }
     }
