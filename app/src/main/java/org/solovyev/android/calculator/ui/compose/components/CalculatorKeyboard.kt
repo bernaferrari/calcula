@@ -1,24 +1,53 @@
 package org.solovyev.android.calculator.ui.compose.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import org.solovyev.android.calculator.R
+import org.solovyev.android.calculator.ui.compose.theme.CalculatorFontFamily
 
 /**
- * Keyboard mode - simple or engineer
+ * Keyboard mode - simple, engineer, or modern
  */
 enum class KeyboardMode {
     SIMPLE,
-    ENGINEER
+    ENGINEER,
+    MODERN
 }
 
 /**
@@ -63,6 +92,10 @@ fun CalculatorKeyboard(
             modifier = modifier
         )
         KeyboardMode.ENGINEER -> EngineerCalculatorKeyboard(
+            actions = actions,
+            modifier = modifier
+        )
+        KeyboardMode.MODERN -> ModernCalculatorKeyboard(
             actions = actions,
             modifier = modifier
         )
@@ -769,5 +802,470 @@ fun SimpleCalculatorKeyboard(
                 modifier = Modifier.weight(1f).fillMaxHeight()
             )
         }
+    }
+}
+
+/**
+ * Modern keyboard with simplified layout and rounded buttons.
+ * Standard calculator layout with operators on the right column.
+ * Advanced functions (π, <, >, f, etc.) are accessible via floating toolbar.
+ */
+@Composable
+fun ModernCalculatorKeyboard(
+    actions: KeyboardActions,
+    modifier: Modifier = Modifier
+) {
+    val glyphBackspace = glyphString(R.string.cpp_glyph_backspace)
+    val buttonSpacing = 6.dp
+    val buttonCornerRadius = 16.dp
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(buttonSpacing)
+    ) {
+        // Row 1: C, ±, %, ÷ (√ up)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            horizontalArrangement = Arrangement.spacedBy(buttonSpacing)
+        ) {
+            ModernButton(
+                text = "C",
+                buttonType = ButtonType.CONTROL,
+                onClick = { actions.onClear() },
+                cornerRadius = buttonCornerRadius,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            )
+            ModernButton(
+                text = "±",
+                buttonType = ButtonType.OPERATION,
+                onClick = { actions.onOperatorClick("-(") },
+                cornerRadius = buttonCornerRadius,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            )
+            ModernButton(
+                text = "%",
+                buttonType = ButtonType.OPERATION,
+                onClick = { actions.onOperatorClick("%") },
+                cornerRadius = buttonCornerRadius,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            )
+            ModernButton(
+                text = "÷",
+                buttonType = ButtonType.OPERATION,
+                onClick = { actions.onOperatorClick("/") },
+                directionTexts = DirectionTexts(up = "√"),
+                onSwipeUp = { actions.onOperatorClick("√") },
+                cornerRadius = buttonCornerRadius,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            )
+        }
+
+        // Row 2: 7 (sin), 8 (cos), 9 (tan), ×
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            horizontalArrangement = Arrangement.spacedBy(buttonSpacing)
+        ) {
+            ModernButton(
+                text = "7",
+                buttonType = ButtonType.DIGIT,
+                onClick = { actions.onNumberClick("7") },
+                directionTexts = DirectionTexts(up = "sin"),
+                onSwipeUp = { actions.onOperatorClick("sin") },
+                cornerRadius = buttonCornerRadius,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            )
+            ModernButton(
+                text = "8",
+                buttonType = ButtonType.DIGIT,
+                onClick = { actions.onNumberClick("8") },
+                directionTexts = DirectionTexts(up = "cos"),
+                onSwipeUp = { actions.onOperatorClick("cos") },
+                cornerRadius = buttonCornerRadius,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            )
+            ModernButton(
+                text = "9",
+                buttonType = ButtonType.DIGIT,
+                onClick = { actions.onNumberClick("9") },
+                directionTexts = DirectionTexts(up = "tan"),
+                onSwipeUp = { actions.onOperatorClick("tan") },
+                cornerRadius = buttonCornerRadius,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            )
+            ModernButton(
+                text = "×",
+                buttonType = ButtonType.OPERATION,
+                onClick = { actions.onOperatorClick("×") },
+                directionTexts = DirectionTexts(up = "^", down = "x²"),
+                onSwipeUp = { actions.onOperatorClick("^") },
+                onSwipeDown = { actions.onOperatorClick("^2") },
+                cornerRadius = buttonCornerRadius,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            )
+        }
+
+        // Row 3: 4 (log), 5 (!), 6 (°), −
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            horizontalArrangement = Arrangement.spacedBy(buttonSpacing)
+        ) {
+            ModernButton(
+                text = "4",
+                buttonType = ButtonType.DIGIT,
+                onClick = { actions.onNumberClick("4") },
+                directionTexts = DirectionTexts(up = "log"),
+                onSwipeUp = { actions.onOperatorClick("log") },
+                cornerRadius = buttonCornerRadius,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            )
+            ModernButton(
+                text = "5",
+                buttonType = ButtonType.DIGIT,
+                onClick = { actions.onNumberClick("5") },
+                directionTexts = DirectionTexts(up = "!"),
+                onSwipeUp = { actions.onOperatorClick("!") },
+                cornerRadius = buttonCornerRadius,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            )
+            ModernButton(
+                text = "6",
+                buttonType = ButtonType.DIGIT,
+                onClick = { actions.onNumberClick("6") },
+                directionTexts = DirectionTexts(up = "°"),
+                onSwipeUp = { actions.onOperatorClick("°") },
+                cornerRadius = buttonCornerRadius,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            )
+            ModernButton(
+                text = "−",
+                buttonType = ButtonType.OPERATION,
+                onClick = { actions.onOperatorClick("−") },
+                cornerRadius = buttonCornerRadius,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            )
+        }
+
+        // Row 4: 1 (ln), 2 (e), 3 (π), +
+        // Mnemonic: ln(e)=1, e≈2.718, π≈3.14
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            horizontalArrangement = Arrangement.spacedBy(buttonSpacing)
+        ) {
+            ModernButton(
+                text = "1",
+                buttonType = ButtonType.DIGIT,
+                onClick = { actions.onNumberClick("1") },
+                directionTexts = DirectionTexts(up = "ln"),
+                onSwipeUp = { actions.onOperatorClick("ln") },
+                cornerRadius = buttonCornerRadius,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            )
+            ModernButton(
+                text = "2",
+                buttonType = ButtonType.DIGIT,
+                onClick = { actions.onNumberClick("2") },
+                directionTexts = DirectionTexts(up = "e"),
+                onSwipeUp = { actions.onOperatorClick("e") },
+                cornerRadius = buttonCornerRadius,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            )
+            ModernButton(
+                text = "3",
+                buttonType = ButtonType.DIGIT,
+                onClick = { actions.onNumberClick("3") },
+                directionTexts = DirectionTexts(up = "π"),
+                onSwipeUp = { actions.onOperatorClick("π") },
+                cornerRadius = buttonCornerRadius,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            )
+            ModernButton(
+                text = "+",
+                buttonType = ButtonType.OPERATION,
+                onClick = { actions.onOperatorClick("+") },
+                cornerRadius = buttonCornerRadius,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            )
+        }
+
+        // Row 5: (), 0 (log), ., ⌫
+        // Mnemonic: log(1)=0
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            horizontalArrangement = Arrangement.spacedBy(buttonSpacing)
+        ) {
+            ModernButton(
+                text = "( )",
+                buttonType = ButtonType.CONTROL,
+                onClick = { actions.onSpecialClick("()") },
+                directionTexts = DirectionTexts(up = "(", down = ")"),
+                onSwipeUp = { actions.onOperatorClick("(") },
+                onSwipeDown = { actions.onOperatorClick(")") },
+                cornerRadius = buttonCornerRadius,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            )
+            ModernButton(
+                text = "0",
+                buttonType = ButtonType.DIGIT,
+                onClick = { actions.onNumberClick("0") },
+                directionTexts = DirectionTexts(up = "000"),
+                onSwipeUp = { actions.onNumberClick("000") },
+                cornerRadius = buttonCornerRadius,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            )
+            ModernButton(
+                text = ".",
+                buttonType = ButtonType.DIGIT,
+                onClick = { actions.onNumberClick(".") },
+                directionTexts = DirectionTexts(up = ","),
+                onSwipeUp = { actions.onNumberClick(",") },
+                cornerRadius = buttonCornerRadius,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            )
+            ModernButton(
+                text = glyphBackspace,
+                buttonType = ButtonType.OPERATION_HIGHLIGHTED,
+                onClick = { actions.onDelete() },
+                onLongClick = { actions.onClear() },
+                cornerRadius = buttonCornerRadius,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            )
+        }
+    }
+}
+
+/**
+ * Modern button with rounded corners for the modern keyboard layout.
+ * Supports swipe gestures with direction text indicators.
+ */
+@Composable
+private fun ModernButton(
+    text: String,
+    buttonType: ButtonType,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    cornerRadius: Dp = 16.dp,
+    directionTexts: DirectionTexts = DirectionTexts(),
+    onLongClick: (() -> Unit)? = null,
+    onSwipeUp: (() -> Unit)? = null,
+    onSwipeDown: (() -> Unit)? = null
+) {
+    var isPressed by remember { mutableStateOf(false) }
+    val viewConfig = LocalViewConfiguration.current
+    val haptics = LocalHapticFeedback.current
+    val highContrast = LocalCalculatorHighContrast.current
+    val hapticsEnabled = LocalCalculatorHapticsEnabled.current
+    val longPressTimeout = viewConfig.longPressTimeoutMillis
+    val touchSlop = viewConfig.touchSlop
+    val density = LocalDensity.current
+    val minDragDistancePx = with(density) { 20.dp.toPx() }
+
+    val backgroundColor = when {
+        isPressed -> when (buttonType) {
+            ButtonType.DIGIT -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f)
+            ButtonType.OPERATION -> MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.8f)
+            ButtonType.OPERATION_HIGHLIGHTED -> MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.8f)
+            ButtonType.CONTROL -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
+            ButtonType.SPECIAL -> MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)
+        }
+        else -> when (buttonType) {
+            ButtonType.DIGIT -> MaterialTheme.colorScheme.surfaceContainerHigh
+            ButtonType.OPERATION -> MaterialTheme.colorScheme.secondaryContainer
+            ButtonType.OPERATION_HIGHLIGHTED -> MaterialTheme.colorScheme.tertiaryContainer
+            ButtonType.CONTROL -> MaterialTheme.colorScheme.surfaceContainerHighest
+            ButtonType.SPECIAL -> MaterialTheme.colorScheme.surface
+        }
+    }
+
+    val textColor = when (buttonType) {
+        ButtonType.DIGIT -> MaterialTheme.colorScheme.onSurface
+        ButtonType.OPERATION -> MaterialTheme.colorScheme.onSecondaryContainer
+        ButtonType.OPERATION_HIGHLIGHTED -> MaterialTheme.colorScheme.onTertiaryContainer
+        ButtonType.CONTROL -> MaterialTheme.colorScheme.onSurface
+        ButtonType.SPECIAL -> MaterialTheme.colorScheme.onSurface
+    }
+
+    val effectiveTextColor = if (highContrast) {
+        MaterialTheme.colorScheme.onSurface
+    } else {
+        textColor
+    }
+
+    val directionTextColor = effectiveTextColor.copy(alpha = 0.6f)
+
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(cornerRadius))
+            .background(backgroundColor)
+            .pointerInput(onClick, onLongClick, onSwipeUp, onSwipeDown) {
+                awaitEachGesture {
+                    val down = awaitFirstDown()
+                    isPressed = true
+                    val start = down.position
+                    val downTime = down.uptimeMillis
+                    var lastPos = start
+                    var movedBeyondSlop = false
+                    var longPressFired = false
+                    var swipeHandled = false
+
+                    while (true) {
+                        val event = awaitPointerEvent()
+                        val change = event.changes.firstOrNull { it.id == down.id } ?: break
+
+                        if (change.changedToUpIgnoreConsumed()) {
+                            if (!longPressFired && !swipeHandled) {
+                                // Check for swipe
+                                val delta = lastPos - start
+                                val distance = delta.getDistance()
+                                if (distance > minDragDistancePx) {
+                                    // Determine swipe direction (vertical only for modern buttons)
+                                    if (kotlin.math.abs(delta.y) > kotlin.math.abs(delta.x)) {
+                                        if (delta.y < 0 && onSwipeUp != null) {
+                                            if (hapticsEnabled) {
+                                                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                            }
+                                            onSwipeUp()
+                                            swipeHandled = true
+                                        } else if (delta.y > 0 && onSwipeDown != null) {
+                                            if (hapticsEnabled) {
+                                                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                            }
+                                            onSwipeDown()
+                                            swipeHandled = true
+                                        }
+                                    }
+                                }
+                                if (!swipeHandled) {
+                                    if (hapticsEnabled) {
+                                        haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    }
+                                    onClick()
+                                }
+                            }
+                            isPressed = false
+                            break
+                        }
+
+                        if (change.positionChanged()) {
+                            lastPos = change.position
+                            if (!movedBeyondSlop) {
+                                movedBeyondSlop = (lastPos - start).getDistance() > touchSlop
+                            }
+                            change.consume()
+                        }
+
+                        if (onLongClick != null &&
+                            !longPressFired &&
+                            !movedBeyondSlop &&
+                            (change.uptimeMillis - downTime) >= longPressTimeout
+                        ) {
+                            longPressFired = true
+                            if (hapticsEnabled) {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            }
+                            onLongClick()
+                        }
+                    }
+                    if (isPressed) {
+                        isPressed = false
+                    }
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        // Direction text indicators
+        directionTexts.up?.let { upText ->
+            Text(
+                text = upText,
+                style = TextStyle(
+                    fontSize = 12.sp,
+                    color = directionTextColor,
+                    fontWeight = FontWeight.Normal,
+                    textAlign = TextAlign.Center,
+                    fontFamily = CalculatorFontFamily
+                ),
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 4.dp)
+            )
+        }
+        directionTexts.down?.let { downText ->
+            Text(
+                text = downText,
+                style = TextStyle(
+                    fontSize = 12.sp,
+                    color = directionTextColor,
+                    fontWeight = FontWeight.Normal,
+                    textAlign = TextAlign.Center,
+                    fontFamily = CalculatorFontFamily
+                ),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 4.dp)
+            )
+        }
+
+        // Main text
+        Text(
+            text = text,
+            style = TextStyle(
+                fontSize = 32.sp,
+                color = effectiveTextColor,
+                fontWeight = FontWeight.Normal,
+                textAlign = TextAlign.Center,
+                fontFamily = CalculatorFontFamily
+            )
+        )
     }
 }

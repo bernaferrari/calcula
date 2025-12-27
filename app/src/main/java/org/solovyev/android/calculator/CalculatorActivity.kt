@@ -30,6 +30,7 @@ import org.solovyev.android.calculator.navigation.Wizard
 import org.solovyev.android.calculator.wizard.WizardDestination
 import org.solovyev.android.calculator.ui.compose.CalculatorTopBar
 import org.solovyev.android.calculator.ui.compose.CalculatorComposeViewModel
+import org.solovyev.android.calculator.ui.compose.ModernModeBottomBar
 import org.solovyev.android.calculator.ui.compose.RateUsDialog
 import org.solovyev.android.calculator.ui.compose.components.CalculatorKeyboard
 import org.solovyev.android.calculator.ui.compose.components.CalculatorScreen
@@ -286,11 +287,13 @@ class CalculatorActivity : BaseActivity(R.string.cpp_app_name) {
         val vibrateOnKeypress by appPreferences.settings.vibrateOnKeypress.collectAsStateWithLifecycle(
             initialValue = appPreferences.settings.vibrateOnKeypressBlocking()
         )
-        val keyboardMode = if (modeState == Preferences.Gui.Mode.engineer) {
-            KeyboardMode.ENGINEER
-        } else {
-            KeyboardMode.SIMPLE
+        val keyboardMode = when (modeState) {
+            Preferences.Gui.Mode.engineer -> KeyboardMode.ENGINEER
+            Preferences.Gui.Mode.simple -> KeyboardMode.SIMPLE
+            Preferences.Gui.Mode.modern -> KeyboardMode.MODERN
         }
+        val isModernMode = modeState == Preferences.Gui.Mode.modern
+
         CalculatorTheme(theme = themePreference) {
             CalculatorScreen(
                 displayState = displayState,
@@ -311,20 +314,34 @@ class CalculatorActivity : BaseActivity(R.string.cpp_app_name) {
                 onSimplify = { viewModel.onSpecialClick(CppSpecialButton.simplify.action) },
                 onPlot = { viewModel.onSpecialClick(CppSpecialButton.plot_add.glyph.toString()) },
                 overlayContent = {
-                    CalculatorTopBar(
-                        mode = modeState,
-                        angleUnit = angleUnitState,
-                        numeralBase = numeralBaseState,
-                        onModeChange = ::setMode,
-                        onAngleUnitChange = ::setAngleUnit,
-                        onNumeralBaseChange = ::setNumeralBase,
-                        onOpenSettings = onOpenSettings,
-                        onOpenHistory = onOpenHistory,
-                        onOpenPlotter = launcher::showPlotter,
-                        onOpenConverter = { showConverter = true },
-                        onOpenAbout = onOpenAbout,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    if (!isModernMode) {
+                        // Standard top bar for engineer/simple modes
+                        CalculatorTopBar(
+                            mode = modeState,
+                            angleUnit = angleUnitState,
+                            numeralBase = numeralBaseState,
+                            onModeChange = ::setMode,
+                            onAngleUnitChange = ::setAngleUnit,
+                            onNumeralBaseChange = ::setNumeralBase,
+                            onOpenSettings = onOpenSettings,
+                            onOpenHistory = onOpenHistory,
+                            onOpenPlotter = launcher::showPlotter,
+                            onOpenConverter = { showConverter = true },
+                            onOpenAbout = onOpenAbout,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                },
+                bottomBar = {
+                    if (isModernMode) {
+                        // Modern mode: floating toolbar at bottom
+                        ModernModeBottomBar(
+                            viewModel = viewModel,
+                            onOpenSettings = onOpenSettings,
+                            onOpenHistory = onOpenHistory,
+                            onOpenConverter = { showConverter = true }
+                        )
+                    }
                 }
             )
 

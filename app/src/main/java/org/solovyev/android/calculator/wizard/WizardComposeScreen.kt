@@ -172,6 +172,14 @@ private fun ChooseModeStep(
     onModeChange: (Preferences.Gui.Mode) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        // Modern mode card - full width, featured as recommended
+        ModeOptionFull(
+            title = stringResource(R.string.cpp_mode_modern),
+            selected = mode == Preferences.Gui.Mode.modern,
+            description = stringResource(R.string.cpp_wizard_mode_modern_description),
+            onClick = { onModeChange(Preferences.Gui.Mode.modern) },
+            recommended = true
+        )
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             ModeOption(
                 title = stringResource(R.string.cpp_mode_simple),
@@ -185,6 +193,42 @@ private fun ChooseModeStep(
                 description = stringResource(R.string.cpp_wizard_mode_engineer_description),
                 onClick = { onModeChange(Preferences.Gui.Mode.engineer) }
             )
+        }
+    }
+}
+
+@Composable
+private fun ModeOptionFull(
+    title: String,
+    selected: Boolean,
+    description: String,
+    onClick: () -> Unit,
+    recommended: Boolean = false
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer
+            else MaterialTheme.colorScheme.surfaceContainer
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(text = title, style = MaterialTheme.typography.titleMedium)
+                if (recommended) {
+                    Text(
+                        text = "Recommended",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+            Text(text = description, style = MaterialTheme.typography.bodySmall)
         }
     }
 }

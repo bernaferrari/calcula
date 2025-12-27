@@ -73,8 +73,12 @@ class CalculatorApp : Application() {
         // Initialize App - needed for legacy code
         App.init(this, appPreferences)
 
-        MobileAds.initialize(this)
-        billingManager.start()
+        if (FeatureFlags.ENABLE_ADS) {
+            MobileAds.initialize(this)
+        }
+        if (FeatureFlags.ENABLE_BILLING) {
+            billingManager.start()
+        }
 
         // Change application's theme/language if needed
         val theme = appPreferences.settings.getThemeBlocking()

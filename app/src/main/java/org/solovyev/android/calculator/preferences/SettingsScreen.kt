@@ -194,6 +194,7 @@ private fun MainSettingsScreen(
         item {
             val modeTitleText = stringResource(R.string.cpp_mode)
             val modeOptions = listOf(
+                stringResource(R.string.cpp_mode_modern),
                 stringResource(R.string.cpp_mode_engineer),
                 stringResource(R.string.cpp_mode_simple)
             )
@@ -214,13 +215,22 @@ private fun MainSettingsScreen(
                     title = modeTitleText,
                     summary = modeTitle(state.mode),
                     onClick = {
-                        val selected = if (state.mode == Preferences.Gui.Mode.engineer) 0 else 1
+                        val selected = when (state.mode) {
+                            Preferences.Gui.Mode.modern -> 0
+                            Preferences.Gui.Mode.engineer -> 1
+                            Preferences.Gui.Mode.simple -> 2
+                        }
                         listDialog = ListDialogState(
                             title = modeTitleText,
                             options = modeOptions,
                             selectedIndex = selected,
                             onSelected = { index ->
-                                onModeChange(if (index == 0) Preferences.Gui.Mode.engineer else Preferences.Gui.Mode.simple)
+                                val newMode = when (index) {
+                                    0 -> Preferences.Gui.Mode.modern
+                                    1 -> Preferences.Gui.Mode.engineer
+                                    else -> Preferences.Gui.Mode.simple
+                                }
+                                onModeChange(newMode)
                             }
                         )
                     }
@@ -1089,10 +1099,10 @@ private fun PrecisionDialog(
 
 @Composable
 private fun modeTitle(mode: Preferences.Gui.Mode): String {
-    return if (mode == Preferences.Gui.Mode.engineer) {
-        stringResource(R.string.cpp_mode_engineer)
-    } else {
-        stringResource(R.string.cpp_mode_simple)
+    return when (mode) {
+        Preferences.Gui.Mode.modern -> stringResource(R.string.cpp_mode_modern)
+        Preferences.Gui.Mode.engineer -> stringResource(R.string.cpp_mode_engineer)
+        Preferences.Gui.Mode.simple -> stringResource(R.string.cpp_mode_simple)
     }
 }
 

@@ -332,7 +332,8 @@ object Preferences {
 
         enum class Mode(@StringRes val nameRes: Int) {
             engineer(R.string.cpp_mode_engineer),
-            simple(R.string.cpp_mode_simple)
+            simple(R.string.cpp_mode_simple),
+            modern(R.string.cpp_mode_modern)
         }
 
         data class TextColor(val normal: Int, val error: Int)

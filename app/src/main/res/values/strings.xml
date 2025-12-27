@@ -55,6 +55,7 @@ by crowdin.net-->
   <string name="cpp_history_empty">No history yet</string>
   <string name="cpp_back">Back</string>
   <string name="cpp_entities_empty">Nothing here yet</string>
+  <string name="cpp_search">Search</string>
   <string name="cpp_fixable_error_title">Fixable error</string>
   <string name="cpp_parameters">Parameters</string>
   <string name="cpp_add_parameter">Add parameter</string>

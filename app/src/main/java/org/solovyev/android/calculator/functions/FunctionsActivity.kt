@@ -146,7 +146,7 @@ open class FunctionsActivity : BaseActivity(R.string.c_functions) {
             val items = viewModel.getFunctionsFor(category).map { function ->
                 EntityRowModel(
                     id = "function:${function.name}",
-                    title = function.toString(),
+                    title = function.name,
                     subtitle = viewModel.getFunctionDescription(function),
                     onUse = {
                         viewModel.useName(function.name)
@@ -165,7 +165,7 @@ open class FunctionsActivity : BaseActivity(R.string.c_functions) {
             val items = viewModel.getOperatorsFor(category).map { operator ->
                 EntityRowModel(
                     id = "operator:${operator.name}",
-                    title = operator.toString(),
+                    title = operator.name,
                     subtitle = viewModel.getOperatorDescription(operator),
                     onUse = {
                         viewModel.useName(operator.name)

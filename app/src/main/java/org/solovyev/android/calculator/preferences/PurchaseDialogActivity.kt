@@ -14,6 +14,7 @@ import org.solovyev.android.calculator.ui.compose.theme.CalculatorTheme
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import org.solovyev.android.calculator.FeatureFlags
 import org.solovyev.android.calculator.billing.BillingManager
 import javax.inject.Inject
 
@@ -25,6 +26,10 @@ class PurchaseDialogActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (!FeatureFlags.ENABLE_BILLING) {
+            finish()
+            return
+        }
 
         setContent {
             CalculatorTheme {

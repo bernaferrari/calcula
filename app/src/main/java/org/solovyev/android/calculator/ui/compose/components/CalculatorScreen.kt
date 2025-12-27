@@ -55,6 +55,7 @@ fun CalculatorScreen(
     onSimplify: () -> Unit,
     onPlot: () -> Unit,
     overlayContent: @Composable BoxScope.() -> Unit = {},
+    bottomBar: @Composable () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     CompositionLocalProvider(
@@ -119,6 +120,9 @@ fun CalculatorScreen(
                             .fillMaxWidth()
                             .weight(5f)
                     )
+
+                    // Bottom bar (for modern mode floating toolbar)
+                    bottomBar()
                 }
 
                 overlayContent()

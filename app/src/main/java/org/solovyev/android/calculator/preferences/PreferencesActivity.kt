@@ -28,6 +28,7 @@ import org.solovyev.android.calculator.App
 import org.solovyev.android.calculator.BaseActivity
 import org.solovyev.android.calculator.R
 import org.solovyev.android.calculator.ui.compose.theme.CalculatorTheme
+import org.solovyev.android.calculator.FeatureFlags
 import org.solovyev.android.calculator.feedback.FeedbackReporter
 import org.solovyev.android.calculator.billing.BillingManager
 import org.solovyev.android.wizard.Wizards
@@ -79,7 +80,12 @@ open class PreferencesActivity : BaseActivity(R.string.cpp_settings) {
             mutableStateOf(destination)
         }
         var backStack by rememberSaveable { mutableStateOf(listOf<SettingsDestination>()) }
-        val adFreePurchased by billingManager.adFreePurchased.collectAsStateWithLifecycle()
+        val billingEnabled = FeatureFlags.ENABLE_BILLING
+        val adFreePurchased by if (billingEnabled) {
+            billingManager.adFreePurchased.collectAsStateWithLifecycle()
+        } else {
+            remember { mutableStateOf(true) }
+        }
 
         fun navigateTo(next: SettingsDestination) {
             backStack = backStack + activeDestination
@@ -120,7 +126,9 @@ open class PreferencesActivity : BaseActivity(R.string.cpp_settings) {
                     onReportBug = { feedbackReporter.report() },
                     onOpenAbout = { launcher.showAbout() },
                     onSupportProject = {
-                        startActivity(Intent(this@PreferencesActivity, PurchaseDialogActivity::class.java))
+                        if (billingEnabled) {
+                            startActivity(Intent(this@PreferencesActivity, PurchaseDialogActivity::class.java))
+                        }
                     }
                 )
             }
