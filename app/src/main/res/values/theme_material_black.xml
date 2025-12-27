@@ -22,53 +22,20 @@
 
 <resources>
 
-    <style name="CppKeyboardButton.Material.Black.Digit" parent="CppKeyboardButton">
-        <item name="android:background">@drawable/material_button_black</item>
-    </style>
-
-    <style name="CppKeyboardButton.Material.Black.Digit.Highlighted" parent="CppKeyboardButton.Material.Black.Digit">
-        <item name="android:background">@drawable/material_button_black_lighter</item>
-    </style>
-
-    <style name="CppKeyboardButton.Material.Black.Operation" parent="CppKeyboardButton.Material.Digit">
-        <item name="android:background">@drawable/material_button_deep_blue</item>
-    </style>
-
-    <style name="CppKeyboardButton.Material.Black.Operation.Highlighted" parent="CppKeyboardButton.Material.Black.Operation">
-        <item name="android:background">@drawable/material_button_deep_blue_lighter</item>
-    </style>
-
-    <style name="CppKeyboardButton.Material.Black.Control" parent="CppKeyboardButton.Material.Black.Digit" />
-
     <style name="Cpp.Theme.Material.Black" parent="Cpp.Theme">
         <item name="android:windowBackground">@color/grey_965</item>
         <item name="cpp_editor_bg">@color/grey_965</item>
         <item name="cpp_fab_bg">@color/deep_blue_900</item>
-        <item name="cpp_button_style_digit">@style/CppKeyboardButton.Material.Black.Digit</item>
-        <item name="cpp_button_style_control">@style/CppKeyboardButton.Material.Black.Digit</item>
-        <item name="cpp_button_style_control_highlighted">@style/CppKeyboardButton.Material.Black.Digit.Highlighted</item>
-        <item name="cpp_button_style_operation">@style/CppKeyboardButton.Material.Black.Operation</item>
-        <item name="cpp_button_style_operation_highlighted">@style/CppKeyboardButton.Material.Black.Operation.Highlighted</item>
     </style>
 
     <style name="Cpp.Theme.Material.Black.Dialog" parent="Cpp.Theme.Dialog">
         <item name="cpp_editor_bg">@color/grey_965</item>
         <item name="cpp_fab_bg">@color/deep_blue_900</item>
-        <item name="cpp_button_style_digit">@style/CppKeyboardButton.Material.Black.Digit</item>
-        <item name="cpp_button_style_control">@style/CppKeyboardButton.Material.Black.Digit</item>
-        <item name="cpp_button_style_control_highlighted">@style/CppKeyboardButton.Material.Black.Digit.Highlighted</item>
-        <item name="cpp_button_style_operation">@style/CppKeyboardButton.Material.Black.Operation</item>
-        <item name="cpp_button_style_operation_highlighted">@style/CppKeyboardButton.Material.Black.Operation.Highlighted</item>
     </style>
 
     <style name="Cpp.Theme.Material.Black.Dialog.Alert" parent="Cpp.Theme.Dialog.Alert">
         <item name="cpp_editor_bg">@color/grey_965</item>
         <item name="cpp_fab_bg">@color/deep_blue_900</item>
-        <item name="cpp_button_style_digit">@style/CppKeyboardButton.Material.Black.Digit</item>
-        <item name="cpp_button_style_control">@style/CppKeyboardButton.Material.Black.Digit</item>
-        <item name="cpp_button_style_control_highlighted">@style/CppKeyboardButton.Material.Black.Digit.Highlighted</item>
-        <item name="cpp_button_style_operation">@style/CppKeyboardButton.Material.Black.Operation</item>
-        <item name="cpp_button_style_operation_highlighted">@style/CppKeyboardButton.Material.Black.Operation.Highlighted</item>
     </style>
 
     <style name="Cpp.Theme.Material.Black.Calculator" parent="Cpp.Theme.Material.Black">

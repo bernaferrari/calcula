@@ -43,8 +43,11 @@ object App {
     @Volatile
     private lateinit var application: Application
 
+    val context: Context
+        get() = application
+
     @Volatile
-    private lateinit var appPreferences: AppPreferences
+    lateinit var appPreferences: AppPreferences
 
     fun init(application: Application, appPreferences: AppPreferences) {
         App.application = application
@@ -223,6 +226,7 @@ object App {
                     processViewsOfType0(view.getChildAt(index), viewClass, viewProcessor)
                 }
             }
+
             else -> {
                 if (viewClass == null || viewClass.isAssignableFrom(view.javaClass)) {
                     @Suppress("UNCHECKED_CAST")
@@ -260,6 +264,7 @@ object App {
                 }
                 null
             }
+
             else -> {
                 if (viewClass.isAssignableFrom(view.javaClass)) {
                     @Suppress("UNCHECKED_CAST")
@@ -270,7 +275,6 @@ object App {
             }
         }
     }
-
 
 
     fun interface ViewProcessor<V> {

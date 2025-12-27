@@ -15,7 +15,6 @@ import org.solovyev.android.wizard.Wizards
 
 class CalculatorWizards(private val context: Context) : Wizards {
 
-    override val activityClassName: Class<out Activity> = WizardActivity::class.java
 
     override fun getWizard(name: String?, arguments: Bundle?): Wizard {
         val wizardName = name ?: FIRST_TIME_WIZARD

@@ -1,5 +1,6 @@
 package org.solovyev.android.calculator
 
+import android.content.Context
 import android.content.pm.ActivityInfo
 import android.graphics.Typeface
 import android.os.Bundle
@@ -11,7 +12,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.StringRes
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -26,7 +27,7 @@ import javax.inject.Inject
 @AndroidEntryPoint
 abstract class BaseActivity(
     @StringRes private val titleId: Int
-) : AppCompatActivity() {
+) : ComponentActivity() {
 
     @Inject
     lateinit var appPreferences: AppPreferences
@@ -45,14 +46,16 @@ abstract class BaseActivity(
     val activityMode: Preferences.Gui.Mode
         get() = mode
 
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(Languages.wrapContext(newBase, App.appPreferences))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         onPreCreate()
 
-        languages.updateContextLocale(this, false)
-
         if (titleId != 0) {
-            setTitle(titleId)
+            // setTitle(titleId) // Removed as optional for Compose
         }
 
         observeSettings()

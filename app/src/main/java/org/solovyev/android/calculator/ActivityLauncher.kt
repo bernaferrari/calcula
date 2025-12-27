@@ -10,20 +10,24 @@ import dagger.Lazy
 import jscl.math.Generic
 import jscl.math.function.CustomFunction
 import org.solovyev.android.Check
-import org.solovyev.android.calculator.about.AboutActivity
 import org.solovyev.android.calculator.functions.CppFunction
 import org.solovyev.android.calculator.functions.FunctionsActivity
-import org.solovyev.android.calculator.history.HistoryActivity
+import org.solovyev.android.calculator.variables.CppVariable
 import org.solovyev.android.calculator.operators.OperatorsActivity
 import org.solovyev.android.calculator.plot.ExpressionFunction
 import org.solovyev.android.calculator.plot.PlotActivity
 import org.solovyev.android.calculator.preferences.PreferencesActivity
 import org.solovyev.android.calculator.preferences.SettingsDestination
-import org.solovyev.android.calculator.variables.CppVariable
 import org.solovyev.android.calculator.variables.VariablesActivity
 import org.solovyev.android.plotter.PlotFunction
 import org.solovyev.android.plotter.Plotter
+import org.solovyev.android.calculator.navigation.About
+import org.solovyev.android.calculator.navigation.HistoryKey
+import org.solovyev.android.calculator.navigation.NavKey
+import org.solovyev.android.calculator.navigation.Settings
 import org.solovyev.common.msg.MessageType
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -50,6 +54,9 @@ class ActivityLauncher @Inject constructor() {
 
     private var activity: CalculatorActivity? = null
 
+    private val _navigationFlow = MutableSharedFlow<NavKey>(extraBufferCapacity = 1)
+    val navigationFlow: SharedFlow<NavKey> = _navigationFlow
+
     fun plotDisplayedExpression() {
         val state = display.get().getState()
         if (!state.valid) {
@@ -60,18 +67,17 @@ class ActivityLauncher @Inject constructor() {
     }
 
     fun showHistory() {
-        show(context, HistoryActivity.getClass(context))
+        _navigationFlow.tryEmit(HistoryKey)
     }
 
     fun showSettings() {
-        show(context, PreferencesActivity.getClass(context))
+        _navigationFlow.tryEmit(Settings)
     }
 
     fun showWidgetSettings() {
-        show(
-            context,
-            PreferencesActivity.makeIntent(context, SettingsDestination.WIDGET)
-        )
+        // For now, we only have one Settings destination in Navigation 3. 
+        // We could pass arguments to Settings key if needed.
+        _navigationFlow.tryEmit(Settings)
     }
 
     fun showOperators() {
@@ -79,7 +85,7 @@ class ActivityLauncher @Inject constructor() {
     }
 
     fun showAbout() {
-        show(context, AboutActivity.getClass(context))
+        _navigationFlow.tryEmit(About)
     }
 
     fun showPlotter() {
@@ -103,10 +109,6 @@ class ActivityLauncher @Inject constructor() {
         Check.isNotNull(this.activity)
         Check.equals(this.activity, activity)
         this.activity = null
-    }
-
-    fun show(activity: Class<HistoryActivity>) {
-        show(context, activity)
     }
 
     private val context: Context

@@ -103,6 +103,7 @@ class History @Inject constructor(
                     errorReporter.onException(e)
                     emptyList()
                 }
+
                 else -> throw e
             }
         }
@@ -156,7 +157,7 @@ class History @Inject constructor(
 
     fun getRecent(): List<HistoryState> = getRecent(true)
 
-    private fun getRecent(forUi: Boolean): List<HistoryState> {
+    fun getRecent(forUi: Boolean): List<HistoryState> {
         Check.isMainThread()
         val result = mutableListOf<HistoryState>()
         val separator = appPreferences.settings.getOutputSeparatorBlocking()
@@ -213,7 +214,7 @@ class History @Inject constructor(
         applyHistoryState(state)
     }
 
-    private fun applyHistoryState(state: HistoryState) {
+    fun applyHistoryState(state: HistoryState) {
         editor.setState(state.editor)
         display.setState(state.display)
     }

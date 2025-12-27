@@ -51,8 +51,8 @@ fun CalculatorTheme(
     val isLightTheme = resolvedTheme.light
     
     val colorScheme = when {
-        // Material You - use system dynamic colors
-        useDynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+        // Material You - use system dynamic colors (also when material_you_theme is selected)
+        (useDynamicColor || resolvedTheme == Preferences.Gui.Theme.material_you_theme) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             if (isLightTheme) {
                 dynamicLightColorScheme(context)
             } else {
@@ -65,6 +65,7 @@ fun CalculatorTheme(
                 Preferences.Gui.Theme.material_theme -> DeepBlueSeed to true
                 Preferences.Gui.Theme.material_black_theme -> BlackSeed to true
                 Preferences.Gui.Theme.material_light_theme -> BlueSeed to false
+                Preferences.Gui.Theme.material_you_theme -> BlueSeed to true // Fallback for < S
                 Preferences.Gui.Theme.metro_blue_theme -> BlueSeed to !systemDarkTheme.not()
                 Preferences.Gui.Theme.metro_green_theme -> GreenSeed to !systemDarkTheme.not()
                 Preferences.Gui.Theme.metro_purple_theme -> PurpleSeed to !systemDarkTheme.not()

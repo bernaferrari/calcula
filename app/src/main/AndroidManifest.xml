@@ -76,29 +76,11 @@
             android:theme="@style/Cpp.Theme.Dialog" />
 
         <activity
-            android:name=".history.HistoryActivity"
-            android:label="@string/c_history" />
-
-        <activity
-            android:name=".history.HistoryActivity$Dialog"
-            android:label="@string/c_history"
-            android:theme="@style/Cpp.Theme.Dialog" />
-
-        <activity
             android:name=".errors.FixableErrorsActivity"
             android:excludeFromRecents="true"
             android:finishOnTaskLaunch="true"
             android:launchMode="singleTask"
             android:theme="@style/Cpp.Theme.Translucent" />
-
-        <activity
-            android:name=".about.AboutActivity"
-            android:label="@string/cpp_about" />
-
-        <activity
-            android:name=".about.AboutActivity$Dialog"
-            android:label="@string/cpp_about"
-            android:theme="@style/Cpp.Theme.Dialog" />
 
         <activity
             android:name=".functions.FunctionsActivity"

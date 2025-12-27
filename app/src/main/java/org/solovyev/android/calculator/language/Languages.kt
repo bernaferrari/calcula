@@ -3,7 +3,7 @@ package org.solovyev.android.calculator.language
 import android.app.Application
 import android.content.Context
 import android.util.Log
-import androidx.appcompat.app.AppCompatDelegate
+
 import androidx.core.os.LocaleListCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,8 +27,8 @@ class Languages(
      */
     fun init() {
         scope.launch {
-            appPreferences.settings.language.collect { code ->
-                updateContextLocale(application, false, code)
+            appPreferences.settings.language.collect {
+                // language change is handled by BaseActivity observing formatting changes
             }
         }
     }
@@ -92,21 +92,19 @@ class Languages(
         return getList().find { it.code == code }
     }
 
-    fun updateContextLocale(context: Context, initial: Boolean, code: String? = null) {
+    fun wrapContext(context: Context, code: String? = null): Context {
         val language = code?.let { get(it) } ?: getCurrent()
-        // we don't need to set system language while starting up the app
-        if (initial && language.isSystem()) {
-            return
+        if (language.isSystem()) {
+            return context
         }
-        val localeList = if (language.isSystem()) {
-            LocaleListCompat.getEmptyLocaleList()
-        } else {
-            LocaleListCompat.create(language.locale)
-        }
-        AppCompatDelegate.setApplicationLocales(localeList)
-        if (!language.isSystem() && Locale.getDefault() != language.locale) {
+
+        if (Locale.getDefault() != language.locale) {
             Locale.setDefault(language.locale)
         }
+
+        val config = android.content.res.Configuration(context.resources.configuration)
+        config.setLocale(language.locale)
+        return context.createConfigurationContext(config)
     }
 
     companion object {
@@ -148,6 +146,26 @@ class Languages(
                 locales = Locale.getAvailableLocales()
             }
             return locales!!
+        }
+
+        fun wrapContext(context: Context, appPreferences: AppPreferences): Context {
+            val code = appPreferences.settings.getLanguageBlocking()
+            return wrapContext(context, code)
+        }
+
+        fun wrapContext(context: Context, code: String): Context {
+            val language = makeLanguage(code) ?: SYSTEM_LANGUAGE
+            if (language.isSystem()) {
+                return context
+            }
+
+            if (Locale.getDefault() != language.locale) {
+                Locale.setDefault(language.locale)
+            }
+
+            val config = android.content.res.Configuration(context.resources.configuration)
+            config.setLocale(language.locale)
+            return context.createConfigurationContext(config)
         }
     }
 }

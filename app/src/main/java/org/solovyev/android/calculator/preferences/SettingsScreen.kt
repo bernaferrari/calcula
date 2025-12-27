@@ -470,6 +470,7 @@ private fun AppearanceScreen(
     val languageOptions = languages.map { it.getName(context) }
     val themeTitleText = stringResource(R.string.cpp_theme)
     val themeOptions = listOf(
+        Preferences.Gui.Theme.material_you_theme,
         Preferences.Gui.Theme.material_theme,
         Preferences.Gui.Theme.material_black_theme,
         Preferences.Gui.Theme.material_light_theme,

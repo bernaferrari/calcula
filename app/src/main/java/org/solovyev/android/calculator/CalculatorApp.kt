@@ -89,8 +89,10 @@ class CalculatorApp : Application() {
     }
 
     private fun onPostCreate() {
+
         languages.init()
-        languages.updateContextLocale(this, true)
+        // Ensure default locale is set correctly
+        Languages.wrapContext(this, appPreferences)
 
         // Initialize components
         editor.init()

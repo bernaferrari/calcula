@@ -14,15 +14,12 @@ import androidx.annotation.ColorRes
 import androidx.annotation.StringRes
 import androidx.annotation.StyleRes
 import org.solovyev.android.Check
-import org.solovyev.android.calculator.about.AboutActivity
 import org.solovyev.android.calculator.functions.FunctionsActivity
-import org.solovyev.android.calculator.history.HistoryActivity
 import org.solovyev.android.calculator.language.Languages
 import org.solovyev.android.calculator.operators.OperatorsActivity
 import org.solovyev.android.calculator.preferences.PreferenceEntry
 import org.solovyev.android.calculator.preferences.PreferencesActivity
 import org.solovyev.android.calculator.variables.VariablesActivity
-import org.solovyev.android.calculator.wizard.WizardActivity
 import org.solovyev.android.prefs.BooleanPreference
 import org.solovyev.android.prefs.IntegerPreference
 import org.solovyev.android.prefs.NumberToStringPreference
@@ -266,6 +263,11 @@ object Preferences {
                     return context.getString(nameRes, material_theme.getName(context))
                 }
             },
+            material_you_theme(
+                R.string.cpp_theme_you,
+                R.style.Cpp_Theme_Material,
+                R.style.Cpp_Theme_Material_Calculator
+            ),
             material_light_theme(
                 R.string.cpp_theme_light,
                 R.style.Cpp_Theme_Material_Light,
@@ -279,13 +281,11 @@ object Preferences {
             fun getThemeFor(context: Context): Int {
                 return when (context) {
                     is CalculatorActivity -> calculatorTheme
-                    is WizardActivity -> wizardTheme
                     is FunctionsActivity.Dialog,
                     is PreferencesActivity.Dialog,
                     is VariablesActivity.Dialog,
-                    is OperatorsActivity.Dialog,
-                    is HistoryActivity.Dialog,
-                    is AboutActivity.Dialog -> dialogTheme
+                    is OperatorsActivity.Dialog -> dialogTheme
+
                     else -> theme
                 }
             }
@@ -352,8 +352,10 @@ object Preferences {
             Gui.Theme::class.java
         )
         val layout = StringPreference.of("org.solovyev.android.calculator.CalculatorActivity_calc_layout", "simple")
-        val showReleaseNotes = BooleanPreference.of("org.solovyev.android.calculator.CalculatorActivity_show_release_notes", true)
-        val usePrevAsBack = BooleanPreference.of("org.solovyev.android.calculator.CalculatorActivity_use_back_button_as_prev", false)
+        val showReleaseNotes =
+            BooleanPreference.of("org.solovyev.android.calculator.CalculatorActivity_show_release_notes", true)
+        val usePrevAsBack =
+            BooleanPreference.of("org.solovyev.android.calculator.CalculatorActivity_use_back_button_as_prev", false)
         val showEqualsButton = BooleanPreference.of("showEqualsButton", true)
         val autoOrientation = BooleanPreference.of("autoOrientation", true)
         val startOnBoot = BooleanPreference.of("onscreen_start_on_boot", false)

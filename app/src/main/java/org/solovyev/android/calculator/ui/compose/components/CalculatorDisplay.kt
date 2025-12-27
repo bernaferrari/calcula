@@ -6,8 +6,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -22,15 +27,11 @@ import org.solovyev.android.calculator.DisplayState
  *
  * Features:
  * - Auto-resizing text to fit content
- * - Error state with red color styling
+ * - On error: shows last valid result with reduced opacity (ghosted)
  * - Copy button for results (click or long-press on display)
- * - Animated result changes with smooth slide transitions
- * - Horizontal scrolling for long results
  * - Material3 theming with clean, modern design
- * - Haptic feedback on long press
  *
  * @param state The current display state containing text, validity, and result
- * @param onCopy Callback invoked when the copy button is clicked or display is long-pressed
  * @param modifier Modifier to be applied to the display
  * @param minTextSize Minimum text size for auto-resizing
  * @param maxTextSize Maximum text size for auto-resizing
@@ -42,14 +43,32 @@ fun CalculatorDisplay(
     minTextSize: TextUnit = 20.sp,
     maxTextSize: TextUnit = 48.sp
 ) {
-    val textColor = if (state.valid) {
-        MaterialTheme.colorScheme.onSurface
+    // Track the last valid result to show with reduced opacity on errors
+    var lastValidText by remember { mutableStateOf("") }
+    
+    // Update lastValidText when we get a valid result with non-empty text
+    if (state.valid && state.text.isNotEmpty()) {
+        lastValidText = state.text
+    }
+
+    // Determine what to display and how
+    val displayText: String
+    val textAlpha: Float
+    val textColor = MaterialTheme.colorScheme.onSurface
+    
+    if (state.valid) {
+        // Valid result - show normally
+        displayText = state.text
+        textAlpha = 1f
     } else {
-        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+        // Error state - show last valid result with reduced opacity (ghosted)
+        // Don't show the error message, just ghost the previous value
+        displayText = lastValidText
+        textAlpha = 0.4f
     }
 
     val fontSize = calculateFontSize(
-        text = state.text,
+        text = displayText,
         minSize = minTextSize,
         maxSize = maxTextSize
     )
@@ -61,7 +80,7 @@ fun CalculatorDisplay(
         contentAlignment = Alignment.CenterEnd
     ) {
         Text(
-            text = state.text,
+            text = displayText,
             style = TextStyle(
                 color = textColor,
                 fontSize = fontSize,
@@ -69,7 +88,8 @@ fun CalculatorDisplay(
                 fontFamily = CalculatorFontFamily,
                 textAlign = TextAlign.End
             ),
-            maxLines = 1
+            maxLines = 1,
+            modifier = Modifier.alpha(textAlpha)
         )
     }
 }

@@ -2,6 +2,7 @@ package org.solovyev.android.calculator.ui.compose.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -11,7 +12,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -26,6 +26,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
@@ -45,13 +46,10 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 import org.solovyev.android.calculator.EditorState
 import org.solovyev.android.calculator.ui.compose.theme.CalculatorFontFamily
-import org.solovyev.android.calculator.R
 
 /**
  * Calculator editor component that shows the input expression with a modern Material3 design.
@@ -60,6 +58,7 @@ import org.solovyev.android.calculator.R
  * - Syntax highlighting (numbers, operators, functions, constants)
  * - Blinking cursor animation at the current cursor position
  * - Full text selection support with custom Material3 colors
+ * - Click-to-position cursor support
  * - Auto-scrolling to keep cursor visible
  * - Horizontal scrolling for long expressions
  * - Right-to-left text alignment for calculator-style input
@@ -89,15 +88,21 @@ fun CalculatorEditor(
     var fieldWidthPx by remember { mutableStateOf(0) }
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
-
-    // Update text field when state changes externally without clobbering selection ranges.
-    LaunchedEffect(state.sequence, state.text, state.selection) {
+    val interactionSource = remember { MutableInteractionSource() }
+    
+    // Track last synced values to detect external vs internal changes
+    var lastExternalSequence by remember { mutableStateOf(-1L) }
+    var lastExternalText by remember { mutableStateOf("") }
+    
+    // Only sync from external state when it actually changes from outside
+    LaunchedEffect(state.sequence, state.text) {
         val newText = state.text.toString()
-        val newSelection = state.selection.coerceIn(0, newText.length)
-        val textChanged = textFieldValue.text != newText
-        val shouldUpdateSelection = textChanged || textFieldValue.selection.collapsed
-
-        if (textChanged || (shouldUpdateSelection && textFieldValue.selection.start != newSelection)) {
+        
+        // Detect if this is an external change (from calculator engine)
+        if (state.sequence != lastExternalSequence || newText != lastExternalText) {
+            lastExternalSequence = state.sequence
+            lastExternalText = newText
+            val newSelection = state.selection.coerceIn(0, newText.length)
             textFieldValue = TextFieldValue(
                 text = newText,
                 selection = TextRange(newSelection)
@@ -110,15 +115,22 @@ fun CalculatorEditor(
         keyboardController?.hide()
     }
 
-    // Auto-scroll to keep cursor visible without forcing it to the end.
+    // Auto-scroll to keep cursor visible
     LaunchedEffect(textFieldValue.selection, textLayoutResult, fieldWidthPx) {
-        delay(50) // Small delay to ensure layout is complete
+        delay(50)
         val layout = textLayoutResult ?: return@LaunchedEffect
         val textLength = textFieldValue.text.length
-        if (fieldWidthPx == 0 || textLength == 0) {
+        val layoutTextLength = layout.layoutInput.text.length
+        
+        if (fieldWidthPx == 0 || textLength == 0 || layoutTextLength != textLength) {
             return@LaunchedEffect
         }
-        val cursorPosition = textFieldValue.selection.end.coerceIn(0, textLength - 1)
+        
+        val cursorPosition = textFieldValue.selection.end.coerceIn(0, textLength)
+        if (cursorPosition < 0 || cursorPosition > layoutTextLength) {
+            return@LaunchedEffect
+        }
+        
         val cursorRect = layout.getCursorRect(cursorPosition)
         val current = scrollState.value.toFloat()
         val minVisible = current
@@ -131,7 +143,6 @@ fun CalculatorEditor(
         scrollState.animateScrollTo(target.roundToInt())
     }
 
-    // Calculate dynamic font size based on text length
     val fontSize = remember(state.text) {
         calculateEditorFontSize(
             text = state.text.toString(),
@@ -140,7 +151,6 @@ fun CalculatorEditor(
         )
     }
 
-    // Custom text selection colors matching Material3 theme
     val customTextSelectionColors = TextSelectionColors(
         handleColor = MaterialTheme.colorScheme.primary,
         backgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
@@ -157,13 +167,14 @@ fun CalculatorEditor(
             BasicTextField(
                 value = textFieldValue,
                 onValueChange = { newValue ->
+                    val oldValue = textFieldValue
                     textFieldValue = newValue
-                    if (newValue.text != state.text.toString()) {
+                    
+                    if (newValue.text != oldValue.text) {
+                        // Text changed - notify parent
                         onTextChange(newValue.text, newValue.selection.start)
-                    }
-                    if (newValue.selection.start == newValue.selection.end &&
-                        newValue.selection.start != state.selection
-                    ) {
+                    } else if (newValue.selection != oldValue.selection && newValue.selection.collapsed) {
+                        // Only selection changed (user clicked/tapped) - notify parent
                         onSelectionChange(newValue.selection.start)
                     }
                 },
@@ -171,12 +182,14 @@ fun CalculatorEditor(
                     .fillMaxWidth()
                     .horizontalScroll(scrollState)
                     .focusRequester(focusRequester)
-                    .onFocusChanged { state ->
-                        if (state.isFocused) {
+                    .onFocusChanged { focusState ->
+                        if (focusState.isFocused) {
                             keyboardController?.hide()
                         }
                     }
                     .onSizeChanged { fieldWidthPx = it.width },
+                enabled = true,
+                readOnly = false,
                 textStyle = TextStyle(
                     color = MaterialTheme.colorScheme.onBackground,
                     fontSize = fontSize,
@@ -185,7 +198,6 @@ fun CalculatorEditor(
                     fontFamily = CalculatorFontFamily
                 ),
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                readOnly = true,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Ascii,
                     imeAction = ImeAction.None,
@@ -193,6 +205,7 @@ fun CalculatorEditor(
                     showKeyboardOnFocus = false
                 ),
                 singleLine = true,
+                interactionSource = interactionSource,
                 onTextLayout = { textLayoutResult = it },
                 decorationBox = { innerTextField ->
                     Box(
@@ -200,7 +213,6 @@ fun CalculatorEditor(
                         contentAlignment = Alignment.TopStart
                     ) { innerTextField() }
                 },
-                // Enable visual transformation for syntax highlighting
                 visualTransformation = if (highlightExpressions) {
                     SyntaxHighlightingVisualTransformation(
                         primaryColor = MaterialTheme.colorScheme.primary,
@@ -217,10 +229,6 @@ fun CalculatorEditor(
     }
 }
 
-/**
- * Calculates an appropriate font size based on text length.
- * Longer expressions get smaller font sizes for better fit.
- */
 private fun calculateEditorFontSize(
     text: String,
     minSize: TextUnit,
@@ -235,8 +243,6 @@ private fun calculateEditorFontSize(
         length < 30 -> 26.sp
         else -> minSize
     }
-
-    // Coerce between min and max using value comparison
     return when {
         size.value < minSize.value -> minSize
         size.value > maxSize.value -> maxSize
@@ -244,10 +250,6 @@ private fun calculateEditorFontSize(
     }
 }
 
-/**
- * Visual transformation that applies syntax highlighting to calculator expressions.
- * Highlights different token types with distinct colors.
- */
 private class SyntaxHighlightingVisualTransformation(
     private val primaryColor: androidx.compose.ui.graphics.Color,
     private val secondaryColor: androidx.compose.ui.graphics.Color,
@@ -263,10 +265,6 @@ private class SyntaxHighlightingVisualTransformation(
         )
     }
 
-    /**
-     * Applies syntax highlighting to the input text.
-     * Highlights numbers, operators, functions, constants, and brackets.
-     */
     private fun highlightSyntax(text: String): AnnotatedString {
         return buildAnnotatedString {
             var i = 0
@@ -274,7 +272,6 @@ private class SyntaxHighlightingVisualTransformation(
                 val char = text[i]
 
                 when {
-                    // Numbers (including decimal points and scientific notation)
                     char.isDigit() || char == '.' -> {
                         val start = i
                         while (i < text.length && (text[i].isDigit() || text[i] == '.' ||
@@ -292,7 +289,6 @@ private class SyntaxHighlightingVisualTransformation(
                         continue
                     }
 
-                    // Operators
                     isOperator(char) -> {
                         withStyle(
                             SpanStyle(
@@ -304,7 +300,6 @@ private class SyntaxHighlightingVisualTransformation(
                         }
                     }
 
-                    // Functions and constants (letters)
                     char.isLetter() -> {
                         val start = i
                         while (i < text.length && (text[i].isLetter() || text[i].isDigit() || text[i] == '_')) {
@@ -340,8 +335,7 @@ private class SyntaxHighlightingVisualTransformation(
                         continue
                     }
 
-                    // Parentheses and brackets
-                    char in "()[]{}," -> {
+                    char in "()[]{},\u0000" -> {
                         withStyle(
                             SpanStyle(
                                 color = surfaceVariantColor,
@@ -352,7 +346,6 @@ private class SyntaxHighlightingVisualTransformation(
                         }
                     }
 
-                    // Default - whitespace and other characters
                     else -> {
                         withStyle(SpanStyle(color = baseColor)) {
                             append(char)
@@ -364,9 +357,6 @@ private class SyntaxHighlightingVisualTransformation(
         }
     }
 
-    /**
-     * Checks if a character is a mathematical operator.
-     */
     private fun isOperator(char: Char): Boolean {
         return char in setOf(
             '+', '-', '*', '/', '÷', '×', '·',
@@ -375,46 +365,25 @@ private class SyntaxHighlightingVisualTransformation(
         )
     }
 
-    /**
-     * Checks if a word is a known mathematical function.
-     */
     private fun isKnownFunction(word: String): Boolean {
         val lowerWord = word.lowercase()
         return lowerWord in setOf(
-            // Trigonometric functions
             "sin", "cos", "tan", "cot", "sec", "csc",
             "asin", "acos", "atan", "acot", "asec", "acsc",
             "arcsin", "arccos", "arctan", "arccot", "arcsec", "arccsc",
-
-            // Hyperbolic functions
             "sinh", "cosh", "tanh", "coth", "sech", "csch",
             "asinh", "acosh", "atanh", "acoth", "asech", "acsch",
             "arcsinh", "arccosh", "arctanh", "arccoth", "arcsech", "arccsch",
-
-            // Logarithmic and exponential
             "ln", "log", "lg", "log10", "log2", "exp",
-
-            // Root functions
             "sqrt", "cbrt", "root",
-
-            // Absolute and sign
             "abs", "sgn", "sign",
-
-            // Rounding functions
             "ceil", "floor", "round", "trunc",
-
-            // Statistical and comparison
             "max", "min", "gcd", "lcm",
-
-            // Other mathematical functions
             "fact", "factorial", "mod", "rem",
             "deg", "rad", "re", "im", "arg"
         )
     }
 
-    /**
-     * Checks if a word is a known mathematical constant.
-     */
     private fun isKnownConstant(word: String): Boolean {
         val lowerWord = word.lowercase()
         return lowerWord in setOf(

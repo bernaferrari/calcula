@@ -116,7 +116,7 @@ open class PreferencesActivity : BaseActivity(R.string.cpp_settings) {
                     destination = activeDestination,
                     adFreePurchased = adFreePurchased,
                     onNavigate = ::navigateTo,
-                    onStartWizard = { org.solovyev.android.wizard.WizardUi.startWizard(wizards, this@PreferencesActivity) },
+                    onStartWizard = { /* TODO: Trigger wizard via Navigation 3 when this is a screen */ },
                     onReportBug = { feedbackReporter.report() },
                     onOpenAbout = { launcher.showAbout() },
                     onSupportProject = {
