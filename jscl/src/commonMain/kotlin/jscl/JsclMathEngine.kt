@@ -109,16 +109,17 @@ open class JsclMathEngine : MathEngine {
         if (value.isNaN()) {
             return value.toString()
         }
+        val normalized = if (nb == NumeralBase.dec) normalizeForDisplay(value) else value
         if (nb == NumeralBase.dec) {
-            if (value == 0.0) {
+            if (normalized == 0.0) {
                 return "0"
             }
-            val constant = findConstant(value)
+            val constant = findConstant(normalized)
             if (constant != null) {
                 return constant.name
             }
         }
-        return prepareNumberFormatter(nb).format(value, nb.radix).toString()
+        return prepareNumberFormatter(nb).format(normalized, nb.radix).toString()
     }
 
     private fun prepareNumberFormatter(nb: NumeralBase): NumberFormatter {
@@ -188,6 +189,11 @@ open class JsclMathEngine : MathEngine {
             }
         }
         return null
+    }
+
+    private fun normalizeForDisplay(value: Double): Double {
+        val threshold = maxOf(DISPLAY_ABSOLUTE_EPS, DISPLAY_RELATIVE_EPS * kotlin.math.abs(value))
+        return if (kotlin.math.abs(value) < threshold) 0.0 else value
     }
 
     override fun getMessageRegistry(): MessageRegistry {
@@ -262,6 +268,8 @@ open class JsclMathEngine : MathEngine {
         val DEFAULT_NUMERAL_BASE: NumeralBase = NumeralBase.dec
 
         const val GROUPING_SEPARATOR_DEFAULT: Char = ' '
+        private const val DISPLAY_ABSOLUTE_EPS = 1e-12
+        private const val DISPLAY_RELATIVE_EPS = 1e-12
 
         private var instance: JsclMathEngine = JsclMathEngine()
 

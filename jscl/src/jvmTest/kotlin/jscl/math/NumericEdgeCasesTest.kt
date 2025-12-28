@@ -37,6 +37,8 @@ class NumericEdgeCasesTest {
         assertEquals("3", engine.evaluate("sqrt(9)"))
         assertEquals("0", engine.evaluate("sin(pi)"))
         assertEquals("0", engine.evaluate("sin(PI)"))
+        assertEquals("0", engine.evaluate("1e-15"))
+        assertEquals("0.000000001", engine.evaluate("1e-9"))
 
         val numeric = engine.evaluateGeneric("ln(-5)").numeric() as NumericWrapper
         val complex = numeric.content() as jscl.math.numeric.Complex

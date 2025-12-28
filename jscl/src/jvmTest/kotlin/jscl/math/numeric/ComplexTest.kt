@@ -10,8 +10,8 @@ class ComplexTest {
 
     @Test
     fun testSmallImag() {
-        assertEquals("1+0.000000000000001*i", Complex.valueOf(1.0, 0.000000000000001).toString())
-        assertEquals("1-0.000000000000001*i", Complex.valueOf(1.0, -0.000000000000001).toString())
+        assertEquals("1+0*i", Complex.valueOf(1.0, 0.000000000000001).toString())
+        assertEquals("1-0*i", Complex.valueOf(1.0, -0.000000000000001).toString())
     }
 
     @Test

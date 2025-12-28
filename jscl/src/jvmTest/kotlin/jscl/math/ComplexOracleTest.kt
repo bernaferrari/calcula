@@ -7,6 +7,8 @@ import jscl.math.numeric.Complex
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.math.sinh
+import kotlin.math.cosh
 import kotlin.random.Random
 import org.junit.After
 import org.junit.Assert.assertTrue
@@ -49,6 +51,33 @@ class ComplexOracleTest {
             val value = evalComplex("ln(-$x)")
             assertApprox(kotlin.math.ln(x), value.realPart())
             assertApprox(Math.PI, value.imaginaryPart())
+        }
+    }
+
+    @Test
+    fun testExpLnInverseOnPrincipalBranch() {
+        val rnd = Random(6)
+        repeat(100) {
+            val r = rnd.nextDouble(1e-6, 100.0)
+            val theta = rnd.nextDouble(-Math.PI + 1e-3, Math.PI - 1e-3)
+            val value = evalComplex("exp(ln($r*e^(i*$theta)))")
+            assertApprox(r * cos(theta), value.realPart())
+            assertApprox(r * sin(theta), value.imaginaryPart())
+        }
+    }
+
+    @Test
+    fun testTrigHyperbolicComplexIdentity() {
+        val rnd = Random(7)
+        repeat(100) {
+            val x = rnd.nextDouble(-10.0, 10.0)
+            val sinValue = evalComplex("sin(i*$x)")
+            assertApprox(0.0, sinValue.realPart())
+            assertApprox(sinh(x), sinValue.imaginaryPart())
+
+            val cosValue = evalComplex("cos(i*$x)")
+            assertApprox(cosh(x), cosValue.realPart())
+            assertApprox(0.0, cosValue.imaginaryPart())
         }
     }
 

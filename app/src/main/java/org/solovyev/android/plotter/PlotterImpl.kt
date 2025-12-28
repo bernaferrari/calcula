@@ -370,12 +370,22 @@ class PlotView @JvmOverloads constructor(
             }
             1 -> {
                 var started = false
+                var prevY = 0f
+                val jumpThreshold = bounds.height() * 5f
+                val clampThreshold = bounds.height() * 10f
                 for (i in 0 until points) {
                     val x = bounds.left + i * xStep
                     val yValue = function.function.evaluate(x)
                     if (!yValue.isFinite()) {
                         started = false
                         continue
+                    }
+                    if (kotlin.math.abs(yValue) > clampThreshold) {
+                        started = false
+                        continue
+                    }
+                    if (started && kotlin.math.abs(yValue - prevY) > jumpThreshold) {
+                        started = false
                     }
                     val sx = mapX(x, bounds)
                     val sy = mapY(yValue, bounds)
@@ -385,6 +395,7 @@ class PlotView @JvmOverloads constructor(
                     } else {
                         path.lineTo(sx, sy)
                     }
+                    prevY = yValue
                 }
                 canvas.drawPath(path, paint)
             }
@@ -396,12 +407,22 @@ class PlotView @JvmOverloads constructor(
                     slices.forEach { ySlice ->
                         val slicePath = Path()
                         var started = false
+                        var prevY = 0f
+                        val jumpThreshold = bounds.height() * 5f
+                        val clampThreshold = bounds.height() * 10f
                         for (i in 0 until points) {
                             val x = bounds.left + i * xStep
                             val yValue = function.function.evaluate(x, ySlice)
                             if (!yValue.isFinite()) {
                                 started = false
                                 continue
+                            }
+                            if (kotlin.math.abs(yValue) > clampThreshold) {
+                                started = false
+                                continue
+                            }
+                            if (started && kotlin.math.abs(yValue - prevY) > jumpThreshold) {
+                                started = false
                             }
                             val sx = mapX(x, bounds)
                             val sy = mapY(yValue, bounds)
@@ -411,6 +432,7 @@ class PlotView @JvmOverloads constructor(
                             } else {
                                 slicePath.lineTo(sx, sy)
                             }
+                            prevY = yValue
                         }
                         canvas.drawPath(slicePath, paint)
                     }
