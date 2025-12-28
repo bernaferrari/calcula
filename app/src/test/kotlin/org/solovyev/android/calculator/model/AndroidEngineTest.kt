@@ -22,17 +22,18 @@ class AndroidEngineTest : BaseCalculatorTest() {
     @Before
     override fun setUp() {
         super.setUp()
-        engine.mathEngine.precision = 3
+        engine.getMathEngine().setPrecision(3)
+        engine.getMathEngine().setGroupingSeparator(JsclMathEngine.GROUPING_SEPARATOR_DEFAULT)
     }
 
     @Test
     @Throws(Exception::class)
     fun testDegrees() {
-        val me: MathEngine = engine.mathEngine
-        val defaultAngleUnit = me.angleUnits
+        val me: MathEngine = engine.getMathEngine()
+        val defaultAngleUnit = me.getAngleUnits()
         try {
-            me.angleUnits = AngleUnit.rad
-            me.precision = 3
+            me.setAngleUnits(AngleUnit.rad)
+            me.setPrecision(3)
             assertError("°")
             assertEval("0.017", "1°")
             assertEval("0.349", "20.0°")
@@ -42,21 +43,21 @@ class AndroidEngineTest : BaseCalculatorTest() {
 
             assertEval("∂(cos(t), t, t, 1°)", "∂(cos(t),t,t,1°)", JsclOperation.simplify)
         } finally {
-            me.angleUnits = defaultAngleUnit
+            me.setAngleUnits(defaultAngleUnit)
         }
     }
 
     @Test
     @Throws(Exception::class)
     fun testFormatting() {
-        val me: MathEngine = engine.mathEngine
+        val me: MathEngine = engine.getMathEngine()
         assertEval("12 345", me.simplify("12345"))
     }
 
     @Test
     @Throws(ParseException::class)
     fun testI() {
-        val me: MathEngine = engine.mathEngine
+        val me: MathEngine = engine.getMathEngine()
 
         assertEval("-i", me.evaluate("i^3"))
         for (i in 0 until 1000) {
@@ -82,7 +83,7 @@ class AndroidEngineTest : BaseCalculatorTest() {
     @Test
     @Throws(Exception::class)
     fun testEmptyFunction() {
-        val me: MathEngine = engine.mathEngine
+        val me: MathEngine = engine.getMathEngine()
         try {
             me.evaluate("cos(cos(cos(cos(acos(acos(acos(acos(acos(acos(acos(acos(cos(cos(cos(cos(cosh(acos(cos(cos(cos(cos(cos(acos(acos(acos(acos(acos(acos(acos(acos(cos(cos(cos(cos(cosh(acos(cos()))))))))))))))))))))))))))))))))))))))")
             Assert.fail()
@@ -95,12 +96,12 @@ class AndroidEngineTest : BaseCalculatorTest() {
         } catch (ignored: ParseException) {
         }
 
-        val defaultAngleUnit = me.angleUnits
+        val defaultAngleUnit = me.getAngleUnits()
         try {
-            me.angleUnits = AngleUnit.rad
+            me.setAngleUnits(AngleUnit.rad)
             assertEval("0.739", me.evaluate("cos(cos(cos(cos(cos(cos(cos(cos(cos(cos(cos(cos(cos(cos(cos(cos(cos(cos(cos(cos(cos(cos(cos(cos(cos(cos(cos(cos(cos(cos(cos(cos(cos(cos(cos(cos(1))))))))))))))))))))))))))))))))))))"))
         } finally {
-            me.angleUnits = defaultAngleUnit
+            me.setAngleUnits(defaultAngleUnit)
         }
 
         engine.variablesRegistry.addOrUpdate(CppVariable.builder("si").withValue(5.0).build().toJsclConstant())
@@ -112,26 +113,26 @@ class AndroidEngineTest : BaseCalculatorTest() {
     @Test
     @Throws(Exception::class)
     fun testRounding() {
-        val me: MathEngine = engine.mathEngine
+        val me: MathEngine = engine.getMathEngine()
 
         try {
-            me.groupingSeparator = '\''
-            me.precision = 2
+            me.setGroupingSeparator('\'')
+            me.setPrecision(2)
             assertEval("12'345'678.9", me.evaluate("1.23456789E7"))
-            me.precision = 10
+            me.setPrecision(10)
             assertEval("12'345'678.9", me.evaluate("1.23456789E7"))
             assertEval("123'456'789", me.evaluate("1.234567890E8"))
             assertEval("1'234'567'890.1", me.evaluate("1.2345678901E9"))
         } finally {
-            me.precision = 3
-            me.groupingSeparator = JsclMathEngine.GROUPING_SEPARATOR_DEFAULT
+            me.setPrecision(3)
+            me.setGroupingSeparator(JsclMathEngine.GROUPING_SEPARATOR_DEFAULT)
         }
     }
 
     @Test
     @Throws(Exception::class)
     fun testNumeralSystems() {
-        val me: MathEngine = engine.mathEngine
+        val me: MathEngine = engine.getMathEngine()
 
         assertEval("11 259 375", "0x:ABCDEF")
         assertEval("30 606 154.462", "0x:ABCDEF*e")
@@ -144,30 +145,31 @@ class AndroidEngineTest : BaseCalculatorTest() {
 
         assertError("0b:π")
 
-        val defaultNumeralBase = me.numeralBase
+        val defaultNumeralBase = me.getNumeralBase()
         try {
-            me.numeralBase = NumeralBase.bin
+            me.setNumeralBase(NumeralBase.bin)
             assertEval("101", "10+11")
             assertEval("0.1011", "10/11")
 
-            me.numeralBase = NumeralBase.hex
+            me.setNumeralBase(NumeralBase.hex)
             assertEval("63 7B", "56CE+CAD")
             assertEval("E", "E")
         } finally {
-            me.numeralBase = defaultNumeralBase
+            me.setNumeralBase(defaultNumeralBase)
         }
     }
 
     @Test
     @Throws(Exception::class)
     fun testLog() {
-        val me: MathEngine = engine.mathEngine
+        val me: MathEngine = engine.getMathEngine()
 
         assertEval("∞", Expression.valueOf("1/0").numeric().toString())
         assertEval("∞", Expression.valueOf("ln(10)/ln(1)").numeric().toString())
 
         // logarithm
-        assertEval("ln(x)/ln(base)", (me.functionsRegistry["log"] as CustomFunction).content, JsclOperation.simplify)
+        val logFunction = me.getFunctionsRegistry().get("log") as CustomFunction
+        assertEval("ln(x)/ln(base)", logFunction.getContent(), JsclOperation.simplify)
         assertEval("∞", "log(1, 10)")
         assertEval("3.322", "log(2, 10)")
         assertEval("1.431", "log(5, 10)")

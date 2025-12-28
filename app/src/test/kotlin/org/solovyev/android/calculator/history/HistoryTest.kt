@@ -1,60 +1,90 @@
 package org.solovyev.android.calculator.history
 
-import android.content.SharedPreferences
 import android.os.Handler
 import android.os.Looper
-import com.squareup.otto.Bus
 import dagger.Lazy
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import okio.FileSystem as OkioFileSystem
+import okio.Path
+import okio.Path.Companion.toPath
 import org.junit.After
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchers.eq
-import org.mockito.Mockito.*
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.timeout
+import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.verify
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
+import org.solovyev.android.calculator.Clipboard
 import org.solovyev.android.calculator.Display
 import org.solovyev.android.calculator.DisplayState
-import org.solovyev.android.calculator.Editor
 import org.solovyev.android.calculator.EditorState
-import org.solovyev.android.calculator.Engine
 import org.solovyev.android.calculator.ErrorReporter
-import org.solovyev.android.calculator.Tests.sameThreadExecutor
+import org.solovyev.android.calculator.Notifier
+import org.solovyev.android.calculator.Tests
+import org.solovyev.android.calculator.UiPreferences
+import org.solovyev.android.calculator.di.AppCoroutineScope
+import org.solovyev.android.calculator.di.AppDirectories
+import org.solovyev.android.calculator.di.AppDispatchers
+import org.solovyev.android.calculator.di.AppPreferences
 import org.solovyev.android.calculator.jscl.JsclOperation.numeric
 import org.solovyev.android.calculator.json.Json
+import org.solovyev.android.calculator.testutils.MainDispatcherRule
 import org.solovyev.android.io.FileSystem
 import java.io.File
 
 @RunWith(RobolectricTestRunner::class)
 class HistoryTest {
 
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private lateinit var env: Tests.CalculatorEnvironment
     private lateinit var history: History
+    private lateinit var appPreferences: AppPreferences
+    private lateinit var dispatchers: AppDispatchers
+    private lateinit var appScope: AppCoroutineScope
+    private lateinit var directories: AppDirectories
+    private lateinit var fileSystem: FileSystem
+    private lateinit var handler: Handler
+    private val errorReporter: ErrorReporter = object : ErrorReporter {
+        override fun onException(e: Throwable) {
+            throw AssertionError(e)
+        }
+
+        override fun onError(message: String) {
+            throw AssertionError(message)
+        }
+    }
 
     @Before
     fun setUp() {
-        history = History()
-        history.backgroundThread = sameThreadExecutor()
-        history.filesDir = Lazy { File(".") }
-        history.application = RuntimeEnvironment.application
-        history.bus = mock(Bus::class.java)
-        history.errorReporter = mock(ErrorReporter::class.java)
-        history.fileSystem = mock(FileSystem::class.java)
-        history.handler = Handler(Looper.getMainLooper())
-        history.preferences = mock(SharedPreferences::class.java)
-        val editor = mock(SharedPreferences.Editor::class.java)
-        `when`(history.preferences.edit()).thenReturn(editor)
-        `when`(editor.remove(anyString())).thenReturn(editor)
-        history.editor = mock(Editor::class.java)
-        history.setLoaded(true)
+        env = Tests.createCalculatorEnvironment()
+        appPreferences = env.appPreferences
+        dispatchers = AppDispatchers()
+        appScope = AppCoroutineScope(dispatchers)
+        directories = AppDirectories(env.application, dispatchers, appScope)
+        handler = Handler(Looper.getMainLooper())
+        fileSystem = FileSystem()
+        fileSystem.errorReporter = errorReporter
+        history = createHistory(fileSystem)
+        history.init()
+        awaitLoaded(history)
     }
 
     @After
     fun tearDown() {
-        history.savedHistoryFile.delete()
-        history.recentHistoryFile.delete()
+        deleteHistoryFile("history-recent.json")
+        deleteHistoryFile("history-saved.json")
     }
 
     @Test
@@ -73,32 +103,29 @@ class HistoryTest {
         addState("2354")
         addState("23547")
 
-        val states = history.recent
+        val states = history.getRecent()
         assertEquals(3, states.size)
-        assertEquals("23547", states[0].editor.textString)
+        assertEquals("23547", states[0].editor.getTextString())
         // intermediate state
-        assertEquals("235", states[1].editor.textString)
-        assertEquals("123+3", states[2].editor.textString)
+        assertEquals("235", states[1].editor.getTextString())
+        assertEquals("123+3", states[2].editor.getTextString())
     }
 
     @Test
-    fun testRecentHistoryShouldTakeIntoAccountGroupingSeparator() {
-        `when`(history.preferences.contains(eq(Engine.Preferences.Output.separator.key))).thenReturn(true)
-        `when`(history.preferences.getString(eq(Engine.Preferences.Output.separator.key), anyString())).thenReturn(" ")
+    fun testRecentHistoryShouldTakeIntoAccountGroupingSeparator() = runBlocking {
+        appPreferences.settings.setOutputSeparator(' ')
         addState("1")
         addState("12")
         addState("123")
         addState("1 234")
         addState("12 345")
 
-        var states = history.recent
-        assertEquals(3, states.size)
-        assertEquals("12 345", states[0].editor.textString)
-        assertEquals("1 234", states[1].editor.textString)
-        assertEquals("123", states[2].editor.textString)
+        var states = history.getRecent()
+        assertEquals(1, states.size)
+        assertEquals("12 345", states[0].editor.getTextString())
         history.clearRecent()
 
-        `when`(history.preferences.getString(eq(Engine.Preferences.Output.separator.key), anyString())).thenReturn("'")
+        appPreferences.settings.setOutputSeparator('\'')
         addState("1")
         addState("12")
         addState("123")
@@ -106,10 +133,10 @@ class HistoryTest {
         addState("12'345")
         addState("12 345")
 
-        states = history.recent
-        assertEquals(4, states.size)
-        assertEquals("12 345", states[0].editor.textString)
-        assertEquals("12'345", states[1].editor.textString)
+        states = history.getRecent()
+        assertEquals(2, states.size)
+        assertEquals("12 345", states[0].editor.getTextString())
+        assertEquals("12'345", states[1].editor.getTextString())
     }
 
     @Test
@@ -122,32 +149,33 @@ class HistoryTest {
         addState("34")
         addState("")
 
-        val states = history.recent
+        val states = history.getRecent()
         assertEquals(2, states.size)
-        assertEquals("34", states[0].editor.textString)
-        assertEquals("12", states[1].editor.textString)
+        assertEquals("34", states[0].editor.getTextString())
+        assertEquals("12", states[1].editor.getTextString())
     }
 
     private fun addState(text: String) {
-        history.addRecent(HistoryState.builder(EditorState.create(text, 3), DisplayState.empty()).build())
+        history.addRecent(
+            HistoryState.builder(EditorState.create(text, 3), DisplayState.empty()).build()
+        )
     }
 
     @Test
     fun testShouldConvertOldHistory() {
-        var states = History.convertOldHistory(oldXml1)
-        assertNotNull(states)
+        var states = requireNotNull(History.convertOldHistory(oldXml1))
         assertEquals(1, states.size)
 
         var state = states[0]
         assertEquals(100000000, state.time)
         assertEquals("", state.comment)
-        assertEquals("1+1", state.editor.textString)
+        assertEquals("1+1", state.editor.getTextString())
         assertEquals(3, state.editor.selection)
         assertEquals("Error", state.display.text)
         assertEquals(true, state.display.valid)
         assertNull(state.display.result)
 
-        states = History.convertOldHistory(oldXml2)
+        states = requireNotNull(History.convertOldHistory(oldXml2))
         checkOldXml2States(states)
     }
 
@@ -158,7 +186,7 @@ class HistoryTest {
         var state = states[0]
         assertEquals(100000000, state.time)
         assertEquals("boom", state.comment)
-        assertEquals("1+11", state.editor.textString)
+        assertEquals("1+11", state.editor.getTextString())
         assertEquals(3, state.editor.selection)
         assertEquals("Error", state.display.text)
         assertEquals(true, state.display.valid)
@@ -167,7 +195,7 @@ class HistoryTest {
         state = states[3]
         assertEquals(1, state.time)
         assertEquals("", state.comment)
-        assertEquals("4+5/35sin(41)+dfdsfsdfs", state.editor.textString)
+        assertEquals("4+5/35sin(41)+dfdsfsdfs", state.editor.getTextString())
         assertEquals(0, state.editor.selection)
         assertEquals("4+5/35sin(41)+dfdsfsdfs", state.display.text)
         assertEquals(true, state.display.valid)
@@ -175,141 +203,175 @@ class HistoryTest {
     }
 
     @Test
-    fun testShouldMigrateOldHistory() {
-        history.fileSystem = FileSystem()
-        `when`(history.preferences.getString(eq(History.OLD_HISTORY_PREFS_KEY), any())).thenReturn(oldXml2)
-        history.init(sameThreadExecutor())
-        Robolectric.flushForegroundThreadScheduler()
-        checkOldXml2States(history.saved)
-    }
-
-    @Test
-    fun testShouldWriteNewHistoryFile() {
-        history.fileSystem = mock(FileSystem::class.java)
-        `when`(history.preferences.getString(eq(History.OLD_HISTORY_PREFS_KEY), any()))
-            .thenReturn(oldXml1)
-        history.init(sameThreadExecutor())
-        Robolectric.flushForegroundThreadScheduler()
-        verify(history.fileSystem).write(eq(history.savedHistoryFile), eq(
-            "[{\"e\":{\"t\":\"1+1\",\"s\":3},\"d\":{\"t\":\"Error\",\"v\":true},\"t\":100000000}]"))
-    }
-
-    @Test
-    fun testShouldAddStateIfEditorAndDisplayAreInSync() {
-        val editorState = EditorState.create("editor", 2)
-        `when`(history.editor.state).thenReturn(editorState)
-
-        val displayState = DisplayState.createError(numeric, "test", editorState.sequence)
-        history.onDisplayChanged(Display.ChangedEvent(DisplayState.empty(), displayState))
-
-        val states = history.recent
-        assertEquals(1, states.size)
-        assertSame(editorState, states[0].editor)
-        assertSame(displayState, states[0].display)
-    }
-
-    @Test
-    fun testShouldNotAddStateIfEditorAndDisplayAreOutOfSync() {
-        val editorState = EditorState.create("editor", 2)
-        `when`(history.editor.state).thenReturn(editorState)
-
-        val displayState = DisplayState.createError(numeric, "test", editorState.sequence - 1)
-        history.onDisplayChanged(Display.ChangedEvent(DisplayState.empty(), displayState))
-
-        val states = history.recent
-        assertEquals(0, states.size)
-    }
-
-    @Test
-    fun testShouldReportOnMigrateException() {
-        `when`(history.preferences.getString(eq(History.OLD_HISTORY_PREFS_KEY), any())).thenReturn(
-            "boom")
-        history.init(sameThreadExecutor())
-
-        verify(history.errorReporter).onException(any(Throwable::class.java))
-    }
-
-    @Test
-    fun testShouldNotRemoveOldHistoryOnError() {
-        `when`(history.preferences.getString(eq(History.OLD_HISTORY_PREFS_KEY), any())).thenReturn("boom")
-        history.init(sameThreadExecutor())
-
-        verify(history.preferences, never()).edit()
-        verify(history.errorReporter).onException(any(Throwable::class.java))
-    }
-
-    @Test
     fun testShouldLoadStates() {
-        val states = Json.load(File(HistoryTest::class.java.getResource("recent-history.json").file),
-            FileSystem(), HistoryState.JSON_CREATOR)
+        val resource = requireNotNull(HistoryTest::class.java.getResource("recent-history.json"))
+        val file = File(resource.file)
+        val states = Json.load(file.absolutePath.toPath(), fileSystem, HistoryState.JSON_CREATOR)
         assertEquals(8, states.size)
 
         var state = states[0]
         assertEquals(1452770652381L, state.time)
         assertEquals("", state.comment)
-        assertEquals("01 234 567 890 123 456 789", state.editor.textString)
+        assertEquals("01 234 567 890 123 456 789", state.editor.getTextString())
         assertEquals(26, state.editor.selection)
         assertEquals("1 234 567 890 123 460 000", state.display.text)
 
         state = states[4]
         assertEquals(1452770626394L, state.time)
         assertEquals("", state.comment)
-        assertEquals("985", state.editor.textString)
+        assertEquals("985", state.editor.getTextString())
         assertEquals(3, state.editor.selection)
         assertEquals("985", state.display.text)
 
         state = states[7]
         assertEquals(1452770503823L, state.time)
         assertEquals("", state.comment)
-        assertEquals("52", state.editor.textString)
+        assertEquals("52", state.editor.getTextString())
         assertEquals(2, state.editor.selection)
         assertEquals("52", state.display.text)
     }
 
     @Test
     fun testShouldClearSaved() {
-        history.updateSaved(HistoryState.builder(EditorState.create("text", 0),
-            DisplayState.createValid(numeric, null, "result", 0)).build())
-        Robolectric.flushForegroundThreadScheduler()
-        assertTrue(history.saved.isNotEmpty())
+        val mockFileSystem = mock(FileSystem::class.java)
+        val historyWithMock = createHistory(mockFileSystem)
+        historyWithMock.init()
+        awaitLoaded(historyWithMock)
 
-        // renew counter
-        history.fileSystem = mock(FileSystem::class.java)
-        history.clearSaved()
+        historyWithMock.updateSaved(
+            HistoryState.builder(
+                EditorState.create("text", 0),
+                DisplayState.createValid(numeric, null, "result", 0)
+            ).build()
+        )
+        Robolectric.flushForegroundThreadScheduler()
+        assertTrue(historyWithMock.getSaved().isNotEmpty())
+
+        historyWithMock.clearSaved()
         Robolectric.flushForegroundThreadScheduler()
 
-        assertTrue(history.saved.isEmpty())
-        verify(history.fileSystem).writeSilently(eq(history.savedHistoryFile), eq("[]"))
+        assertTrue(historyWithMock.getSaved().isEmpty())
+        val pathCaptor = argumentCaptor<Path>()
+        runBlocking {
+            verify(mockFileSystem, timeout(1000)).writeSilently(pathCaptor.capture(), eq("[]"))
+        }
+        assertEquals("history-saved.json", pathCaptor.firstValue.name)
     }
 
     @Test
     fun testShouldClearRecent() {
-        history.addRecent(HistoryState.builder(EditorState.create("text", 0),
-            DisplayState.createValid(numeric, null, "result", 0)).build())
-        Robolectric.flushForegroundThreadScheduler()
-        assertTrue(history.recent.isNotEmpty())
+        val mockFileSystem = mock(FileSystem::class.java)
+        val historyWithMock = createHistory(mockFileSystem)
+        historyWithMock.init()
+        awaitLoaded(historyWithMock)
 
-        // renew counter
-        history.fileSystem = mock(FileSystem::class.java)
-        history.clearRecent()
+        historyWithMock.addRecent(
+            HistoryState.builder(
+                EditorState.create("text", 0),
+                DisplayState.createValid(numeric, null, "result", 0)
+            ).build()
+        )
+        Robolectric.flushForegroundThreadScheduler()
+        assertTrue(historyWithMock.getRecent().isNotEmpty())
+
+        historyWithMock.clearRecent()
         Robolectric.flushForegroundThreadScheduler()
 
-        assertTrue(history.recent.isEmpty())
-        verify(history.fileSystem).writeSilently(eq(history.recentHistoryFile), eq("[]"))
+        assertTrue(historyWithMock.getRecent().isEmpty())
+        val pathCaptor = argumentCaptor<Path>()
+        runBlocking {
+            verify(mockFileSystem, timeout(1000)).writeSilently(pathCaptor.capture(), eq("[]"))
+        }
+        assertEquals("history-recent.json", pathCaptor.firstValue.name)
     }
 
     @Test
     fun testShouldUpdateSaved() {
-        val state = HistoryState.builder(EditorState.create("text", 0),
-            DisplayState.createValid(numeric, null, "result", 0)).build()
+        val state = HistoryState.builder(
+            EditorState.create("text", 0),
+            DisplayState.createValid(numeric, null, "result", 0)
+        ).build()
         history.updateSaved(state)
-        assertTrue(history.saved.size == 1)
-        assertEquals(state.time, history.saved[0].time)
+        assertTrue(history.getSaved().size == 1)
+        assertEquals(state.time, history.getSaved()[0].time)
 
         history.updateSaved(HistoryState.builder(state, false).withTime(10).build())
-        assertTrue(history.saved.size == 1)
-        assertEquals(10, history.saved[0].time)
+        assertTrue(history.getSaved().size == 1)
+        assertEquals(10, history.getSaved()[0].time)
     }
+
+    @Test
+    fun testShouldAddStateIfEditorAndDisplayAreInSync() {
+        val editorState = EditorState.create("editor", 2)
+        env.editor.setState(editorState)
+
+        val displayState = DisplayState.createError(numeric, "test", editorState.sequence)
+        history.onDisplayChanged(Display.ChangedEvent(DisplayState.empty(), displayState))
+
+        val states = history.getRecent()
+        assertEquals(1, states.size)
+        assertEquals(editorState, states[0].editor)
+        assertEquals(displayState, states[0].display)
+    }
+
+    @Test
+    fun testShouldNotAddStateIfEditorAndDisplayAreOutOfSync() {
+        val editorState = EditorState.create("editor", 2)
+        env.editor.setState(editorState)
+
+        val displayState = DisplayState.createError(numeric, "test", editorState.sequence - 1)
+        history.onDisplayChanged(Display.ChangedEvent(DisplayState.empty(), displayState))
+
+        val states = history.getRecent()
+        assertEquals(0, states.size)
+    }
+
+    private fun createHistory(fileSystem: FileSystem): History {
+        val notifier = Notifier().apply {
+            application = env.application
+            handler = this@HistoryTest.handler
+        }
+        val uiPreferences = UiPreferences(appPreferences)
+        val display = Display(
+            env.application,
+            daggerLazy(Clipboard(env.application)),
+            daggerLazy(notifier),
+            daggerLazy(uiPreferences),
+            env.calculator
+        )
+        display.init()
+        fileSystem.errorReporter = errorReporter
+        return History(
+            env.application,
+            handler,
+            appPreferences,
+            env.editor,
+            display,
+            errorReporter,
+            fileSystem,
+            directories,
+            dispatchers,
+            appScope
+        )
+    }
+
+    private fun awaitLoaded(history: History) {
+        runBlocking {
+            history.loaded.first { it }
+        }
+    }
+
+    private fun deleteHistoryFile(name: String) {
+        val path = directories.getFile(name)
+        if (OkioFileSystem.SYSTEM.exists(path)) {
+            OkioFileSystem.SYSTEM.delete(path)
+        }
+    }
+
+    private fun <T> daggerLazy(value: T): Lazy<T> = object : Lazy<T> {
+        override fun get(): T = value
+    }
+
 
     companion object {
         private const val oldXml1 = """<history>

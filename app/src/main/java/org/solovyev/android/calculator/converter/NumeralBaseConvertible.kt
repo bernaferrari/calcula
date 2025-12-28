@@ -17,7 +17,7 @@ class NumeralBaseConvertible(
         val baseTo = (to as NumeralBaseConvertible).base
         val real = Converter.parse(value, base.radix)
 
-        return if (real.isIntegral) {
+        return if (real.isIntegral()) {
             val l = real.toLong()
             if (l != Long.MAX_VALUE && l != -Long.MAX_VALUE) {
                 mathEngine.format(BigInteger.fromLong(l), baseTo)

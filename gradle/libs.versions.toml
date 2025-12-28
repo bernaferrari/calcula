@@ -27,6 +27,7 @@ ksp = "2.3.4"
 lifecycleRuntimeKtx = "2.10.0"
 material = "1.13.0"
 mockito = "5.21.0"
+mockito-kotlin = "5.4.0"
 navigationCompose = "2.9.6"
 # Navigation 3
 nav3Core = "1.0.0"
@@ -98,8 +99,10 @@ junit = { module = "junit:junit", version.ref = "junit" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 # Coroutines
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 material = { module = "com.google.android.material:material", version.ref = "material" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockito-kotlin" }
 opencsv = { module = "com.opencsv:opencsv", version.ref = "opencsv" }
 play-services-ads = { module = "com.google.android.gms:play-services-ads", version.ref = "playServicesAds" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }

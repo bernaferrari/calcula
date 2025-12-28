@@ -18,7 +18,7 @@ class Notifier @Inject constructor() {
     lateinit var handler: Handler
 
     fun showMessage(message: Message) {
-        showMessage(message.getLocalizedMessage())
+        showMessage(CalculatorMessages.getLocalizedMessage(message))
     }
 
     fun showMessage(@StringRes message: Int, vararg parameters: Any) {

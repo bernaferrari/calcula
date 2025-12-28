@@ -23,6 +23,10 @@ class WidgetReceiver : BroadcastReceiver() {
     lateinit var history: History
 
     override fun onReceive(context: Context, intent: Intent) {
+        handleIntent(context, intent)
+    }
+
+    internal fun handleIntent(context: Context, intent: Intent) {
         val action = intent.action
         if (!TextUtils.equals(action, ACTION_BUTTON_PRESSED)) {
             return

@@ -1,21 +1,29 @@
 plugins {
-    `java-library`
-    kotlin("jvm")
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-}
-
-dependencies {
-    api(libs.bignum)
-    implementation(libs.kotlinx.atomicfu)
-
-    testImplementation(libs.junit)
-    testImplementation(libs.opencsv)
+    kotlin("multiplatform")
 }
 
 kotlin {
+    jvm()
     jvmToolchain(17)
+
+    sourceSets {
+        val commonMain by getting {
+            dependencies {
+                api(libs.bignum)
+                implementation(libs.kotlinx.atomicfu)
+                implementation(libs.kotlinx.datetime)
+            }
+        }
+        val commonTest by getting {
+            dependencies {
+                implementation(kotlin("test"))
+            }
+        }
+        val jvmTest by getting {
+            dependencies {
+                implementation(libs.junit)
+                implementation(libs.opencsv)
+            }
+        }
+    }
 }

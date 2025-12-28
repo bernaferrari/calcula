@@ -54,12 +54,18 @@ class ExpressionFunction(val function: jscl.math.function.Function) : Function(m
         is Complex -> {
             val imag = content.imaginaryPart()
             val real = content.realPart()
-            if (real == 0.0 && imag != 0.0) Float.NaN else real.toFloat()
+            if (kotlin.math.abs(imag) > COMPLEX_EPS || !real.isFinite()) {
+                Float.NaN
+            } else {
+                real.toFloat()
+            }
         }
         else -> Float.NaN
     }
 
     companion object {
+        private const val COMPLEX_EPS = 1e-12
+
         private fun makeFunctionName(function: jscl.math.function.Function): String {
             var name: String = function.name
             if (name.isEmpty()) {

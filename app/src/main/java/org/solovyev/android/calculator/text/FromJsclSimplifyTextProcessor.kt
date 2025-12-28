@@ -35,7 +35,7 @@ class FromJsclSimplifyTextProcessor(private val engine: Engine) : TextProcessor<
                 }
 
                 if (needMultiplicationSign(mathTypeBefore?.type, mathTypeAfter?.type)) {
-                    append(engine.multiplicationSign)
+                    append(engine.multiplicationSign.value ?: "*")
                 }
             } else {
                 when (mathType.type) {

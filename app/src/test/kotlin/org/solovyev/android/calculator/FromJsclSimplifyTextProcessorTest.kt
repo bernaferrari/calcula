@@ -1,22 +1,27 @@
 package org.solovyev.android.calculator
 
 import org.junit.Assert.assertEquals
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.solovyev.android.calculator.text.FromJsclSimplifyTextProcessor
+import org.solovyev.android.calculator.testutils.MainDispatcherRule
 import org.solovyev.android.calculator.variables.CppVariable
 
 @RunWith(RobolectricTestRunner::class)
 class FromJsclSimplifyTextProcessorTest {
 
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
     @Test
     fun testProcess() {
         val engine = Tests.makeEngine()
         val tp = FromJsclSimplifyTextProcessor(engine)
-        engine.mathEngine.groupingSeparator = ' '
+        engine.getMathEngine().setGroupingSeparator(' ')
 
-        engine.variablesRegistry.addOrUpdate(CppVariable.builder("t2.718281828459045", 2).build().toJsclConstant())
+        engine.variablesRegistry.addOrUpdate(CppVariable.builder("t2.718281828459045", 2.0).build().toJsclConstant())
         engine.variablesRegistry.addOrUpdate(CppVariable.builder("t").build().toJsclConstant())
         assertEquals("t×", tp.process("t*"))
         assertEquals("×t", tp.process("*t"))

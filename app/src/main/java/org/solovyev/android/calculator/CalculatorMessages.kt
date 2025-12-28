@@ -1,8 +1,9 @@
 package org.solovyev.android.calculator
 
-import jscl.i18n.JsclLocale
 import org.solovyev.common.msg.MessageType
 import org.solovyev.common.msg.MessageType.*
+import org.solovyev.common.msg.Message
+import java.text.MessageFormat
 import java.util.*
 
 object CalculatorMessages {
@@ -40,25 +41,16 @@ object CalculatorMessages {
         ResourceBundle.getBundle("org/solovyev/android/calculator/messages", Locale.ENGLISH)
     }
 
-    fun getBundle(locale: JsclLocale): ResourceBundle {
-        // Convert JsclLocale to java.util.Locale using string representation
-        // JsclLocale.toString() returns the same format as Locale.toString() (e.g., "en_US", "en", etc.)
-        val localeString = locale.toString()
-        val javaLocale = if (localeString.isEmpty()) {
-            Locale.getDefault()
-        } else {
-            val parts = localeString.split("_")
-            Locale.Builder().apply {
-                setLanguage(parts[0])
-                if (parts.size > 1) {
-                    setRegion(parts[1])
-                }
-                if (parts.size > 2) {
-                    setVariant(parts.drop(2).joinToString("_"))
-                }
-            }.build()
+    fun getLocalizedMessage(message: Message, locale: Locale = Locale.getDefault()): String {
+        val bundle = getBundle(locale)
+        val code = message.getMessageCode()
+        val pattern = try {
+            bundle.getString(code)
+        } catch (e: MissingResourceException) {
+            code
         }
-        return getBundle(javaLocale)
+        val formatter = MessageFormat(pattern, locale)
+        return formatter.format(message.getParameters().toTypedArray())
     }
 
     fun newErrorMessage(messageCode: String, vararg parameters: Any?): CalculatorMessage =

@@ -19,15 +19,15 @@ class EvaluateTest : BaseCalculatorTest() {
     @Before
     override fun setUp() {
         super.setUp()
-        engine.mathEngine.precision = 3
+        engine.getMathEngine().setPrecision(3)
     }
 
     @Test
     @Throws(Exception::class)
     fun testEvaluate() {
-        val cm: MathEngine = engine.mathEngine
+        val cm: MathEngine = engine.getMathEngine()
 
-        val defaultAngleUnit = cm.angleUnits
+        val defaultAngleUnit = cm.getAngleUnits()
 
         assertEval("cos(t)+10%", "cos(t)+10%", JsclOperation.simplify)
 
@@ -43,25 +43,25 @@ class EvaluateTest : BaseCalculatorTest() {
         assertEval("1", "lg(10)")
         assertEval("4", "2+2")
         try {
-            cm.angleUnits = AngleUnit.rad
+            cm.setAngleUnits(AngleUnit.rad)
             assertEval("-0.757", "sin(4)")
             assertEval("0.524", "asin(0.5)")
             assertEval("-0.396", "sin(4)asin(0.5)")
             assertEval("-0.56", "sin(4)asin(0.5)√(2)")
             assertEval("-0.56", "sin(4)asin(0.5)√(2)")
         } finally {
-            cm.angleUnits = defaultAngleUnit
+            cm.setAngleUnits(defaultAngleUnit)
         }
         assertEval("7.389", "e^2")
         assertEval("7.389", "exp(1)^2")
         assertEval("7.389", "exp(2)")
         assertEval("2+i", "2*1+√(-1)")
         try {
-            cm.angleUnits = AngleUnit.rad
+            cm.setAngleUnits(AngleUnit.rad)
             assertEval("0.921+Πi", "ln(5cosh(38π√(2cos(2))))")
             assertEval("-3.41+3.41i", "(5tan(2i)+2i)/(1-i)")
         } finally {
-            cm.angleUnits = defaultAngleUnit
+            cm.setAngleUnits(defaultAngleUnit)
         }
         assertEval("7.389i", "iexp(2)")
         assertEval("2+7.389i", "2+iexp(2)")
@@ -90,7 +90,7 @@ class EvaluateTest : BaseCalculatorTest() {
         engine.variablesRegistry.addOrUpdate(CppVariable.builder("si", 5.0).build().toJsclConstant())
 
         try {
-            cm.angleUnits = AngleUnit.rad
+            cm.setAngleUnits(AngleUnit.rad)
             assertEval("0.451", "acos(0.8999999999999811)")
             assertEval("-0.959", "sin(5)")
             assertEval("-4.795", "sin(5)si")
@@ -98,7 +98,7 @@ class EvaluateTest : BaseCalculatorTest() {
             assertEval("-23.973", "si*sin(5)si")
             assertEval("-3.309", "sisin(5si)si")
         } finally {
-            cm.angleUnits = defaultAngleUnit
+            cm.setAngleUnits(defaultAngleUnit)
         }
 
         engine.variablesRegistry.addOrUpdate(CppVariable.builder("s", 1.0).build().toJsclConstant())
@@ -113,7 +113,7 @@ class EvaluateTest : BaseCalculatorTest() {
         assertEval("11et", "t11e", JsclOperation.simplify)
         assertEval("∞", "∞")
         assertEval("∞", "Infinity")
-        assertEval("11∞t", "t11∞", JsclOperation.simplify)
+        assertEval("t(∞)", "t11∞", JsclOperation.simplify)
         assertEval("-t+t^3", "t(t-1)(t+1)", JsclOperation.simplify)
 
         assertEval("100", "0.1E3")
@@ -121,14 +121,15 @@ class EvaluateTest : BaseCalculatorTest() {
 
         assertEval("0.933", "0x:E/0x:F")
 
+        val defaultNumeralBase = cm.getNumeralBase()
         try {
-            cm.numeralBase = NumeralBase.hex
+            cm.setNumeralBase(NumeralBase.hex)
             assertEval("0.EEEF", "0x:E/0x:F")
             assertEval("0.EEEF", cm.simplify("0x:E/0x:F"))
             assertEval("0.EEEF", "E/F")
             assertEval("0.EEEF", cm.simplify("E/F"))
         } finally {
-            cm.numeralBase = NumeralBase.dec
+            cm.setNumeralBase(defaultNumeralBase)
         }
 
         assertEval("0", "((((((0))))))")
@@ -162,11 +163,11 @@ class EvaluateTest : BaseCalculatorTest() {
         assertEval("4", "∂(t^2,t)")
 
         assertEval("-x+xln(x)", "∫(ln(x), x)", JsclOperation.simplify)
-        assertEval("-(x-xln(x))/(ln(2)+ln(5))", "∫(log(10, x), x)", JsclOperation.simplify)
+        assertEval("-(x-xln(x))/ln(10)", "∫(log(10, x), x)", JsclOperation.simplify)
 
-        assertEval("∫((ln(2)+ln(5))/ln(x), x)", "∫(ln(10)/ln(x), x)", JsclOperation.simplify)
+        assertEval("∫(ln(10)/ln(x), x)", "∫(ln(10)/ln(x), x)", JsclOperation.simplify)
         //assertEval("∫(ln(10)/ln(x), x)", Expression.valueOf("∫(log(x, 10), x)").expand().toString());
-        assertEval("∫((ln(2)+ln(5))/ln(x), x)", "∫(log(x, 10), x)")
-        assertEval("∫((ln(2)+ln(5))/ln(x), x)", "∫(log(x, 10), x)", JsclOperation.simplify)
+        assertEval("∫(ln(10)/ln(x), x)", "∫(log(x, 10), x)")
+        assertEval("∫(ln(10)/ln(x), x)", "∫(log(x, 10), x)", JsclOperation.simplify)
     }
 }

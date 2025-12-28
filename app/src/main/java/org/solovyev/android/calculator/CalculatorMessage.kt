@@ -1,6 +1,5 @@
 package org.solovyev.android.calculator
 
-import jscl.i18n.JsclLocale
 import org.solovyev.common.msg.AbstractMessage
 import org.solovyev.common.msg.Message
 import org.solovyev.common.msg.MessageType
@@ -23,11 +22,6 @@ class CalculatorMessage : AbstractMessage {
         messageType: MessageType,
         parameters: List<*>
     ) : super(messageCode, messageType, parameters)
-
-    override fun getMessagePattern(locale: JsclLocale): String {
-        val rb = CalculatorMessages.getBundle(locale)
-        return rb.getString(getMessageCode())
-    }
 
     companion object {
         @JvmStatic

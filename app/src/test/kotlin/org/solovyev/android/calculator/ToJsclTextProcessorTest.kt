@@ -5,13 +5,17 @@ import jscl.NumeralBase
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
+import org.solovyev.android.calculator.testutils.MainDispatcherRule
 
 @RunWith(RobolectricTestRunner::class)
 class ToJsclTextProcessorTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var preprocessor: ToJsclTextProcessor
 
@@ -57,10 +61,10 @@ class ToJsclTextProcessorTest {
         assertEquals("EE", preprocessor.process("EE").toString())
 
         try {
-            preprocessor.engine.mathEngine.numeralBase = NumeralBase.hex
+            preprocessor.engine.getMathEngine().setNumeralBase(NumeralBase.hex)
             assertEquals("22F*exp(F)", preprocessor.process("22Fexp(F)").toString())
         } finally {
-            preprocessor.engine.mathEngine.numeralBase = NumeralBase.dec
+            preprocessor.engine.getMathEngine().setNumeralBase(NumeralBase.dec)
         }
         assertEquals("0x:ABCDEF", preprocessor.process("0x:ABCDEF").toString())
         assertEquals("0x:ABCDEF", preprocessor.process("0x:A BC DEF").toString())
@@ -111,15 +115,15 @@ class ToJsclTextProcessorTest {
 
     @Test
     fun testNumeralBases() {
-        val defaultNumeralBase = JsclMathEngine.getInstance().numeralBase
+        val defaultNumeralBase = JsclMathEngine.getInstance().getNumeralBase()
         try {
-            JsclMathEngine.getInstance().numeralBase = NumeralBase.bin
+            JsclMathEngine.getInstance().setNumeralBase(NumeralBase.bin)
             assertEquals("101", JsclMathEngine.getInstance().evaluate("10+11"))
 
-            JsclMathEngine.getInstance().numeralBase = NumeralBase.hex
+            JsclMathEngine.getInstance().setNumeralBase(NumeralBase.hex)
             assertEquals("56CE+CAD", preprocessor.process("56CE+CAD").value)
         } finally {
-            JsclMathEngine.getInstance().numeralBase = defaultNumeralBase
+            JsclMathEngine.getInstance().setNumeralBase(defaultNumeralBase)
         }
     }
 

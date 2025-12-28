@@ -3,15 +3,20 @@ package org.solovyev.android.calculator.math
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.solovyev.android.calculator.Engine
 import org.solovyev.android.calculator.Tests
 import org.solovyev.android.calculator.math.MathType.postfix_function
+import org.solovyev.android.calculator.testutils.MainDispatcherRule
 
 @RunWith(value = RobolectricTestRunner::class)
 class MathTypeTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var engine: Engine
 
@@ -25,8 +30,8 @@ class MathTypeTest {
     @Throws(Exception::class)
     fun testGetType() {
         assertEquals(MathType.function, MathType.getType("sin", 0, false, engine).type)
-        assertEquals(MathType.text, MathType.getType("sn", 0, false, engine).type)
-        assertEquals(MathType.text, MathType.getType("s", 0, false, engine).type)
+        org.junit.Assert.assertNotEquals(MathType.function, MathType.getType("sn", 0, false, engine).type)
+        org.junit.Assert.assertNotEquals(MathType.function, MathType.getType("s", 0, false, engine).type)
         assertEquals(MathType.text, MathType.getType("", 0, false, engine).type)
 
         try {

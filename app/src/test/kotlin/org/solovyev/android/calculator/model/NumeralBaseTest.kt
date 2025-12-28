@@ -1,9 +1,8 @@
 package org.solovyev.android.calculator.model
 
-import au.com.bytecode.opencsv.CSVReader
+import com.opencsv.CSVParserBuilder
+import com.opencsv.CSVReaderBuilder
 import com.google.common.base.Function
-import jscl.JsclMathEngine
-import jscl.MathEngine
 import jscl.math.Expression
 import jscl.util.ExpressionGeneratorWithInput
 import org.junit.Assert
@@ -21,7 +20,7 @@ class NumeralBaseTest : BaseCalculatorTest() {
     @Before
     override fun setUp() {
         super.setUp()
-        engine.mathEngine.precision = 3
+        engine.getMathEngine().setPrecision(3)
     }
 
     @Throws(jscl.text.ParseException::class, ParseException::class)
@@ -31,11 +30,11 @@ class NumeralBaseTest : BaseCalculatorTest() {
         val bin = "0b:" + line[2].uppercase()
 
         val decExpression = converter.apply(dec)
-        val decResult = engine.mathEngine.evaluate(decExpression)
+        val decResult = engine.getMathEngine().evaluate(decExpression)
         val hexExpression = converter.apply(hex)
-        val hexResult = engine.mathEngine.evaluate(hexExpression)
+        val hexResult = engine.getMathEngine().evaluate(hexExpression)
         val binExpression = converter.apply(bin)
-        val binResult = engine.mathEngine.evaluate(binExpression)
+        val binResult = engine.getMathEngine().evaluate(binExpression)
 
         Assert.assertEquals("dec-hex: $decExpression : $hexExpression", decResult, hexResult)
         Assert.assertEquals("dec-bin: $decExpression : $binExpression", decResult, binResult)
@@ -44,14 +43,14 @@ class NumeralBaseTest : BaseCalculatorTest() {
     @Test
     @Throws(Exception::class)
     fun testConversion() {
-        var reader: CSVReader? = null
-        try {
-            val me: MathEngine = JsclMathEngine.getInstance()
-
-            reader = CSVReader(
-                InputStreamReader(NumeralBaseTest::class.java.getResourceAsStream("/org/solovyev/android/calculator/model/nb_table.csv")),
-                '\t'
+        val reader = CSVReaderBuilder(
+            InputStreamReader(
+                NumeralBaseTest::class.java.getResourceAsStream("/org/solovyev/android/calculator/model/nb_table.csv")
             )
+        ).withCSVParser(
+            CSVParserBuilder().withSeparator('\t').build()
+        ).build()
+        try {
 
             // skip first line
             reader.readNext()
@@ -102,7 +101,7 @@ class NumeralBaseTest : BaseCalculatorTest() {
                 line = reader.readNext()
             }
         } finally {
-            reader?.close()
+            reader.close()
         }
     }
 

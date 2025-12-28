@@ -1,65 +1,62 @@
 package org.solovyev.android.calculator.wizard
 
-import android.os.Build
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.android.controller.ActivityController
-import org.robolectric.annotation.Config
-import org.solovyev.android.wizard.WizardUi
-import java.lang.reflect.Field
+import org.robolectric.RuntimeEnvironment
+import org.solovyev.android.calculator.di.AppPreferences
+import org.solovyev.android.calculator.testutils.MainDispatcherRule
+import org.solovyev.android.wizard.Wizard
+import org.solovyev.android.wizard.WizardFlow
+import org.solovyev.android.wizard.WizardStep
+import org.solovyev.android.wizard.Wizards
 
-@Config(sdk = [Build.VERSION_CODES.LOLLIPOP])
 @RunWith(RobolectricTestRunner::class)
 class OnScreenCalculatorWizardStepTest {
 
-    private lateinit var fragment: OnScreenCalculatorWizardStep
-
-    private lateinit var activity: WizardActivity
-
-    private lateinit var controller: ActivityController<WizardActivity>
-    private lateinit var uiField: Field
-
-    @Before
-    @Throws(Exception::class)
-    fun setUp() {
-        uiField = WizardActivity::class.java.getDeclaredField("wizardUi")
-        uiField.isAccessible = true
-
-        createActivity()
-        setFragment()
-    }
-
-    @Throws(IllegalAccessException::class)
-    private fun getWizardUi(): WizardUi {
-        return uiField.get(activity) as WizardUi
-    }
-
-    private fun createActivity() {
-        controller = Robolectric.buildActivity(WizardActivity::class.java).create().start().resume()
-        activity = controller.get()
-    }
-
-    @Throws(IllegalAccessException::class)
-    private fun setFragment() {
-        getWizardUi().step = CalculatorWizardStep.on_screen_calculator
-        activity.supportFragmentManager.executePendingTransactions()
-        fragment = activity.supportFragmentManager.findFragmentByTag(CalculatorWizardStep.on_screen_calculator.fragmentTag) as OnScreenCalculatorWizardStep
-    }
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
 
     @Test
-    @Throws(Exception::class)
-    fun testShouldRestoreStateOnRestart() {
-        fragment.checkbox.isChecked = true
-        controller.restart()
-        assertTrue(fragment.checkbox.isChecked)
+    fun testShowAppIconUpdatesState() = runBlocking {
+        val appPreferences = AppPreferences(RuntimeEnvironment.application)
+        val viewModel = WizardComposeViewModel(
+            appPreferences,
+            FakeWizards(FakeWizard("flow"))
+        )
 
-        fragment.checkbox.isChecked = false
-        controller.restart()
-        assertFalse(fragment.checkbox.isChecked)
+        viewModel.setShowAppIcon(false)
+        val state = viewModel.state.first { !it.showAppIcon }
+        assertFalse(state.showAppIcon)
+
+        viewModel.setShowAppIcon(true)
+        val updated = viewModel.state.first { it.showAppIcon }
+        assertTrue(updated.showAppIcon)
+    }
+
+    private class FakeWizards(private val wizard: Wizard) : Wizards {
+        override fun getWizard(name: String?, arguments: android.os.Bundle?): Wizard = wizard
+    }
+
+    private class FakeWizard(override val name: String) : Wizard {
+        override val lastSavedStepName: String? = null
+        override val isFinished: Boolean = false
+        override val isStarted: Boolean = false
+        override val flow: WizardFlow = object : WizardFlow {
+            override fun getStepByName(name: String): WizardStep? = null
+            override fun getNextStep(step: WizardStep): WizardStep? = null
+            override fun getPrevStep(step: WizardStep): WizardStep? = null
+            override val firstStep: WizardStep
+                get() = CalculatorWizardStep.WELCOME
+        }
+
+        override fun saveLastStep(step: WizardStep) = Unit
+
+        override fun saveFinished(step: WizardStep, forceFinish: Boolean) = Unit
     }
 }

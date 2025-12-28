@@ -1,24 +1,24 @@
 package org.solovyev.android.calculator
 
-import android.content.SharedPreferences
-import com.squareup.otto.Bus
 import org.junit.Assert
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.mock
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
+import org.solovyev.android.calculator.testutils.MainDispatcherRule
 
 @RunWith(RobolectricTestRunner::class)
 class EditorTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var editor: Editor
 
     @Before
     fun setUp() {
-        editor = Editor(RuntimeEnvironment.application, mock(SharedPreferences::class.java), Tests.makeEngine())
-        editor.bus = mock(Bus::class.java)
+        editor = Tests.createCalculatorEnvironment().editor
         // real text processor causes Robolectric to crash: NullPointerException at
         // org.robolectric.res.ThemeStyleSet$OverlayedStyle.equals
         editor.textProcessor = null
@@ -28,52 +28,52 @@ class EditorTest {
     fun testInsert() {
         var viewState = editor.state
 
-        Assert.assertEquals("", viewState.textString)
+        Assert.assertEquals("", viewState.getTextString())
         Assert.assertEquals(0, viewState.selection)
 
         viewState = insertAndGet("")
 
-        Assert.assertEquals("", viewState.textString)
+        Assert.assertEquals("", viewState.getTextString())
         Assert.assertEquals(0, viewState.selection)
 
         viewState = insertAndGet("test")
 
-        Assert.assertEquals("test", viewState.textString)
+        Assert.assertEquals("test", viewState.getTextString())
         Assert.assertEquals(4, viewState.selection)
 
         viewState = insertAndGet("test")
-        Assert.assertEquals("testtest", viewState.textString)
+        Assert.assertEquals("testtest", viewState.getTextString())
         Assert.assertEquals(8, viewState.selection)
 
         viewState = insertAndGet("")
-        Assert.assertEquals("testtest", viewState.textString)
+        Assert.assertEquals("testtest", viewState.getTextString())
         Assert.assertEquals(8, viewState.selection)
 
         viewState = insertAndGet("1234567890")
-        Assert.assertEquals("testtest1234567890", viewState.textString)
+        Assert.assertEquals("testtest1234567890", viewState.getTextString())
         Assert.assertEquals(18, viewState.selection)
 
         editor.moveCursorLeft()
         viewState = insertAndGet("9")
-        Assert.assertEquals("testtest12345678990", viewState.textString)
+        Assert.assertEquals("testtest12345678990", viewState.getTextString())
         Assert.assertEquals(18, viewState.selection)
 
         editor.setCursorOnStart()
         viewState = insertAndGet("9")
-        Assert.assertEquals("9testtest12345678990", viewState.textString)
+        Assert.assertEquals("9testtest12345678990", viewState.getTextString())
         Assert.assertEquals(1, viewState.selection)
 
         editor.erase()
         viewState = insertAndGet("9")
-        Assert.assertEquals("9testtest12345678990", viewState.textString)
+        Assert.assertEquals("9testtest12345678990", viewState.getTextString())
         Assert.assertEquals(1, viewState.selection)
 
         viewState = insertAndGet("öäü")
-        Assert.assertEquals("9öäütesttest12345678990", viewState.textString)
+        Assert.assertEquals("9öäütesttest12345678990", viewState.getTextString())
 
         editor.setCursorOnEnd()
         viewState = insertAndGet("öäü")
-        Assert.assertEquals("9öäütesttest12345678990öäü", viewState.textString)
+        Assert.assertEquals("9öäütesttest12345678990öäü", viewState.getTextString())
     }
 
     private fun insertAndGet(text: String): EditorState {
@@ -86,39 +86,39 @@ class EditorTest {
         setTextAndGet("")
         editor.erase()
 
-        Assert.assertEquals("", editor.state.textString)
+        Assert.assertEquals("", editor.state.getTextString())
 
         setTextAndGet("test")
         editor.erase()
-        Assert.assertEquals("tes", editor.state.textString)
+        Assert.assertEquals("tes", editor.state.getTextString())
 
         editor.erase()
-        Assert.assertEquals("te", editor.state.textString)
+        Assert.assertEquals("te", editor.state.getTextString())
 
         editor.erase()
-        Assert.assertEquals("t", editor.state.textString)
+        Assert.assertEquals("t", editor.state.getTextString())
 
         editor.erase()
-        Assert.assertEquals("", editor.state.textString)
+        Assert.assertEquals("", editor.state.getTextString())
 
         editor.erase()
-        Assert.assertEquals("", editor.state.textString)
+        Assert.assertEquals("", editor.state.getTextString())
 
         setTextAndGet("1234")
         editor.moveCursorLeft()
         editor.erase()
-        Assert.assertEquals("124", editor.state.textString)
+        Assert.assertEquals("124", editor.state.getTextString())
 
         editor.erase()
-        Assert.assertEquals("14", editor.state.textString)
+        Assert.assertEquals("14", editor.state.getTextString())
 
         editor.erase()
-        Assert.assertEquals("4", editor.state.textString)
+        Assert.assertEquals("4", editor.state.getTextString())
 
         setTextAndGet("1")
         editor.moveCursorLeft()
         editor.erase()
-        Assert.assertEquals("1", editor.state.textString)
+        Assert.assertEquals("1", editor.state.getTextString())
     }
 
     @Test
@@ -174,43 +174,43 @@ class EditorTest {
     fun testSetText() {
         var viewState = setTextAndGet("test")
 
-        Assert.assertEquals("test", viewState.textString)
+        Assert.assertEquals("test", viewState.getTextString())
         Assert.assertEquals(4, viewState.selection)
 
         viewState = setTextAndGet("testtest")
-        Assert.assertEquals("testtest", viewState.textString)
+        Assert.assertEquals("testtest", viewState.getTextString())
         Assert.assertEquals(8, viewState.selection)
 
         viewState = setTextAndGet("")
-        Assert.assertEquals("", viewState.textString)
+        Assert.assertEquals("", viewState.getTextString())
         Assert.assertEquals(0, viewState.selection)
 
         viewState = setTextAndGet("testtest", 0)
-        Assert.assertEquals("testtest", viewState.textString)
+        Assert.assertEquals("testtest", viewState.getTextString())
         Assert.assertEquals(0, viewState.selection)
 
         viewState = setTextAndGet("testtest", 2)
-        Assert.assertEquals("testtest", viewState.textString)
+        Assert.assertEquals("testtest", viewState.getTextString())
         Assert.assertEquals(2, viewState.selection)
 
         viewState = setTextAndGet("", 0)
-        Assert.assertEquals("", viewState.textString)
+        Assert.assertEquals("", viewState.getTextString())
         Assert.assertEquals(0, viewState.selection)
 
         viewState = setTextAndGet("", 3)
-        Assert.assertEquals("", viewState.textString)
+        Assert.assertEquals("", viewState.getTextString())
         Assert.assertEquals(0, viewState.selection)
 
         viewState = setTextAndGet("", -3)
-        Assert.assertEquals("", viewState.textString)
+        Assert.assertEquals("", viewState.getTextString())
         Assert.assertEquals(0, viewState.selection)
 
         viewState = setTextAndGet("test")
-        Assert.assertEquals("test", viewState.textString)
+        Assert.assertEquals("test", viewState.getTextString())
         Assert.assertEquals(4, viewState.selection)
 
         viewState = setTextAndGet("", 2)
-        Assert.assertEquals("", viewState.textString)
+        Assert.assertEquals("", viewState.getTextString())
         Assert.assertEquals(0, viewState.selection)
     }
 

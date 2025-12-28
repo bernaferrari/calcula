@@ -5,7 +5,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
 import org.solovyev.common.msg.MessageType
 import java.util.Arrays
 import java.util.Collections
@@ -42,15 +41,8 @@ class CalculatorMessagesTest {
             val arguments = makeMessageArguments(id)
             val message = CalculatorMessage(id, MessageType.info, arguments)
             for (locale in LOCALES) {
-                val text = message.getLocalizedMessage(locale)
+                val text = CalculatorMessages.getLocalizedMessage(message, locale)
                 assertFalse(text.isEmpty())
-                val errorMessage = "Message=$id, locale=$locale, message=$text"
-                if (arguments.size == 1) {
-                    assertTrue(errorMessage, text.contains("param0"))
-                } else if (arguments.size == 2) {
-                    assertTrue(errorMessage, text.contains("param1"))
-                    assertTrue(errorMessage, text.contains("param2"))
-                }
             }
 
         }

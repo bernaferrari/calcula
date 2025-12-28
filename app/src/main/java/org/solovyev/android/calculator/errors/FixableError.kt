@@ -13,7 +13,7 @@ data class FixableError(
 ) : Parcelable {
 
     constructor(message: Message) : this(
-        message = message.getLocalizedMessage(),
+        message = CalculatorMessages.getLocalizedMessage(message),
         messageType = CalculatorMessages.toMessageType(message.getMessageLevel().getMessageLevel()),
         error = FixableErrorType.getErrorByCode(message.getMessageCode())
     )

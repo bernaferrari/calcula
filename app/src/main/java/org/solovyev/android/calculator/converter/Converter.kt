@@ -24,7 +24,7 @@ internal object Converter {
         }
 
         return Real(processedValue, base).also { real ->
-            if (real.isNan) {
+            if (real.isNan()) {
                 throw NumberFormatException()
             }
         }

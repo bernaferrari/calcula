@@ -1,6 +1,5 @@
 package org.solovyev.android.calculator
 
-import jscl.i18n.JsclLocale
 import org.solovyev.common.msg.Message
 import org.solovyev.common.msg.MessageLevel
 
@@ -44,11 +43,7 @@ class ParseException : RuntimeException, Message {
     }
 
     override fun getLocalizedMessage(): String {
-        return internalMessage.getLocalizedMessage(JsclLocale.getDefault())
-    }
-
-    override fun getLocalizedMessage(locale: JsclLocale): String {
-        return internalMessage.getLocalizedMessage(locale)
+        return CalculatorMessages.getLocalizedMessage(internalMessage)
     }
 
     override val message: String?

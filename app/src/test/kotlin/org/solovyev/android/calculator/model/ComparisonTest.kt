@@ -12,7 +12,7 @@ class ComparisonTest : BaseCalculatorTest() {
     @Before
     override fun setUp() {
         super.setUp()
-        engine.mathEngine.precision = 3
+        engine.getMathEngine().setPrecision(3)
     }
 
     @Test

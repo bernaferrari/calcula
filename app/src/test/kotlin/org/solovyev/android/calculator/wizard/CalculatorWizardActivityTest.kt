@@ -1,189 +1,106 @@
 package org.solovyev.android.calculator.wizard
 
-import android.content.Intent
-import android.os.Bundle
-import androidx.fragment.app.FragmentManager
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
-import org.robolectric.Shadows
-import org.robolectric.android.controller.ActivityController
-import org.solovyev.android.calculator.wizard.CalculatorWizardStep.choose_mode
-import org.solovyev.android.wizard.WizardUi
+import org.solovyev.android.calculator.di.AppPreferences
+import org.solovyev.android.calculator.testutils.MainDispatcherRule
+import org.solovyev.android.wizard.ListWizardFlow
+import org.solovyev.android.wizard.Wizard
+import org.solovyev.android.wizard.WizardFlow
+import org.solovyev.android.wizard.WizardStep
 import org.solovyev.android.wizard.Wizards
-import java.lang.reflect.Field
 
-@RunWith(value = RobolectricTestRunner::class)
+@RunWith(RobolectricTestRunner::class)
 class CalculatorWizardActivityTest {
 
-    private lateinit var controller: ActivityController<WizardActivity>
-    private lateinit var activity: WizardActivity
-    private lateinit var wizards: Wizards
-    private lateinit var uiField: Field
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
 
-    @Before
-    @Throws(Exception::class)
-    fun setUp() {
-        controller = Robolectric.buildActivity(WizardActivity::class.java)
-        activity = controller.get()
-        wizards = CalculatorWizards(RuntimeEnvironment.application)
-        activity.setWizards(wizards)
-        controller.create()
+    @Test
+    fun testStartWizardUsesFirstStep() {
+        val flow = ListWizardFlow(listOf(CalculatorWizardStep.WELCOME, CalculatorWizardStep.CHOOSE_MODE))
+        val wizard = FakeWizard("flow", flow)
+        val viewModel = WizardComposeViewModel(
+            AppPreferences(RuntimeEnvironment.application),
+            FakeWizards(wizard)
+        )
 
-        uiField = WizardActivity::class.java.getDeclaredField("wizardUi")
-        uiField.isAccessible = true
+        viewModel.startWizard("flow", null)
+        val state = viewModel.wizardState.value
+        assertNotNull(state)
+        assertEquals(flow.firstStep, state?.step)
     }
 
     @Test
-    @Throws(Exception::class)
-    fun testShouldBeFirstTimeWizardByDefault() {
-        assertEquals(CalculatorWizards.FIRST_TIME_WIZARD, getWizardUi().wizard.name)
-    }
+    fun testStepNavigationUpdatesWizardState() {
+        val flow = ListWizardFlow(
+            listOf(CalculatorWizardStep.WELCOME, CalculatorWizardStep.CHOOSE_MODE, CalculatorWizardStep.LAST)
+        )
+        val wizard = FakeWizard("flow", flow)
+        val viewModel = WizardComposeViewModel(
+            AppPreferences(RuntimeEnvironment.application),
+            FakeWizards(wizard)
+        )
 
-    @Throws(IllegalAccessException::class)
-    private fun getWizardUi(): WizardUi {
-        return uiField.get(activity) as WizardUi
-    }
+        viewModel.startWizard("flow", CalculatorWizardStep.WELCOME.name)
+        viewModel.nextStep()
+        assertEquals(CalculatorWizardStep.CHOOSE_MODE, viewModel.wizardState.value?.step)
+        assertEquals(CalculatorWizardStep.CHOOSE_MODE.name, wizard.lastSavedStepName)
 
-    @Test
-    @Throws(Exception::class)
-    fun testShouldBeFirstStep() {
-        assertNotNull(getWizardUi().step)
-        assertEquals(getWizardUi().flow.firstStep, getWizardUi().step)
-    }
+        viewModel.nextStep()
+        assertEquals(CalculatorWizardStep.LAST, viewModel.wizardState.value?.step)
+        assertEquals(CalculatorWizardStep.LAST.name, wizard.lastSavedStepName)
 
-    @Test
-    @Throws(Exception::class)
-    fun testShouldSaveState() {
-        getWizardUi().step = choose_mode
-
-        val outState = Bundle()
-        controller.saveInstanceState(outState)
-
-        controller = Robolectric.buildActivity(WizardActivity::class.java)
-        controller.create(outState)
-
-        activity = controller.get()
-        assertNotNull(getWizardUi().flow)
-        assertEquals(CalculatorWizards.FIRST_TIME_WIZARD, getWizardUi().wizard.name)
-        assertNotNull(getWizardUi().step)
-        assertEquals(choose_mode, getWizardUi().step)
+        viewModel.prevStep()
+        assertEquals(CalculatorWizardStep.CHOOSE_MODE, viewModel.wizardState.value?.step)
     }
 
     @Test
-    @Throws(Exception::class)
-    fun testCreate() {
-        val intent = Intent()
-        intent.setClass(activity, WizardActivity::class.java)
-        intent.putExtra("flow", CalculatorWizards.DEFAULT_WIZARD_FLOW)
-        controller = Robolectric.buildActivity(WizardActivity::class.java, intent)
-        controller.create()
-        activity = controller.get()
-        assertEquals(CalculatorWizards.DEFAULT_WIZARD_FLOW, getWizardUi().wizard.name)
-        assertEquals(getWizardUi().flow.firstStep, getWizardUi().step)
+    fun testFinishWizardMarksFinished() {
+        val flow = ListWizardFlow(listOf(CalculatorWizardStep.WELCOME, CalculatorWizardStep.LAST))
+        val wizard = FakeWizard("flow", flow)
+        val viewModel = WizardComposeViewModel(
+            AppPreferences(RuntimeEnvironment.application),
+            FakeWizards(wizard)
+        )
 
-        val outState1 = Bundle()
-        controller.saveInstanceState(outState1)
-
-        controller = Robolectric.buildActivity(WizardActivity::class.java)
-        activity = controller.get()
-        controller.create(outState1)
-        assertEquals(CalculatorWizards.DEFAULT_WIZARD_FLOW, getWizardUi().wizard.name)
-        assertEquals(getWizardUi().flow.firstStep, getWizardUi().step)
-    }
-
-    @Test
-    @Throws(Exception::class)
-    fun testShouldAddFirstFragment() {
-        controller.start().resume()
-
-        val fm: FragmentManager = activity.supportFragmentManager
-        val f = fm.findFragmentByTag(CalculatorWizardStep.welcome.fragmentTag)
-        assertNotNull(f)
-        assertTrue(f!!.isAdded)
-    }
-
-    @Test
-    @Throws(Exception::class)
-    fun testShouldAddStepFragment() {
-        controller.start().resume()
-
-        val fm: FragmentManager = activity.supportFragmentManager
-
-        getWizardUi().step = choose_mode
-
-        val f = fm.findFragmentByTag(choose_mode.fragmentTag)
-        assertNotNull(f)
-        assertTrue(f!!.isAdded)
-    }
-
-    @Test
-    @Throws(Exception::class)
-    fun testSetStep() {
-        getWizardUi().step = choose_mode
-        assertEquals(choose_mode, getWizardUi().step)
-    }
-
-    @Test
-    @Throws(Exception::class)
-    fun testShouldStartWizardActivityAfterStart() {
-        val shadowActivity = Shadows.shadowOf(controller.get())
-        WizardUi.startWizard(activity.wizards, CalculatorWizards.DEFAULT_WIZARD_FLOW, RuntimeEnvironment.application)
-        assertNotNull(shadowActivity.nextStartedActivity)
-    }
-
-    @Test
-    @Throws(Exception::class)
-    fun testTitleShouldBeSet() {
-        getWizardUi().step = choose_mode
-        assertEquals(activity.getString(choose_mode.titleResId), activity.title.toString())
-    }
-
-    @Throws(IllegalAccessException::class)
-    private fun setLastStep() {
-        getWizardUi().step = CalculatorWizardStep.values()[CalculatorWizardStep.values().size - 1]
-    }
-
-    @Throws(IllegalAccessException::class)
-    private fun setFirstStep() {
-        getWizardUi().step = CalculatorWizardStep.values()[0]
-    }
-
-    @Test
-    @Throws(Exception::class)
-    fun testShouldSaveLastWizardStateOnPause() {
-        val wizard = wizards.getWizard(getWizardUi().wizard.name)
-        assertNull(wizard.lastSavedStepName)
-        getWizardUi().step = CalculatorWizardStep.drag_button
-        activity.onPause()
-        assertEquals(CalculatorWizardStep.drag_button.name, wizard.lastSavedStepName)
-    }
-
-    @Test
-    @Throws(Exception::class)
-    fun testShouldSaveFinishedIfLastStep() {
-        val wizard = wizards.getWizard(getWizardUi().wizard.name)
-        assertFalse(wizard.isFinished)
-        setLastStep()
-        getWizardUi().finishWizard()
+        viewModel.startWizard("flow", CalculatorWizardStep.LAST.name)
+        viewModel.finishWizard()
         assertTrue(wizard.isFinished)
     }
 
-    @Test
-    @Throws(Exception::class)
-    fun testShouldNotSaveFinishedIfNotLastStep() {
-        val wizard = wizards.getWizard(getWizardUi().wizard.name)
-        assertFalse(wizard.isFinished)
-        setFirstStep()
-        getWizardUi().finishWizard()
-        assertFalse(wizard.isFinished)
+    private class FakeWizards(private val wizard: Wizard) : Wizards {
+        override fun getWizard(name: String?, arguments: android.os.Bundle?): Wizard = wizard
+    }
+
+    private class FakeWizard(
+        override val name: String,
+        override val flow: WizardFlow
+    ) : Wizard {
+        private var lastStep: WizardStep? = null
+        private var finished = false
+
+        override val lastSavedStepName: String?
+            get() = lastStep?.name
+
+        override val isFinished: Boolean
+            get() = finished
+
+        override val isStarted: Boolean
+            get() = lastStep != null
+
+        override fun saveLastStep(step: WizardStep) {
+            lastStep = step
+        }
+
+        override fun saveFinished(step: WizardStep, forceFinish: Boolean) {
+            finished = forceFinish || flow.getNextStep(step) == null
+        }
     }
 }

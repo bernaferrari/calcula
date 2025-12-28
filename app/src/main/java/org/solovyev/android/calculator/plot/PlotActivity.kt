@@ -32,6 +32,6 @@ class PlotActivity : BaseActivity(R.string.c_plot) {
     }
 
     companion object {
-        const val POINTS_COUNT = 100
+        const val POINTS_COUNT = 1000
     }
 }
