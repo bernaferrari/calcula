@@ -45,6 +45,7 @@ class SettingsPreferencesStore(
         private val OUTPUT_PRECISION = intPreferencesKey("engine.output.precision")
         private val OUTPUT_SEPARATOR = stringPreferencesKey("engine.output.separator")
         private val MULTIPLICATION_SIGN = stringPreferencesKey("engine.multiplicationSign")
+        private val PLOT_IMAG = booleanPreferencesKey("graph_plot_imag")
     }
 
     val mode: Flow<LegacyPreferences.Gui.Mode> = dataStore.data.map { prefs ->
@@ -133,6 +134,10 @@ class SettingsPreferencesStore(
         prefs[MULTIPLICATION_SIGN] ?: (Engine.Preferences.multiplicationSign.defaultValue ?: "×")
     }
 
+    val plotImag: Flow<Boolean> = dataStore.data.map { prefs ->
+        prefs[PLOT_IMAG] ?: false
+    }
+
     fun getModeBlocking(): LegacyPreferences.Gui.Mode = runBlocking { mode.first() }
 
     fun getAngleUnitBlocking(): AngleUnit = runBlocking { angleUnit.first() }
@@ -169,6 +174,9 @@ class SettingsPreferencesStore(
 
     fun getOutputSeparatorBlocking(): Char =
         runBlocking { outputSeparator.first() }
+
+    fun getPlotImagBlocking(): Boolean =
+        runBlocking { plotImag.first() }
 
     suspend fun setMode(mode: LegacyPreferences.Gui.Mode) {
         dataStore.edit { it[MODE] = mode.name }
@@ -248,5 +256,9 @@ class SettingsPreferencesStore(
 
     suspend fun setMultiplicationSign(sign: String) {
         dataStore.edit { it[MULTIPLICATION_SIGN] = sign }
+    }
+
+    suspend fun setPlotImag(enabled: Boolean) {
+        dataStore.edit { it[PLOT_IMAG] = enabled }
     }
 }

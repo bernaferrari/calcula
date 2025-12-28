@@ -37,6 +37,7 @@ import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.PinDrop
 import androidx.compose.material.icons.rounded.ScreenRotation
 import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.ShowChart
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.TextFields
@@ -153,7 +154,8 @@ fun SettingsScreen(
             state = state,
             onCalculateOnFlyChange = viewModel::setCalculateOnFly,
             onShowReleaseNotesChange = viewModel::setShowReleaseNotes,
-            onUseBackAsPreviousChange = viewModel::setUseBackAsPrevious
+            onUseBackAsPreviousChange = viewModel::setUseBackAsPrevious,
+            onPlotImagChange = viewModel::setPlotImag
         )
     }
 }
@@ -712,7 +714,8 @@ private fun OtherScreen(
     state: SettingsUiState,
     onCalculateOnFlyChange: (Boolean) -> Unit,
     onShowReleaseNotesChange: (Boolean) -> Unit,
-    onUseBackAsPreviousChange: (Boolean) -> Unit
+    onUseBackAsPreviousChange: (Boolean) -> Unit,
+    onPlotImagChange: (Boolean) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
@@ -738,6 +741,13 @@ private fun OtherScreen(
                     title = stringResource(R.string.c_calc_use_back_button_as_prev_title),
                     checked = state.useBackAsPrevious,
                     onCheckedChange = onUseBackAsPreviousChange
+                )
+                SwitchPreference(
+                    icon = Icons.Rounded.ShowChart,
+                    title = stringResource(R.string.cpp_plot_imaginary_part),
+                    summary = stringResource(R.string.cpp_plot_imaginary_part_summary),
+                    checked = state.plotImag,
+                    onCheckedChange = onPlotImagChange
                 )
             }
         }

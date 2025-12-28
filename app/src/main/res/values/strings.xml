@@ -97,6 +97,8 @@ by crowdin.net-->
   <string name="cpp_plot_functions">Plot functions</string>
   <string name="cpp_plot_function_line_color">Line color</string>
   <string name="cpp_plot_function_line_width">Line width</string>
+  <string name="cpp_plot_imaginary_part">Plot imaginary part</string>
+  <string name="cpp_plot_imaginary_part_summary">Use the imaginary component when plotting complex results</string>
   <string name="cpp_plot_empty_function_error">Unable to plot empty function!</string>
   <string name="cpp_plot_too_many_variables">Unable to plot: too many variables!</string>
   <string name="cpp_plot_range">Graph range</string>

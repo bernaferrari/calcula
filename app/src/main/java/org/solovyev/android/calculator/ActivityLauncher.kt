@@ -52,6 +52,9 @@ class ActivityLauncher @Inject constructor() {
     @Inject
     lateinit var notifier: Notifier
 
+    @Inject
+    lateinit var appPreferences: org.solovyev.android.calculator.di.AppPreferences
+
     private var activity: CalculatorActivity? = null
 
     private val _navigationFlow = MutableSharedFlow<NavKey>(extraBufferCapacity = 1)
@@ -156,7 +159,8 @@ class ActivityLauncher @Inject constructor() {
                 .setContent(content)
                 .create()
 
-            val ef = ExpressionFunction(f)
+            val plotImaginary = appPreferences.settings.getPlotImagBlocking()
+            val ef = ExpressionFunction(f, plotImaginary)
             val color = org.solovyev.android.plotter.Color.create(0xFF0099CC.toInt())
             val width = org.solovyev.android.plotter.meshes.MeshSpec.defaultWidth(context)
             val meshSpec = org.solovyev.android.plotter.meshes.MeshSpec(color, width).apply {

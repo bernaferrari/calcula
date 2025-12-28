@@ -370,31 +370,53 @@ class PlotView @JvmOverloads constructor(
             }
             1 -> {
                 var started = false
+                var prevX = 0f
                 var prevY = 0f
                 val jumpThreshold = bounds.height() * 5f
                 val clampThreshold = bounds.height() * 10f
+                val errorTolerance = bounds.height() * 0.01f
+                val maxDepth = 8
+
+                fun evalAt(x: Float): Float? {
+                    val yValue = function.function.evaluate(x)
+                    if (!yValue.isFinite()) return null
+                    if (kotlin.math.abs(yValue) > clampThreshold) return null
+                    return yValue
+                }
+
+                fun appendSegment(x0: Float, y0: Float, x1: Float, y1: Float, depth: Int): Boolean {
+                    val xm = (x0 + x1) / 2f
+                    val ym = evalAt(xm) ?: return false
+                    val linearMid = (y0 + y1) / 2f
+                    val error = kotlin.math.abs(ym - linearMid)
+                    if (depth < maxDepth && error > errorTolerance) {
+                        val leftOk = appendSegment(x0, y0, xm, ym, depth + 1)
+                        val rightOk = appendSegment(xm, ym, x1, y1, depth + 1)
+                        return leftOk && rightOk
+                    }
+                    path.lineTo(mapX(x1, bounds), mapY(y1, bounds))
+                    return true
+                }
+
                 for (i in 0 until points) {
                     val x = bounds.left + i * xStep
-                    val yValue = function.function.evaluate(x)
-                    if (!yValue.isFinite()) {
+                    val yValue = evalAt(x) ?: run {
                         started = false
                         continue
                     }
-                    if (kotlin.math.abs(yValue) > clampThreshold) {
-                        started = false
-                        continue
-                    }
-                    if (started && kotlin.math.abs(yValue - prevY) > jumpThreshold) {
-                        started = false
-                    }
-                    val sx = mapX(x, bounds)
-                    val sy = mapY(yValue, bounds)
                     if (!started) {
-                        path.moveTo(sx, sy)
+                        path.moveTo(mapX(x, bounds), mapY(yValue, bounds))
                         started = true
                     } else {
-                        path.lineTo(sx, sy)
+                        if (kotlin.math.abs(yValue - prevY) > jumpThreshold) {
+                            path.moveTo(mapX(x, bounds), mapY(yValue, bounds))
+                        } else {
+                            if (!appendSegment(prevX, prevY, x, yValue, 0)) {
+                                path.moveTo(mapX(x, bounds), mapY(yValue, bounds))
+                            }
+                        }
                     }
+                    prevX = x
                     prevY = yValue
                 }
                 canvas.drawPath(path, paint)

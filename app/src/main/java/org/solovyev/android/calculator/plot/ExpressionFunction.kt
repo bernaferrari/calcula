@@ -11,7 +11,10 @@ import jscl.math.numeric.Numeric
 import jscl.math.numeric.Real
 import org.solovyev.android.plotter.Function
 
-class ExpressionFunction(val function: jscl.math.function.Function) : Function(makeFunctionName(function)) {
+class ExpressionFunction(
+    val function: jscl.math.function.Function,
+    private val plotImaginary: Boolean = false
+) : Function(makeFunctionName(function)) {
     @get:JvmName("arityProperty")
     val arity: Int = function.getMaxParameters()
     private val parameters: Array<Generic?> = arrayOfNulls(arity)
@@ -50,14 +53,18 @@ class ExpressionFunction(val function: jscl.math.function.Function) : Function(m
     }
 
     private fun unwrap(content: Numeric): Float = when (content) {
-        is Real -> content.doubleValue().toFloat()
+        is Real -> if (plotImaginary) 0f else content.doubleValue().toFloat()
         is Complex -> {
             val imag = content.imaginaryPart()
             val real = content.realPart()
-            if (kotlin.math.abs(imag) > COMPLEX_EPS || !real.isFinite()) {
-                Float.NaN
+            if (plotImaginary) {
+                if (!imag.isFinite()) Float.NaN else imag.toFloat()
             } else {
-                real.toFloat()
+                if (kotlin.math.abs(imag) > COMPLEX_EPS || !real.isFinite()) {
+                    Float.NaN
+                } else {
+                    real.toFloat()
+                }
             }
         }
         else -> Float.NaN

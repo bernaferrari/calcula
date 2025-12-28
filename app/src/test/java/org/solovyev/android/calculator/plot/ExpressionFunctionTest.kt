@@ -17,4 +17,16 @@ class ExpressionFunctionTest {
         val positive = plotFunction.evaluate(5f)
         assertTrue(positive.isFinite())
     }
+
+    @Test
+    fun testImaginaryPlotModeUsesImaginaryPart() {
+        val function = CustomFunction.Builder("f", listOf("x"), "ln(x)").create()
+        val plotFunction = ExpressionFunction(function, true)
+
+        val negative = plotFunction.evaluate(-5f)
+        assertTrue(negative.isFinite())
+
+        val positive = plotFunction.evaluate(5f)
+        assertTrue(positive == 0f)
+    }
 }

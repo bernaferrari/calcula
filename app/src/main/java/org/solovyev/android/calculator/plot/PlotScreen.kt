@@ -57,6 +57,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.InputChip
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -557,6 +558,8 @@ private fun PlotEditFunctionDialog(
     var name by remember(function) { mutableStateOf(initial.name) }
     var body by remember(function) { mutableStateOf(initial.body) }
     var params by remember(function) { mutableStateOf(initial.parameters.toList()) }
+    var paramsTouched by remember(function) { mutableStateOf(params.isNotEmpty()) }
+    var newParam by remember(function) { mutableStateOf("") }
     var color by remember(function) { mutableStateOf(initialMesh.color.toInt()) }
     var lineWidth by remember(function) { mutableStateOf(initialMesh.width) }
     var nameError by remember { mutableStateOf<String?>(null) }
@@ -591,7 +594,13 @@ private fun PlotEditFunctionDialog(
                 item {
                     OutlinedTextField(
                         value = body,
-                        onValueChange = { body = it; bodyError = null },
+                        onValueChange = { value ->
+                            body = value
+                            bodyError = null
+                            if (!paramsTouched) {
+                                params = detectParameters(calculator, value)
+                            }
+                        },
                         label = { Text(text = stringResource(R.string.cpp_function_body)) },
                         isError = bodyError != null,
                         supportingText = bodyError?.let { { Text(text = it) } },
@@ -608,35 +617,59 @@ private fun PlotEditFunctionDialog(
                     )
                 }
 
-                items(params.indices.toList()) { index ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                item {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        OutlinedTextField(
-                            value = params[index],
-                            onValueChange = { value ->
-                                params = params.toMutableList().apply { set(index, value) }
-                                paramsError = null
-                            },
-                            label = { Text(text = stringResource(R.string.cpp_parameter)) },
-                            modifier = Modifier.weight(1f),
-                            singleLine = true
-                        )
-                        IconButton(onClick = {
-                            params = params.toMutableList().apply { removeAt(index) }
-                        }) {
-                            Icon(Icons.Default.Close, contentDescription = null)
+                        params.forEach { param ->
+                            InputChip(
+                                selected = false,
+                                onClick = {
+                                    params = params.toMutableList().apply { remove(param) }
+                                    paramsTouched = true
+                                },
+                                label = { Text(text = param) },
+                                trailingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = null
+                                    )
+                                },
+                                enabled = true
+                            )
                         }
                     }
                 }
 
                 if (params.size < 2) {
                     item {
-                        TextButton(onClick = { params = params + "" }) {
-                            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(8.dp))
-                            Text(text = stringResource(R.string.cpp_add_parameter))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            OutlinedTextField(
+                                value = newParam,
+                                onValueChange = { value ->
+                                    newParam = value
+                                    paramsError = null
+                                },
+                                label = { Text(text = stringResource(R.string.cpp_parameter)) },
+                                modifier = Modifier.weight(1f),
+                                singleLine = true
+                            )
+                            TextButton(onClick = {
+                                val candidate = newParam.trim()
+                                if (candidate.isNotEmpty()) {
+                                    params = params + candidate
+                                    paramsTouched = true
+                                    newParam = ""
+                                }
+                            }) {
+                                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text(text = stringResource(R.string.cpp_add_parameter))
+                            }
                         }
                     }
                 }
@@ -711,6 +744,7 @@ private fun PlotEditFunctionDialog(
                     val nameValue = name.trim()
                     val bodyValue = body.trim()
                     val paramList = params.map { it.trim() }.filter { it.isNotEmpty() }
+                        .ifEmpty { detectParameters(calculator, bodyValue) }
 
                     val nameValid = validateName(context, nameValue)
                     if (!nameValid.first) {
@@ -873,6 +907,22 @@ private fun validateBody(
         true to null
     } catch (e: ParseException) {
         false to Utils.getErrorMessage(e)
+    }
+}
+
+private fun detectParameters(calculator: Calculator, body: String): List<String> {
+    if (body.isEmpty()) {
+        return emptyList()
+    }
+    return try {
+        val prepared = calculator.prepare(body)
+        prepared.undefinedVariables
+            .map { it.name }
+            .distinct()
+            .sorted()
+            .take(2)
+    } catch (_: Exception) {
+        emptyList()
     }
 }
 

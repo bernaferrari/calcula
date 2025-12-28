@@ -40,6 +40,7 @@ data class SettingsUiState(
     val outputNotation: Engine.Notation,
     val outputPrecision: Int,
     val outputSeparator: Char,
+    val plotImag: Boolean,
     val numberFormatExamples: String
 )
 
@@ -68,7 +69,8 @@ class SettingsComposeViewModel @Inject constructor(
         appPreferences.settings.highlightExpressions,
         appPreferences.settings.rotateScreen,
         appPreferences.settings.keepScreenOn,
-        appPreferences.settings.calculateOnFly
+        appPreferences.settings.calculateOnFly,
+        appPreferences.settings.plotImag
     ) { values ->
         ToggleSnapshot(
             values[0],
@@ -76,7 +78,8 @@ class SettingsComposeViewModel @Inject constructor(
             values[2],
             values[3],
             values[4],
-            values[5]
+            values[5],
+            values[6]
         )
     }
 
@@ -124,6 +127,7 @@ class SettingsComposeViewModel @Inject constructor(
             outputNotation = output.outputNotation,
             outputPrecision = output.outputPrecision,
             outputSeparator = output.outputSeparator,
+            plotImag = toggles.plotImag,
             numberFormatExamples = buildExamples()
         )
     }.stateIn(
@@ -149,6 +153,7 @@ class SettingsComposeViewModel @Inject constructor(
             outputNotation = Engine.Notation.dec,
             outputPrecision = 5,
             outputSeparator = jscl.JsclMathEngine.GROUPING_SEPARATOR_DEFAULT,
+            plotImag = false,
             numberFormatExamples = ""
         )
     )
@@ -167,7 +172,8 @@ class SettingsComposeViewModel @Inject constructor(
         val highlightExpressions: Boolean,
         val rotateScreen: Boolean,
         val keepScreenOn: Boolean,
-        val calculateOnFly: Boolean
+        val calculateOnFly: Boolean,
+        val plotImag: Boolean
     )
 
     private data class UiSnapshot(
@@ -222,6 +228,10 @@ class SettingsComposeViewModel @Inject constructor(
 
     fun setKeepScreenOn(enabled: Boolean) = viewModelScope.launch {
         appPreferences.settings.setKeepScreenOn(enabled)
+    }
+
+    fun setPlotImag(enabled: Boolean) = viewModelScope.launch {
+        appPreferences.settings.setPlotImag(enabled)
     }
 
     fun setCalculateOnFly(enabled: Boolean) = viewModelScope.launch {
