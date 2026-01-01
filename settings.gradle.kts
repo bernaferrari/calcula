@@ -13,8 +13,11 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Calculator++"
-include(":app")
+rootProject.name = "CalculatorPlusPlus"
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
+include(":androidApp")
+include(":shared")
 include(":dragbutton")
 include(":jscl")
 include(":translations")

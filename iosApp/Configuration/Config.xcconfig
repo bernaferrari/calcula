@@ -1,0 +1,7 @@
+TEAM_ID=
+
+PRODUCT_NAME=CalculatorPlusPlus
+PRODUCT_BUNDLE_IDENTIFIER=org.solovyev.android.calculator.ios
+
+CURRENT_PROJECT_VERSION=1
+MARKETING_VERSION=1.0

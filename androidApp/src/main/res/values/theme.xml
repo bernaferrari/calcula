@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base Material3 theme for the app -->
+    <style name="Cpp.Theme.Material" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowBackground">@android:color/background_dark</item>
+    </style>
+
+    <!-- Calculator activity theme -->
+    <style name="Cpp.Theme.Material.Calculator" parent="Cpp.Theme.Material" />
+
+    <!-- Dialog theme -->
+    <style name="Cpp.Theme.Dialog" parent="Theme.Material3.DayNight.Dialog">
+        <item name="android:windowNoTitle">true</item>
+    </style>
+
+    <!-- Translucent theme for floating/overlay activities -->
+    <style name="Cpp.Theme.Translucent" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
+
+    <!-- Wizard theme (now handled by Compose Onboarding) -->
+    <style name="Cpp.Theme.Wizard" parent="Cpp.Theme.Material" />
+</resources>
