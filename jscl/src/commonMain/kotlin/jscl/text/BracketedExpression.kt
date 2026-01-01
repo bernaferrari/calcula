@@ -11,13 +11,8 @@ class BracketedExpression private constructor() : Parser<ExpressionVariable> {
 
         ParserUtils.tryToParse(p, pos0, '(')
 
-        val result: Generic
-        try {
-            result = ExpressionParser.parser.parse(p, previousSumElement)
-        } catch (e: ParseException) {
-            p.position.value = pos0
-            throw e
-        }
+        // Parse expression, reset position on failure
+        val result = ExpressionParser.parser.parseOrThrow(p, previousSumElement, pos0)
 
         ParserUtils.tryToParse(p, pos0, ')')
 

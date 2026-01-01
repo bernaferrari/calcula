@@ -8,7 +8,7 @@ import jscl.JsclMathEngine
  * Date: 11/29/11
  * Time: 11:28 AM
  */
-class PiConstant : ExtendedConstant(Constants.PI, Math.PI, "JsclDouble.valueOf(Math.PI)") {
+class PiConstant : ExtendedConstant(Constants.PI, kotlin.math.PI, "JsclDouble.valueOf(kotlin.math.PI)") {
 
     override val name: String
         get() = Constants.PI.name

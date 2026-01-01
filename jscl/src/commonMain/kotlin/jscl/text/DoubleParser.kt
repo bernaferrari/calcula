@@ -62,23 +62,29 @@ internal class FloatingPointLiteral private constructor() : Parser<Double> {
         val digitsParser = Digits(nb)
 
         val result = StringBuilder()
-        try {
-            result.append(digitsParser.parse(p, previousSumElement))
-            digits = true
-        } catch (e: ParseException) {
-            p.exceptionsPool.release(e)
+
+        // Try parsing digits (optional at this point)
+        when (val digitsResult = digitsParser.tryParse(p, previousSumElement)) {
+            is ParseResult.Success -> {
+                result.append(digitsResult.value)
+                digits = true
+            }
+            is ParseResult.Failure -> p.exceptionsPool.release(digitsResult.toException())
         }
 
-        try {
-            DecimalPoint.parser.parse(p, previousSumElement)
-            result.append(".")
-            point = true
-        } catch (e: ParseException) {
-            if (!digits) {
-                p.position.value = pos0
-                throw e
-            } else {
-                p.exceptionsPool.release(e)
+        // Try parsing decimal point (required if no digits yet)
+        when (val pointResult = DecimalPoint.parser.tryParse(p, previousSumElement)) {
+            is ParseResult.Success -> {
+                result.append(".")
+                point = true
+            }
+            is ParseResult.Failure -> {
+                if (!digits) {
+                    p.position.value = pos0
+                    throw pointResult.toException()
+                } else {
+                    p.exceptionsPool.release(pointResult.toException())
+                }
             }
         }
 
@@ -86,26 +92,32 @@ internal class FloatingPointLiteral private constructor() : Parser<Double> {
             ParserUtils.throwParseException(p, pos0, Messages.msg_15)
         }
 
-        try {
-            result.append(digitsParser.parse(p, previousSumElement))
-        } catch (e: ParseException) {
-            if (!digits) {
-                p.position.value = pos0
-                throw e
-            } else {
-                p.exceptionsPool.release(e)
+        // Try parsing more digits after point (required if no digits before point)
+        when (val digitsResult2 = digitsParser.tryParse(p, previousSumElement)) {
+            is ParseResult.Success -> result.append(digitsResult2.value)
+            is ParseResult.Failure -> {
+                if (!digits) {
+                    p.position.value = pos0
+                    throw digitsResult2.toException()
+                } else {
+                    p.exceptionsPool.release(digitsResult2.toException())
+                }
             }
         }
 
-        try {
-            result.append(ExponentPart.parser.parse(p, previousSumElement))
-            exponent = true
-        } catch (e: ParseException) {
-            if (!point) {
-                p.position.value = pos0
-                throw e
-            } else {
-                p.exceptionsPool.release(e)
+        // Try parsing exponent (required if no point)
+        when (val expResult = ExponentPart.parser.tryParse(p, previousSumElement)) {
+            is ParseResult.Success -> {
+                result.append(expResult.value)
+                exponent = true
+            }
+            is ParseResult.Failure -> {
+                if (!point) {
+                    p.position.value = pos0
+                    throw expResult.toException()
+                } else {
+                    p.exceptionsPool.release(expResult.toException())
+                }
             }
         }
 
@@ -126,10 +138,10 @@ internal class FloatingPointLiteral private constructor() : Parser<Double> {
     }
 }
 
-internal class DecimalPoint private constructor() : Parser<Void?> {
+internal class DecimalPoint private constructor() : Parser<Unit?> {
 
     @Throws(ParseException::class)
-    override fun parse(p: Parser.Parameters, previousSumElement: Generic?): Void? {
+    override fun parse(p: Parser.Parameters, previousSumElement: Generic?): Unit? {
         val pos0 = p.position.toInt()
 
         ParserUtils.skipWhitespaces(p)
@@ -140,7 +152,7 @@ internal class DecimalPoint private constructor() : Parser<Void?> {
     }
 
     companion object {
-        val parser: Parser<Void?> = DecimalPoint()
+        val parser: Parser<Unit?> = DecimalPoint()
     }
 }
 
@@ -161,12 +173,8 @@ internal class ExponentPart private constructor() : Parser<String> {
             throw ParserUtils.makeParseException(p, pos0, Messages.msg_10, 'e', 'E')
         }
 
-        try {
-            result.append(SignedInteger.parser.parse(p, previousSumElement))
-        } catch (e: ParseException) {
-            p.position.value = pos0
-            throw e
-        }
+        // Parse signed integer, reset position on failure
+        result.append(SignedInteger.parser.parseOrThrow(p, previousSumElement, pos0))
 
         return result.toString()
     }
@@ -192,12 +200,8 @@ internal class SignedInteger private constructor() : Parser<String> {
             result.append(c)
         }
 
-        try {
-            result.append(IntegerParser.parser.parse(p, previousSumElement))
-        } catch (e: ParseException) {
-            p.position.value = pos0
-            throw e
-        }
+        // Parse integer, reset position on failure
+        result.append(IntegerParser.parser.parseOrThrow(p, previousSumElement, pos0))
 
         return result.toString()
     }

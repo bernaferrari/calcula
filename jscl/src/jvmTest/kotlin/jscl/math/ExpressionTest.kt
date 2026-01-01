@@ -8,12 +8,12 @@ import jscl.math.function.Constant
 import jscl.math.function.ExtendedConstant
 import jscl.math.function.IConstant
 import jscl.text.ParseException
-import midpcalc.Real
+import jscl.math.precision.Real
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
-import org.solovyev.common.NumberFormatter
+import jscl.common.NumberFormatter
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader

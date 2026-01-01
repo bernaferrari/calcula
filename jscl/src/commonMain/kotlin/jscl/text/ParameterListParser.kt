@@ -15,24 +15,22 @@ class ParameterListParser(
 
         ParserUtils.tryToParse(p, pos0, '(')
 
-        try {
-            result.add(ExpressionParser.parser.parse(p, previousSumElement))
-        } catch (e: ParseException) {
-            if (minNumberOfParameters > 0) {
-                p.position.value = pos0
-                throw e
-            } else {
-                p.exceptionsPool.release(e)
+        // Parse first expression using Result-based approach
+        when (val firstExpr = ExpressionParser.parser.tryParse(p, previousSumElement)) {
+            is ParseResult.Success -> result.add(firstExpr.value)
+            is ParseResult.Failure -> {
+                if (minNumberOfParameters > 0) {
+                    p.position.value = pos0
+                    throw firstExpr.toException()
+                } else {
+                    p.exceptionsPool.release(firstExpr.toException())
+                }
             }
         }
 
-        while (true) {
-            try {
-                result.add(CommaAndExpression.parser.parse(p, previousSumElement))
-            } catch (e: ParseException) {
-                p.exceptionsPool.release(e)
-                break
-            }
+        // Parse additional comma-separated expressions
+        CommaAndExpression.parser.parseWhileSuccessful(p, previousSumElement, Unit) { _, expr ->
+            result.add(expr)
         }
 
         ParserUtils.tryToParse(p, pos0, ')')

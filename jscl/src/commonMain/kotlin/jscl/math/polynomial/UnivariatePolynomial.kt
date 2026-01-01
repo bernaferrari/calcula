@@ -40,7 +40,7 @@ open class UnivariatePolynomial protected constructor(
     override fun add(that: Polynomial): Polynomial {
         val p = newinstance()
         val q = that as UnivariatePolynomial
-        val d = Math.max(degree, q.degree)
+        val d = kotlin.math.max(degree, q.degree)
         for (i in d downTo 0) {
             p.put(i, get(i).add(q.get(i)))
         }
@@ -50,7 +50,7 @@ open class UnivariatePolynomial protected constructor(
     override fun subtract(that: Polynomial): Polynomial {
         val p = newinstance()
         val q = that as UnivariatePolynomial
-        val d = Math.max(degree, q.degree)
+        val d = kotlin.math.max(degree, q.degree)
         for (i in d downTo 0) {
             p.put(i, get(i).subtract(q.get(i)))
         }
@@ -355,7 +355,7 @@ open class UnivariatePolynomial protected constructor(
 
     override fun compareTo(other: Polynomial): Int {
         val p = other as UnivariatePolynomial
-        val d = Math.max(degree, p.degree)
+        val d = kotlin.math.max(degree, p.degree)
         for (i in d downTo 0) {
             val a1 = get(i)
             val a2 = p.get(i)
@@ -400,7 +400,7 @@ open class UnivariatePolynomial protected constructor(
         } else {
             if (n >= content.size) resize(n)
             content[n] = a
-            degree = Math.max(degree, n)
+            degree = kotlin.math.max(degree, n)
         }
     }
 

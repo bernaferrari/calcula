@@ -33,12 +33,12 @@ class Identifier private constructor() : Parser<String> {
         private val allowedCharacters = listOf('√', '∞', 'π', '∂', '∏', 'Σ', '∫')
 
         private fun isValidFirstCharacter(ch: Char): Boolean {
-            return Character.isLetter(ch) || allowedCharacters.contains(ch)
+            return ch.isLetter() || allowedCharacters.contains(ch)
         }
 
         private fun isValidNotFirstCharacter(string: String, position: Position): Boolean {
             val ch = string[position.value]
-            return Character.isLetter(ch) || Character.isDigit(ch) || ch == '_'
+            return ch.isLetter() || ch.isDigit() || ch == '_'
         }
     }
 }

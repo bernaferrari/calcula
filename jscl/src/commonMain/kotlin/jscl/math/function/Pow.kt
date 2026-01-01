@@ -292,7 +292,7 @@ class Pow(generic: Generic?, exponent: Generic?) : Algebraic("pow", if (generic 
     }
 
     override fun toString(): String {
-        val buffer = StringBuffer()
+        val buffer = StringBuilder()
         try {
             val en = parameters!![0].integerValue()
             if (en.signum() < 0) buffer.append(GenericVariable.valueOf(en, true))
@@ -336,7 +336,7 @@ class Pow(generic: Generic?, exponent: Generic?) : Algebraic("pow", if (generic 
     }
 
     override fun toJava(): String {
-        val buffer = StringBuffer()
+        val buffer = StringBuilder()
         buffer.append(parameters!![0].toJava())
         buffer.append(".pow(")
         buffer.append(parameters!![1].toJava())

@@ -1,20 +1,20 @@
 package jscl
 
-import org.solovyev.common.msg.Message
-import org.solovyev.common.msg.MessageRegistry
+import kotlinx.atomicfu.atomic
+import jscl.common.msg.Message
+import jscl.common.msg.MessageRegistry
 
 class FixedCapacityListMessageRegistry(private val capacity: Int) : MessageRegistry {
 
     private val messages: MutableList<Message> = ArrayList(capacity)
 
-    @Volatile
-    private var size: Int = 0
+    private val size = atomic(0)
 
     override fun addMessage(message: Message) {
         if (!messages.contains(message)) {
-            if (size <= capacity) {
+            if (size.value <= capacity) {
                 messages.add(message)
-                size++
+                size.incrementAndGet()
             } else {
                 messages.removeAt(0)
                 messages.add(message)
@@ -24,7 +24,7 @@ class FixedCapacityListMessageRegistry(private val capacity: Int) : MessageRegis
 
     override fun getMessage(): Message {
         if (hasMessage()) {
-            size--
+            size.decrementAndGet()
             return messages.removeAt(0)
         } else {
             throw IllegalStateException("No messages!")
@@ -32,6 +32,6 @@ class FixedCapacityListMessageRegistry(private val capacity: Int) : MessageRegis
     }
 
     override fun hasMessage(): Boolean {
-        return size > 0
+        return size.value > 0
     }
 }

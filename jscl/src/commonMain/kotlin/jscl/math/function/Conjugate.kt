@@ -99,7 +99,7 @@ class Conjugate(generic: Generic?) : Function("conjugate", if (generic != null) 
     }
 
     override fun toJava(): String {
-        val buffer = StringBuffer()
+        val buffer = StringBuilder()
         buffer.append(parameters!![0].toJava())
         buffer.append(".conjugate()")
         return buffer.toString()

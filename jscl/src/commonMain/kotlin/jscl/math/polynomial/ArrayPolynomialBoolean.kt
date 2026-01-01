@@ -3,7 +3,7 @@ package jscl.math.polynomial
 import jscl.math.Generic
 import jscl.math.JsclBoolean
 import jscl.math.JsclInteger
-import org.solovyev.common.collections.SortedMutableMap
+import jscl.common.collections.SortedMutableMap
 
 internal class ArrayPolynomialBoolean : ArrayPolynomialModular {
 

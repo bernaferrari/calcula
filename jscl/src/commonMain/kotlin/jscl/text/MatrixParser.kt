@@ -15,20 +15,18 @@ class MatrixParser private constructor() : Parser<Matrix> {
 
         ParserUtils.tryToParse(p, pos0, '[')
 
-        try {
-            vectors.add(VectorParser.parser.parse(p, previousSumElement))
-        } catch (e: ParseException) {
-            p.position.value = pos0
-            throw e
+        // Parse first vector - failure resets position and propagates
+        when (val firstVector = VectorParser.parser.tryParse(p, previousSumElement)) {
+            is ParseResult.Success -> vectors.add(firstVector.value)
+            is ParseResult.Failure -> {
+                p.position.value = pos0
+                throw firstVector.toException()
+            }
         }
 
-        while (true) {
-            try {
-                vectors.add(CommaAndVector.parser.parse(p, previousSumElement))
-            } catch (e: ParseException) {
-                p.exceptionsPool.release(e)
-                break
-            }
+        // Parse additional comma-separated vectors
+        CommaAndVector.parser.parseWhileSuccessful(p, previousSumElement, Unit) { _, vector ->
+            vectors.add(vector)
         }
 
         ParserUtils.tryToParse(p, pos0, ']')

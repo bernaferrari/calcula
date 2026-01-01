@@ -23,13 +23,9 @@ internal class UnsignedFactor private constructor() : Parser<Any> {
 
         list.add(generic)
 
-        while (true) {
-            try {
-                list.add(PowerExponentParser.parser.parse(p, null))
-            } catch (e: ParseException) {
-                p.exceptionsPool.release(e)
-                break
-            }
+        // Parse additional power exponents using Result-based approach
+        PowerExponentParser.parser.parseWhileSuccessful(p, null, Unit) { _, exponent ->
+            list.add(exponent)
         }
 
         val it = list.listIterator(list.size)

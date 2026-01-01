@@ -6,7 +6,7 @@ import jscl.math.NotIntegrableException
 import jscl.math.Variable
 import jscl.math.operator.AbstractFunction
 import jscl.text.ParserUtils
-import org.solovyev.common.math.MathEntity
+import jscl.common.math.MathEntity
 
 abstract class Function protected constructor(name: String, parameters: Array<Generic>?) : AbstractFunction(name, parameters) {
 

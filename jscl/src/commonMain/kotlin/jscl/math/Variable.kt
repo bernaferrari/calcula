@@ -5,7 +5,7 @@ import jscl.math.operator.Factorial
 import jscl.math.operator.Operator
 import jscl.mathml.MathML
 import jscl.text.ParseException
-import org.solovyev.common.math.MathEntity
+import jscl.common.math.MathEntity
 
 abstract class Variable(
     override var name: String

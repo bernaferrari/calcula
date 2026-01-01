@@ -4,7 +4,7 @@ import jscl.math.function.Constant
 import jscl.math.function.IConstant
 import jscl.mathml.MathML
 import jscl.text.ParserUtils
-import org.solovyev.common.math.MathRegistry
+import jscl.common.math.MathRegistry
 import com.ionspin.kotlin.bignum.integer.BigInteger
 
 abstract class Generic : Arithmetic<Generic>, Comparable<Any> {
@@ -65,7 +65,7 @@ abstract class Generic : Arithmetic<Generic>, Comparable<Any> {
     open fun normalize(): Generic = gcdAndNormalize()[1]
 
     open fun pow(exponent: Int): Generic {
-        assert(exponent >= 0)
+        require(exponent >= 0)
 
         var result: Generic = JsclInteger.valueOf(1)
 

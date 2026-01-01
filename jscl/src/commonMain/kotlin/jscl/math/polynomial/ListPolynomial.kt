@@ -5,7 +5,7 @@ import jscl.math.Generic
 import jscl.math.JsclInteger
 import jscl.math.Literal
 import jscl.util.ArrayUtils
-import org.solovyev.common.collections.SortedMutableMap
+import jscl.common.collections.SortedMutableMap
 
 internal class ListPolynomial(
     monomialFactory: Monomial,

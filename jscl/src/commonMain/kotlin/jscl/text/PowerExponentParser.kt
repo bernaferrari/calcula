@@ -13,22 +13,11 @@ internal class PowerExponentParser private constructor() : Parser<Generic> {
     override fun parse(p: Parser.Parameters, previousSumElement: Generic?): Generic {
         val pos0 = p.position.toInt()
 
-        try {
-            PowerParser.parser.parse(p, previousSumElement)
-        } catch (e: ParseException) {
-            p.position.value = pos0
-            throw e
-        }
+        // Parse power operator, reset position on failure
+        PowerParser.parser.parseOrThrow(p, previousSumElement, pos0)
 
-        val result: Generic
-        try {
-            result = ExponentParser.parser.parse(p, previousSumElement)
-        } catch (e: ParseException) {
-            p.position.value = pos0
-            throw e
-        }
-
-        return result
+        // Parse exponent, reset position on failure
+        return ExponentParser.parser.parseOrThrow(p, previousSumElement, pos0)
     }
 
     companion object {

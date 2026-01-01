@@ -1,10 +1,10 @@
 package jscl
 
-import midpcalc.Real
+import jscl.math.precision.Real
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import org.solovyev.common.NumberFormatter
+import jscl.common.NumberFormatter
 
 /**
  * User: serso

@@ -4,7 +4,7 @@ import jscl.math.Generic
 import jscl.math.function.Function
 import jscl.math.function.FunctionsRegistry
 import jscl.text.msg.Messages
-import org.solovyev.common.math.MathRegistry
+import jscl.common.math.MathRegistry
 
 /**
  * User: serso

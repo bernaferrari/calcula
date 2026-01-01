@@ -1,7 +1,7 @@
 package jscl.math.function
 
-import org.solovyev.common.math.AbstractMathRegistry
-import org.solovyev.common.math.MathRegistry
+import jscl.common.math.AbstractMathRegistry
+import jscl.common.math.MathRegistry
 
 class ConstantsRegistry : AbstractMathRegistry<IConstant>() {
 
@@ -9,11 +9,11 @@ class ConstantsRegistry : AbstractMathRegistry<IConstant>() {
         add(PiConstant())
         add(PiConstantAlias("pi"))
         add(PiConstantAlias("PI"))
-        add(ExtendedConstant(Constants.PI_INV, Math.PI, null))
+        add(ExtendedConstant(Constants.PI_INV, kotlin.math.PI, null))
         add(ExtendedConstant(Constants.INF, Double.POSITIVE_INFINITY, "JsclDouble.valueOf(Double.POSITIVE_INFINITY)"))
         add(ExtendedConstant(Constants.INF_2, Double.POSITIVE_INFINITY, "JsclDouble.valueOf(Double.POSITIVE_INFINITY)"))
         add(ExtendedConstant(Constants.I, "√(-1)", null))
-        add(ExtendedConstant(Constant(E), Math.E, null))
+        add(ExtendedConstant(Constant(E), kotlin.math.E, null))
         add(ExtendedConstant(Constant(C), C_VALUE, null))
         add(ExtendedConstant(Constant(G), G_VALUE, null))
         add(ExtendedConstant(Constant(H_REDUCED), H_REDUCED_VALUE, null))
@@ -29,7 +29,7 @@ class ConstantsRegistry : AbstractMathRegistry<IConstant>() {
         const val G = "G"
         const val G_VALUE = 6.6738480E-11
         const val H_REDUCED = "h"
-        val H_REDUCED_VALUE = 6.6260695729E-34 / (2 * Math.PI)
+        val H_REDUCED_VALUE = 6.6260695729E-34 / (2 * kotlin.math.PI)
         const val NAN = "NaN"
 
         fun getInstance(): MathRegistry<IConstant> {

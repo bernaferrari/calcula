@@ -22,7 +22,7 @@ class Rand : Operator, TimeDependent {
     override fun getMinParameters(): Int = 0
 
     override fun selfExpand(): Generic {
-        return NumericWrapper(Real.valueOf(Math.random()))
+        return NumericWrapper(Real.valueOf(kotlin.random.Random.nextDouble()))
     }
 
     override fun numeric(): Generic {

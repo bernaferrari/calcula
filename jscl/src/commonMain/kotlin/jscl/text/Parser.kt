@@ -42,15 +42,11 @@ interface Parser<T> {
         }
 
         companion object {
-            private val instance = object : ThreadLocal<Parameters>() {
-                override fun initialValue(): Parameters {
-                    return Parameters("", JsclMathEngine.getInstance())
-                }
-            }
-
+            // Using a simple approach instead of ThreadLocal for KMP compatibility
+            // ThreadLocal doesn't exist in Kotlin/Native, so we create new parameters each time
+            // This is fine for parsing as it's typically short-lived
             fun get(expression: String): Parameters {
-                val parameters = instance.get()!!
-                parameters.expression = expression
+                val parameters = Parameters(expression, JsclMathEngine.getInstance())
                 parameters.reset()
                 return parameters
             }

@@ -1,6 +1,6 @@
 package jscl.math.function
 
-import org.solovyev.common.math.MathEntity
+import jscl.common.math.MathEntity
 
 /**
  * User: serso

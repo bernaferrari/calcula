@@ -72,7 +72,7 @@ class Cubic(generic: Generic?) : Algebraic("cubic", if (generic != null) arrayOf
     }
 
     override fun toJava(): String {
-        val buffer = StringBuffer()
+        val buffer = StringBuilder()
         buffer.append(parameters!![0].toJava())
         buffer.append(".pow(")
         buffer.append(Constants.Generic.THIRD.toJava())

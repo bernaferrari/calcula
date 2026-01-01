@@ -8,26 +8,22 @@ class MultiTryParser<T>(
 
     @Throws(ParseException::class)
     override fun parse(p: Parser.Parameters, previousSumElement: Generic?): T {
-        var result: T? = null
-
-        val it = parsers.iterator()
-        while (it.hasNext()) {
-            try {
-                val parser = it.next()
-                result = parser.parse(p, previousSumElement)
-            } catch (e: ParseException) {
-                p.addException(e)
-
-                if (!it.hasNext()) {
-                    throw e
+        // Try each parser in order until one succeeds
+        for ((index, parser) in parsers.withIndex()) {
+            when (val result = parser.tryParse(p, previousSumElement)) {
+                is ParseResult.Success -> return result.value
+                is ParseResult.Failure -> {
+                    val exception = result.toException()
+                    p.addException(exception)
+                    // If this is the last parser, throw the exception
+                    if (index == parsers.lastIndex) {
+                        throw exception
+                    }
                 }
-            }
-
-            if (result != null) {
-                break
             }
         }
 
-        return result!!
+        // Should never reach here if parsers is non-empty
+        throw IllegalStateException("No parsers provided")
     }
 }

@@ -5,8 +5,8 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.solovyev.common.msg.MessageType
-import org.solovyev.common.msg.MessageType.error
+import jscl.common.msg.MessageType
+import jscl.common.msg.MessageType.error
 
 /**
  * User: serso

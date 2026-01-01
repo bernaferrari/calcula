@@ -3,7 +3,7 @@ package jscl
 import jscl.math.function.Function
 import jscl.math.function.IConstant
 import jscl.math.operator.Operator
-import org.solovyev.common.math.MathRegistry
+import jscl.common.math.MathRegistry
 import com.ionspin.kotlin.bignum.integer.BigInteger
 
 interface MathContext {

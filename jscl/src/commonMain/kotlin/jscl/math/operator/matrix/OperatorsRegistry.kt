@@ -3,7 +3,7 @@ package jscl.math.operator.matrix
 import jscl.math.Generic
 import jscl.math.function.FunctionsRegistry
 import jscl.math.operator.*
-import org.solovyev.common.math.AbstractMathRegistry
+import jscl.common.math.AbstractMathRegistry
 
 /**
  * User: serso

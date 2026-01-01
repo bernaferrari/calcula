@@ -1,29 +1,30 @@
 package jscl.util
 
 import kotlin.math.pow
+import kotlin.random.Random
 
 abstract class AbstractExpressionGenerator<T>(protected val depth: Int = 10) {
 
     abstract fun generate(): T
 
     protected fun generateBrackets(): Boolean {
-        return Math.random() > 0.8
+        return Random.nextDouble() > 0.8
     }
 
     protected fun generateOperation(): Operation {
-        val operationId = (Math.random() * 4.0).toInt()
+        val operationId = (Random.nextDouble() * 4.0).toInt()
         return Operation.getOperationById(operationId)
             ?: throw UnsupportedOperationException("Check!")
     }
 
     protected fun generateFunction(): Function? {
-        val functionId = (Math.random() * 8.0).toInt()
+        val functionId = (Random.nextDouble() * 8.0).toInt()
         return Function.getFunctionById(functionId)
     }
 
     // only positive values (as - operator exists)
     protected fun generateNumber(): Double {
-        return Math.random() * MAX_VALUE
+        return Random.nextDouble() * MAX_VALUE
     }
 
     protected enum class Operation(private val operationId: Int, val token: String) {

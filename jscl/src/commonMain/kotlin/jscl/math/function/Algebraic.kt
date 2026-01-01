@@ -9,7 +9,6 @@ abstract class Algebraic(name: String, parameters: Array<Generic>?) : Function(n
     @Throws(NotRootException::class)
     abstract fun rootValue(): Root
 
-    @Throws(NotIntegrableException::class)
     override fun antiDerivative(n: Int): Generic {
         throw NotIntegrableException(this)
     }

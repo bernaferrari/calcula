@@ -3,7 +3,7 @@ package jscl.math.function
 import jscl.math.Variable
 import jscl.math.function.hyperbolic.*
 import jscl.math.function.trigonometric.*
-import org.solovyev.common.math.AbstractMathRegistry
+import jscl.common.math.AbstractMathRegistry
 
 /**
  * User: serso

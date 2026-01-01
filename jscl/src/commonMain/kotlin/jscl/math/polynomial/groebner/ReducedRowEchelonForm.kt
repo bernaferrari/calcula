@@ -44,7 +44,7 @@ internal class ReducedRowEchelonForm(list: List<*>) {
     }
 
     override fun toString(): String {
-        val buffer = StringBuffer()
+        val buffer = StringBuilder()
         buffer.append("{")
         val n = content.size
         for (i in 0 until n) {

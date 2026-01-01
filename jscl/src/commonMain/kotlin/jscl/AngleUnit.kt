@@ -69,20 +69,20 @@ enum class AngleUnit {
     }
 
     companion object {
-        private const val FROM_RAD_TO_DEG = 180.0 / Math.PI
-        private const val FROM_RAD_TO_GRAD = 200.0 / Math.PI
-        private const val FROM_RAD_TO_TURNS = 0.5 / Math.PI
+        private const val FROM_RAD_TO_DEG = 180.0 / kotlin.math.PI
+        private const val FROM_RAD_TO_GRAD = 200.0 / kotlin.math.PI
+        private const val FROM_RAD_TO_TURNS = 0.5 / kotlin.math.PI
 
-        private const val FROM_DEG_TO_RAD = Math.PI / 180.0
+        private const val FROM_DEG_TO_RAD = kotlin.math.PI / 180.0
         private const val FROM_DEG_TO_TURNS = 0.5 / 180.0
         private const val FROM_DEG_TO_GRAD = 10.0 / 9.0
 
-        private const val FROM_GRAD_TO_RAD = Math.PI / 200.0
+        private const val FROM_GRAD_TO_RAD = kotlin.math.PI / 200.0
         private const val FROM_GRAD_TO_TURNS = 0.5 / 200.0
         private const val FROM_GRAD_TO_DEG = 9.0 / 10.0
 
         private const val FROM_TURNS_TO_GRAD = 200.0 / 0.5
-        private const val FROM_TURNS_TO_RAD = Math.PI / 0.5
+        private const val FROM_TURNS_TO_RAD = kotlin.math.PI / 0.5
         private const val FROM_TURNS_TO_DEG = 180.0 / 0.5
     }
 }

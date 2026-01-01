@@ -1,9 +1,9 @@
 package jscl
 
 import jscl.text.msg.JsclMessage
-import org.solovyev.common.msg.Message
-import org.solovyev.common.msg.MessageLevel
-import org.solovyev.common.msg.MessageType
+import jscl.common.msg.Message
+import jscl.common.msg.MessageLevel
+import jscl.common.msg.MessageType
 
 abstract class JsclArithmeticException(
     messageCode: String,

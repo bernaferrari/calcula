@@ -6,7 +6,7 @@ import jscl.math.NotDivisibleException
 import jscl.math.NotDoubleException
 import jscl.text.msg.JsclMessage
 import jscl.text.msg.Messages
-import org.solovyev.common.msg.MessageType
+import jscl.common.msg.MessageType
 import kotlin.math.*
 
 class Complex private constructor(

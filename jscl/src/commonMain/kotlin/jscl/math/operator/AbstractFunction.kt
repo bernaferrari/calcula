@@ -28,7 +28,7 @@ abstract class AbstractFunction protected constructor(name: String, parameters: 
     private fun checkParameters(parameters: Array<Generic>?) {
         // Only check if parameters is not null (null is used for template functions)
         if (parameters != null) {
-            assert(getMinParameters() <= parameters.size && parameters.size <= getMaxParameters())
+            require(getMinParameters() <= parameters.size && parameters.size <= getMaxParameters())
         }
     }
 

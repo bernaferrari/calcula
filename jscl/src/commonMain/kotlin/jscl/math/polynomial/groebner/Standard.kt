@@ -7,7 +7,7 @@ import jscl.math.polynomial.Monomial
 import jscl.math.polynomial.Ordering
 import jscl.math.polynomial.Polynomial
 import jscl.util.ArrayUtils
-import org.solovyev.common.collections.SortedMutableMap
+import jscl.common.collections.SortedMutableMap
 
 open class Standard(val flags: Int) {
     internal val comparator: Comparator<Pair>

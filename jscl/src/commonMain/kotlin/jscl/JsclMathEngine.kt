@@ -13,16 +13,18 @@ import jscl.math.operator.matrix.OperatorsRegistry
 import jscl.math.operator.Percent
 import jscl.math.operator.Rand
 import jscl.text.ParseException
-import midpcalc.Real
-import org.solovyev.common.NumberFormatter
-import org.solovyev.common.math.MathRegistry
-import org.solovyev.common.msg.MessageRegistry
-import org.solovyev.common.msg.Messages
+import jscl.math.precision.Real
+import jscl.common.NumberFormatter
+import jscl.common.math.MathRegistry
+import jscl.common.msg.MessageRegistry
+import jscl.common.msg.Messages
 import com.ionspin.kotlin.bignum.integer.BigInteger
 
 open class JsclMathEngine : MathEngine {
 
-    private val numberFormatter = ThreadLocal.withInitial { NumberFormatter() }
+    // In KMP, ThreadLocal doesn't exist. Using a simple instance since NumberFormatter is typically
+    // used in short-lived formatting operations and is not thread-safe anyway
+    private val numberFormatter = NumberFormatter()
 
     private var groupingSeparator: Char = NumberFormatter.NO_GROUPING
     private var notation: Int = Real.NumberFormat.FSE_NONE
@@ -123,7 +125,7 @@ open class JsclMathEngine : MathEngine {
     }
 
     private fun prepareNumberFormatter(nb: NumeralBase): NumberFormatter {
-        val nf = numberFormatter.get()!!
+        val nf = numberFormatter
         nf.groupingSeparator = if (hasGroupingSeparator()) getGroupingSeparator(nb) else NumberFormatter.NO_GROUPING
         nf.precision = precision
         when (notation) {

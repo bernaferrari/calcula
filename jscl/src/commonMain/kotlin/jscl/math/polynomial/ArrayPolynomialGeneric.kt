@@ -4,8 +4,8 @@ import jscl.math.Expression
 import jscl.math.Generic
 import jscl.math.JsclInteger
 import jscl.math.Literal
-import org.solovyev.common.collections.SortedMutableMap
-import org.solovyev.common.collections.binarySearch
+import jscl.common.collections.SortedMutableMap
+import jscl.common.collections.binarySearch
 
 internal open class ArrayPolynomialGeneric : Polynomial {
     var coef: Array<Generic?>

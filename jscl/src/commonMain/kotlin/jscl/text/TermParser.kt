@@ -19,22 +19,29 @@ internal class TermParser private constructor() : Parser<Generic> {
 
         var s = UnsignedFactor.parser.parse(p, previousSumElement) as Generic
 
+        // Parse multiplication/division chain using Result-based approach
+        // Try multiply first, if that fails try divide, if both fail we're done
         while (true) {
-            try {
-                val b = MultiplyFactor.parser.parse(p, null)
-                result = result.multiply(s)
-                s = b
-            } catch (e: ParseException) {
-                p.exceptionsPool.release(e)
-                try {
-                    val b = DivideFactor.parser.parse(p, null)
-                    s = if (s.compareTo(JsclInteger.valueOf(1)) == 0)
-                        Inverse(GenericVariable.content(b, true)).expressionValue()
-                    else
-                        Fraction(GenericVariable.content(s, true), GenericVariable.content(b, true)).expressionValue()
-                } catch (e2: ParseException) {
-                    p.exceptionsPool.release(e2)
-                    break
+            when (val multiplyResult = MultiplyFactor.parser.tryParse(p, null)) {
+                is ParseResult.Success -> {
+                    result = result.multiply(s)
+                    s = multiplyResult.value
+                }
+                is ParseResult.Failure -> {
+                    p.exceptionsPool.release(multiplyResult.toException())
+                    when (val divideResult = DivideFactor.parser.tryParse(p, null)) {
+                        is ParseResult.Success -> {
+                            val b = divideResult.value
+                            s = if (s.compareTo(JsclInteger.valueOf(1)) == 0)
+                                Inverse(GenericVariable.content(b, true)).expressionValue()
+                            else
+                                Fraction(GenericVariable.content(s, true), GenericVariable.content(b, true)).expressionValue()
+                        }
+                        is ParseResult.Failure -> {
+                            p.exceptionsPool.release(divideResult.toException())
+                            break
+                        }
+                    }
                 }
             }
         }

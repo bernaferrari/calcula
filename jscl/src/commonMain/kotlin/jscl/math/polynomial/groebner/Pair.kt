@@ -27,7 +27,7 @@ internal class Pair : Comparable<Pair> {
         this.polynomial = polynomial
         monomial = arrayOf(polynomial[0].head()!!.monomial(), polynomial[1].head()!!.monomial())
         scm = monomial[0].scm(monomial[1])
-        sugar = Math.max(
+        sugar = kotlin.math.max(
             polynomial[0].sugar() - polynomial[0].degree(),
             polynomial[1].sugar() - polynomial[1].degree()
         ) + scm.degree()

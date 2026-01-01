@@ -6,7 +6,7 @@ import jscl.math.function.Fraction
 import jscl.math.function.Pow
 import jscl.math.polynomial.Monomial
 import jscl.mathml.MathML
-import org.solovyev.common.collections.SortedMutableMap
+import jscl.common.collections.SortedMutableMap
 
 class Literal internal constructor() : Comparable<Any> {
 

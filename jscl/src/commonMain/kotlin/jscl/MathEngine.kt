@@ -2,7 +2,7 @@ package jscl
 
 import jscl.math.Generic
 import jscl.text.ParseException
-import org.solovyev.common.msg.MessageRegistry
+import jscl.common.msg.MessageRegistry
 
 interface MathEngine : MathContext {
 

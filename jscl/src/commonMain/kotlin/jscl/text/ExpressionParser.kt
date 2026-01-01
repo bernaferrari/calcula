@@ -17,12 +17,15 @@ class ExpressionParser private constructor() : Parser<Generic> {
             result = negatePercentIfNeeded(result) ?: result.negate()
         }
 
+        // Parse additional terms using Result-based approach
+        // Important: pass the accumulated result as previousSumElement for percent calculations
         while (true) {
-            try {
-                result = result.add(PlusOrMinusTerm.parser.parse(p, result))
-            } catch (e: ParseException) {
-                p.exceptionsPool.release(e)
-                break
+            when (val parseResult = PlusOrMinusTerm.parser.tryParse(p, result)) {
+                is ParseResult.Success -> result = result.add(parseResult.value)
+                is ParseResult.Failure -> {
+                    p.exceptionsPool.release(parseResult.toException())
+                    break
+                }
             }
         }
 

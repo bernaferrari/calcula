@@ -21,29 +21,23 @@ class ImplicitFunctionParser private constructor() : Parser<Function> {
             throw p.exceptionsPool.obtain(p.position.toInt(), p.expression, Messages.msg_6, listOf(name))
         }
 
+        // Parse subscripts using Result-based approach
         val subscripts = ArrayList<Generic>()
-        while (true) {
-            try {
-                subscripts.add(Subscript.parser.parse(p, previousSumElement))
-            } catch (e: ParseException) {
-                p.exceptionsPool.release(e)
-                break
+        Subscript.parser.parseWhileSuccessful(p, previousSumElement, Unit) { _, subscript ->
+            subscripts.add(subscript)
+        }
+
+        // Parse optional derivation
+        val b = when (val derivResult = Derivation.parser.tryParse(p, previousSumElement)) {
+            is ParseResult.Success -> derivResult.value
+            is ParseResult.Failure -> {
+                p.exceptionsPool.release(derivResult.toException())
+                IntArray(0)
             }
         }
 
-        var b: IntArray
-        try {
-            b = Derivation.parser.parse(p, previousSumElement)
-        } catch (e: ParseException) {
-            p.exceptionsPool.release(e)
-            b = IntArray(0)
-        }
-        try {
-            a = ParameterListParser.parser1.parse(p, previousSumElement)
-        } catch (e: ParseException) {
-            p.position.value = pos0
-            throw e
-        }
+        // Parse parameter list, reset position on failure
+        a = ParameterListParser.parser1.parseOrThrow(p, previousSumElement, pos0)
 
         val derivations = IntArray(a.size)
         for (i in 0 until a.size.coerceAtMost(b.size)) {
@@ -63,12 +57,14 @@ internal class Derivation private constructor() : Parser<IntArray> {
 
     @Throws(ParseException::class)
     override fun parse(p: Parser.Parameters, previousSumElement: Generic?): IntArray {
-        try {
-            return intArrayOf(PrimeCharacters.parser.parse(p, previousSumElement))
-        } catch (e: ParseException) {
-            p.exceptionsPool.release(e)
+        // Try prime characters first, then fall back to superscript list
+        return when (val primeResult = PrimeCharacters.parser.tryParse(p, previousSumElement)) {
+            is ParseResult.Success -> intArrayOf(primeResult.value)
+            is ParseResult.Failure -> {
+                p.exceptionsPool.release(primeResult.toException())
+                SuperscriptList.parser.parse(p, previousSumElement)
+            }
         }
-        return SuperscriptList.parser.parse(p, previousSumElement)
     }
 
     companion object {
@@ -84,21 +80,13 @@ internal class SuperscriptList private constructor() : Parser<IntArray> {
 
         ParserUtils.tryToParse(p, pos0, '{')
 
+        // Parse first integer, reset position on failure
         val result = ArrayList<Int>()
-        try {
-            result.add(IntegerParser.parser.parse(p, previousSumElement))
-        } catch (e: ParseException) {
-            p.position.value = pos0
-            throw e
-        }
+        result.add(IntegerParser.parser.parseOrThrow(p, previousSumElement, pos0))
 
-        while (true) {
-            try {
-                result.add(CommaAndInteger.parser.parse(p, previousSumElement))
-            } catch (e: ParseException) {
-                p.exceptionsPool.release(e)
-                break
-            }
+        // Parse additional comma-separated integers
+        CommaAndInteger.parser.parseWhileSuccessful(p, previousSumElement, Unit) { _, integer ->
+            result.add(integer)
         }
 
         ParserUtils.tryToParse(p, pos0, '}')

@@ -6,7 +6,7 @@ import jscl.math.operator.DoubleFactorial
 import jscl.math.operator.Factorial
 import jscl.math.operator.Operator
 import jscl.math.operator.Percent
-import org.solovyev.common.math.AbstractMathRegistry
+import jscl.common.math.AbstractMathRegistry
 
 /**
  * User: serso

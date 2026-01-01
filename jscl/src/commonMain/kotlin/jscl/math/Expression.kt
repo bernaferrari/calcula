@@ -18,8 +18,8 @@ import jscl.util.ArrayUtils
 
 open class Expression : Generic {
     var size: Int = 0
-    private var literals: Array<Literal?>? = null
-    private var coefficients: Array<JsclInteger?>? = null
+    private var literals: Array<Literal?> = emptyArray()
+    private var coefficients: Array<JsclInteger?> = emptyArray()
 
     protected constructor()
 
@@ -29,9 +29,9 @@ open class Expression : Generic {
 
     fun size(): Int = size
 
-    fun literal(n: Int): Literal = literals!![n]!!
+    fun literal(n: Int): Literal = literals[n]!!
 
-    fun coef(n: Int): JsclInteger = coefficients!![n]!!
+    fun coef(n: Int): JsclInteger = coefficients[n]!!
 
     fun init(size: Int) {
         literals = arrayOfNulls(size)
@@ -40,12 +40,12 @@ open class Expression : Generic {
     }
 
     fun resize(size: Int) {
-        val length = literals!!.size
+        val length = literals.size
         if (size < length) {
             val literal = arrayOfNulls<Literal>(size)
             val coef = arrayOfNulls<JsclInteger>(size)
-            this.literals!!.copyInto(literal, 0, length - size, length - size + size)
-            this.coefficients!!.copyInto(coef, 0, length - size, length - size + size)
+            literals.copyInto(literal, 0, length - size, length - size + size)
+            coefficients.copyInto(coef, 0, length - size, length - size + size)
             this.literals = literal
             this.coefficients = coef
             this.size = size
@@ -59,8 +59,8 @@ open class Expression : Generic {
         var thisI = this.size
         var thatI = that.size
 
-        var thisLiteral = if (thisI > 0) this.literals!![--thisI] else null
-        var thatLiteral = if (thatI > 0) that.literals!![--thatI] else null
+        var thisLiteral = if (thisI > 0) this.literals[--thisI] else null
+        var thatLiteral = if (thatI > 0) that.literals[--thatI] else null
 
         while (thisLiteral != null || thatLiteral != null) {
             val c = when {
@@ -71,29 +71,29 @@ open class Expression : Generic {
 
             when {
                 c < 0 -> {
-                    val thisCoefficient = this.coefficients!![thisI]
+                    val thisCoefficient = this.coefficients[thisI]
                     --i
-                    result.literals!![i] = thisLiteral
-                    result.coefficients!![i] = thisCoefficient
-                    thisLiteral = if (thisI > 0) literals!![--thisI] else null
+                    result.literals[i] = thisLiteral
+                    result.coefficients[i] = thisCoefficient
+                    thisLiteral = if (thisI > 0) literals[--thisI] else null
                 }
                 c > 0 -> {
-                    val en = that.coefficients!![thatI]
+                    val en = that.coefficients[thatI]
                     --i
-                    result.literals!![i] = thatLiteral
-                    result.coefficients!![i] = en
-                    thatLiteral = if (thatI > 0) that.literals!![--thatI] else null
+                    result.literals[i] = thatLiteral
+                    result.coefficients[i] = en
+                    thatLiteral = if (thatI > 0) that.literals[--thatI] else null
                 }
                 else -> {
-                    val sum = coefficients!![thisI]!!.add(that.coefficients!![thatI]!!)
+                    val sum = coefficients[thisI]!!.add(that.coefficients[thatI]!!)
                     if (sum.signum() != 0) {
                         --i
-                        result.literals!![i] = thisLiteral
-                        result.coefficients!![i] = sum
+                        result.literals[i] = thisLiteral
+                        result.coefficients[i] = sum
                     }
 
-                    thisLiteral = if (thisI > 0) literals!![--thisI] else null
-                    thatLiteral = if (thatI > 0) that.literals!![--thatI] else null
+                    thisLiteral = if (thisI > 0) literals[--thisI] else null
+                    thatLiteral = if (thatI > 0) that.literals[--thatI] else null
                 }
             }
         }
@@ -139,8 +139,8 @@ open class Expression : Generic {
         var thisI = this.size
         var thatI = that.size
 
-        var thisLiteral = if (thisI > 0) literals!![--thisI] else null
-        var thatLiteral = if (thatI > 0) that.literals!![--thatI]?.multiply(literal) else null
+        var thisLiteral = if (thisI > 0) literals[--thisI] else null
+        var thatLiteral = if (thatI > 0) that.literals[--thatI]?.multiply(literal) else null
 
         while (thisLiteral != null || thatLiteral != null) {
             val c = when {
@@ -151,28 +151,28 @@ open class Expression : Generic {
 
             when {
                 c < 0 -> {
-                    val en = coefficients!![thisI]
+                    val en = coefficients[thisI]
                     --i
-                    result.literals!![i] = thisLiteral
-                    result.coefficients!![i] = en
-                    thisLiteral = if (thisI > 0) literals!![--thisI] else null
+                    result.literals[i] = thisLiteral
+                    result.coefficients[i] = en
+                    thisLiteral = if (thisI > 0) literals[--thisI] else null
                 }
                 c > 0 -> {
-                    val en = that.coefficients!![thatI]!!.multiply(coefficient)
+                    val en = that.coefficients[thatI]!!.multiply(coefficient)
                     --i
-                    result.literals!![i] = thatLiteral
-                    result.coefficients!![i] = en
-                    thatLiteral = if (thatI > 0) that.literals!![--thatI]?.multiply(literal) else null
+                    result.literals[i] = thatLiteral
+                    result.coefficients[i] = en
+                    thatLiteral = if (thatI > 0) that.literals[--thatI]?.multiply(literal) else null
                 }
                 else -> {
-                    val en = coefficients!![thisI]!!.add(that.coefficients!![thatI]!!.multiply(coefficient))
+                    val en = coefficients[thisI]!!.add(that.coefficients[thatI]!!.multiply(coefficient))
                     if (en.signum() != 0) {
                         --i
-                        result.literals!![i] = thisLiteral
-                        result.coefficients!![i] = en
+                        result.literals[i] = thisLiteral
+                        result.coefficients[i] = en
                     }
-                    thisLiteral = if (thisI > 0) literals!![--thisI] else null
-                    thatLiteral = if (thatI > 0) that.literals!![--thatI]?.multiply(literal) else null
+                    thisLiteral = if (thisI > 0) literals[--thisI] else null
+                    thatLiteral = if (thatI > 0) that.literals[--thatI]?.multiply(literal) else null
                 }
             }
         }
@@ -184,7 +184,7 @@ open class Expression : Generic {
     fun multiply(expression: Expression): Expression {
         var result = newInstance(0)
         for (i in 0 until size) {
-            result = result.multiplyAndAdd(literals!![i]!!, coefficients!![i]!!, expression)
+            result = result.multiplyAndAdd(literals[i]!!, coefficients[i]!!, expression)
         }
         return result
     }
@@ -236,8 +236,8 @@ open class Expression : Generic {
                 try {
                     val ex = newInstance(size)
                     for (i in 0 until size) {
-                        ex.literals!![i] = literals!![i]
-                        ex.coefficients!![i] = coefficients!![i]!!.divide(generic)
+                        ex.literals[i] = literals[i]
+                        ex.coefficients[i] = coefficients[i]!!.divide(generic)
                     }
                     return arrayOf(ex, JsclInteger.valueOf(0))
                 } catch (e: NotDivisibleException) {
@@ -277,7 +277,7 @@ open class Expression : Generic {
     override fun gcd(): Generic {
         var result = JsclInteger.valueOf(0)
         for (i in size - 1 downTo 0) {
-            result = result.gcd(coefficients!![i]!!)
+            result = result.gcd(coefficients[i]!!)
         }
         return result
     }
@@ -285,7 +285,7 @@ open class Expression : Generic {
     fun literalScm(): Literal {
         var result = Literal.newInstance()
         for (i in 0 until size) {
-            result = result.scm(literals!![i]!!)
+            result = result.scm(literals[i]!!)
         }
         return result
     }
@@ -295,7 +295,7 @@ open class Expression : Generic {
     }
 
     override fun signum(): Int {
-        return if (size == 0) 0 else coefficients!![0]!!.signum()
+        return if (size == 0) 0 else coefficients[0]!!.signum()
     }
 
     override fun degree(): Int = 0
@@ -364,8 +364,8 @@ open class Expression : Generic {
     private fun substitute(content: Map<Variable, Generic>): Generic {
         var sum: Generic = JsclInteger.ZERO
         for (i in 0 until size) {
-            val literal = literals!![i]!!
-            var sumElement: Generic = coefficients!![i]!!
+            val literal = literals[i]!!
+            var sumElement: Generic = coefficients[i]!!
             for (j in 0 until literal.size()) {
                 val v = literal.getVariable(j)
                 val power = literal.getPower(j)
@@ -441,7 +441,7 @@ open class Expression : Generic {
     override fun sumValue(): Array<Generic> {
         val result = arrayOfNulls<Generic>(size)
         for (i in result.indices) {
-            result[i] = valueOf(literals!![i]!!, coefficients!![i]!!)
+            result[i] = valueOf(literals[i]!!, coefficients[i]!!)
         }
         return result as Array<Generic>
     }
@@ -450,8 +450,8 @@ open class Expression : Generic {
         return when {
             size == 0 -> arrayOf(JsclInteger.valueOf(0))
             size == 1 -> {
-                val l = literals!![0]!!
-                val k = coefficients!![0]!!
+                val l = literals[0]!!
+                val k = coefficients[0]!!
                 val productElements = l.productValue()
                 if (k.compareTo(JsclInteger.valueOf(1)) == 0) {
                     productElements
@@ -470,8 +470,8 @@ open class Expression : Generic {
         return when {
             size == 0 -> Power(JsclInteger.valueOf(0), 1)
             size == 1 -> {
-                val l = literals!![0]!!
-                val en = coefficients!![0]!!
+                val l = literals[0]!!
+                val en = coefficients[0]!!
                 when {
                     en.compareTo(JsclInteger.valueOf(1)) == 0 -> l.powerValue()
                     l.degree() == 0 -> en.powerValue()
@@ -496,8 +496,8 @@ open class Expression : Generic {
         return when {
             size == 0 -> JsclInteger.valueOf(0)
             size == 1 -> {
-                val l = literals!![0]!!
-                val c = coefficients!![0]!!
+                val l = literals[0]!!
+                val c = coefficients[0]!!
                 if (l.degree() == 0) c
                 else throw NotIntegerException.get()
             }
@@ -509,8 +509,8 @@ open class Expression : Generic {
         return when {
             size == 0 -> 0.0
             size == 1 -> {
-                val l = literals!![0]!!
-                val c = coefficients!![0]!!
+                val l = literals[0]!!
+                val c = coefficients[0]!!
                 if (l.degree() == 0) c.doubleValue()
                 else throw NotDoubleException.get()
             }
@@ -522,8 +522,8 @@ open class Expression : Generic {
         return when {
             size == 0 -> throw NotVariableException()
             size == 1 -> {
-                val l = literals!![0]!!
-                val c = coefficients!![0]!!
+                val l = literals[0]!!
+                val c = coefficients[0]!!
                 if (c.compareTo(JsclInteger.valueOf(1)) == 0) l.variableValue()
                 else throw NotVariableException()
             }
@@ -576,8 +576,8 @@ open class Expression : Generic {
     fun compareTo(expression: Expression): Int {
         var i1 = size
         var i2 = expression.size
-        var l1 = if (i1 == 0) null else literals!![--i1]
-        var l2 = if (i2 == 0) null else expression.literals!![--i2]
+        var l1 = if (i1 == 0) null else literals[--i1]
+        var l2 = if (i2 == 0) null else expression.literals[--i2]
         while (l1 != null || l2 != null) {
             val c = when {
                 l1 == null -> -1
@@ -587,11 +587,11 @@ open class Expression : Generic {
             if (c < 0) return -1
             else if (c > 0) return 1
             else {
-                val cc = coefficients!![i1]!!.compareTo(expression.coefficients!![i2]!!)
+                val cc = coefficients[i1]!!.compareTo(expression.coefficients[i2]!!)
                 if (cc < 0) return -1
                 else if (cc > 0) return 1
-                l1 = if (i1 == 0) null else literals!![--i1]
-                l2 = if (i2 == 0) null else expression.literals!![--i2]
+                l1 = if (i1 == 0) null else literals[--i1]
+                l2 = if (i2 == 0) null else expression.literals[--i2]
             }
         }
         return 0
@@ -608,15 +608,15 @@ open class Expression : Generic {
     fun init(lit: Literal, integer: JsclInteger) {
         if (integer.signum() != 0) {
             init(1)
-            literals!![0] = lit
-            coefficients!![0] = integer
+            literals[0] = lit
+            coefficients[0] = integer
         } else init(0)
     }
 
     fun init(expression: Expression) {
         init(expression.size)
-        expression.literals!!.copyInto(literals!!, 0, 0, 0 + size)
-        expression.coefficients!!.copyInto(coefficients!!, 0, 0, 0 + size)
+        expression.literals.copyInto(literals, 0, 0, 0 + size)
+        expression.coefficients.copyInto(coefficients, 0, 0, 0 + size)
     }
 
     fun init(integer: JsclInteger) {
@@ -657,8 +657,8 @@ open class Expression : Generic {
         }
 
         for (i in 0 until size) {
-            val literal = literals!![i]!!
-            val coefficient = coefficients!![i]!!
+            val literal = literals[i]!!
+            val coefficient = coefficients[i]!!
 
             if (coefficient.signum() > 0 && i > 0) {
                 result.append("+")
@@ -688,8 +688,8 @@ open class Expression : Generic {
         }
 
         for (i in 0 until size) {
-            var l = literals!![i]!!
-            var en = coefficients!![i]!!
+            var l = literals[i]!!
+            var en = coefficients[i]!!
             if (i > 0) {
                 if (en.signum() < 0) {
                     result.append(".subtract(")
@@ -717,8 +717,8 @@ open class Expression : Generic {
             e1.appendChild(e2)
         }
         for (i in 0 until size) {
-            val l = literals!![i]!!
-            val en = coefficients!![i]!!
+            val l = literals[i]!!
+            val en = coefficients[i]!!
             if (en.signum() > 0 && i > 0) {
                 val e2 = element.element("mo")
                 e2.appendChild(element.text("+"))
@@ -742,7 +742,7 @@ open class Expression : Generic {
     override val constants: Set<Constant>
         get() {
             val result = HashSet<Constant>()
-            for (literal in literals!!) {
+            for (literal in literals) {
                 if (literal != null) {
                     for (variable in literal.variables()) {
                         result.addAll(variable.constants)
@@ -795,8 +795,7 @@ open class Expression : Generic {
     }
 
     private fun containsNonFiniteLiteral(): Boolean {
-        val literalsSnapshot = literals ?: return false
-        for (literal in literalsSnapshot) {
+        for (literal in literals) {
             if (literal == null) continue
             for (variable in literal.variables()) {
                 val variableContent = (variable as? GenericVariable)?.content ?: continue

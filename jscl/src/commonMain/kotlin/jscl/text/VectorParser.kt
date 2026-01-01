@@ -15,20 +15,19 @@ class VectorParser private constructor() : Parser<JsclVector> {
         ParserUtils.tryToParse(p, pos0, '[')
 
         val result = ArrayList<Generic>()
-        try {
-            result.add(ExpressionParser.parser.parse(p, previousSumElement))
-        } catch (e: ParseException) {
-            p.position.value = pos0
-            throw e
+
+        // Parse first expression - failure resets position and propagates
+        when (val firstExpr = ExpressionParser.parser.tryParse(p, previousSumElement)) {
+            is ParseResult.Success -> result.add(firstExpr.value)
+            is ParseResult.Failure -> {
+                p.position.value = pos0
+                throw firstExpr.toException()
+            }
         }
 
-        while (true) {
-            try {
-                result.add(CommaAndExpression.parser.parse(p, previousSumElement))
-            } catch (e: ParseException) {
-                p.exceptionsPool.release(e)
-                break
-            }
+        // Parse additional comma-separated expressions
+        CommaAndExpression.parser.parseWhileSuccessful(p, previousSumElement, Unit) { _, expr ->
+            result.add(expr)
         }
 
         ParserUtils.skipWhitespaces(p)

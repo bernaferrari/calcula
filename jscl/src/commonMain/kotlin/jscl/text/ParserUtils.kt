@@ -11,16 +11,15 @@ import jscl.text.msg.Messages
 object ParserUtils {
 
     fun checkInterruption() {
-        if (Thread.currentThread().isInterrupted) {
-            throw ParseInterruptedException("Interrupted!")
-        }
+        // In Kotlin Multiplatform, Thread interruption doesn't exist in common code.
+        // This is now a no-op. If needed, use coroutine cancellation instead.
     }
 
     fun skipWhitespaces(p: Parser.Parameters) {
         val position = p.position
         val expression = p.expression
 
-        while (position.toInt() < expression.length && Character.isWhitespace(expression[position.toInt()])) {
+        while (position.toInt() < expression.length && expression[position.toInt()].isWhitespace()) {
             position.increment()
         }
     }
@@ -53,6 +52,22 @@ object ParserUtils {
             }
         } else {
             throwParseException(p, pos0, Messages.msg_11, s)
+        }
+    }
+
+    /**
+     * Try to parse a string, returning a ParseResult instead of throwing.
+     */
+    fun tryToParseResult(p: Parser.Parameters, pos0: Int, s: String): ParseResult<Unit> {
+        skipWhitespaces(p)
+
+        return if (p.position.toInt() < p.expression.length && p.expression.startsWith(s, p.position.toInt())) {
+            p.position.add(s.length)
+            ParseResult.Success(Unit)
+        } else {
+            val exception = p.exceptionsPool.obtain(p.position.toInt(), p.expression, Messages.msg_11, listOf(s))
+            p.position.value = pos0
+            ParseResult.fromException(exception)
         }
     }
 
@@ -95,16 +110,8 @@ object ParserUtils {
         previousSumParser: Generic?,
         p: Parser.Parameters
     ): T {
-        val result: T
-
-        try {
-            result = parser.parse(p, previousSumParser)
-        } catch (e: ParseException) {
-            p.position.value = initialPosition
-            throw e
-        }
-
-        return result
+        // Use parseOrThrow from ParseResult for consistent behavior
+        return parser.parseOrThrow(p, previousSumParser, initialPosition)
     }
 
     @Suppress("UNCHECKED_CAST")

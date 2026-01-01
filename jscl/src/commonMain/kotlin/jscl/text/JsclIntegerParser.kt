@@ -13,13 +13,8 @@ class JsclIntegerParser private constructor() : Parser<JsclInteger> {
 
         val nb = NumeralBaseParser.parser.parse(p, previousSumElement)
 
-        val number: String
-        try {
-            number = Digits(nb).parse(p, previousSumElement)
-        } catch (e: ParseException) {
-            p.position.value = pos0
-            throw e
-        }
+        // Parse digits, reset position on failure
+        val number = Digits(nb).parseOrThrow(p, previousSumElement, pos0)
 
         try {
             return nb.toJsclInteger(number)

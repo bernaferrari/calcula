@@ -8,27 +8,15 @@ class CompoundIdentifier private constructor() : Parser<String> {
     override fun parse(p: Parser.Parameters, previousSumElement: Generic?): String {
         val pos0 = p.position.toInt()
 
-        val result: StringBuilder
-
         ParserUtils.skipWhitespaces(p)
-        try {
-            val identifier = Identifier.parser.parse(p, previousSumElement)
-            result = StringBuilder()
-            result.append(identifier)
-        } catch (e: ParseException) {
-            p.position.value = pos0
-            throw e
-        }
 
-        while (true) {
-            try {
-                val dotAndId = DotAndIdentifier.parser.parse(p, previousSumElement)
-                // NOTE: '.' must be appended after parsing
-                result.append(".").append(dotAndId)
-            } catch (e: ParseException) {
-                p.exceptionsPool.release(e)
-                break
-            }
+        // Parse first identifier, reset position on failure
+        val result = StringBuilder()
+        result.append(Identifier.parser.parseOrThrow(p, previousSumElement, pos0))
+
+        // Parse additional dot-separated identifiers
+        DotAndIdentifier.parser.parseWhileSuccessful(p, previousSumElement, Unit) { _, dotAndId ->
+            result.append(".").append(dotAndId)
         }
 
         return result.toString()
@@ -47,15 +35,8 @@ internal class DotAndIdentifier private constructor() : Parser<String> {
 
         ParserUtils.tryToParse(p, pos0, '.')
 
-        val result: String
-        try {
-            result = Identifier.parser.parse(p, previousSumElement)
-        } catch (e: ParseException) {
-            p.position.value = pos0
-            throw e
-        }
-
-        return result
+        // Parse identifier, reset position on failure
+        return Identifier.parser.parseOrThrow(p, previousSumElement, pos0)
     }
 
     companion object {

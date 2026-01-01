@@ -5,7 +5,7 @@ import jscl.JsclMathEngine
 
 class PiConstantAlias(
     private val alias: String
-) : ExtendedConstant(Constant(alias), Math.PI, "JsclDouble.valueOf(Math.PI)") {
+) : ExtendedConstant(Constant(alias), kotlin.math.PI, "JsclDouble.valueOf(kotlin.math.PI)") {
 
     override val name: String
         get() = alias

@@ -1,8 +1,8 @@
 package jscl.text
 
-import org.solovyev.common.msg.Message
-import org.solovyev.common.msg.MessageLevel
-import org.solovyev.common.msg.MessageType
+import jscl.common.msg.Message
+import jscl.common.msg.MessageLevel
+import jscl.common.msg.MessageType
 
 open class ParseException : Exception, Message {
 

@@ -10,21 +10,19 @@ class ConstantParser private constructor() : Parser<Constant> {
     override fun parse(p: Parser.Parameters, previousSumElement: Generic?): Constant {
         val name = CompoundIdentifier.parser.parse(p, previousSumElement)
 
+        // Parse subscripts using Result-based approach
         val l = ArrayList<Generic>()
-        while (true) {
-            try {
-                l.add(Subscript.parser.parse(p, previousSumElement))
-            } catch (e: ParseException) {
-                p.exceptionsPool.release(e)
-                break
-            }
+        Subscript.parser.parseWhileSuccessful(p, previousSumElement, Unit) { _, subscript ->
+            l.add(subscript)
         }
 
-        var prime = 0
-        try {
-            prime = Prime.parser.parse(p, previousSumElement)
-        } catch (e: ParseException) {
-            p.exceptionsPool.release(e)
+        // Parse optional prime
+        val prime = when (val primeResult = Prime.parser.tryParse(p, previousSumElement)) {
+            is ParseResult.Success -> primeResult.value
+            is ParseResult.Failure -> {
+                p.exceptionsPool.release(primeResult.toException())
+                0
+            }
         }
 
         @Suppress("UNCHECKED_CAST")
@@ -65,13 +63,8 @@ internal class Superscript private constructor() : Parser<Int> {
 
         ParserUtils.tryToParse(p, pos0, '{')
 
-        val result: Int
-        try {
-            result = IntegerParser.parser.parse(p, previousSumElement)
-        } catch (e: ParseException) {
-            p.position.value = pos0
-            throw e
-        }
+        // Parse integer, reset position on failure
+        val result = IntegerParser.parser.parseOrThrow(p, previousSumElement, pos0)
 
         ParserUtils.tryToParse(p, pos0, '}')
 

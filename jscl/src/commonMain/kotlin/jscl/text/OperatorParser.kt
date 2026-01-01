@@ -30,7 +30,7 @@ class OperatorParser private constructor() : Parser<Operator> {
             ParserUtils.throwParseException(p, pos0, Messages.msg_3, operatorName)
         }
 
-        assert(result != null)
+        require(result != null)
         return result!!
     }
 

@@ -4,7 +4,7 @@ import jscl.math.Expression
 import jscl.math.Generic
 import jscl.math.JsclInteger
 import jscl.math.Literal
-import org.solovyev.common.collections.SortedMutableMap
+import jscl.common.collections.SortedMutableMap
 
 internal class TreePolynomial(monomialFactory: Monomial, coefFactory: Generic?) : Polynomial(monomialFactory, coefFactory) {
     internal val content: SortedMutableMap<Monomial, Generic> = SortedMutableMap(monomialFactory.ordering)
@@ -49,7 +49,7 @@ internal class TreePolynomial(monomialFactory: Monomial, coefFactory: Generic?) 
                 else content[m] = s
             }
             degree = Polynomial.degree(this)
-            sugar = Math.max(sugar, q.sugar)
+            sugar = kotlin.math.max(sugar, q.sugar)
             normalized = false
             return this
         } else return copy().subtract(that)
@@ -70,7 +70,7 @@ internal class TreePolynomial(monomialFactory: Monomial, coefFactory: Generic?) 
                 else content[m] = s
             }
             degree = Polynomial.degree(this)
-            sugar = Math.max(sugar, q.sugar)
+            sugar = kotlin.math.max(sugar, q.sugar)
             normalized = false
             return this
         } else return copy().multiplyAndSubtract(generic, polynomial)
@@ -91,7 +91,7 @@ internal class TreePolynomial(monomialFactory: Monomial, coefFactory: Generic?) 
                 else content[m] = s
             }
             degree = Polynomial.degree(this)
-            sugar = Math.max(sugar, q.sugar + monomial.degree())
+            sugar = kotlin.math.max(sugar, q.sugar + monomial.degree())
             normalized = false
             return this
         } else return copy().multiplyAndSubtract(monomial, generic, polynomial)
@@ -230,7 +230,7 @@ internal class TreePolynomial(monomialFactory: Monomial, coefFactory: Generic?) 
             val a = a1.add(a2)
             if (a.signum() == 0) content.remove(m)
             else content[m] = a
-            sugar = Math.max(sugar, m.degree())
+            sugar = kotlin.math.max(sugar, m.degree())
         }
         degree = Polynomial.degree(this)
         this.sugar = sugar

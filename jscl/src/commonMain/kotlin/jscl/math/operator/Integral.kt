@@ -9,7 +9,7 @@ import jscl.math.Variable
 import jscl.mathml.MathML
 import jscl.text.msg.JsclMessage
 import jscl.text.msg.Messages
-import org.solovyev.common.msg.MessageType
+import jscl.common.msg.MessageType
 
 class Integral : Operator {
 

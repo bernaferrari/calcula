@@ -12,14 +12,15 @@ class NumeralBaseParser private constructor() : Parser<NumeralBase> {
 
         ParserUtils.skipWhitespaces(p)
 
+        // Try each numeral base prefix until one matches
         for (numeralBase in NumeralBase.values()) {
-            try {
-                val jsclPrefix = numeralBase.getJsclPrefix()
-                ParserUtils.tryToParse(p, pos0, jsclPrefix)
-                result = numeralBase
-                break
-            } catch (e: ParseException) {
-                p.exceptionsPool.release(e)
+            val jsclPrefix = numeralBase.getJsclPrefix()
+            when (val prefixResult = ParserUtils.tryToParseResult(p, pos0, jsclPrefix)) {
+                is ParseResult.Success -> {
+                    result = numeralBase
+                    break
+                }
+                is ParseResult.Failure -> p.exceptionsPool.release(prefixResult.toException())
             }
         }
 

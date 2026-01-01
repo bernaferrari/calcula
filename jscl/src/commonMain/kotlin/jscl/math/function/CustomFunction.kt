@@ -9,8 +9,8 @@ import jscl.math.*
 import jscl.text.ParseException
 import jscl.text.msg.JsclMessage
 import jscl.text.msg.Messages
-import org.solovyev.common.math.MathEntity
-import org.solovyev.common.msg.MessageType
+import jscl.common.math.MathEntity
+import jscl.common.msg.MessageType
 import kotlinx.atomicfu.atomic
 
 class CustomFunction : Function, IFunction {

@@ -1,7 +1,7 @@
 package jscl.text.msg
 
-import org.solovyev.common.msg.AbstractMessage
-import org.solovyev.common.msg.MessageType
+import jscl.common.msg.AbstractMessage
+import jscl.common.msg.MessageType
 
 /**
  * User: serso

@@ -10,13 +10,8 @@ class Subscript private constructor() : Parser<Generic> {
 
         ParserUtils.tryToParse(p, pos0, '[')
 
-        val a: Generic
-        try {
-            a = ExpressionParser.parser.parse(p, previousSumElement)
-        } catch (e: ParseException) {
-            p.position.value = pos0
-            throw e
-        }
+        // Parse expression, reset position on failure
+        val a = ExpressionParser.parser.parseOrThrow(p, previousSumElement, pos0)
 
         ParserUtils.tryToParse(p, pos0, ']')
 

@@ -58,7 +58,7 @@ internal open class BooleanMonomial : SmallMonomial {
             val r = (i and pmask) shl log2n
             val a = (element[q] shr r) and nmask
             val b = (monomial.element[q] shr r) and nmask
-            val c = Math.min(a, b)
+            val c = kotlin.math.min(a, b)
             m.element[q] = m.element[q] or (c shl r)
             m.degree += c
         }
@@ -72,7 +72,7 @@ internal open class BooleanMonomial : SmallMonomial {
             val r = (i and pmask) shl log2n
             val a = (element[q] shr r) and nmask
             val b = (monomial.element[q] shr r) and nmask
-            val c = Math.max(a, b)
+            val c = kotlin.math.max(a, b)
             m.element[q] = m.element[q] or (c shl r)
             m.degree += c
         }

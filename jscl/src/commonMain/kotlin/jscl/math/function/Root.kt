@@ -142,7 +142,7 @@ open class Root : Algebraic {
     }
 
     override fun toString(): String {
-        val buffer = StringBuffer()
+        val buffer = StringBuilder()
         buffer.append(name)
         buffer.append("[").append(subscript).append("]")
         buffer.append("(")
@@ -154,7 +154,7 @@ open class Root : Algebraic {
     }
 
     override fun toJava(): String {
-        val buffer = StringBuffer()
+        val buffer = StringBuilder()
         buffer.append("Numeric.").append(name).append("(")
         buffer.append(subscript.integerValue().toInt())
         buffer.append(", new Numeric[] {")

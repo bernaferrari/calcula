@@ -54,7 +54,7 @@ open class Monomial internal constructor(
     open fun gcd(monomial: Monomial): Monomial {
         val m = newinstance()
         for (i in unknown.indices) {
-            val n = Math.min(element[i], monomial.element[i])
+            val n = kotlin.math.min(element[i], monomial.element[i])
             m.element[i] = n
             m.degree += n
         }
@@ -64,7 +64,7 @@ open class Monomial internal constructor(
     open fun scm(monomial: Monomial): Monomial {
         val m = newinstance()
         for (i in unknown.indices) {
-            val n = Math.max(element[i], monomial.element[i])
+            val n = kotlin.math.max(element[i], monomial.element[i])
             m.element[i] = n
             m.degree += n
         }
@@ -313,7 +313,7 @@ internal class MonomialDivisor(beginning: Monomial, monomial: Monomial) : Monomi
     private fun fill(s: Int) {
         var remaining = s
         for (i in current.element.indices) {
-            val d = Math.min(monomial.element[i] - current.element[i], remaining)
+            val d = kotlin.math.min(monomial.element[i] - current.element[i], remaining)
             current.element[i] += d
             remaining -= d
         }
