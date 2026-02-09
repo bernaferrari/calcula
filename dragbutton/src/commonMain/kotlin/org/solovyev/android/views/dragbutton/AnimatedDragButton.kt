@@ -55,7 +55,7 @@ import androidx.compose.ui.unit.dp
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
-import kotlinx.datetime.Clock
+import kotlin.time.TimeSource
 
 /**
  * An animated drag button with premium visual feedback.
@@ -439,7 +439,7 @@ fun AnimatedDragButton(
                     isPressed = true
                     hasTriggeredThreshold = false
                     val start = down.position
-                    val downTime = Clock.System.now().toEpochMilliseconds()
+                    val downMark = TimeSource.Monotonic.markNow()
                     
                     try {
                         while (true) {
@@ -447,7 +447,7 @@ fun AnimatedDragButton(
                             val change = event.changes.firstOrNull { it.id == down.id } ?: break
                             
                             if (change.changedToUpIgnoreConsumed()) {
-                                val duration = Clock.System.now().toEpochMilliseconds() - downTime
+                                val duration = downMark.elapsedNow().inWholeMilliseconds
                                 val finalOffset = change.position - start
                                 val distance = finalOffset.getDistance()
                                 

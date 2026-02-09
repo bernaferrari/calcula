@@ -19,7 +19,7 @@
     <supports-screens android:anyDensity="true" />
 
     <application
-        android:name=".CalculatorApp"
+        android:name=".app.CalculatorApp"
         android:allowBackup="true"
         android:hardwareAccelerated="true"
         android:icon="@drawable/ic_launcher"

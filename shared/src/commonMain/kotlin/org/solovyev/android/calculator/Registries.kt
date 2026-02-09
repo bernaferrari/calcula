@@ -20,4 +20,4 @@ interface FunctionsRegistry : EntitiesRegistry<Function> {
 }
 
 interface OperatorsRegistry : EntitiesRegistry<Operator>
-interface PostfixFunctionsRegistry : EntitiesRegistry<Function>
+interface PostfixFunctionsRegistry : EntitiesRegistry<Operator>

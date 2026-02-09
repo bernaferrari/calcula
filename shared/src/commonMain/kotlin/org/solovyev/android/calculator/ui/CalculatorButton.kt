@@ -6,6 +6,8 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -39,6 +41,10 @@ import androidx.compose.ui.unit.sp
 import kotlin.math.acos
 import kotlin.math.max
 import kotlin.math.PI
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
+import androidx.compose.ui.graphics.graphicsLayer
 
 
 /**
@@ -114,47 +120,57 @@ fun CalculatorButton(
     // TextMeasurer for drawing direction texts using Compose APIs
     val textMeasurer = rememberTextMeasurer()
 
-    val backgroundColor = backgroundOverride ?: when {
-        isPressed -> when (buttonType) {
-            ButtonType.DIGIT -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f)
-            ButtonType.OPERATION -> MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.8f)
-            ButtonType.OPERATION_HIGHLIGHTED -> MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.8f)
-            ButtonType.CONTROL -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
-            ButtonType.SPECIAL -> MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)
-        }
-        else -> when (buttonType) {
-            ButtonType.DIGIT -> MaterialTheme.colorScheme.surface
-            ButtonType.OPERATION -> MaterialTheme.colorScheme.secondaryContainer
-            ButtonType.OPERATION_HIGHLIGHTED -> MaterialTheme.colorScheme.tertiaryContainer
-            ButtonType.CONTROL -> MaterialTheme.colorScheme.surfaceVariant
-            ButtonType.SPECIAL -> MaterialTheme.colorScheme.surface
-        }
+    // Expressive shapes based on Material 3 guidelines
+    val shape = when (buttonType) {
+        ButtonType.DIGIT -> CircleShape // Pill/Circle for digits
+        ButtonType.OPERATION, ButtonType.CONTROL -> RoundedCornerShape(16.dp) // Squircle for ops
+        ButtonType.OPERATION_HIGHLIGHTED, ButtonType.SPECIAL -> MaterialTheme.shapes.extraLarge // Special shape
+    }
+    
+    // Enhanced spring spec for "bouncy" feel
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.88f else 1f, 
+        animationSpec = spring(
+            dampingRatio = 0.4f, // Bouncier
+            stiffness = 400f // Slightly less stiff than Medium
+        ),
+        label = "ButtonScale"
+    )
+
+    // Color logic
+    val backgroundColor = backgroundOverride ?: when (buttonType) {
+        ButtonType.DIGIT -> MaterialTheme.colorScheme.surfaceContainerHigh
+        ButtonType.OPERATION -> MaterialTheme.colorScheme.secondaryContainer
+        ButtonType.OPERATION_HIGHLIGHTED -> MaterialTheme.colorScheme.tertiaryContainer
+        ButtonType.CONTROL -> MaterialTheme.colorScheme.surfaceVariant
+        ButtonType.SPECIAL -> MaterialTheme.colorScheme.primaryContainer
     }
 
-    val textColor = when (buttonType) {
+    val effectiveTextColor = when (buttonType) {
         ButtonType.DIGIT -> MaterialTheme.colorScheme.onSurface
         ButtonType.OPERATION -> MaterialTheme.colorScheme.onSecondaryContainer
         ButtonType.OPERATION_HIGHLIGHTED -> MaterialTheme.colorScheme.onTertiaryContainer
-        ButtonType.CONTROL -> MaterialTheme.colorScheme.onSurface
-        ButtonType.SPECIAL -> MaterialTheme.colorScheme.onSurface
+        ButtonType.CONTROL -> MaterialTheme.colorScheme.onSurfaceVariant
+        ButtonType.SPECIAL -> MaterialTheme.colorScheme.onPrimaryContainer
     }
 
-    val effectiveTextColor = if (highContrast) {
-        MaterialTheme.colorScheme.onSurface
-    } else {
-        textColor
-    }
-    val directionTextColor = effectiveTextColor.copy(alpha = if (highContrast) 1f else directionTextAlpha)
-    
     val directionTextStyle = TextStyle(
-        color = directionTextColor,
-        fontSize = with(density) { directionTextSizePx.toSp() },
+        fontSize = directionTextSizePx.sp,
+        color = effectiveTextColor.copy(alpha = directionTextAlpha),
+        textAlign = TextAlign.Center,
         fontFamily = CalculatorFontFamily
     )
 
     Box(
         modifier = modifier
-            .fillMaxSize()
+            .padding(2.dp) // Internal padding for individual button spacing if needed
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                shadowElevation = if (isPressed) 2.dp.toPx() else 0f
+                this.shape = shape
+                clip = true
+            }
             .background(backgroundColor)
             .pointerInput(
                 onClick,
@@ -190,9 +206,7 @@ fun CalculatorButton(
                                     DragDirection.Right -> onSwipeRight?.let { it(); true } ?: false
                                 }
                                 if (handled) {
-                                    if (hapticsEnabled) {
-                                        haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                    }
+                                    HapticHelper.performSwipeFeedback(haptics, hapticsEnabled)
                                     isPressed = false
                                     break
                                 }
@@ -201,9 +215,7 @@ fun CalculatorButton(
                             }
 
                             if (!longPressFired) {
-                                if (hapticsEnabled) {
-                                    haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                }
+                                HapticHelper.performButtonFeedback(buttonType, haptics, hapticsEnabled)
                                 onClick()
                             }
                             isPressed = false
@@ -223,9 +235,7 @@ fun CalculatorButton(
                             (change.uptimeMillis - downTime) >= longPressTimeout
                         ) {
                             longPressFired = true
-                            if (hapticsEnabled) {
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            }
+                            HapticHelper.performLongPressFeedback(haptics, hapticsEnabled)
                             onLongClick()
                         }
                     }

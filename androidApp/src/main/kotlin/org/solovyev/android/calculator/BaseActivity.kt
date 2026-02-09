@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import org.solovyev.android.calculator.language.AndroidLanguages
 import androidx.activity.compose.setContent
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
@@ -15,7 +16,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
 
 abstract class BaseActivity(
@@ -31,18 +31,28 @@ abstract class BaseActivity(
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Get initial values synchronously for theme setup
-        runBlocking {
+        lifecycleScope.launch {
             lastTheme = appPreferences.gui.theme.first()
             lastMode = appPreferences.gui.mode.first()
             lastLanguage = appPreferences.gui.language.first()
+            updateOrientation(appPreferences.gui.rotateScreen.first())
+            updateKeepScreenOn(appPreferences.gui.keepScreenOn.first())
+            observeSettings()
         }
-
-        observeSettings()
 
         setContent {
             Content()
         }
+    }
+
+    override fun attachBaseContext(newBase: Context) {
+        // Apply preferred locale before view inflation.
+        val wrapped = try {
+            AndroidLanguages.wrapContext(newBase, appPreferences)
+        } catch (_: Throwable) {
+            newBase
+        }
+        super.attachBaseContext(wrapped)
     }
 
     @Composable
@@ -56,33 +66,6 @@ abstract class BaseActivity(
     override fun onPause() {
         paused = true
         super.onPause()
-    }
-
-    fun restartIfModeChanged(): Boolean {
-        val newMode = runBlocking { appPreferences.gui.mode.first() }
-        if (newMode != lastMode) {
-            recreate()
-            return true
-        }
-        return false
-    }
-
-    private fun restartIfThemeChanged(): Boolean {
-        val newTheme = runBlocking { appPreferences.gui.theme.first() }
-        if (newTheme != lastTheme) {
-            recreate()
-            return true
-        }
-        return false
-    }
-
-    private fun restartIfLanguageChanged(): Boolean {
-        val newLanguage = runBlocking { appPreferences.gui.language.first() }
-        if (newLanguage != lastLanguage) {
-            recreate()
-            return true
-        }
-        return false
     }
 
     private fun updateOrientation(enabled: Boolean) {
@@ -104,12 +87,6 @@ abstract class BaseActivity(
     }
 
     private fun observeSettings() {
-        // Get initial values
-        runBlocking {
-            updateOrientation(appPreferences.gui.rotateScreen.first())
-            updateKeepScreenOn(appPreferences.gui.keepScreenOn.first())
-        }
-
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
@@ -123,11 +100,20 @@ abstract class BaseActivity(
                     }
                 }
                 launch {
+                    appPreferences.gui.mode.collect { newMode ->
+                        if (paused) return@collect
+                        if (newMode != lastMode) {
+                            lastMode = newMode
+                            recreate()
+                        }
+                    }
+                }
+                launch {
                     appPreferences.gui.theme.collect { newTheme ->
                         if (paused) return@collect
                         if (newTheme != lastTheme) {
                             lastTheme = newTheme
-                            restartIfThemeChanged()
+                            recreate()
                         }
                     }
                 }
@@ -136,7 +122,7 @@ abstract class BaseActivity(
                         if (paused) return@collect
                         if (newLanguage != lastLanguage) {
                             lastLanguage = newLanguage
-                            restartIfLanguageChanged()
+                            recreate()
                         }
                     }
                 }

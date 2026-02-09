@@ -1,7 +1,6 @@
 package org.solovyev.android.calculator.ui.onboarding
 
 import androidx.compose.animation.*
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -20,6 +19,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.jetbrains.compose.resources.stringResource
+import org.solovyev.android.calculator.ui.Res
 import org.solovyev.android.calculator.GuiTheme
 import org.solovyev.android.calculator.GuiMode
 
@@ -32,19 +33,16 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.material.ripple.rememberRipple
 
 @Composable
 fun OnboardingScreen(
     onComplete: () -> Unit,
     onThemeSelected: (GuiTheme) -> Unit,
-    onModeSelected: (GuiMode) -> Unit,
+    onModeSelected: (GuiMode) -> Unit, // Keep for API compat, but ignored
     modifier: Modifier = Modifier
 ) {
     var currentStep by remember { mutableStateOf(0) }
     var selectedTheme by remember { mutableStateOf(GuiTheme.material_theme) }
-    var selectedMode by remember { mutableStateOf(GuiMode.simple) }
     val haptic = LocalHapticFeedback.current
 
     Box(
@@ -91,15 +89,10 @@ fun OnboardingScreen(
                         currentStep = 2 
                     }
                 )
-                2 -> ModeStep(
-                    selectedMode = selectedMode,
-                    onModeSelected = {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        selectedMode = it
-                        onModeSelected(it)
-                    },
+                2 -> TipsStep(
                     onComplete = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onModeSelected(GuiMode.modern) // Always set Modern mode
                         onComplete()
                     }
                 )
@@ -132,6 +125,12 @@ fun OnboardingScreen(
 
 @Composable
 private fun WelcomeStep(onContinue: () -> Unit) {
+    var visible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        visible = true
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -141,55 +140,83 @@ private fun WelcomeStep(onContinue: () -> Unit) {
     ) {
         Spacer(Modifier.weight(1f))
 
-        // App icon placeholder
-        Box(
-            modifier = Modifier
-                .size(120.dp)
-                .clip(RoundedCornerShape(28.dp))
-                .background(MaterialTheme.colorScheme.primaryContainer),
-            contentAlignment = Alignment.Center
+        // Animated App Icon
+        AnimatedVisibility(
+            visible = visible,
+            enter = scaleIn(initialScale = 0.5f, animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)) + fadeIn()
         ) {
-            Text(
-                text = "π",
-                fontSize = 64.sp,
-                fontWeight = FontWeight.Light,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
+            Box(
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(RoundedCornerShape(32.dp))
+                    .background(
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primary,
+                                MaterialTheme.colorScheme.tertiary
+                            )
+                        )
+                    )
+                    .clickable { }, // Consume clicks
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "π",
+                    fontSize = 72.sp,
+                    fontWeight = FontWeight.Light,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            }
         }
 
-        Spacer(Modifier.height(40.dp))
+        Spacer(Modifier.height(48.dp))
 
-        Text(
-            text = "Calculator++",
-            fontSize = 34.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
+        AnimatedVisibility(
+            visible = visible,
+            enter = slideInVertically(initialOffsetY = { 40 }, animationSpec = spring(stiffness = Spring.StiffnessLow)) + fadeIn(),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "Calculator++", // stringResource(Res.string.cpp_onboarding_title),
+                    style = MaterialTheme.typography.displaySmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
 
-        Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(16.dp))
 
-        Text(
-            text = "Scientific calculator\nwith style",
-            fontSize = 17.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            lineHeight = 24.sp
-        )
+                Text(
+                    text = "Precision tools for serious work.", // stringResource(Res.string.cpp_onboarding_subtitle),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
 
         Spacer(Modifier.weight(1f))
 
-        FilledTonalButton(
-            onClick = onContinue,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(14.dp)
+        AnimatedVisibility(
+            visible = visible,
+            enter = slideInVertically(initialOffsetY = { 100 }, animationSpec = spring(stiffness = Spring.StiffnessLow)) + fadeIn()
         ) {
-            Text(
-                text = "Get Started",
-                fontSize = 17.sp,
-                fontWeight = FontWeight.SemiBold
-            )
+            Button(
+                onClick = onContinue,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text(
+                    text = "Continue", // stringResource(Res.string.cpp_onboarding_continue),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
 
         Spacer(Modifier.height(100.dp))
@@ -203,9 +230,9 @@ private fun ThemeStep(
     onContinue: () -> Unit
 ) {
     val themes = listOf(
-        GuiTheme.material_theme to "System",
-        GuiTheme.material_light to "Light",
-        GuiTheme.material_dark to "Dark"
+        GuiTheme.material_theme to "System", // stringResource(Res.string.cpp_theme_system),
+        GuiTheme.material_light to "Light", // stringResource(Res.string.cpp_theme_light),
+        GuiTheme.material_dark to "Dark" // stringResource(Res.string.cpp_theme_dark)
     )
 
     Column(
@@ -217,7 +244,7 @@ private fun ThemeStep(
         Spacer(Modifier.height(80.dp))
 
         Text(
-            text = "Choose Appearance",
+            text = "Choose Appearance", // stringResource(Res.string.cpp_onboarding_choose_appearance),
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface
@@ -226,7 +253,7 @@ private fun ThemeStep(
         Spacer(Modifier.height(8.dp))
 
         Text(
-            text = "You can change this anytime in settings",
+            text = "You can change this anytime in settings", // stringResource(Res.string.cpp_onboarding_appearance_hint),
             fontSize = 15.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -239,6 +266,7 @@ private fun ThemeStep(
         ) {
             themes.forEach { (theme, name) ->
                 ThemeOption(
+                    theme = theme,
                     name = name,
                     isSelected = selectedTheme == theme,
                     onClick = { onThemeSelected(theme) },
@@ -257,7 +285,7 @@ private fun ThemeStep(
             shape = RoundedCornerShape(14.dp)
         ) {
             Text(
-                text = "Continue",
+                text = "Continue", // stringResource(Res.string.cpp_onboarding_continue),
                 fontSize = 17.sp,
                 fontWeight = FontWeight.SemiBold
             )
@@ -269,6 +297,7 @@ private fun ThemeStep(
 
 @Composable
 private fun ThemeOption(
+    theme: GuiTheme,
     name: String,
     isSelected: Boolean,
     onClick: () -> Unit,
@@ -292,9 +321,11 @@ private fun ThemeOption(
                 .size(60.dp)
                 .clip(RoundedCornerShape(12.dp))
                 .background(
-                    if (name == "Dark") Color(0xFF1C1C1E)
-                    else if (name == "Light") Color(0xFFF2F2F7)
-                    else MaterialTheme.colorScheme.surface
+                    when (theme) {
+                        GuiTheme.material_dark -> Color(0xFF1C1C1E)
+                        GuiTheme.material_light -> Color(0xFFF2F2F7)
+                        GuiTheme.material_theme -> MaterialTheme.colorScheme.surface
+                    }
                 )
         )
 
@@ -323,15 +354,13 @@ private fun ThemeOption(
 }
 
 @Composable
-private fun ModeStep(
-    selectedMode: GuiMode,
-    onModeSelected: (GuiMode) -> Unit,
+private fun TipsStep(
     onComplete: () -> Unit
 ) {
-    val modes = listOf(
-        GuiMode.simple to ("Simple" to "Basic arithmetic"),
-        GuiMode.engineer to ("Scientific" to "Full functions"),
-        GuiMode.modern to ("Modern" to "Sleek design")
+    val tips = listOf(
+        "1" to ("Reuse Results" to "Tap a result to insert it into your expression"), // stringResource(Res.string.cpp_onboarding_tip1_title)
+        "2" to ("Scientific Functions" to "Use the f(x) key for trig, logs, and constants"), // stringResource(Res.string.cpp_onboarding_tip2_title)
+        "3" to ("History Shortcuts" to "Recent calculations appear above the keyboard") // stringResource(Res.string.cpp_onboarding_tip3_title)
     )
 
     Column(
@@ -343,7 +372,7 @@ private fun ModeStep(
         Spacer(Modifier.height(80.dp))
 
         Text(
-            text = "Calculator Mode",
+            text = "Setup Complete", // stringResource(Res.string.cpp_onboarding_complete_title),
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface
@@ -352,9 +381,10 @@ private fun ModeStep(
         Spacer(Modifier.height(8.dp))
 
         Text(
-            text = "Select your preferred layout",
+            text = "A few essentials to get started", // stringResource(Res.string.cpp_onboarding_complete_subtitle),
             fontSize = 15.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
         )
 
         Spacer(Modifier.height(32.dp))
@@ -363,12 +393,11 @@ private fun ModeStep(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            modes.forEach { (mode, labels) ->
-                ModeOption(
+            tips.forEach { (emoji, labels) ->
+                TipCard(
+                    leadingLabel = emoji,
                     title = labels.first,
-                    subtitle = labels.second,
-                    isSelected = selectedMode == mode,
-                    onClick = { onModeSelected(mode) }
+                    subtitle = labels.second
                 )
             }
         }
@@ -383,13 +412,58 @@ private fun ModeStep(
             shape = RoundedCornerShape(14.dp)
         ) {
             Text(
-                text = "Start Calculating",
+                text = "Open Calculator", // stringResource(Res.string.cpp_onboarding_open_calculator),
                 fontSize = 17.sp,
                 fontWeight = FontWeight.SemiBold
             )
         }
 
         Spacer(Modifier.height(100.dp))
+    }
+}
+
+@Composable
+private fun TipCard(
+    leadingLabel: String,
+    title: String,
+    subtitle: String
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primaryContainer),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = leadingLabel,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        }
+        Column {
+            Text(
+                text = title,
+                fontSize = 17.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = subtitle,
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
 

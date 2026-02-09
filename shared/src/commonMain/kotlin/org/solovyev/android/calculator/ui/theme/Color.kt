@@ -2,62 +2,84 @@ package org.solovyev.android.calculator.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
-
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
-
-// Standard Color Palette
-val PrimaryDark = Color(0xFFD0BCFF)
-val OnPrimaryDark = Color(0xFF381E72)
-val PrimaryContainerDark = Color(0xFF4F378B)
-val OnPrimaryContainerDark = Color(0xFFEADDFF)
-
-val SecondaryDark = Color(0xFFCCC2DC)
-val OnSecondaryDark = Color(0xFF332D41)
-val SecondaryContainerDark = Color(0xFF4A4458)
-val OnSecondaryContainerDark = Color(0xFFE8DEF8)
-
-val TertiaryDark = Color(0xFFEFB8C8)
-val OnTertiaryDark = Color(0xFF492532)
-val TertiaryContainerDark = Color(0xFF633B48)
-val OnTertiaryContainerDark = Color(0xFFFFD8E4)
-
-val ErrorDark = Color(0xFFF2B8B5)
-val OnErrorDark = Color(0xFF601410)
-val ErrorContainerDark = Color(0xFF8C1D18)
-val OnErrorContainerDark = Color(0xFFF9DEDC)
-
-val BackgroundDark = Color(0xFF1C1B1F)
-val OnBackgroundDark = Color(0xFFE6E1E5)
-val SurfaceDark = Color(0xFF1C1B1F)
-val OnSurfaceDark = Color(0xFFE6E1E5)
-val SurfaceVariantDark = Color(0xFF49454F)
-val OnSurfaceVariantDark = Color(0xFFCAC4D0)
-val OutlineDark = Color(0xFF938F99)
-
-val PrimaryLight = Color(0xFF6750A4)
+// Primary Brand Colors - Sophisticated and refined
+val PrimaryBlue = Color(0xFF007AFF)
+val PrimaryBlueDark = Color(0xFF0A84FF)
 val OnPrimaryLight = Color(0xFFFFFFFF)
-val PrimaryContainerLight = Color(0xFFEADDFF)
-val OnPrimaryContainerLight = Color(0xFF21005D)
+val OnPrimaryDark = Color(0xFFFFFFFF)
 
-val SecondaryLight = Color(0xFF625B71)
-val OnSecondaryLight = Color(0xFFFFFFFF)
-val SecondaryContainerLight = Color(0xFFE8DEF8)
-val OnSecondaryContainerLight = Color(0xFF1D192B)
+// Secondary Colors - Elegant accent tones
+val SecondaryTeal = Color(0xFF00C7BE)
+val SecondaryPurple = Color(0xFFAF52DE)
 
-val TertiaryLight = Color(0xFF7D5260)
-val OnTertiaryLight = Color(0xFFFFFFFF)
-val TertiaryContainerLight = Color(0xFFFFD8E4)
-val OnTertiaryContainerLight = Color(0xFF31111D)
+// Background Colors - Clean and minimal
+val BackgroundLight = Color(0xFFF5F5F7)
+val BackgroundDark = Color(0xFF000000)
+val SurfaceLight = Color(0xFFFFFFFF)
+val SurfaceDark = Color(0xFF1C1C1E)
+val SurfaceElevatedLight = Color(0xFFFFFFFF)
+val SurfaceElevatedDark = Color(0xFF2C2C2E)
 
-val BackgroundLight = Color(0xFFFFFBFE)
-val OnBackgroundLight = Color(0xFF1C1B1F)
-val SurfaceLight = Color(0xFFFFFBFE)
-val OnSurfaceLight = Color(0xFF1C1B1F)
-val SurfaceVariantLight = Color(0xFFE7E0EC)
-val OnSurfaceVariantLight = Color(0xFF49454F)
-val OutlineLight = Color(0xFF79747E)
+// Display Area Colors
+val DisplayBackgroundLight = Color(0xFFFFFFFF)
+val DisplayBackgroundDark = Color(0xFF1C1C1E)
+val DisplayEditorTextLight = Color(0xFF1C1C1F)
+val DisplayEditorTextDark = Color(0xFFE5E5EA)
+val DisplayResultLight = Color(0xFF007AFF)
+val DisplayResultDark = Color(0xFF0A84FF)
+
+// Button Colors - Modern and clean
+val ButtonDigitBackgroundLight = Color(0xFFE9E9EA)
+val ButtonDigitBackgroundDark = Color(0xFF3A3A3C)
+val ButtonDigitTextLight = Color(0xFF1C1C1F)
+val ButtonDigitTextDark = Color(0xFFE5E5EA)
+
+val ButtonOperationBackgroundLight = Color(0xFF007AFF)
+val ButtonOperationBackgroundDark = Color(0xFF0A84FF)
+val ButtonOperationTextLight = Color(0xFFFFFFFF)
+val ButtonOperationTextDark = Color(0xFFFFFFFF)
+
+val ButtonControlBackgroundLight = Color(0xFFD1D1D6)
+val ButtonControlBackgroundDark = Color(0xFF48484A)
+val ButtonControlTextLight = Color(0xFF1C1C1F)
+val ButtonControlTextDark = Color(0xFFE5E5EA)
+
+val ButtonHighlightBackgroundLight = Color(0xFF34C759)
+val ButtonHighlightBackgroundDark = Color(0xFF30D158)
+val ButtonHighlightTextLight = Color(0xFFFFFFFF)
+val ButtonHighlightTextDark = Color(0xFFFFFFFF)
+
+// Border and divider colors
+val DividerLight = Color(0xFFE5E5EA)
+val DividerDark = Color(0xFF38383A)
+val BorderLight = Color(0xFFC7C7CC)
+val BorderDark = Color(0xFF48484A)
+
+// Text Colors
+val TextPrimaryLight = Color(0xFF1C1C1F)
+val TextPrimaryDark = Color(0xFFE5E5EA)
+val TextSecondaryLight = Color(0xFF86868B)
+val TextSecondaryDark = Color(0xFFAEAEB2)
+val TextTertiaryLight = Color(0xFFB0B0B6)
+val TextTertiaryDark = Color(0xFF6E6E73)
+
+// Error and special states
+val ErrorColor = Color(0xFFFF3B30)
+val ErrorColorDark = Color(0xFFFF453A)
+val SuccessColor = Color(0xFF34C759)
+val SuccessColorDark = Color(0xFF30D158)
+
+// Shadow colors for elevation
+val ShadowColorLight = Color(0x1A000000)
+val ShadowColorDark = Color(0x40000000)
+
+// Overlay colors for glass effects
+val OverlayLight = Color(0x80FFFFFF)
+val OverlayDark = Color(0x80000000)
+
+// Accent colors for highlighting
+val AccentOrange = Color(0xFFFF9500)
+val AccentYellow = Color(0xFFFFCC00)
+val AccentRed = Color(0xFFFF3B30)
+val AccentPink = Color(0xFFFF2D55)
+val AccentIndigo = Color(0xFF5856D6)

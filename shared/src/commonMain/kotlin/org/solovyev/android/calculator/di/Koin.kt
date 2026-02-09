@@ -3,6 +3,7 @@ package org.solovyev.android.calculator.di
 import org.koin.core.module.Module
 import org.koin.dsl.module
 import org.solovyev.android.calculator.*
+import jscl.JsclMathEngine
 import org.solovyev.android.calculator.history.*
 import org.solovyev.android.calculator.memory.*
 import org.solovyev.android.calculator.preferences.*
@@ -14,6 +15,7 @@ import org.solovyev.android.calculator.ui.settings.SettingsViewModel
 import org.solovyev.android.calculator.ui.variables.VariablesViewModel
 import org.solovyev.android.calculator.ui.functions.FunctionsViewModel
 import org.solovyev.android.calculator.ui.onboarding.OnboardingViewModel
+import org.solovyev.android.calculator.ui.graphing.GraphViewModel
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.context.startKoin
@@ -30,15 +32,23 @@ val commonModule = module {
     // Shared Singletons
     single<Notifier> { Notifier() }
     single<AppPreferences> { DataStoreAppPreferences(get()) }
+    single { JsclMathEngine.getInstance() }
+    single<ErrorReporter> { DefaultErrorReporter() }
+    single<FunctionsRegistry> { DefaultFunctionsRegistry(get()) }
+    single<OperatorsRegistry> { DefaultOperatorsRegistry(get()) }
+    single<PostfixFunctionsRegistry> { DefaultPostfixFunctionsRegistry(get()) }
+    single<VariablesRegistry> { DefaultVariablesRegistry(get()) }
+    singleOf(::Engine)
     
     singleOf(::Editor)
     singleOf(::Display)
     singleOf(::Calculator)
     singleOf(::Keyboard)
+    singleOf(::ToJsclTextProcessor)
     
     // History and Memory
     singleOf(::RoomHistory)
-    singleOf(::DataStoreMemory)
+    single<Memory> { DataStoreMemory(get()) }
 
     // ViewModels
     viewModelOf(::CalculatorViewModel)
@@ -49,6 +59,7 @@ val commonModule = module {
     viewModelOf(::VariablesViewModel)
     viewModelOf(::FunctionsViewModel)
     viewModelOf(::OnboardingViewModel)
+    viewModelOf(::GraphViewModel)
 }
 
 expect val platformModule: Module

@@ -1,66 +1,48 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 package org.solovyev.android.calculator.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.unit.dp
+
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.MotionScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import com.materialkolor.PaletteStyle
+import com.materialkolor.dynamiccolor.ColorSpec
+import com.materialkolor.rememberDynamicMaterialThemeState
 
-private val DarkColorScheme = darkColorScheme(
-    primary = PrimaryDark,
-    secondary = SecondaryDark,
-    tertiary = TertiaryDark,
-    background = BackgroundDark,
-    surface = SurfaceDark,
-    onPrimary = OnPrimaryDark,
-    onSecondary = OnSecondaryDark,
-    onTertiary = OnTertiaryDark,
-    onBackground = OnBackgroundDark,
-    onSurface = OnSurfaceDark,
-    primaryContainer = PrimaryContainerDark,
-    onPrimaryContainer = OnPrimaryContainerDark,
-    secondaryContainer = SecondaryContainerDark,
-    onSecondaryContainer = OnSecondaryContainerDark,
-    surfaceVariant = SurfaceVariantDark,
-    onSurfaceVariant = OnSurfaceVariantDark,
-    outline = OutlineDark
-)
-
-private val LightColorScheme = lightColorScheme(
-    primary = PrimaryLight,
-    secondary = SecondaryLight,
-    tertiary = TertiaryLight,
-    background = BackgroundLight,
-    surface = SurfaceLight,
-    onPrimary = OnPrimaryLight,
-    onSecondary = OnSecondaryLight,
-    onTertiary = OnTertiaryLight,
-    onBackground = OnBackgroundLight,
-    onSurface = OnSurfaceLight,
-    primaryContainer = PrimaryContainerLight,
-    onPrimaryContainer = OnPrimaryContainerLight,
-    secondaryContainer = SecondaryContainerLight,
-    onSecondaryContainer = OnSecondaryContainerLight,
-    surfaceVariant = SurfaceVariantLight,
-    onSurfaceVariant = OnSurfaceVariantLight,
-    outline = OutlineLight
-)
-
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun CalculatorTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    // But for common code we will stick to our custom schemes for consistency
+    seedColor: Color = Color(0xFF13ABF1), // Default Blue
+    isAmoled: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
+    val dynamicTheme = rememberDynamicMaterialThemeState(
+        seedColor = seedColor,
+        style = PaletteStyle.Vibrant, // Changed to Vibrant for more expressiveness
+        isDark = darkTheme, 
+        isAmoled = isAmoled,
+        specVersion = ColorSpec.SpecVersion.SPEC_2025
+    )
+
+    // Override shapes to be more rounded/softer
+    val shapes = MaterialTheme.shapes.copy(
+        extraSmall = RoundedCornerShape(16.dp),
+        small = RoundedCornerShape(24.dp),
+        medium = RoundedCornerShape(32.dp),
+        large = RoundedCornerShape(48.dp),
+        extraLarge = RoundedCornerShape(100.dp) // Full pill/circle
+    )
 
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = dynamicTheme.colorScheme,
+        shapes = shapes,
         typography = Typography,
         content = content
     )

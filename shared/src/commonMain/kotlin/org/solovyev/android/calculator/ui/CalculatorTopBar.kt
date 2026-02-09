@@ -1,6 +1,8 @@
 package org.solovyev.android.calculator.ui
 
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MoreVert
@@ -18,8 +20,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import org.solovyev.android.calculator.ui.*
 import org.solovyev.android.calculator.ui.settings.CalculatorMode
@@ -45,7 +52,17 @@ fun CalculatorTopBar(
     modifier: Modifier = Modifier
 ) {
     TopAppBar(
-        title = {},
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "Calculator", // Simplified title
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+        },
         actions = {
             CalculatorOverflowMenu(
                 mode = mode,

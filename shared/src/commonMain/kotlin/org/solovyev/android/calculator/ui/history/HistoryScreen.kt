@@ -59,6 +59,12 @@ import org.jetbrains.compose.resources.stringResource
 import org.solovyev.android.calculator.history.HistoryState
 import org.solovyev.android.calculator.ui.*
 
+import androidx.compose.material.icons.rounded.Calculate
+import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.Save
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.FilledTonalButton
+
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun HistoryScreen(
@@ -123,7 +129,7 @@ fun HistoryScreen(
                                 horizontalArrangement = Arrangement.Center
                             ) {
                                 Icon(
-                                    imageVector = if (index == 0) Icons.Default.History else Icons.Default.Save,
+                                    imageVector = if (index == 0) Icons.Rounded.History else Icons.Rounded.Save,
                                     contentDescription = null,
                                     modifier = Modifier.size(18.dp)
                                 )
@@ -136,7 +142,7 @@ fun HistoryScreen(
             }
 
             if (currentList.isEmpty()) {
-                EmptyHistoryState(isRecent = selectedTab == 0)
+                EmptyHistoryState(isRecent = selectedTab == 0, onStartCalculating = onBack)
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
@@ -162,49 +168,61 @@ fun HistoryScreen(
 }
 
 @Composable
-private fun EmptyHistoryState(isRecent: Boolean) {
-    Box(
+private fun EmptyHistoryState(isRecent: Boolean, onStartCalculating: () -> Unit = {}) {
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(32.dp),
-        contentAlignment = Alignment.Center
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        Surface(
+            modifier = Modifier.size(120.dp),
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh
         ) {
-            Surface(
-                modifier = Modifier.size(80.dp),
-                shape = RoundedCornerShape(40.dp),
-                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = if (isRecent) Icons.Default.History else Icons.Default.Save,
-                        contentDescription = null,
-                        modifier = Modifier.size(40.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = if (isRecent) Icons.Rounded.History else Icons.Rounded.Save,
+                    contentDescription = null,
+                    modifier = Modifier.size(56.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
             }
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                text = stringResource(Res.string.cpp_history_empty),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = if (isRecent) {
-                    "Your calculations will appear here"
-                } else {
-                    "Save calculations for quick access"
-                },
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                textAlign = TextAlign.Center
-            )
+        }
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        Text(
+            text = if (isRecent) stringResource(Res.string.cpp_history_empty) else "No saved calculations",
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center
+        )
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        Text(
+            text = if (isRecent) {
+                "Your recent calculations will appear here automatically."
+            } else {
+                "Save important results for quick access later."
+            },
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+        
+        if (isRecent) {
+            Spacer(modifier = Modifier.height(32.dp))
+            FilledTonalButton(
+                onClick = onStartCalculating,
+                modifier = Modifier.height(50.dp)
+            ) {
+                Icon(Icons.Rounded.Calculate, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Start Calculating")
+            }
         }
     }
 }

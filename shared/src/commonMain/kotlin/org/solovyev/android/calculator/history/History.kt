@@ -1,10 +1,8 @@
 package org.solovyev.android.calculator.history
 
-import kotlinx.datetime.Clock
+import kotlinx.coroutines.flow.Flow
 import org.solovyev.android.calculator.DisplayState
 import org.solovyev.android.calculator.EditorState
-
-import kotlinx.coroutines.flow.Flow
 
 /**
  * History interface for retrieving past calculations.
@@ -31,10 +29,10 @@ interface History {
  * This is a KMP-compatible version without Android Parcelable/JSON dependencies.
  */
 data class HistoryState(
-    val id: Long = Clock.System.now().toEpochMilliseconds(),
+    val id: Long = kotlin.time.Clock.System.now().toEpochMilliseconds(),
     val editor: EditorState,
     val display: DisplayState,
-    val time: Long = Clock.System.now().toEpochMilliseconds(),
+    val time: Long = kotlin.time.Clock.System.now().toEpochMilliseconds(),
     val comment: String = ""
 ) {
     fun same(that: HistoryState): Boolean {
@@ -67,10 +65,10 @@ data class HistoryState(
         
         internal constructor(state: HistoryState, newState: Boolean) : this(
             HistoryState(
-                id = if (newState) Clock.System.now().toEpochMilliseconds() else state.id,
+                id = if (newState) kotlin.time.Clock.System.now().toEpochMilliseconds() else state.id,
                 editor = state.editor,
                 display = state.display,
-                time = if (newState) Clock.System.now().toEpochMilliseconds() else state.time,
+                time = if (newState) kotlin.time.Clock.System.now().toEpochMilliseconds() else state.time,
                 comment = state.comment
             )
         )

@@ -63,7 +63,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
-import kotlinx.datetime.Clock
+import kotlin.time.TimeSource
 
 /**
  * Selection state for the popover
@@ -167,7 +167,7 @@ fun PopoverDragButton(
                     val down = awaitFirstDown(requireUnconsumed = false)
                     isPressed = true
                     val start = down.position
-                    val downTime = Clock.System.now().toEpochMilliseconds()
+                    val downMark = TimeSource.Monotonic.markNow()
                     var lastPosition = start
                     var movedBeyondSlop = false
                     var longPressFired = false
@@ -260,7 +260,7 @@ fun PopoverDragButton(
                             // Check for long press
                             if (!longPressFired && 
                                 !movedBeyondSlop &&
-                                (change.uptimeMillis - downTime) >= longPressTimeout
+                                downMark.elapsedNow().inWholeMilliseconds >= longPressTimeout
                             ) {
                                 longPressFired = true
                                 showPopover = true

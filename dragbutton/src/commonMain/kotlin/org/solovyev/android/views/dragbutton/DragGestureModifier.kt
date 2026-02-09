@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.composed
-import kotlinx.datetime.Clock
+import kotlin.time.TimeSource
 
 /**
  * Default minimum distance for a drag gesture to be recognized.
@@ -41,13 +41,13 @@ fun Modifier.detectDirectionalDrag(
 
             val down = awaitFirstDown(requireUnconsumed = false)
             val start = down.position
-            val downTime = Clock.System.now().toEpochMilliseconds()
+            val downMark = TimeSource.Monotonic.markNow()
             
             val up = waitForUpOrCancellation()
             
             if (up != null) {
                 val end = up.position
-                val duration = Clock.System.now().toEpochMilliseconds() - downTime
+                val duration = downMark.elapsedNow().inWholeMilliseconds
                 
                 // Check duration constraints (40ms - 2500ms)
                 if (duration in 40..2500) {

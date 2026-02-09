@@ -13,16 +13,16 @@
     <string name="cpp_release_notes_152">★ High contrast text option\n★ Redesigned settings\n★ More
         number format options: scientific and engineering notations\n★ Small UI tweaks\n★ Bugs fixes</string>
     <string name="c_history">History</string>
-    <string name="cpp_glyph_paste">"\ue000"</string>
-    <string name="cpp_glyph_copy">"\ue001"</string>
-    <string name="cpp_glyph_left">"\ue002"</string>
-    <string name="cpp_glyph_right">"\ue003"</string>
-    <string name="cpp_glyph_backspace">"\ue004"</string>
-    <string name="cpp_glyph_history">"\ue005"</string>
-    <string name="cpp_glyph_undo">"\ue007"</string>
-    <string name="cpp_glyph_redo">"\ue008"</string>
-    <string name="cpp_glyph_fast_back">"\ue00a"</string>
-    <string name="cpp_glyph_fast_forward">"\ue00b"</string>
+    <string name="cpp_glyph_paste">"\uD83D\uDCCB"</string> <!-- Clipboard -->
+    <string name="cpp_glyph_copy">"\u274F"</string> <!-- Square with shadow or similar -->
+    <string name="cpp_glyph_left">"\u2190"</string>
+    <string name="cpp_glyph_right">"\u2192"</string>
+    <string name="cpp_glyph_backspace">"\u232B"</string>
+    <string name="cpp_glyph_history">"\uD83D\uDD52"</string> <!-- Clock -->
+    <string name="cpp_glyph_undo">"\u21A9"</string>
+    <string name="cpp_glyph_redo">"\u21AA"</string>
+    <string name="cpp_glyph_fast_back">"\u219E"</string> <!-- Two-headed arrow left -->
+    <string name="cpp_glyph_fast_forward">"\u21A0"</string> <!-- Two-headed arrow right -->
     <string name="cpp_kb_clear">C</string>
     <string name="cpp_kb_variables">π</string>
     <string name="cpp_kb_functions">ƒ</string>
@@ -32,7 +32,7 @@
     <string name="cpp_kb_memory_minus">M-</string>
     <string name="cpp_kb_memory_clear">MC</string>
     <string name="cpp_settings">Settings</string>
-    <string name="cpp_glyph_graph">"\ue009"</string>
+    <string name="cpp_glyph_graph">"\uD83D\uDCC8"</string> <!-- Chart increasing -->
 
     <string name="cpp_history_tab_saved">Saved</string>
     <string name="cpp_back">Back</string>
@@ -101,6 +101,25 @@
     <string name="cpp_hex">Hexadecimal</string>
     <string name="cpp_oct">Octal</string>
     <string name="cpp_bin">Binary</string>
+
+
+    <string name="cpp_onboarding_title">Calculator++</string>
+    <string name="cpp_onboarding_subtitle">Precision tools for serious work.</string>
+    <string name="cpp_onboarding_continue">Continue</string>
+    <string name="cpp_onboarding_choose_appearance">Choose Appearance</string>
+    <string name="cpp_onboarding_appearance_hint">You can change this anytime in settings</string>
+    <string name="cpp_theme_system">System</string>
+    <string name="cpp_theme_light">Light</string>
+    <string name="cpp_theme_dark">Dark</string>
+    <string name="cpp_onboarding_complete_title">Setup Complete</string>
+    <string name="cpp_onboarding_complete_subtitle">A few essentials to get started</string>
+    <string name="cpp_onboarding_tip1_title">Reuse Results</string>
+    <string name="cpp_onboarding_tip1_subtitle">Tap a result to insert it into your expression</string>
+    <string name="cpp_onboarding_tip2_title">Scientific Functions</string>
+    <string name="cpp_onboarding_tip2_subtitle">Use the f(x) key for trig, logs, and constants</string>
+    <string name="cpp_onboarding_tip3_title">History Shortcuts</string>
+    <string name="cpp_onboarding_tip3_subtitle">Recent calculations appear above the keyboard</string>
+    <string name="cpp_onboarding_open_calculator">Open Calculator</string>
 
     <!-- Variables and Functions -->
     <string name="c_vars_and_constants">Variables &amp; Constants</string>

@@ -377,7 +377,7 @@ private fun getConvertibleName(convertible: Convertible): String {
         is ConverterUnit -> {
             val nameRes = convertible.nameRes
             val name = if (nameRes != null) stringResource(nameRes) else null
-            if (name != null) "$name (${convertible.symbol})" else convertible.symbol
+            if (name != null && name != convertible.symbol) "$name (${convertible.symbol})" else convertible.symbol
         }
         is NumeralBaseConvertible -> convertible.base.name
         else -> convertible.toString()

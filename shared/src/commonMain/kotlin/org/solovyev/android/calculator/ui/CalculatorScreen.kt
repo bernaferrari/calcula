@@ -1,121 +1,181 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class, androidx.compose.material3.ExperimentalMaterial3Api::class)
 package org.solovyev.android.calculator.ui
 
+import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import org.solovyev.android.calculator.DisplayState
 import org.solovyev.android.calculator.EditorState
 
-/**
- * Main calculator screen combining display, editor, and keyboard.
- *
- * Layout:
- * - Editor at top (shows input)
- * - Row with Equals button and Display below editor
- * - Keyboard at bottom (for input)
- *
- * @param displayState Current display state
- * @param editorState Current editor state
- * @param onEditorTextChange Callback when editor text changes
- * @param onEditorSelectionChange Callback when editor selection changes
- * @param keyboard Keyboard content
- * @param onEquals Callback for equals button
- * @param onSimplify Callback for simplify (drag up on equals)
- * @param onPlot Callback for plot (drag down on equals)
- * @param modifier Modifier to be applied to the screen
- */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun CalculatorScreen(
     displayState: DisplayState,
     editorState: EditorState,
+    previewResult: String? = null,
+    unitHint: String? = null,
     onEditorTextChange: (String, Int) -> Unit,
     onEditorSelectionChange: (Int) -> Unit,
+    onOpenHistory: () -> Unit,
+    onOpenConverter: () -> Unit,
+    onOpenFunctions: () -> Unit,
+    onOpenGraph: () -> Unit,
+    onOpenSettings: () -> Unit,
     highlightExpressions: Boolean = true,
     highContrast: Boolean = false,
     hapticsEnabled: Boolean = true,
     keyboard: @Composable (Modifier) -> Unit,
-    onEquals: () -> Unit,
-    onSimplify: () -> Unit,
-    onPlot: () -> Unit,
-    overlayContent: @Composable BoxScope.() -> Unit = {},
-    bottomBar: @Composable () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val labels = LocalKeyboardStrings.current
-
     CompositionLocalProvider(
         LocalCalculatorHighContrast provides highContrast,
         LocalCalculatorHapticsEnabled provides hapticsEnabled
     ) {
         Scaffold(
             modifier = modifier.fillMaxSize(),
-            containerColor = MaterialTheme.colorScheme.background
+            containerColor = MaterialTheme.colorScheme.background,
         ) { paddingValues ->
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Column(
-                    modifier = Modifier.fillMaxSize()
+                // Minimal top bar with just history and settings
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End
                 ) {
-                    // Editor section (input)
-                    CalculatorEditor(
-                        state = editorState,
-                        onTextChange = onEditorTextChange,
-                        onSelectionChange = onEditorSelectionChange,
-                        highlightExpressions = highlightExpressions,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(2f)
-                    )
-
-                    // Display row (equals + display)
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                    ) {
-                        CalculatorButton(
-                            text = "=",
-                            buttonType = ButtonType.CONTROL,
-                            directionTexts = DirectionTexts(
-                                up = "≡",
-                                down = labels.glyphGraph
-                            ),
-                            onClick = onEquals,
-                            onSwipeUp = onSimplify,
-                            onSwipeDown = onPlot,
-                            backgroundOverride = Color.Transparent,
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxSize()
-                        )
-                        CalculatorDisplay(
-                            state = displayState,
-                            modifier = Modifier
-                                .weight(4f)
-                                .fillMaxSize()
-                                .padding(horizontal = 10.dp)
+                    IconButton(onClick = onOpenHistory) {
+                        Icon(
+                            imageVector = Icons.Default.History,
+                            contentDescription = "History",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-
-                    keyboard(
-                        Modifier
-                            .fillMaxWidth()
-                            .weight(5f)
-                    )
-
-                    // Bottom bar (for modern mode floating toolbar)
-                    bottomBar()
+                    IconButton(onClick = onOpenSettings) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Settings",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
 
-                overlayContent()
+                // Display area
+                DisplayCard(
+                    state = displayState,
+                    editorState = editorState,
+                    previewResult = previewResult,
+                    unitHint = unitHint,
+                    highlightExpressions = highlightExpressions,
+                    onEditorTextChange = onEditorTextChange,
+                    onEditorSelectionChange = onEditorSelectionChange,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f, fill = false)
+                )
+
+                // Keyboard area
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                ) {
+                    keyboard(Modifier.fillMaxSize())
+                }
             }
+        }
+    }
+}
+
+@Composable
+private fun DisplayCard(
+    state: DisplayState,
+    editorState: EditorState,
+    previewResult: String?,
+    unitHint: String?,
+    highlightExpressions: Boolean,
+    onEditorTextChange: (String, Int) -> Unit,
+    onEditorSelectionChange: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    // Clean, reasonable font sizes
+    val inputFontSize = 32.sp
+    val resultFontSize = 48.sp
+
+    Column(
+        modifier = modifier.padding(horizontal = 4.dp),
+        horizontalAlignment = Alignment.End
+    ) {
+        CalculatorEditor(
+            state = editorState,
+            onTextChange = onEditorTextChange,
+            onSelectionChange = onEditorSelectionChange,
+            highlightExpressions = highlightExpressions,
+            minTextSize = inputFontSize,
+            maxTextSize = inputFontSize,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        AnimatedVisibility(
+            visible = state.text.isNotEmpty(),
+            enter = fadeIn() + slideInVertically { it / 2 },
+            exit = fadeOut() + slideOutVertically { it / 2 }
+        ) {
+            Text(
+                text = state.text,
+                style = MaterialTheme.typography.displayMedium.copy(
+                    fontSize = resultFontSize,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = (-0.5).sp
+                ),
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.End,
+                maxLines = 1
+            )
+        }
+
+        AnimatedVisibility(
+            visible = previewResult != null && state.text.isEmpty(),
+            enter = fadeIn() + slideInVertically { -it / 2 },
+            exit = fadeOut() + slideOutVertically { -it / 2 }
+        ) {
+            Text(
+                text = "= ${previewResult ?: ""}",
+                style = MaterialTheme.typography.titleLarge.copy(
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    fontWeight = FontWeight.Medium
+                ),
+                textAlign = TextAlign.End
+            )
+        }
+
+        AnimatedVisibility(
+            visible = unitHint != null,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Text(
+                text = unitHint ?: "",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.tertiary,
+                textAlign = TextAlign.End
+            )
         }
     }
 }

@@ -50,6 +50,16 @@ interface GuiPreferences {
     val highContrast: Flow<Boolean>
     val vibrateOnKeypress: Flow<Boolean>
 
+    val latexMode: Flow<Boolean>
+    val themeSeed: Flow<Int>
+    val isAmoled: Flow<Boolean>
+
+    val highlightExpressions: Flow<Boolean>
+    val plotImag: Flow<Boolean>
+
+    suspend fun setHighlightExpressions(value: Boolean)
+    suspend fun setPlotImag(value: Boolean)
+
     suspend fun setTheme(value: String)
     suspend fun setMode(value: String)
     suspend fun setLanguage(value: String)
@@ -59,6 +69,10 @@ interface GuiPreferences {
     suspend fun setKeepScreenOn(value: Boolean)
     suspend fun setHighContrast(value: Boolean)
     suspend fun setVibrateOnKeypress(value: Boolean)
+
+    suspend fun setLatexMode(value: Boolean)
+    suspend fun setThemeSeed(value: Int)
+    suspend fun setIsAmoled(value: Boolean)
 }
 
 interface OnscreenPreferences {

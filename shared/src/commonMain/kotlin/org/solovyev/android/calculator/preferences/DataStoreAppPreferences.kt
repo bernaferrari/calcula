@@ -101,6 +101,12 @@ class DataStoreGuiPreferences(private val dataStore: DataStore<Preferences>) : G
     private val keyKeepScreenOn = booleanPreferencesKey("gui.keepScreenOn")
     private val keyHighContrast = booleanPreferencesKey("gui.highContrast")
     private val keyVibrateOnKeypress = booleanPreferencesKey("gui.vibrateOnKeypress")
+    private val keyLatexMode = booleanPreferencesKey("gui.latexMode")
+    private val keyThemeSeed = intPreferencesKey("gui.themeSeed")
+    private val keyIsAmoled = booleanPreferencesKey("gui.isAmoled")
+
+    private val keyHighlightExpressions = booleanPreferencesKey("gui.highlightExpressions")
+    private val keyPlotImag = booleanPreferencesKey("gui.plotImag")
 
     override val theme: Flow<String> = dataStore.data.map { it[keyTheme] ?: "material_theme" }
     override val mode: Flow<String> = dataStore.data.map { it[keyMode] ?: "simple" }
@@ -111,6 +117,11 @@ class DataStoreGuiPreferences(private val dataStore: DataStore<Preferences>) : G
     override val keepScreenOn: Flow<Boolean> = dataStore.data.map { it[keyKeepScreenOn] ?: true }
     override val highContrast: Flow<Boolean> = dataStore.data.map { it[keyHighContrast] ?: false }
     override val vibrateOnKeypress: Flow<Boolean> = dataStore.data.map { it[keyVibrateOnKeypress] ?: true }
+    override val latexMode: Flow<Boolean> = dataStore.data.map { it[keyLatexMode] ?: false }
+    override val themeSeed: Flow<Int> = dataStore.data.map { it[keyThemeSeed] ?: 0xFF13ABF1.toInt() }
+    override val isAmoled: Flow<Boolean> = dataStore.data.map { it[keyIsAmoled] ?: false }
+    override val highlightExpressions: Flow<Boolean> = dataStore.data.map { it[keyHighlightExpressions] ?: true }
+    override val plotImag: Flow<Boolean> = dataStore.data.map { it[keyPlotImag] ?: false }
 
     override suspend fun setTheme(value: String) { dataStore.edit { it[keyTheme] = value } }
     override suspend fun setMode(value: String) { dataStore.edit { it[keyMode] = value } }
@@ -121,6 +132,11 @@ class DataStoreGuiPreferences(private val dataStore: DataStore<Preferences>) : G
     override suspend fun setKeepScreenOn(value: Boolean) { dataStore.edit { it[keyKeepScreenOn] = value } }
     override suspend fun setHighContrast(value: Boolean) { dataStore.edit { it[keyHighContrast] = value } }
     override suspend fun setVibrateOnKeypress(value: Boolean) { dataStore.edit { it[keyVibrateOnKeypress] = value } }
+    override suspend fun setLatexMode(value: Boolean) { dataStore.edit { it[keyLatexMode] = value } }
+    override suspend fun setThemeSeed(value: Int) { dataStore.edit { it[keyThemeSeed] = value } }
+    override suspend fun setIsAmoled(value: Boolean) { dataStore.edit { it[keyIsAmoled] = value } }
+    override suspend fun setHighlightExpressions(value: Boolean) { dataStore.edit { it[keyHighlightExpressions] = value } }
+    override suspend fun setPlotImag(value: Boolean) { dataStore.edit { it[keyPlotImag] = value } }
 }
 
 class DataStoreOnscreenPreferences(private val dataStore: DataStore<Preferences>) : OnscreenPreferences {

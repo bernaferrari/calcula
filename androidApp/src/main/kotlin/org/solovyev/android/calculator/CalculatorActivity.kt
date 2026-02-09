@@ -2,11 +2,10 @@ package org.solovyev.android.calculator
 
 import android.os.Bundle
 import android.view.KeyEvent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
 import org.solovyev.android.calculator.history.History
 import org.solovyev.android.calculator.ui.CalculatorApp
@@ -24,7 +23,12 @@ class CalculatorActivity : BaseActivity(R.string.cpp_app_name) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        useBackAsPrevious = runBlocking { appPreferences.gui.useBackAsPrevious.first() }
+        enableEdgeToEdge() // Mad Activity part 2
+        lifecycleScope.launch {
+            appPreferences.gui.useBackAsPrevious.collect { enabled ->
+                useBackAsPrevious = enabled
+            }
+        }
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
@@ -39,6 +43,5 @@ class CalculatorActivity : BaseActivity(R.string.cpp_app_name) {
 
     override fun onResume() {
         super.onResume()
-        restartIfModeChanged()
     }
 }

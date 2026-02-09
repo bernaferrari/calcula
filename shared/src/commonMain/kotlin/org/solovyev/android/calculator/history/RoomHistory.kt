@@ -31,7 +31,7 @@ class RoomHistory(private val historyDao: HistoryDao) : History {
         val entry = HistoryEntry(
             expression = expression,
             result = result,
-            timestamp = Clock.System.now().toEpochMilliseconds(),
+            timestamp = kotlin.time.Clock.System.now().toEpochMilliseconds(),
             editorSelection = selection,
             isSaved = false
         )

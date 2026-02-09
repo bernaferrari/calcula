@@ -102,6 +102,18 @@ class Calculator(
         }
     }
 
+    /**
+     * Synchronously evaluates an expression for live preview.
+     * Returns the result string or throws on error.
+     */
+    suspend fun evaluateForPreview(expression: String): String {
+        return try {
+            JsclOperation.numeric.evaluate(expression, engine.getMathEngine())
+        } catch (e: Exception) {
+            ""
+        }
+    }
+
     
     // ...
 

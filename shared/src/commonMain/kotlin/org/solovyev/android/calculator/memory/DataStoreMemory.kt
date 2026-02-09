@@ -28,7 +28,7 @@ class DataStoreMemory(private val dataStore: DataStore<Preferences>) : Memory {
     /**
      * Stores a value in memory.
      */
-    suspend fun store(value: String) {
+    override suspend fun store(value: String) {
         dataStore.edit { preferences ->
             preferences[keyMemoryValue] = value
         }
@@ -37,7 +37,7 @@ class DataStoreMemory(private val dataStore: DataStore<Preferences>) : Memory {
     /**
      * Adds a value to the current memory value.
      */
-    suspend fun add(value: String) {
+    override suspend fun add(value: String) {
         val current = get() ?: "0"
         try {
             val result = current.toDouble() + value.toDouble()
@@ -49,9 +49,23 @@ class DataStoreMemory(private val dataStore: DataStore<Preferences>) : Memory {
     }
 
     /**
+     * Subtracts a value from the current memory value.
+     */
+    override suspend fun subtract(value: String) {
+        val current = get() ?: "0"
+        try {
+            val result = current.toDouble() - value.toDouble()
+            store(result.toString())
+        } catch (e: NumberFormatException) {
+            // If parsing fails, just store the new value
+            store(value)
+        }
+    }
+
+    /**
      * Recalls the stored memory value and emits it via [valueReadyEvents].
      */
-    fun recall() {
+    override fun recall() {
         scope.launch {
             val value = get()
             if (value != null) {
@@ -63,7 +77,7 @@ class DataStoreMemory(private val dataStore: DataStore<Preferences>) : Memory {
     /**
      * Clears the memory.
      */
-    suspend fun clear() {
+    override suspend fun clear() {
         dataStore.edit { preferences ->
             preferences.remove(keyMemoryValue)
         }

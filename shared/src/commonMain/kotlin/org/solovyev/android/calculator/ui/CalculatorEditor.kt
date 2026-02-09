@@ -5,6 +5,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
@@ -23,11 +24,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
@@ -69,9 +68,10 @@ import org.solovyev.android.calculator.EditorState
  * @param onTextChange Callback invoked when text changes
  * @param onSelectionChange Callback invoked when cursor selection changes
  * @param modifier Modifier to be applied to the editor
- * @param minTextSize Minimum text size for auto-resizing
- * @param maxTextSize Maximum text size for auto-resizing
+ *  * @param maxTextSize Maximum text size for auto-resizing
  */
+import androidx.compose.foundation.layout.Row
+
 @Composable
 fun CalculatorEditor(
     state: EditorState,
@@ -79,15 +79,14 @@ fun CalculatorEditor(
     onSelectionChange: (Int) -> Unit,
     modifier: Modifier = Modifier,
     highlightExpressions: Boolean = true,
-    minTextSize: TextUnit = 24.sp,
-    maxTextSize: TextUnit = 36.sp
+    minTextSize: TextUnit = 38.sp,
+    maxTextSize: TextUnit = 38.sp
 ) {
     val scrollState = rememberScrollState()
     var textFieldValue by remember { mutableStateOf(TextFieldValue()) }
     var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
     var fieldWidthPx by remember { mutableStateOf(0) }
     val focusRequester = remember { FocusRequester() }
-    val keyboardController = LocalSoftwareKeyboardController.current
     val interactionSource = remember { MutableInteractionSource() }
     
     // Track last synced values to detect external vs internal changes
@@ -108,11 +107,6 @@ fun CalculatorEditor(
                 selection = TextRange(newSelection)
             )
         }
-    }
-
-    LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
-        keyboardController?.hide()
     }
 
     // Auto-scroll to keep cursor visible
@@ -143,25 +137,20 @@ fun CalculatorEditor(
         scrollState.animateScrollTo(target.roundToInt())
     }
 
-    val fontSize = remember(state.text) {
-        calculateEditorFontSize(
-            text = state.text.toString(),
-            minSize = minTextSize,
-            maxSize = maxTextSize
-        )
-    }
+    val fontSize = maxTextSize
 
     val customTextSelectionColors = TextSelectionColors(
         handleColor = MaterialTheme.colorScheme.primary,
         backgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
     )
 
-    Box(
+    Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        contentAlignment = Alignment.TopStart
+            .background(Color.Transparent)
+            .padding(horizontal = 20.dp, vertical = 12.dp)
+            .heightIn(min = 72.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
         CompositionLocalProvider(LocalTextSelectionColors provides customTextSelectionColors) {
             BasicTextField(
@@ -182,17 +171,13 @@ fun CalculatorEditor(
                     .fillMaxWidth()
                     .horizontalScroll(scrollState)
                     .focusRequester(focusRequester)
-                    .onFocusChanged { focusState ->
-                        if (focusState.isFocused) {
-                            keyboardController?.hide()
-                        }
-                    }
                     .onSizeChanged { fieldWidthPx = it.width },
                 enabled = true,
-                readOnly = false,
+                readOnly = true, // Prevent system keyboard from opening
                 textStyle = TextStyle(
                     color = MaterialTheme.colorScheme.onBackground,
                     fontSize = fontSize,
+                    lineHeight = fontSize,
                     fontWeight = FontWeight.Normal,
                     textAlign = TextAlign.Start,
                     fontFamily = CalculatorFontFamily
@@ -202,7 +187,7 @@ fun CalculatorEditor(
                     keyboardType = KeyboardType.Ascii,
                     imeAction = ImeAction.None,
                     autoCorrectEnabled = false,
-                    showKeyboardOnFocus = false
+                    showKeyboardOnFocus = true
                 ),
                 singleLine = true,
                 interactionSource = interactionSource,
@@ -226,27 +211,6 @@ fun CalculatorEditor(
                 }
             )
         }
-    }
-}
-
-private fun calculateEditorFontSize(
-    text: String,
-    minSize: TextUnit,
-    maxSize: TextUnit
-): TextUnit {
-    val length = text.length
-    val size = when {
-        length == 0 -> maxSize
-        length < 10 -> maxSize
-        length < 15 -> 32.sp
-        length < 20 -> 28.sp
-        length < 30 -> 26.sp
-        else -> minSize
-    }
-    return when {
-        size.value < minSize.value -> minSize
-        size.value > maxSize.value -> maxSize
-        else -> size
     }
 }
 

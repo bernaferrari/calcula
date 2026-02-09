@@ -1907,7 +1907,7 @@ class Real {
         }
         if ((this.exponent < 0 && this.mantissa == 0L) && (a.exponent < 0 && a.mantissa == 0L) && sign == a.sign)
             return
-        var dir = -compare(a)
+        val dir = -compare(a)
         if (dir == 0)
             return
         if ((this.exponent == 0 && this.mantissa == 0L)) {
@@ -1966,7 +1966,7 @@ class Real {
             }
             return
         }
-        var shift = 0x4000003e - exponent
+        val shift = 0x4000003e - exponent
         if (shift <= 0)
             return
         if ((this.sign.toInt() != 0))
@@ -2024,7 +2024,7 @@ class Real {
             makeZero(sign.toInt())
             return
         }
-        var shift = 0x4000003e - exponent
+        val shift = 0x4000003e - exponent
         if (shift <= 0)
             return
         mantissa += 1L shl (shift - 1) // Bla-bla, this works almost
@@ -2055,7 +2055,7 @@ class Real {
             makeZero(sign.toInt())
             return
         }
-        var shift = 0x4000003e - exponent
+        val shift = 0x4000003e - exponent
         if (shift <= 0)
             return
         mantissa = mantissa and ((1L shl shift) - 1).inv()
@@ -2081,7 +2081,7 @@ class Real {
     fun frac() {
         if (!(this.exponent >= 0 && this.mantissa != 0L) || exponent < 0x40000000)
             return
-        var shift = 0x4000003e - exponent
+        val shift = 0x4000003e - exponent
         if (shift <= 0) {
             makeZero(sign.toInt())
             return
@@ -2123,7 +2123,7 @@ class Real {
         }
         if (exponent < 0x40000000)
             return 0
-        var shift = 0x4000003e - exponent
+        val shift = 0x4000003e - exponent
         if (shift < 32) {
             return if (this.sign.toInt() == 0) Int.MAX_VALUE else Int.MIN_VALUE + 1
             // 0x80000001, so that you can take -x.toInteger()
@@ -2168,7 +2168,7 @@ class Real {
         }
         if (exponent < 0x40000000)
             return 0
-        var shift = 0x4000003e - exponent
+        val shift = 0x4000003e - exponent
         if (shift < 0) {
             return if (this.sign.toInt() == 0) Long.MAX_VALUE else Long.MIN_VALUE + 1
             // 0x8000000000000001L, so that you can take -x.toLong()
@@ -2207,7 +2207,7 @@ class Real {
             return true
         if (exponent < 0x40000000)
             return false
-        var shift = 0x4000003e - exponent
+        val shift = 0x4000003e - exponent
         return shift <= 0 || (mantissa and ((1L shl shift) - 1)) == 0L
     }
     /**
@@ -2234,7 +2234,7 @@ class Real {
         if (!(this.exponent >= 0 && this.mantissa != 0L) ||
                 exponent < 0x40000000 || exponent > 0x4000003e)
             return false
-        var shift = 0x4000003e - exponent
+        val shift = 0x4000003e - exponent
         return ((mantissa ushr shift) and 1L) != 0L
     }
     /**
@@ -2255,13 +2255,13 @@ class Real {
      * @param a the <code>Real</code> to exchange with this.
      */
     fun swap(a: Real) {
-        var tmpMantissa = mantissa
+        val tmpMantissa = mantissa
         mantissa = a.mantissa;
         a.mantissa = tmpMantissa;
-        var tmpExponent = exponent
+        val tmpExponent = exponent
         exponent = a.exponent;
         a.exponent = tmpExponent;
-        var tmpSign = sign
+        val tmpSign = sign
         sign = a.sign;
         a.sign = tmpSign;
     }
@@ -2485,7 +2485,7 @@ class Real {
             mantissa = a.mantissa;
             extraVar = aExtra;
         }
-        var shift = exponent - e
+        val shift = exponent - e
         if (shift >= 127)
             return extraVar;
         if (shift >= 64) {
@@ -2606,15 +2606,15 @@ class Real {
             makeInfinity(sign.toInt());
             return;
         }
-        var a0 = mantissa and 0x7fffffff
-        var a1 = mantissa ushr 31
-        var b0 = a.mantissa and 0x7fffffff
-        var b1 = a.mantissa ushr 31
+        val a0 = mantissa and 0x7fffffff
+        val a1 = mantissa ushr 31
+        val b0 = a.mantissa and 0x7fffffff
+        val b1 = a.mantissa ushr 31
         mantissa = a1 * b1
         // If we're going to need normalization, we don't want to round twice
         val round = if (mantissa < 0) 0 else 0x40000000
         mantissa += ((a0 * b1 + a1 * b0 + ((a0 * b0) ushr 31) + round) ushr 31)
-        var aExp = a.exponent
+        val aExp = a.exponent
         exponent += aExp - 0x40000000
         if (exponent < 0) {
             if (exponent == -1 && aExp < 0x40000000 && mantissa < 0) {
@@ -2686,9 +2686,9 @@ class Real {
             makeInfinity(sign.toInt()); // Overflow
             return;
         }
-        var a0 = mantissa and 0x7fffffff
-        var a1 = mantissa ushr 31
-        var b0 = aVar.toLong() and 0xffffffffL
+        val a0 = mantissa and 0x7fffffff
+        val a1 = mantissa ushr 31
+        val b0 = aVar.toLong() and 0xffffffffL
         mantissa = a1 * b0
         // If we're going to need normalization, we don't want to round twice
         val round = if (mantissa < 0) 0 else 0x40000000
@@ -2749,7 +2749,7 @@ class Real {
             makeInfinity(sign.toInt());
             return 0;
         }
-        var aExp = a.exponent
+        val aExp = a.exponent
         exponent += aExp - 0x40000000;
         if (exponent < 0) {
             if (aExp < 0x40000000)
@@ -2763,11 +2763,11 @@ class Real {
         var a0 = extraVar and mask32
         var a1 = extraVar ushr 32
         var a2 = mantissa and mask32
-        var a3 = mantissa ushr 32
+        val a3 = mantissa ushr 32
         var b0 = aExtra and mask32
         var b1 = aExtra ushr 32
         var b2 = a.mantissa and mask32
-        var b3 = a.mantissa ushr 32
+        val b3 = a.mantissa ushr 32
         a0 = ((a3 * b0 ushr 2) +
                 (a2 * b1 ushr 2) +
                 (a1 * b2 ushr 2) +
@@ -2820,7 +2820,7 @@ class Real {
         sign = 0
         if (!(this.exponent >= 0 && this.mantissa != 0L))
             return;
-        var e = exponent
+        val e = exponent
         exponent += exponent - 0x40000000
         if (exponent < 0) {
             if (e < 0x40000000)
@@ -2829,8 +2829,8 @@ class Real {
                 makeInfinity(sign.toInt()); // Overflow
             return;
         }
-        var a0 = mantissa and 0x7fffffff
-        var a1 = mantissa ushr 31
+        val a0 = mantissa and 0x7fffffff
+        val a1 = mantissa ushr 31
         mantissa = a1 * a1
         // If we're going to need normalization, we don't want to round twice
         val round = if (mantissa < 0) 0 else 0x40000000
@@ -2944,7 +2944,7 @@ class Real {
             makeInfinity(sign.toInt());
             return;
         }
-        var denom = aVar.toLong() and 0xffffffffL
+        val denom = aVar.toLong() and 0xffffffffL
         var remainder = mantissa % denom
         mantissa /= denom
         // Normalizing mantissa and scaling remainder accordingly
@@ -3091,7 +3091,7 @@ class Real {
             makeInfinity(sign.toInt());
             return 0;
         }
-        var s = sign
+        val s = sign
         sign = 0
         // Special case, simple power of 2
         if (mantissa == 0x4000000000000000L && extra == 0L) {
@@ -3101,12 +3101,12 @@ class Real {
             return 0;
         }
         // Normalize exponent
-        var exp = 0x40000000 - exponent
+        val exp = 0x40000000 - exponent
         exponent = 0x40000000;
         // Save -A
         val recipTmp = recipTmp()
         recipTmp.assign(this)
-        var recipTmpExtra = extra
+        val recipTmpExtra = extra
         recipTmp.neg()
         // First establish approximate result (actually 63 bit accurate)
         recip();
@@ -3335,7 +3335,7 @@ class Real {
             exponent = a.exponent;
             mantissa = a.mantissa;
         }
-        var shift = exponent - e
+        val shift = exponent - e
         if (shift >= 64) {
             if (s.toInt() == 0)
                 makeZero(sign.toInt());
@@ -3419,7 +3419,7 @@ class Real {
             exponent = a.exponent;
             mantissa = a.mantissa;
         }
-        var shift = exponent - e
+        val shift = exponent - e
         if (shift >= 64 || shift <= -64)
             return;
         if (s.toInt() != 0)
@@ -3500,7 +3500,7 @@ class Real {
             exponent = a.exponent;
             mantissa = a.mantissa;
         }
-        var shift = exponent - e
+        val shift = exponent - e
         if (shift >= 64)
             return;
         if (s.toInt() != 0)
@@ -3561,7 +3561,7 @@ class Real {
             }
             return;
         }
-        var shift = exponent - a.exponent
+        val shift = exponent - a.exponent
         if (shift >= 64 || (shift <= -64 && (this.sign.toInt() == 0)))
             return;
         var m = a.mantissa
@@ -3634,7 +3634,7 @@ class Real {
         val recipTmp = recipTmp()
         recipTmp.assign(this)
         // normalize to range [0.5, 1)
-        var e = exponent - 0x3fffffff
+        val e = exponent - 0x3fffffff
         exponent = 0x3fffffff
         // quadratic approximation, relative error 6.45e-4
         val recipTmp2 = recipTmp2()
@@ -3711,7 +3711,7 @@ class Real {
     fun cbrt() {
         if (!(this.exponent >= 0 && this.mantissa != 0L))
             return;
-        var s = sign
+        val s = sign
         sign = 0
         // Calculates recipocal cube root of normalized Real,
         // not zero, nan or infinity
@@ -3845,7 +3845,7 @@ class Real {
         expTmp.assign(this);
         expTmp.add(HALF);
         expTmp.floor();
-        var exp = expTmp.toInteger()
+        val exp = expTmp.toInteger()
         if (exp > 0x40000000) {
             makeInfinity(sign.toInt());
             return;
@@ -3939,7 +3939,7 @@ class Real {
         expTmp.exponent = 0x40000000
         expTmp.mantissa = 0x5c551d94ae0bf85dL
         // log2(e)
-        var extra = mul128(0, expTmp, 0xdf43ff68348e9f44uL.toLong())
+        val extra = mul128(0, expTmp, 0xdf43ff68348e9f44uL.toLong())
         exp2Internal(extra)
     }
     /**
@@ -3985,7 +3985,7 @@ class Real {
         expTmp.exponent = 0x40000001
         expTmp.mantissa = 0x6a4d3c25e68dc57fL
         // log2(10)
-        var extra = mul128(0, expTmp, 0x2495fb7fa6d7eda6L)
+        val extra = mul128(0, expTmp, 0x2495fb7fa6d7eda6L)
         exp2Internal(extra)
     }
     fun lnInternal(): Int {
@@ -4132,7 +4132,7 @@ class Real {
      * </td></tr></table>
      */
     fun ln() {
-        var exp = lnInternal()
+        val exp = lnInternal()
         val expTmp = expTmp()
         expTmp.assign(exp);
         expTmp.mul(LN2);
@@ -4156,7 +4156,7 @@ class Real {
      * </td></tr></table>
      */
     fun log2() {
-        var exp = lnInternal()
+        val exp = lnInternal()
         mul(LOG2E);
         add(exp);
     }
@@ -4177,7 +4177,7 @@ class Real {
      * </td></tr></table>
      */
     fun log10() {
-        var exp = lnInternal()
+        val exp = lnInternal()
         val expTmp = expTmp()
         expTmp.assign(exp);
         expTmp.mul(LN2);
@@ -4306,7 +4306,7 @@ class Real {
         if ((a.exponent < 0 && a.mantissa == 0L)) {
             tmp1.assign(this);
             tmp1.abs();
-            var test = tmp1.compare(ONE)
+            val test = tmp1.compare(ONE)
             if (test > 0) {
                 if ((a.sign.toInt() == 0))
                     makeInfinity(0);
@@ -4399,7 +4399,7 @@ class Real {
             tmp3.assign(ONE)
         }
         // Do log2 and maintain accuracy
-        var e = lnInternal()
+        val e = lnInternal()
         tmp2.sign = 0
         tmp2.exponent = 0x40000000
         tmp2.mantissa = 0x5c551d94ae0bf85dL
@@ -4748,7 +4748,7 @@ class Real {
      * </td></tr></table>
      */
     fun acos() {
-        var negative = (this.sign.toInt() != 0)
+        val negative = (this.sign.toInt() != 0)
         abs();
         val tmp1 = tmp1()
         tmp1.assign(this);
@@ -4793,14 +4793,14 @@ class Real {
         if ((this.exponent == 0 && this.mantissa == 0L) || (this.exponent < 0 && this.mantissa != 0L))
             return;
         if ((this.exponent < 0 && this.mantissa == 0L)) {
-            var s = sign
+            val s = sign
             this.mantissa = PI_2.mantissa
             this.exponent = PI_2.exponent
             this.sign = PI_2.sign
             sign = s
             return
         }
-        var s = sign
+        val s = sign
         sign = 0
         // range reduction
         var addPI_2 = false
@@ -4931,8 +4931,8 @@ class Real {
         }
         if ((this.exponent == 0 && this.mantissa == 0L) && (x.exponent == 0 && x.mantissa == 0L))
             return;
-        var s = sign
-        var s2 = x.sign
+        val s = sign
+        val s2 = x.sign
         sign = 0
         x.sign = 0
         div(x)
@@ -5042,7 +5042,7 @@ class Real {
             return;
         // Use symmetry to prevent underflow error for very large negative
         // values
-        var s = sign
+        val s = sign
         sign = 0;
         val tmp1 = tmp1()
         tmp1.assign(this);
@@ -5165,7 +5165,7 @@ class Real {
         if (!(this.exponent >= 0))
             return;
         // x<0: gamma(-x) = -pi/(x*gamma(x)*sin(pi*x))
-        var negative = (this.sign.toInt() != 0)
+        val negative = (this.sign.toInt() != 0)
         abs();
         val tmp1 = tmp1()
         tmp1.assign(this);
@@ -5313,7 +5313,7 @@ class Real {
         if (digits > 64)
             digits = 64
         tmp1.scalbn(1)
-        var dxq = tmp1.toInteger() + 1
+        val dxq = tmp1.toInteger() + 1
         tmp1.assign(this)
         recip()
         tmp2.assign(this)
@@ -5387,7 +5387,7 @@ class Real {
                 makeZero(0);
             return;
         }
-        var s = sign
+        val s = sign
         sign = 0
         val tmp1 = tmp1()
         tmp1.sign = 0
@@ -5433,7 +5433,7 @@ class Real {
             makeInfinity(1);
             return;
         }
-        var sign = ONE.compare(this)
+        val sign = ONE.compare(this)
         if (sign.toInt() == 0) {
             makeZero();
             return;
@@ -5590,7 +5590,7 @@ class Real {
     fun toDHMS() {
         if (!(this.exponent >= 0 && this.mantissa != 0L))
             return
-        var negative = (this.sign.toInt() != 0)
+        val negative = (this.sign.toInt() != 0)
         abs()
         var D: Int
         var m: Int
@@ -5673,7 +5673,7 @@ class Real {
     fun fromDHMS() {
         if (!(this.exponent >= 0 && this.mantissa != 0L))
             return;
-        var negative = (this.sign.toInt() != 0)
+        val negative = (this.sign.toInt() != 0)
         abs();
         var Y: Int
         var M: Int
@@ -5748,16 +5748,13 @@ class Real {
      * </td></tr></table>
      */
     fun time() {
-        var now = Clock.System.now().toEpochMilliseconds()
-        var h: Int
-        var m: Int
-        var s: Int
+        var now = kotlin.time.Clock.System.now().toEpochMilliseconds()
         now /= 1000;
-        s = (now % 60).toInt();
+        val s: Int = (now % 60).toInt();
         now /= 60;
-        m = (now % 60).toInt();
+        val m: Int = (now % 60).toInt();
         now /= 60;
-        h = (now % 24).toInt();
+        val h: Int = (now % 24).toInt();
         assign((h * 100 + m) * 100 + s);
         div(10000);
     }
@@ -5784,7 +5781,7 @@ class Real {
      * </td></tr></table>
      */
     fun date() {
-        var now = Clock.System.now().toEpochMilliseconds()
+        var now = kotlin.time.Clock.System.now().toEpochMilliseconds()
         now /= 86400000; // days
         now *= 24; // hours
         assign(now);
@@ -6080,7 +6077,7 @@ class Real {
                 }
             }
         }
-        var accurateDigits = (accurateBits + bitsPerDigit - 1) / bitsPerDigit
+        val accurateDigits = (accurateBits + bitsPerDigit - 1) / bitsPerDigit
         for (i in 0 until accurateDigits) {
             digits[i] = (mantissa ushr (64 - bitsPerDigit)).toByte()
             mantissa = mantissa shl bitsPerDigit

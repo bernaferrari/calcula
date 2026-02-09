@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -36,6 +37,7 @@ import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.PinDrop
 import androidx.compose.material.icons.rounded.ScreenRotation
 import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.Code
 import androidx.compose.material.icons.rounded.ShowChart
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.Star
@@ -44,6 +46,12 @@ import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.Vibration
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.Widgets
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.border
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalButton
@@ -74,6 +82,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import org.jetbrains.compose.resources.stringResource
@@ -136,6 +145,8 @@ data class SettingsUiState(
     val outputPrecision: Int = 5,
     val outputSeparator: Char = ' ',
     val theme: AppTheme = AppTheme.MATERIAL_YOU,
+    val themeSeedColor: Int = 0xFF13ABF1.toInt(),
+    val isAmoledTheme: Boolean = false,
     val languageCode: String = "system",
     val vibrateOnKeypress: Boolean = true,
     val highContrast: Boolean = false,
@@ -149,6 +160,7 @@ data class SettingsUiState(
     val showReleaseNotes: Boolean = true,
     val useBackAsPrevious: Boolean = false,
     val plotImag: Boolean = false,
+    val latexMode: Boolean = false,
     val numberFormatExamples: String = "1,234.56\n0.001234"
 )
 
@@ -175,6 +187,8 @@ interface SettingsActions {
     fun setOutputPrecision(precision: Int)
     fun setOutputSeparator(separator: Char)
     fun setTheme(theme: AppTheme)
+    fun setThemeSeedColor(color: Int)
+    fun setIsAmoledTheme(enabled: Boolean)
     fun setLanguage(code: String)
     fun setVibrateOnKeypress(enabled: Boolean)
     fun setHighContrast(enabled: Boolean)
@@ -188,6 +202,7 @@ interface SettingsActions {
     fun setShowReleaseNotes(enabled: Boolean)
     fun setUseBackAsPrevious(enabled: Boolean)
     fun setPlotImag(enabled: Boolean)
+    fun setLatexMode(enabled: Boolean)
 }
 
 // ============================================================================
@@ -235,7 +250,8 @@ fun SettingsScreen(
             onHighContrastChange = actions::setHighContrast,
             onHighlightExpressionsChange = actions::setHighlightExpressions,
             onRotateChange = actions::setRotateScreen,
-            onKeepScreenOnChange = actions::setKeepScreenOn
+            onKeepScreenOnChange = actions::setKeepScreenOn,
+            actions = actions
         )
         SettingsDestination.ONSCREEN -> OnscreenScreen(
             state = state,
@@ -251,7 +267,8 @@ fun SettingsScreen(
             onCalculateOnFlyChange = actions::setCalculateOnFly,
             onShowReleaseNotesChange = actions::setShowReleaseNotes,
             onUseBackAsPreviousChange = actions::setUseBackAsPrevious,
-            onPlotImagChange = actions::setPlotImag
+            onPlotImagChange = actions::setPlotImag,
+            onLatexModeChange = actions::setLatexMode
         )
     }
 }
@@ -275,6 +292,10 @@ private fun MainSettingsScreen(
     val angleOptions = AngleUnit.entries
     val radixOptions = NumeralBase.entries
 
+    val modeTitle = stringResource(Res.string.cpp_mode)
+    val anglesTitle = stringResource(Res.string.cpp_angles)
+    val radixTitle = stringResource(Res.string.cpp_radix)
+
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(16.dp),
@@ -296,7 +317,7 @@ private fun MainSettingsScreen(
                     summary = state.mode.displayName,
                     onClick = {
                         listDialog = ListDialogState(
-                            title = "Mode",
+                            title = modeTitle,
                             options = modeOptions,
                             selectedIndex = CalculatorMode.entries.indexOf(state.mode),
                             onSelected = { index -> onModeChange(CalculatorMode.entries[index]) }
@@ -309,7 +330,7 @@ private fun MainSettingsScreen(
                     summary = state.angleUnit.displayName,
                     onClick = {
                         listDialog = ListDialogState(
-                            title = "Angles",
+                            title = anglesTitle,
                             options = angleOptions.map { it.displayName },
                             selectedIndex = angleOptions.indexOf(state.angleUnit),
                             onSelected = { index -> onAngleUnitChange(angleOptions[index]) }
@@ -322,7 +343,7 @@ private fun MainSettingsScreen(
                     summary = state.numeralBase.displayName,
                     onClick = {
                         listDialog = ListDialogState(
-                            title = "Radix",
+                            title = radixTitle,
                             options = radixOptions.map { it.displayName },
                             selectedIndex = radixOptions.indexOf(state.numeralBase),
                             onSelected = { index -> onNumeralBaseChange(radixOptions[index]) }
@@ -529,10 +550,19 @@ private fun AppearanceScreen(
     onHighContrastChange: (Boolean) -> Unit,
     onHighlightExpressionsChange: (Boolean) -> Unit,
     onRotateChange: (Boolean) -> Unit,
-    onKeepScreenOnChange: (Boolean) -> Unit
+    onKeepScreenOnChange: (Boolean) -> Unit,
+    actions: SettingsActions // Access to new actions
 ) {
     var listDialog by remember { mutableStateOf<ListDialogState?>(null) }
-    val themeOptions = AppTheme.entries
+    
+    // Simplified Theme Options for Light/Dark/System
+    // We Map MATERIAL_YOU -> System, MATERIAL_LIGHT -> Light, MATERIAL_DARK -> Dark
+    // ignoring other legacy themes for this selector
+    val themeModeOptions = listOf(
+        AppTheme.MATERIAL_YOU to "System",
+        AppTheme.MATERIAL_LIGHT to "Light",
+        AppTheme.MATERIAL_DARK to "Dark"
+    )
 
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
@@ -540,7 +570,36 @@ private fun AppearanceScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
+            ThemePreview(state.theme, state.themeSeedColor)
+        }
+
+        item {
             PreferenceGroup(title = stringResource(Res.string.cpp_appearance)) {
+                // Color Picker
+                ThemeSelector(
+                    currentSeedColor = state.themeSeedColor,
+                    isAmoled = state.isAmoledTheme,
+                    onSeedColorChange = actions::setThemeSeedColor,
+                    onAmoledChange = { actions.setIsAmoledTheme(it) }
+                )
+
+                HorizontalDivider()
+
+                // Light/Dark Mode
+                 PreferenceItem(
+                    icon = Icons.Rounded.LightMode,
+                    title = "Mode",
+                    summary = themeModeOptions.find { it.first == state.theme }?.second ?: "Dark",
+                    onClick = {
+                        listDialog = ListDialogState(
+                            title = "Mode",
+                            options = themeModeOptions.map { it.second },
+                            selectedIndex = themeModeOptions.indexOfFirst { it.first == state.theme }.coerceAtLeast(0),
+                            onSelected = { index -> onThemeChange(themeModeOptions[index].first) }
+                        )
+                    }
+                )
+                
                 if (languages.isNotEmpty()) {
                     PreferenceItem(
                         icon = Icons.Rounded.Language,
@@ -556,19 +615,6 @@ private fun AppearanceScreen(
                         }
                     )
                 }
-                PreferenceItem(
-                    icon = Icons.Rounded.LightMode,
-                    title = stringResource(Res.string.cpp_theme),
-                    summary = state.theme.displayName,
-                    onClick = {
-                        listDialog = ListDialogState(
-                            title = "Theme",
-                            options = themeOptions.map { it.displayName },
-                            selectedIndex = themeOptions.indexOf(state.theme).coerceAtLeast(0),
-                            onSelected = { index -> onThemeChange(themeOptions[index]) }
-                        )
-                    }
-                )
             }
         }
 
@@ -620,6 +666,89 @@ private fun AppearanceScreen(
                 listDialog = null
             }
         )
+    }
+}
+
+@Composable
+private fun ThemeSelector(
+    currentSeedColor: Int,
+    isAmoled: Boolean,
+    onSeedColorChange: (Int) -> Unit,
+    onAmoledChange: (Boolean) -> Unit
+) {
+    val colors = listOf(
+        0xFF13ABF1, // Blue (Default)
+        0xFFE91E63, // Pink
+        0xFFF44336, // Red
+        0xFFFF9800, // Orange
+        0xFF4CAF50, // Green
+        0xFF009688, // Teal
+        0xFF673AB7, // Deep Purple
+        0xFF3F51B5, // Indigo
+        0xFF795548, // Brown
+        0xFF607D8B  // Blue Grey
+    )
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text(
+            text = "Color Scheme",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            items(colors) { colorInt ->
+                val color = Color(colorInt)
+                val isSelected = currentSeedColor == colorInt.toInt()
+                
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(color)
+                        .clickable { onSeedColorChange(colorInt.toInt()) }
+                        .then(
+                            if (isSelected) Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
+                            else Modifier
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (isSelected) {
+                        Icon(
+                            imageVector = Icons.Rounded.Check,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        Row(
+            modifier = Modifier.fillMaxWidth().clickable { onAmoledChange(!isAmoled) },
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "AMOLED Black",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Text(
+                    text = "Pure black background for OLED screens",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Switch(
+                checked = isAmoled,
+                onCheckedChange = onAmoledChange
+            )
+        }
     }
 }
 
@@ -741,7 +870,8 @@ private fun OtherScreen(
     onCalculateOnFlyChange: (Boolean) -> Unit,
     onShowReleaseNotesChange: (Boolean) -> Unit,
     onUseBackAsPreviousChange: (Boolean) -> Unit,
-    onPlotImagChange: (Boolean) -> Unit
+    onPlotImagChange: (Boolean) -> Unit,
+    onLatexModeChange: (Boolean) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
@@ -774,6 +904,13 @@ private fun OtherScreen(
                     summary = stringResource(Res.string.cpp_plot_imaginary_part_summary),
                     checked = state.plotImag,
                     onCheckedChange = onPlotImagChange
+                )
+                SwitchPreference(
+                    icon = Icons.Rounded.Code,
+                    title = "LaTeX Output Mode",
+                    summary = "Generate LaTeX syntax instead of calculations",
+                    checked = state.latexMode,
+                    onCheckedChange = onLatexModeChange
                 )
             }
         }
@@ -1122,5 +1259,100 @@ private fun separatorSummary(separator: Char): String {
         ',' -> "Comma (,)"
         '\'' -> "Apostrophe (')"
         else -> separator.toString()
+    }
+}
+
+@Composable
+private fun ThemePreview(theme: AppTheme, seedColor: Int = 0xFF13ABF1.toInt()) {
+    val (backgroundColor, accentColor) = getThemePreviewColors(theme, seedColor)
+    val isLight = theme == AppTheme.MATERIAL_LIGHT || theme == AppTheme.MATERIAL_YOU // Approximation
+    val textColor = if (isLight) Color.Black else Color.White
+    val buttonColor = if (isLight) Color.LightGray.copy(alpha = 0.3f) else Color.DarkGray.copy(alpha = 0.5f)
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(180.dp),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            // Header: Theme Name
+            Text(
+                text = theme.displayName,
+                style = MaterialTheme.typography.titleMedium,
+                color = textColor.copy(alpha = 0.7f)
+            )
+            
+            Spacer(modifier = Modifier.weight(1f))
+            
+            // Mock Display
+            Text(
+                text = "1,234.56",
+                style = MaterialTheme.typography.displayMedium,
+                color = textColor,
+                modifier = Modifier.align(Alignment.End)
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Mock Buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // AC Button
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(accentColor.copy(alpha = 0.2f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("AC", color = accentColor, fontWeight = FontWeight.Bold)
+                }
+                
+                Spacer(modifier = Modifier.weight(1f))
+                
+                // Op Button
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(buttonColor, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Rounded.Calculate, null, tint = textColor)
+                }
+                
+                // Equals Button
+                Box(
+                    modifier = Modifier
+                        .width(96.dp)
+                        .height(48.dp)
+                        .background(accentColor, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("=", color = if (isLight) Color.White else Color.Black, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+// Helper to provide approximate colors for the preview
+// Ideally these would come from the actual theme definition
+private fun getThemePreviewColors(theme: AppTheme, seedColor: Int): Pair<Color, Color> {
+    return when (theme) {
+        AppTheme.MATERIAL_YOU -> Pair(Color(0xFFF2F0F4), Color(seedColor)) // M3 Light-ish with seed
+        AppTheme.MATERIAL_DARK -> Pair(Color(0xFF1C1B1F), Color(0xFFD0BCFF))
+        AppTheme.MATERIAL_BLACK -> Pair(Color(0xFF000000), Color(0xFFBB86FC))
+        AppTheme.MATERIAL_LIGHT -> Pair(Color(0xFFFFFFFF), Color(0xFF6200EE))
+        AppTheme.METRO_BLUE -> Pair(Color(0xFF111111), Color(0xFF00ADEF))
+        AppTheme.METRO_GREEN -> Pair(Color(0xFF111111), Color(0xFF009900))
+        AppTheme.METRO_PURPLE -> Pair(Color(0xFF111111), Color(0xFFAA00FF))
     }
 }

@@ -43,7 +43,7 @@ class FunctionsViewModel(
     }
 
     fun getOperatorsFor(category: OperatorCategory): List<Operator> {
-        val operators = (operatorsRegistry.getEntities() + postfixFunctionsRegistry.getEntities()) as List<Operator>
+        val operators = operatorsRegistry.getEntities() + postfixFunctionsRegistry.getEntities()
         return operators
             .filter { category.isInCategory(it) }
             .sortedBy { it.name }

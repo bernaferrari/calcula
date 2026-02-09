@@ -5,13 +5,13 @@ plugins {
     alias(libs.plugins.compose.multiplatform)
 }
 
+
+
 kotlin {
-    // Android target using new AGP 9-compatible plugin
     androidLibrary {
         namespace = "org.solovyev.android.views.dragbutton"
         compileSdk = 36
-        minSdk = 26
-
+        
         compilerOptions {
             jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
         }

@@ -1,41 +1,15 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 package org.solovyev.android.calculator.ui
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
+
+import androidx.compose.animation.*
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Functions
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.MoreHoriz
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.SwapHoriz
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.automirrored.filled.*
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -71,11 +45,11 @@ data class FloatingToolbarItem(
 )
 
 /**
- * Material 3 Floating Toolbar
+ * Material 3 Expressive Floating Toolbar
  *
- * A floating action bar that can be placed above the keyboard.
- * Supports both horizontal and vertical layouts, and standard/vibrant color schemes.
+ * Uses the official Material 3 implementations.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun FloatingToolbar(
     items: List<FloatingToolbarItem>,
@@ -84,14 +58,9 @@ fun FloatingToolbar(
     colorScheme: FloatingToolbarColor = FloatingToolbarColor.STANDARD,
     expanded: Boolean = true
 ) {
-    val containerColor = when (colorScheme) {
-        FloatingToolbarColor.STANDARD -> MaterialTheme.colorScheme.surfaceContainerHigh
-        FloatingToolbarColor.VIBRANT -> MaterialTheme.colorScheme.primaryContainer
-    }
-
-    val contentColor = when (colorScheme) {
-        FloatingToolbarColor.STANDARD -> MaterialTheme.colorScheme.onSurface
-        FloatingToolbarColor.VIBRANT -> MaterialTheme.colorScheme.onPrimaryContainer
+    val colors = when (colorScheme) {
+        FloatingToolbarColor.STANDARD -> FloatingToolbarDefaults.standardFloatingToolbarColors()
+        FloatingToolbarColor.VIBRANT -> FloatingToolbarDefaults.vibrantFloatingToolbarColors()
     }
 
     AnimatedVisibility(
@@ -100,72 +69,61 @@ fun FloatingToolbar(
         exit = fadeOut() + slideOutVertically { it },
         modifier = modifier
     ) {
-        Surface(
-            shape = RoundedCornerShape(28.dp),
-            color = containerColor,
-            shadowElevation = 6.dp,
-            tonalElevation = 2.dp,
-            modifier = Modifier.padding(8.dp)
-        ) {
-            when (layout) {
-                FloatingToolbarLayout.HORIZONTAL -> {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                    ) {
+        when (layout) {
+            FloatingToolbarLayout.HORIZONTAL -> {
+                HorizontalFloatingToolbar(
+                    expanded = true,
+                    colors = colors,
+                    modifier = Modifier.padding(8.dp),
+                    content = {
                         items.forEach { item ->
-                            FloatingToolbarButton(
-                                item = item,
-                                contentColor = contentColor
-                            )
+                            FloatingToolbarButton(item)
                         }
                     }
-                }
-                FloatingToolbarLayout.VERTICAL -> {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)
-                    ) {
+                )
+            }
+            FloatingToolbarLayout.VERTICAL -> {
+                VerticalFloatingToolbar(
+                    expanded = true,
+                    colors = colors,
+                    modifier = Modifier.padding(8.dp),
+                    content = {
                         items.forEach { item ->
-                            FloatingToolbarButton(
-                                item = item,
-                                contentColor = contentColor
-                            )
+                            FloatingToolbarButton(item)
                         }
                     }
-                }
+                )
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun FloatingToolbarButton(
     item: FloatingToolbarItem,
-    contentColor: Color,
     modifier: Modifier = Modifier
 ) {
-    IconButton(
-        onClick = item.onClick,
-        colors = IconButtonDefaults.iconButtonColors(
-            contentColor = contentColor
-        ),
-        modifier = modifier.size(48.dp)
-    ) {
-        if (item.icon != null) {
+    if (item.icon != null) {
+        IconButton(
+            onClick = item.onClick,
+            modifier = modifier.size(48.dp)
+        ) {
             Icon(
                 imageVector = item.icon,
                 contentDescription = item.label,
                 modifier = Modifier.size(24.dp)
             )
-        } else {
+        }
+    } else {
+        TextButton(
+            onClick = item.onClick,
+            modifier = modifier.height(48.dp)
+        ) {
             Text(
                 text = item.label,
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                color = contentColor
+                fontWeight = FontWeight.Medium
             )
         }
     }
@@ -179,10 +137,9 @@ private fun FloatingToolbarButton(
  */
 @Composable
 fun CalculatorFloatingToolbar(
-    onCursorLeft: () -> Unit,
-    onCursorRight: () -> Unit,
     onFunctions: () -> Unit,
     onConverter: () -> Unit,
+    onGraph: () -> Unit,
     onHistory: () -> Unit,
     onSettings: () -> Unit,
     modifier: Modifier = Modifier,
@@ -192,24 +149,18 @@ fun CalculatorFloatingToolbar(
 ) {
     val items = listOf(
         FloatingToolbarItem(
-            label = "<",
-            icon = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-            onClick = onCursorLeft
-        ),
-        FloatingToolbarItem(
-            label = ">",
-            icon = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-            onClick = onCursorRight
-        ),
-        FloatingToolbarItem(
-            label = "f",
-            icon = Icons.Default.Functions,
+            label = "f(x)",
             onClick = onFunctions
         ),
         FloatingToolbarItem(
             label = "Convert",
             icon = Icons.Default.SwapHoriz,
             onClick = onConverter
+        ),
+        FloatingToolbarItem(
+            label = "Graph",
+            icon = Icons.Default.ShowChart,
+            onClick = onGraph
         ),
         FloatingToolbarItem(
             label = "History",
