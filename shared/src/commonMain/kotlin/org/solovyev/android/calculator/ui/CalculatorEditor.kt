@@ -20,13 +20,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.InterceptPlatformTextInput
+import androidx.compose.ui.platform.PlatformTextInputInterceptor
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
@@ -46,6 +48,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 import org.solovyev.android.calculator.EditorState
@@ -72,6 +75,7 @@ import org.solovyev.android.calculator.EditorState
  */
 import androidx.compose.foundation.layout.Row
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun CalculatorEditor(
     state: EditorState,
@@ -86,25 +90,50 @@ fun CalculatorEditor(
     var textFieldValue by remember { mutableStateOf(TextFieldValue()) }
     var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
     var fieldWidthPx by remember { mutableStateOf(0) }
-    val focusRequester = remember { FocusRequester() }
     val interactionSource = remember { MutableInteractionSource() }
+    var editorFocused by remember { mutableStateOf(false) }
+    val disableSoftKeyboardInterceptor = remember {
+        PlatformTextInputInterceptor { _, _ -> awaitCancellation() }
+    }
     
-    // Track last synced values to detect external vs internal changes
-    var lastExternalSequence by remember { mutableStateOf(-1L) }
+    // Track last synced values to detect meaningful external changes
     var lastExternalText by remember { mutableStateOf("") }
+    var lastExternalSelection by remember { mutableStateOf(-1) }
     
-    // Only sync from external state when it actually changes from outside
-    LaunchedEffect(state.sequence, state.text) {
+    // Only sync from external state when text/selection changed (ignore sequence-only updates).
+    // Preserve active local range selection while focused so users can select/copy reliably.
+    LaunchedEffect(state.sequence, state.text, state.selection) {
         val newText = state.text.toString()
-        
-        // Detect if this is an external change (from calculator engine)
-        if (state.sequence != lastExternalSequence || newText != lastExternalText) {
-            lastExternalSequence = state.sequence
-            lastExternalText = newText
-            val newSelection = state.selection.coerceIn(0, newText.length)
+        val newSelection = state.selection.coerceIn(0, newText.length)
+
+        val textChanged = newText != lastExternalText
+        val selectionChanged = newSelection != lastExternalSelection
+        if (!textChanged && !selectionChanged) {
+            return@LaunchedEffect
+        }
+
+        lastExternalText = newText
+        lastExternalSelection = newSelection
+
+        if (textChanged) {
             textFieldValue = TextFieldValue(
                 text = newText,
                 selection = TextRange(newSelection)
+            )
+            return@LaunchedEffect
+        }
+
+        val hasActiveLocalRangeSelection =
+            editorFocused && !textFieldValue.selection.collapsed && textFieldValue.text == newText
+        if (hasActiveLocalRangeSelection) {
+            return@LaunchedEffect
+        }
+
+        val targetSelection = TextRange(newSelection)
+        if (textFieldValue.selection != targetSelection || textFieldValue.text != newText) {
+            textFieldValue = textFieldValue.copy(
+                text = newText,
+                selection = targetSelection
             )
         }
     }
@@ -148,68 +177,74 @@ fun CalculatorEditor(
         modifier = modifier
             .fillMaxWidth()
             .background(Color.Transparent)
-            .padding(horizontal = 20.dp, vertical = 12.dp)
-            .heightIn(min = 72.dp),
+            .padding(horizontal = 10.dp, vertical = 6.dp)
+            .heightIn(min = 56.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         CompositionLocalProvider(LocalTextSelectionColors provides customTextSelectionColors) {
-            BasicTextField(
-                value = textFieldValue,
-                onValueChange = { newValue ->
-                    val oldValue = textFieldValue
-                    textFieldValue = newValue
-                    
-                    if (newValue.text != oldValue.text) {
-                        // Text changed - notify parent
-                        onTextChange(newValue.text, newValue.selection.start)
-                    } else if (newValue.selection != oldValue.selection && newValue.selection.collapsed) {
-                        // Only selection changed (user clicked/tapped) - notify parent
-                        onSelectionChange(newValue.selection.start)
+            InterceptPlatformTextInput(
+                interceptor = disableSoftKeyboardInterceptor
+            ) {
+                BasicTextField(
+                    value = textFieldValue,
+                    onValueChange = { newValue ->
+                        val oldValue = textFieldValue
+                        textFieldValue = newValue
+
+                        if (newValue.text != oldValue.text) {
+                            // Text changed - notify parent
+                            onTextChange(newValue.text, newValue.selection.start)
+                        } else if (newValue.selection != oldValue.selection && newValue.selection.collapsed) {
+                            // Only selection changed (user clicked/tapped) - notify parent
+                            onSelectionChange(newValue.selection.start)
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(scrollState)
+                        .onFocusChanged { focusState ->
+                            editorFocused = focusState.isFocused
+                        }
+                        .onSizeChanged { fieldWidthPx = it.width },
+                    enabled = true,
+                    readOnly = false,
+                    textStyle = TextStyle(
+                        color = MaterialTheme.colorScheme.onBackground,
+                        fontSize = fontSize,
+                        lineHeight = fontSize,
+                        fontWeight = FontWeight.Normal,
+                        textAlign = TextAlign.End,
+                        fontFamily = CalculatorFontFamily
+                    ),
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Ascii,
+                        imeAction = ImeAction.None,
+                        autoCorrectEnabled = false,
+                        showKeyboardOnFocus = false
+                    ),
+                    singleLine = true,
+                    interactionSource = interactionSource,
+                    onTextLayout = { textLayoutResult = it },
+                    decorationBox = { innerTextField ->
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.TopEnd
+                        ) { innerTextField() }
+                    },
+                    visualTransformation = if (highlightExpressions) {
+                        SyntaxHighlightingVisualTransformation(
+                            primaryColor = MaterialTheme.colorScheme.primary,
+                            secondaryColor = MaterialTheme.colorScheme.secondary,
+                            tertiaryColor = MaterialTheme.colorScheme.tertiary,
+                            baseColor = MaterialTheme.colorScheme.onBackground,
+                            surfaceVariantColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else {
+                        VisualTransformation.None
                     }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(scrollState)
-                    .focusRequester(focusRequester)
-                    .onSizeChanged { fieldWidthPx = it.width },
-                enabled = true,
-                readOnly = true, // Prevent system keyboard from opening
-                textStyle = TextStyle(
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontSize = fontSize,
-                    lineHeight = fontSize,
-                    fontWeight = FontWeight.Normal,
-                    textAlign = TextAlign.Start,
-                    fontFamily = CalculatorFontFamily
-                ),
-                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Ascii,
-                    imeAction = ImeAction.None,
-                    autoCorrectEnabled = false,
-                    showKeyboardOnFocus = true
-                ),
-                singleLine = true,
-                interactionSource = interactionSource,
-                onTextLayout = { textLayoutResult = it },
-                decorationBox = { innerTextField ->
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.TopStart
-                    ) { innerTextField() }
-                },
-                visualTransformation = if (highlightExpressions) {
-                    SyntaxHighlightingVisualTransformation(
-                        primaryColor = MaterialTheme.colorScheme.primary,
-                        secondaryColor = MaterialTheme.colorScheme.secondary,
-                        tertiaryColor = MaterialTheme.colorScheme.tertiary,
-                        baseColor = MaterialTheme.colorScheme.onBackground,
-                        surfaceVariantColor = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                } else {
-                    VisualTransformation.None
-                }
-            )
+                )
+            }
         }
     }
 }
