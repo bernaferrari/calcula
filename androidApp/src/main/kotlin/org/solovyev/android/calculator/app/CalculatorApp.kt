@@ -3,6 +3,11 @@ package org.solovyev.android.calculator.app
 import android.app.Application
 import android.os.Handler
 import android.os.Looper
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import org.koin.core.component.KoinComponent
@@ -26,6 +31,7 @@ class CalculatorApp : Application(), KoinComponent {
     // Notifier is needed by many components but we don't need to inject it here unless we use it
     
     val handler = Handler(Looper.getMainLooper())
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     override fun onCreate() {
         super.onCreate()
@@ -42,9 +48,14 @@ class CalculatorApp : Application(), KoinComponent {
         // Initialize components
         editor.init()
         display.init()
-
-        // Initialize calculator
-        calculator.evaluate()
+        appScope.launch {
+            engine.initAsync()
+        }
+        appScope.launch {
+            appPreferences.settings.calculateOnFly.collect { enabled ->
+                calculator.setCalculateOnFly(enabled)
+            }
+        }
 
         // Warm up engine in background
         Thread {

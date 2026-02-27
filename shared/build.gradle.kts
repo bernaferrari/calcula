@@ -1,6 +1,6 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.android.library)
+    alias(libs.plugins.android.kotlin.multiplatform.library)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.compose.multiplatform)
@@ -8,10 +8,15 @@ plugins {
 }
 
 kotlin {
-    androidTarget {
+    androidLibrary {
+        namespace = "org.solovyev.android.calculator.shared"
+        compileSdk = 36
+        
         compilerOptions {
             jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
         }
+        
+        minSdk = 26
     }
 
     listOf(
@@ -40,13 +45,12 @@ kotlin {
             implementation(libs.androidx.sqlite.bundled)
 
             // Compose Multiplatform
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
-            implementation(compose.ui)
-            implementation(compose.components.resources)
-            implementation(compose.components.uiToolingPreview)
-            implementation(compose.materialIconsExtended)
+            implementation(libs.compose.runtime)
+            implementation(libs.compose.foundation)
+            implementation(libs.compose.material3)
+            implementation(libs.compose.ui)
+            implementation(libs.compose.components.resources)
+            implementation(libs.androidx.material.icons.extended)
 
             // Internal - exposed as API so consumers can access jscl types
             api(project(":jscl"))
@@ -58,6 +62,11 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
+
+            implementation(libs.jetbrains.navigation3.ui)
+
+            // Material Kolor
+            implementation(libs.materialkolor)
         }
 
         androidMain.dependencies {
@@ -68,32 +77,11 @@ kotlin {
 
             // Koin Android
             implementation(libs.koin.android)
-
-            // Navigation
-            implementation(libs.androidx.navigation.compose)
-            implementation(libs.androidx.lifecycle.viewmodel.navigation3)
-
-            // Material Kolor
-            implementation(libs.materialkolor)
         }
 
         commonTest.dependencies {
             implementation(kotlin("test"))
         }
-    }
-}
-
-android {
-    namespace = "org.solovyev.android.calculator.shared"
-    compileSdk = 36
-
-    defaultConfig {
-        minSdk = 26
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 

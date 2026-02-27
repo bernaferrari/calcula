@@ -44,6 +44,8 @@ class Editor(
     private val _cursorMovedEvents = MutableSharedFlow<CursorMovedEvent>()
     val cursorMovedEvents: SharedFlow<CursorMovedEvent> = _cursorMovedEvents.asSharedFlow()
 
+    private val undoManager = EditorUndoManager()
+
     @get:JvmName("stateProperty")
     val state: EditorState
         get() = _stateFlow.value
@@ -116,7 +118,8 @@ class Editor(
     }
 
     fun setState(state: EditorState) {
-        onTextChanged(state)
+        undoManager.clear()
+        onTextChanged(EditorState.create(state.getTextString(), state.selection))
     }
 
     private fun newSelectionViewState(newSelection: Int): EditorState {
@@ -162,6 +165,7 @@ class Editor(
         }
 
         val newText = text.substring(0, removeStart) + text.substring(selection, text.length)
+        undoManager.recordBeforeChange(state)
         onTextChanged(EditorState.create(newText, removeStart))
         return newText.isNotEmpty()
     }
@@ -171,11 +175,16 @@ class Editor(
     }
 
     fun setText(text: String) {
+        if (state.getTextString() == text && state.selection == text.length) return
+        undoManager.recordBeforeChange(state)
         onTextChanged(EditorState.create(text, text.length))
     }
 
     fun setText(text: String, selection: Int) {
-        onTextChanged(EditorState.create(text, clamp(selection, text)))
+        val boundedSelection = clamp(selection, text)
+        if (state.getTextString() == text && state.selection == boundedSelection) return
+        undoManager.recordBeforeChange(state)
+        onTextChanged(EditorState.create(text, boundedSelection))
     }
 
     fun insert(text: String, selectionOffset: Int = 0) {
@@ -187,6 +196,8 @@ class Editor(
         val newTextLength = text.length + oldText.length
         val newSelection = clamp(text.length + selection + selectionOffset, newTextLength)
         val newText = oldText.substring(0, selection) + text + oldText.substring(selection)
+        if (oldText == newText && state.selection == newSelection) return
+        undoManager.recordBeforeChange(state)
         onTextChanged(EditorState.create(newText, newSelection))
     }
 
@@ -200,6 +211,22 @@ class Editor(
         }
         return onSelectionChanged(EditorState.forNewSelection(state, clamp(selection, state.text)))
     }
+
+    fun undo(): Boolean {
+        val target = undoManager.undo(state) ?: return false
+        onTextChanged(EditorState.create(target.getTextString(), target.selection))
+        return true
+    }
+
+    fun redo(): Boolean {
+        val target = undoManager.redo(state) ?: return false
+        onTextChanged(EditorState.create(target.getTextString(), target.selection))
+        return true
+    }
+
+    fun canUndo(): Boolean = undoManager.canUndo()
+
+    fun canRedo(): Boolean = undoManager.canRedo()
 
     fun onHistoryLoaded(history: RecentHistory) {
         if (!state.isEmpty()) {

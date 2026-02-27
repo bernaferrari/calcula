@@ -121,7 +121,9 @@ class SqrtAlias(parameter: Generic?) : Algebraic("sqrt", if (parameter != null) 
     }
 
     override fun toString(): String {
-        val parameter = requireNotNull(parameters)[0]
+        val params = parameters
+        if (params.isNullOrEmpty()) return name
+        val parameter = params[0]
         return try {
             if (JsclInteger.ONE.negate() == parameter.integerValue()) {
                 Constants.I.name

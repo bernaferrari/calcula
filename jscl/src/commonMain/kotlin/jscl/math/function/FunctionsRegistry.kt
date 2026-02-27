@@ -53,6 +53,12 @@ class FunctionsRegistry : AbstractMathRegistry<Function>() {
         add(Sgn(null))
 
         add(Conjugate(null))
+        add(BitAnd(null, null))
+        add(BitOr(null, null))
+        add(BitXor(null, null))
+        add(BitNot(null))
+        add(BitShiftLeft(null, null))
+        add(BitShiftRight(null, null))
 
         for (name in Comparison.names) {
             add(Comparison(name, null, null))

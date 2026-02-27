@@ -1,12 +1,7 @@
 package org.solovyev.android.calculator
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
 import org.solovyev.android.calculator.buttons.CppButton
 import org.solovyev.android.calculator.buttons.CppSpecialButton
-import org.solovyev.android.calculator.history.History
 import org.solovyev.android.calculator.jscl.JsclOperation
 import org.solovyev.android.calculator.memory.Memory
 
@@ -16,12 +11,8 @@ import org.solovyev.android.calculator.memory.Memory
 class Keyboard(
     private val calculator: Calculator,
     private val editor: Editor,
-    private val history: History,
-    private val memory: Memory,
-    private val appPreferences: AppPreferences
+    private val memory: Memory
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-
     fun buttonPressed(action: String?): Boolean {
         if (action.isNullOrEmpty()) return false
 
@@ -51,7 +42,8 @@ class Keyboard(
             CppSpecialButton.cursor_right -> editor.moveCursorRight()
             CppSpecialButton.cursor_to_start -> editor.setCursorOnStart()
             CppSpecialButton.cursor_to_end -> editor.setCursorOnEnd()
-            CppSpecialButton.history_undo -> scope.launch { history.undo() }
+            CppSpecialButton.history_undo -> editor.undo()
+            CppSpecialButton.history_redo -> editor.redo()
             CppSpecialButton.copy -> displayCopy() // This needs to be handled via Notifier/Clipboard
             CppSpecialButton.memory -> { /* show memory? */ }
             CppSpecialButton.memory_plus -> {

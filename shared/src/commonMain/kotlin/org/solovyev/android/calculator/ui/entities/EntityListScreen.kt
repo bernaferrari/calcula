@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,25 +13,26 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -55,6 +57,7 @@ fun EntityListScreen(
 ) {
     var selectedTab by remember { mutableStateOf(0) }
     var query by rememberSaveable { mutableStateOf("") }
+    val listState = rememberLazyListState()
     val currentTab = tabs.getOrNull(selectedTab)
     val filteredItems = remember(currentTab, query) {
         val items = currentTab?.items.orEmpty()
@@ -69,18 +72,15 @@ fun EntityListScreen(
         }
     }
 
+    LaunchedEffect(selectedTab, query) {
+        listState.scrollToItem(index = 0)
+    }
+
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(text = title) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(Res.string.cpp_back)
-                        )
-                    }
-                }
+            StandardTopAppBar(
+                title = title,
+                onBack = onBack
             )
         },
         floatingActionButton = {
@@ -93,12 +93,21 @@ fun EntityListScreen(
                 .padding(padding)
         ) {
             if (tabs.size > 1) {
-                PrimaryTabRow(selectedTabIndex = selectedTab) {
+                PrimaryScrollableTabRow(
+                    selectedTabIndex = selectedTab,
+                    edgePadding = 12.dp
+                ) {
                     tabs.forEachIndexed { index, tab ->
                         Tab(
                             selected = selectedTab == index,
                             onClick = { selectedTab = index },
-                            text = { Text(text = tab.title) }
+                            text = {
+                                Text(
+                                    text = tab.title,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         )
                     }
                 }
@@ -133,7 +142,7 @@ fun EntityListScreen(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(horizontal = 16.dp, vertical = 10.dp)
             )
 
             if (currentTab == null || filteredItems.isEmpty()) {
@@ -145,16 +154,19 @@ fun EntityListScreen(
                 ) {
                     Text(
                         text = stringResource(Res.string.cpp_entities_empty),
-                        style = MaterialTheme.typography.bodyLarge
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             } else {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    state = listState,
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(filteredItems, key = { it.id }) { item ->
                         EntityRow(item = item)
-                        HorizontalDivider()
                     }
                 }
             }
@@ -166,53 +178,61 @@ fun EntityListScreen(
 private fun EntityRow(item: EntityRowModel) {
     var menuExpanded by remember { mutableStateOf(false) }
 
-    Column(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { item.onUse() }
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clickable { item.onUse() },
+        shape = RoundedCornerShape(18.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        tonalElevation = 1.dp
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth()
+        Column(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = item.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                if (!item.subtitle.isNullOrBlank()) {
-                    Spacer(modifier = Modifier.height(4.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = item.subtitle,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = item.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
-                }
-            }
-            if (item.menuItems.isNotEmpty()) {
-                Box {
-                    IconButton(onClick = { menuExpanded = true }) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = null
+                    if (!item.subtitle.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = item.subtitle,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
-                    DropdownMenu(
-                        expanded = menuExpanded,
-                        onDismissRequest = { menuExpanded = false }
-                    ) {
-                        item.menuItems.forEach { menuItem ->
-                            DropdownMenuItem(
-                                text = { Text(text = menuItem.label) },
-                                onClick = {
-                                    menuExpanded = false
-                                    menuItem.onClick()
-                                }
+                }
+                if (item.menuItems.isNotEmpty()) {
+                    Box {
+                        IconButton(onClick = { menuExpanded = true }) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = null
                             )
+                        }
+                        DropdownMenu(
+                            expanded = menuExpanded,
+                            onDismissRequest = { menuExpanded = false }
+                        ) {
+                            item.menuItems.forEach { menuItem ->
+                                DropdownMenuItem(
+                                    text = { Text(text = menuItem.label) },
+                                    onClick = {
+                                        menuExpanded = false
+                                        menuItem.onClick()
+                                    }
+                                )
+                            }
                         }
                     }
                 }

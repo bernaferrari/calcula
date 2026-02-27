@@ -56,6 +56,7 @@ fun OnboardingScreen(
                     )
                 )
             )
+            .windowInsetsPadding(WindowInsets.safeDrawing)
     ) {
         AnimatedContent(
             targetState = currentStep,
@@ -82,7 +83,6 @@ fun OnboardingScreen(
                     onThemeSelected = { 
                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         selectedTheme = it
-                        onThemeSelected(it)
                     },
                     onContinue = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -92,6 +92,9 @@ fun OnboardingScreen(
                 2 -> TipsStep(
                     onComplete = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        // Persist theme only when finishing onboarding to avoid activity recreation
+                        // while user is still choosing appearance.
+                        onThemeSelected(selectedTheme)
                         onModeSelected(GuiMode.modern) // Always set Modern mode
                         onComplete()
                     }
@@ -230,9 +233,21 @@ private fun ThemeStep(
     onContinue: () -> Unit
 ) {
     val themes = listOf(
-        GuiTheme.material_theme to "System", // stringResource(Res.string.cpp_theme_system),
-        GuiTheme.material_light to "Light", // stringResource(Res.string.cpp_theme_light),
-        GuiTheme.material_dark to "Dark" // stringResource(Res.string.cpp_theme_dark)
+        Triple(
+            GuiTheme.material_theme,
+            "System", // stringResource(Res.string.cpp_theme_system),
+            "Use your device appearance and dynamic colors"
+        ),
+        Triple(
+            GuiTheme.material_light,
+            "Light", // stringResource(Res.string.cpp_theme_light),
+            "Bright surfaces with strong readability"
+        ),
+        Triple(
+            GuiTheme.material_dark,
+            "Dark", // stringResource(Res.string.cpp_theme_dark),
+            "Comfortable in low light and OLED friendly"
+        )
     )
 
     Column(
@@ -260,17 +275,18 @@ private fun ThemeStep(
 
         Spacer(Modifier.height(48.dp))
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        Column(
+            verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            themes.forEach { (theme, name) ->
+            themes.forEach { (theme, name, summary) ->
                 ThemeOption(
                     theme = theme,
                     name = name,
+                    summary = summary,
                     isSelected = selectedTheme == theme,
                     onClick = { onThemeSelected(theme) },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }
@@ -299,56 +315,113 @@ private fun ThemeStep(
 private fun ThemeOption(
     theme: GuiTheme,
     name: String,
+    summary: String,
     isSelected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val backgroundColor = if (isSelected) 
-        MaterialTheme.colorScheme.primaryContainer 
-    else 
-        MaterialTheme.colorScheme.surfaceVariant
+    val containerColor by animateColorAsState(
+        targetValue = if (isSelected) {
+            MaterialTheme.colorScheme.primaryContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerHigh
+        },
+        label = "themeOptionContainer"
+    )
+    val outlineColor by animateColorAsState(
+        targetValue = if (isSelected) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.42f)
+        } else {
+            MaterialTheme.colorScheme.outline.copy(alpha = 0.18f)
+        },
+        label = "themeOptionOutline"
+    )
 
-    Column(
+    Surface(
         modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(backgroundColor)
-            .clickable(onClick = onClick)
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .clip(RoundedCornerShape(18.dp))
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(18.dp),
+        color = containerColor,
+        border = androidx.compose.foundation.BorderStroke(1.dp, outlineColor)
     ) {
-        Box(
+        Row(
             modifier = Modifier
-                .size(60.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(
-                    when (theme) {
-                        GuiTheme.material_dark -> Color(0xFF1C1C1E)
-                        GuiTheme.material_light -> Color(0xFFF2F2F7)
-                        GuiTheme.material_theme -> MaterialTheme.colorScheme.surface
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(
+                        brush = when (theme) {
+                            GuiTheme.material_dark -> Brush.verticalGradient(
+                                colors = listOf(Color(0xFF101114), Color(0xFF23252A))
+                            )
+                            GuiTheme.material_light -> Brush.verticalGradient(
+                                colors = listOf(Color(0xFFFFFFFF), Color(0xFFEAECEF))
+                            )
+                            GuiTheme.material_theme -> Brush.verticalGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
+                                    MaterialTheme.colorScheme.tertiary.copy(alpha = 0.85f)
+                                )
+                            )
+                        }
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                if (theme == GuiTheme.material_dark) {
+                    Box(
+                        modifier = Modifier
+                            .size(14.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFE7EAF0).copy(alpha = 0.92f))
+                    )
+                }
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = name,
+                    fontSize = 16.sp,
+                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                    color = if (isSelected) {
+                        MaterialTheme.colorScheme.onPrimaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
                     }
                 )
-        )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = summary,
+                    fontSize = 13.sp,
+                    color = if (isSelected) {
+                        MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.84f)
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                )
+            }
 
-        Spacer(Modifier.height(12.dp))
-
-        Text(
-            text = name,
-            fontSize = 15.sp,
-            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-            color = if (isSelected) 
-                MaterialTheme.colorScheme.onPrimaryContainer 
-            else 
-                MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        if (isSelected) {
-            Spacer(Modifier.height(8.dp))
-            Icon(
-                imageVector = Icons.Default.Check,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(20.dp)
-            )
+            if (isSelected) {
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier
+                            .size(26.dp)
+                            .padding(5.dp)
+                    )
+                }
+            }
         }
     }
 }

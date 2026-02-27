@@ -38,12 +38,17 @@
     <string name="cpp_back">Back</string>
     <string name="cpp_clear_history">Clear History</string>
     <string name="cpp_history_empty">History is empty</string>
+    <string name="cpp_history_empty_saved">No saved calculations</string>
+    <string name="cpp_history_empty_recent_subtitle">Your recent calculations will appear here automatically.</string>
+    <string name="cpp_history_empty_saved_subtitle">Save important results for quick access later.</string>
+    <string name="cpp_start_calculating">Start Calculating</string>
     <string name="c_copy_expression">Copy expression</string>
     <string name="c_use">Use</string>
     <string name="c_copy_result">Copy result</string>
     <string name="c_save">Save</string>
     <string name="cpp_edit">Edit</string>
     <string name="cpp_delete">Delete</string>
+    <string name="cpp_scientific_functions">Scientific Functions</string>
 
     <!-- About Screen -->
     <string name="cpp_about">About</string>
@@ -83,6 +88,12 @@
     <string name="cpp_precision">Precision</string>
     <string name="cpp_thousands_separator">Thousands separator</string>
     <string name="p_calculations_calculate_on_fly_title">Calculate on the fly</string>
+    <string name="cpp_rpn_mode">RPN mode</string>
+    <string name="cpp_rpn_mode_summary">Use Reverse Polish Notation with stack registers</string>
+    <string name="cpp_tape_mode">Tape mode</string>
+    <string name="cpp_tape_mode_summary">Show a live running paper tape above the editor</string>
+    <string name="cpp_tape">Tape</string>
+    <string name="cpp_clear_tape">Clear tape</string>
     <string name="c_calc_show_release_notes_title">Show release notes</string>
     <string name="c_calc_use_back_button_as_prev_title">Use back as previous</string>
     <string name="cpp_plot_imaginary_part">Plot imaginary part</string>

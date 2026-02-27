@@ -20,8 +20,9 @@ class ToJsclTextProcessor(private val engine: Engine) : TextProcessor<PreparedEx
             undefinedVars: MutableList<IConstant>,
             engine: Engine
         ): PreparedExpression {
+            val normalizedLiterals = ProgrammerLiteralNormalizer.normalize(s)
             return replaceVariables(
-                processExpression(removeWhitespaces(s), engine).toString(),
+                processExpression(removeWhitespaces(normalizedLiterals), engine).toString(),
                 depth,
                 undefinedVars,
                 engine

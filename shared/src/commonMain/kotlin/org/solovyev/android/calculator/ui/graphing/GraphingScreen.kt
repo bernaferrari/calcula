@@ -9,7 +9,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -28,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import org.koin.compose.viewmodel.koinViewModel
+import org.solovyev.android.calculator.ui.StandardTopAppBar
 
 /**
  * Interactive 2D Graphing Screen for Calculator++
@@ -62,21 +62,14 @@ fun GraphingScreen(
     
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Graph") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
+            StandardTopAppBar(
+                title = "Plotter",
+                onBack = onBack,
                 actions = {
                     IconButton(onClick = { viewModel.resetView() }) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
-                            contentDescription = "Reset View"
+                            contentDescription = "Reset view"
                         )
                     }
                 }

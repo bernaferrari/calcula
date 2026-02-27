@@ -1,10 +1,14 @@
-@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 package org.solovyev.android.calculator.ui
 
 import androidx.compose.animation.core.animateFloatAsState
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
@@ -41,7 +45,9 @@ enum class FloatingToolbarColor {
 data class FloatingToolbarItem(
     val label: String,
     val icon: ImageVector? = null,
-    val onClick: () -> Unit
+    val onClick: () -> Unit,
+    val onLongClick: (() -> Unit)? = null,
+    val onDoubleClick: (() -> Unit)? = null
 )
 
 /**
@@ -74,7 +80,7 @@ fun FloatingToolbar(
                 HorizontalFloatingToolbar(
                     expanded = true,
                     colors = colors,
-                    modifier = Modifier.padding(8.dp),
+                    modifier = Modifier.padding(6.dp),
                     content = {
                         items.forEach { item ->
                             FloatingToolbarButton(item)
@@ -86,7 +92,7 @@ fun FloatingToolbar(
                 VerticalFloatingToolbar(
                     expanded = true,
                     colors = colors,
-                    modifier = Modifier.padding(8.dp),
+                    modifier = Modifier.padding(6.dp),
                     content = {
                         items.forEach { item ->
                             FloatingToolbarButton(item)
@@ -104,27 +110,53 @@ private fun FloatingToolbarButton(
     item: FloatingToolbarItem,
     modifier: Modifier = Modifier
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
     if (item.icon != null) {
-        IconButton(
-            onClick = item.onClick,
-            modifier = modifier.size(48.dp)
+        Surface(
+            shape = CircleShape,
+            color = Color.Transparent,
+            modifier = modifier
+                .size(48.dp)
+                .combinedClickable(
+                    interactionSource = interactionSource,
+                    indication = LocalIndication.current,
+                    onClick = item.onClick,
+                    onLongClick = item.onLongClick,
+                    onDoubleClick = item.onDoubleClick
+                )
         ) {
-            Icon(
-                imageVector = item.icon,
-                contentDescription = item.label,
-                modifier = Modifier.size(24.dp)
-            )
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                Icon(
+                    imageVector = item.icon,
+                    contentDescription = item.label,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
     } else {
-        TextButton(
-            onClick = item.onClick,
-            modifier = modifier.height(48.dp)
+        Surface(
+            shape = RoundedCornerShape(999.dp),
+            color = Color.Transparent,
+            modifier = modifier
+                .height(48.dp)
+                .combinedClickable(
+                    interactionSource = interactionSource,
+                    indication = LocalIndication.current,
+                    onClick = item.onClick,
+                    onLongClick = item.onLongClick,
+                    onDoubleClick = item.onDoubleClick
+                )
         ) {
-            Text(
-                text = item.label,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium
-            )
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp)
+            ) {
+                Text(
+                    text = item.label,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
         }
     }
 }
@@ -137,11 +169,15 @@ private fun FloatingToolbarButton(
  */
 @Composable
 fun CalculatorFloatingToolbar(
-    onFunctions: () -> Unit,
+    onPrevious: () -> Unit,
+    onPreviousStart: () -> Unit,
+    onNext: () -> Unit,
+    onNextEnd: () -> Unit,
+    onCopy: () -> Unit,
+    onPaste: () -> Unit,
+    onVariables: () -> Unit,
     onConverter: () -> Unit,
     onGraph: () -> Unit,
-    onHistory: () -> Unit,
-    onSettings: () -> Unit,
     modifier: Modifier = Modifier,
     layout: FloatingToolbarLayout = FloatingToolbarLayout.HORIZONTAL,
     colorScheme: FloatingToolbarColor = FloatingToolbarColor.STANDARD,
@@ -149,8 +185,23 @@ fun CalculatorFloatingToolbar(
 ) {
     val items = listOf(
         FloatingToolbarItem(
-            label = "f(x)",
-            onClick = onFunctions
+            label = "Prev",
+            icon = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+            onClick = onPrevious,
+            onLongClick = onCopy,
+            onDoubleClick = onPreviousStart
+        ),
+        FloatingToolbarItem(
+            label = "Next",
+            icon = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            onClick = onNext,
+            onLongClick = onPaste,
+            onDoubleClick = onNextEnd
+        ),
+        FloatingToolbarItem(
+            label = "Vars",
+            icon = Icons.Default.Functions,
+            onClick = onVariables
         ),
         FloatingToolbarItem(
             label = "Convert",
@@ -159,18 +210,8 @@ fun CalculatorFloatingToolbar(
         ),
         FloatingToolbarItem(
             label = "Graph",
-            icon = Icons.Default.ShowChart,
+            icon = Icons.AutoMirrored.Filled.ShowChart,
             onClick = onGraph
-        ),
-        FloatingToolbarItem(
-            label = "History",
-            icon = Icons.Default.History,
-            onClick = onHistory
-        ),
-        FloatingToolbarItem(
-            label = "Settings",
-            icon = Icons.Default.Settings,
-            onClick = onSettings
         )
     )
 

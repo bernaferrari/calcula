@@ -47,6 +47,7 @@ fun UnifiedButton(
     buttonType: ButtonType,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     icon: Painter? = null,
     onLongClick: (() -> Unit)? = null,
     onSwipeUp: (() -> Unit)? = null,
@@ -54,7 +55,7 @@ fun UnifiedButton(
     onSwipeLeft: (() -> Unit)? = null,
     onSwipeRight: (() -> Unit)? = null,
     fontSize: androidx.compose.ui.unit.TextUnit = 28.sp,
-    cornerRadius: Dp = 20.dp,
+    cornerRadius: Dp = 16.dp,
     fontWeight: FontWeight = FontWeight.Normal
 ) {
     var isPressed by remember { mutableStateOf(false) }
@@ -95,12 +96,14 @@ fun UnifiedButton(
     }
 
     val shape = RoundedCornerShape(cornerRadius)
+    val effectiveTextColor = if (enabled) textColor else textColor.copy(alpha = 0.45f)
+    val effectiveBackgroundColor = if (enabled) backgroundColor else backgroundColor.copy(alpha = 0.55f)
 
     Box(
         modifier = modifier
             .clip(shape)
-            .background(backgroundColor)
-            .pointerInput(onClick, onLongClick, onSwipeUp, onSwipeDown, onSwipeLeft, onSwipeRight) {
+            .background(effectiveBackgroundColor)
+            .pointerInput(enabled, onClick, onLongClick, onSwipeUp, onSwipeDown, onSwipeLeft, onSwipeRight) {
                 awaitEachGesture {
                     val down = awaitFirstDown()
                     isPressed = true
@@ -115,6 +118,11 @@ fun UnifiedButton(
                         val change = event.changes.firstOrNull { it.id == down.id } ?: break
 
                         if (change.changedToUpIgnoreConsumed()) {
+                            if (!enabled) {
+                                HapticHelper.performSwipeFeedback(haptics, hapticsEnabled)
+                                isPressed = false
+                                break
+                            }
                             if (!actionHandled) {
                                 val delta = lastPos - start
                                 val distance = delta.getDistance()
@@ -156,7 +164,7 @@ fun UnifiedButton(
                         }
 
                         // Long press detection
-                        if (!actionHandled && !movedBeyondSlop && onLongClick != null) {
+                        if (enabled && !actionHandled && !movedBeyondSlop && onLongClick != null) {
                             if ((change.uptimeMillis - downTime) >= longPressTimeout) {
                                 actionHandled = true
                                 if (hapticsEnabled) {
@@ -177,7 +185,7 @@ fun UnifiedButton(
             Icon(
                 painter = icon,
                 contentDescription = text.takeIf { it.isNotEmpty() },
-                tint = textColor,
+                tint = effectiveTextColor,
                 modifier = Modifier.size(24.dp)
             )
         } else {
@@ -185,7 +193,7 @@ fun UnifiedButton(
                 text = text,
                 style = TextStyle(
                     fontSize = fontSize,
-                    color = textColor,
+                    color = effectiveTextColor,
                     fontWeight = fontWeight,
                     textAlign = TextAlign.Center,
                     fontFamily = CalculatorFontFamily

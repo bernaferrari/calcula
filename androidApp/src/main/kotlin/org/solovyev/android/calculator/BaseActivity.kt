@@ -25,6 +25,7 @@ abstract class BaseActivity(
     protected val appPreferences: AppPreferences by inject()
     private var paused = true
     private var lastTheme: String = ""
+    private var lastDynamicColor: Boolean = true
     private var lastMode: String = ""
     private var lastLanguage: String = ""
 
@@ -33,6 +34,7 @@ abstract class BaseActivity(
 
         lifecycleScope.launch {
             lastTheme = appPreferences.gui.theme.first()
+            lastDynamicColor = appPreferences.gui.dynamicColor.first()
             lastMode = appPreferences.gui.mode.first()
             lastLanguage = appPreferences.gui.language.first()
             updateOrientation(appPreferences.gui.rotateScreen.first())
@@ -113,6 +115,15 @@ abstract class BaseActivity(
                         if (paused) return@collect
                         if (newTheme != lastTheme) {
                             lastTheme = newTheme
+                            recreate()
+                        }
+                    }
+                }
+                launch {
+                    appPreferences.gui.dynamicColor.collect { enabled ->
+                        if (paused) return@collect
+                        if (enabled != lastDynamicColor) {
+                            lastDynamicColor = enabled
                             recreate()
                         }
                     }

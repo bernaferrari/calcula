@@ -21,9 +21,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.FormatListBulleted
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Calculate
 import androidx.compose.material.icons.rounded.Contrast
+import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.FlashOn
 import androidx.compose.material.icons.rounded.Fullscreen
 import androidx.compose.material.icons.rounded.History
@@ -31,31 +31,30 @@ import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Keyboard
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.LightMode
+import androidx.compose.material.icons.rounded.BrightnessAuto
 import androidx.compose.material.icons.rounded.Numbers
 import androidx.compose.material.icons.rounded.Palette
-import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.PinDrop
 import androidx.compose.material.icons.rounded.ScreenRotation
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Code
-import androidx.compose.material.icons.rounded.ShowChart
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.TextFields
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.Vibration
-import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.Widgets
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.border
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ButtonGroupDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -63,7 +62,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
+import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -79,6 +83,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -88,6 +94,7 @@ import androidx.compose.ui.window.DialogProperties
 import org.jetbrains.compose.resources.stringResource
 import org.solovyev.android.calculator.ui.Res
 import org.solovyev.android.calculator.ui.* // For c_var_my etc if needed, but Res properties might be nested?
+import org.solovyev.android.calculator.ui.theme.platformDynamicColorScheme
 // import org.solovyev.android.calculator.ui.generated.resources.* // Removed
 
 // ============================================================================
@@ -130,6 +137,12 @@ enum class AppTheme(val displayName: String) {
     METRO_PURPLE("Metro Purple")
 }
 
+enum class AppearanceMode(val displayName: String) {
+    SYSTEM("System"),
+    LIGHT("Light"),
+    DARK("Dark")
+}
+
 enum class SimpleTheme(val displayName: String) {
     DEFAULT("Default"),
     MATERIAL_DARK("Material Dark"),
@@ -144,8 +157,10 @@ data class SettingsUiState(
     val outputNotation: OutputNotation = OutputNotation.PLAIN,
     val outputPrecision: Int = 5,
     val outputSeparator: Char = ' ',
+    val appearanceMode: AppearanceMode = AppearanceMode.SYSTEM,
     val theme: AppTheme = AppTheme.MATERIAL_YOU,
     val themeSeedColor: Int = 0xFF13ABF1.toInt(),
+    val dynamicColorEnabled: Boolean = true,
     val isAmoledTheme: Boolean = false,
     val languageCode: String = "system",
     val vibrateOnKeypress: Boolean = true,
@@ -153,11 +168,12 @@ data class SettingsUiState(
     val highlightExpressions: Boolean = true,
     val rotateScreen: Boolean = true,
     val keepScreenOn: Boolean = true,
-    val onscreenShowAppIcon: Boolean = true,
-    val onscreenTheme: SimpleTheme = SimpleTheme.DEFAULT,
     val widgetTheme: SimpleTheme = SimpleTheme.DEFAULT,
     val calculateOnFly: Boolean = true,
+    val rpnMode: Boolean = false,
+    val tapeMode: Boolean = false,
     val showReleaseNotes: Boolean = true,
+    val showCalculationLatency: Boolean = false,
     val useBackAsPrevious: Boolean = false,
     val plotImag: Boolean = false,
     val latexMode: Boolean = false,
@@ -170,9 +186,22 @@ enum class SettingsDestination {
     MAIN,
     NUMBER_FORMAT,
     APPEARANCE,
-    ONSCREEN,
     WIDGET,
     OTHER
+}
+
+private val SettingsContentPadding = PaddingValues(
+    start = 16.dp,
+    top = 20.dp,
+    end = 16.dp,
+    bottom = 20.dp
+)
+
+private enum class PreferencePosition {
+    SINGLE,
+    TOP,
+    MIDDLE,
+    BOTTOM
 }
 
 // ============================================================================
@@ -186,7 +215,9 @@ interface SettingsActions {
     fun setOutputNotation(notation: OutputNotation)
     fun setOutputPrecision(precision: Int)
     fun setOutputSeparator(separator: Char)
+    fun setAppearanceMode(mode: AppearanceMode)
     fun setTheme(theme: AppTheme)
+    fun setDynamicColor(enabled: Boolean)
     fun setThemeSeedColor(color: Int)
     fun setIsAmoledTheme(enabled: Boolean)
     fun setLanguage(code: String)
@@ -195,11 +226,12 @@ interface SettingsActions {
     fun setHighlightExpressions(enabled: Boolean)
     fun setRotateScreen(enabled: Boolean)
     fun setKeepScreenOn(enabled: Boolean)
-    fun setOnscreenShowAppIcon(enabled: Boolean)
-    fun setOnscreenTheme(theme: SimpleTheme)
     fun setWidgetTheme(theme: SimpleTheme)
     fun setCalculateOnFly(enabled: Boolean)
+    fun setRpnMode(enabled: Boolean)
+    fun setTapeMode(enabled: Boolean)
     fun setShowReleaseNotes(enabled: Boolean)
+    fun setShowCalculationLatency(enabled: Boolean)
     fun setUseBackAsPrevious(enabled: Boolean)
     fun setPlotImag(enabled: Boolean)
     fun setLatexMode(enabled: Boolean)
@@ -245,18 +277,15 @@ fun SettingsScreen(
             state = state,
             languages = languages,
             onLanguageChange = actions::setLanguage,
+            onAppearanceModeChange = actions::setAppearanceMode,
             onThemeChange = actions::setTheme,
+            onDynamicColorChange = actions::setDynamicColor,
             onVibrateChange = actions::setVibrateOnKeypress,
             onHighContrastChange = actions::setHighContrast,
             onHighlightExpressionsChange = actions::setHighlightExpressions,
             onRotateChange = actions::setRotateScreen,
             onKeepScreenOnChange = actions::setKeepScreenOn,
             actions = actions
-        )
-        SettingsDestination.ONSCREEN -> OnscreenScreen(
-            state = state,
-            onShowAppIconChange = actions::setOnscreenShowAppIcon,
-            onThemeChange = actions::setOnscreenTheme
         )
         SettingsDestination.WIDGET -> WidgetScreen(
             state = state,
@@ -265,7 +294,10 @@ fun SettingsScreen(
         SettingsDestination.OTHER -> OtherScreen(
             state = state,
             onCalculateOnFlyChange = actions::setCalculateOnFly,
+            onRpnModeChange = actions::setRpnMode,
+            onTapeModeChange = actions::setTapeMode,
             onShowReleaseNotesChange = actions::setShowReleaseNotes,
+            onShowCalculationLatencyChange = actions::setShowCalculationLatency,
             onUseBackAsPreviousChange = actions::setUseBackAsPrevious,
             onPlotImagChange = actions::setPlotImag,
             onLatexModeChange = actions::setLatexMode
@@ -286,19 +318,9 @@ private fun MainSettingsScreen(
     onOpenAbout: () -> Unit,
     onSupportProject: () -> Unit
 ) {
-    var listDialog by remember { mutableStateOf<ListDialogState?>(null) }
-
-    val modeOptions = CalculatorMode.entries.map { it.displayName }
-    val angleOptions = AngleUnit.entries
-    val radixOptions = NumeralBase.entries
-
-    val modeTitle = stringResource(Res.string.cpp_mode)
-    val anglesTitle = stringResource(Res.string.cpp_angles)
-    val radixTitle = stringResource(Res.string.cpp_radix)
-
     LazyColumn(
-        modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(16.dp),
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = SettingsContentPadding,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Support Project Card
@@ -311,50 +333,44 @@ private fun MainSettingsScreen(
         // Calculator Section
         item {
             PreferenceGroup(title = stringResource(Res.string.cpp_prefs_basic)) {
-                PreferenceItem(
+                InlineChoicePreference(
                     icon = Icons.Rounded.Calculate,
                     title = stringResource(Res.string.cpp_mode),
                     summary = state.mode.displayName,
-                    onClick = {
-                        listDialog = ListDialogState(
-                            title = modeTitle,
-                            options = modeOptions,
-                            selectedIndex = CalculatorMode.entries.indexOf(state.mode),
-                            onSelected = { index -> onModeChange(CalculatorMode.entries[index]) }
-                        )
+                    options = CalculatorMode.entries.map { it.displayName },
+                    selectedIndex = CalculatorMode.entries.indexOf(state.mode).coerceAtLeast(0),
+                    position = PreferencePosition.TOP,
+                    onOptionSelected = { index ->
+                        onModeChange(CalculatorMode.entries[index])
                     }
                 )
-                PreferenceItem(
+                InlineChoicePreference(
                     icon = Icons.Rounded.PinDrop,
                     title = stringResource(Res.string.cpp_angles),
                     summary = state.angleUnit.displayName,
-                    onClick = {
-                        listDialog = ListDialogState(
-                            title = anglesTitle,
-                            options = angleOptions.map { it.displayName },
-                            selectedIndex = angleOptions.indexOf(state.angleUnit),
-                            onSelected = { index -> onAngleUnitChange(angleOptions[index]) }
-                        )
+                    options = listOf("DEG", "RAD", "GRAD", "TURN"),
+                    selectedIndex = AngleUnit.entries.indexOf(state.angleUnit).coerceAtLeast(0),
+                    position = PreferencePosition.MIDDLE,
+                    onOptionSelected = { index ->
+                        onAngleUnitChange(AngleUnit.entries[index])
                     }
                 )
-                PreferenceItem(
+                InlineChoicePreference(
                     icon = Icons.Rounded.Numbers,
                     title = stringResource(Res.string.cpp_radix),
                     summary = state.numeralBase.displayName,
-                    onClick = {
-                        listDialog = ListDialogState(
-                            title = radixTitle,
-                            options = radixOptions.map { it.displayName },
-                            selectedIndex = radixOptions.indexOf(state.numeralBase),
-                            onSelected = { index -> onNumeralBaseChange(radixOptions[index]) }
-                        )
+                    options = listOf("DEC", "HEX", "OCT", "BIN"),
+                    selectedIndex = NumeralBase.entries.indexOf(state.numeralBase).coerceAtLeast(0),
+                    position = PreferencePosition.MIDDLE,
+                    onOptionSelected = { index ->
+                        onNumeralBaseChange(NumeralBase.entries[index])
                     }
                 )
                 PreferenceItem(
                     icon = Icons.AutoMirrored.Rounded.FormatListBulleted,
                     title = stringResource(Res.string.cpp_number_format),
                     summary = stringResource(Res.string.cpp_examples),
-                    showArrow = true,
+                    position = PreferencePosition.BOTTOM,
                     onClick = { onNavigate(SettingsDestination.NUMBER_FORMAT) }
                 )
             }
@@ -367,27 +383,20 @@ private fun MainSettingsScreen(
                     icon = Icons.Rounded.Palette,
                     title = stringResource(Res.string.cpp_appearance),
                     summary = stringResource(Res.string.cpp_theme),
-                    showArrow = true,
+                    position = PreferencePosition.TOP,
                     onClick = { onNavigate(SettingsDestination.APPEARANCE) }
-                )
-                PreferenceItem(
-                    icon = Icons.Rounded.PhoneAndroid,
-                    title = stringResource(Res.string.cpp_floating_calculator),
-                    summary = stringResource(Res.string.cpp_theme),
-                    showArrow = true,
-                    onClick = { onNavigate(SettingsDestination.ONSCREEN) }
                 )
                 PreferenceItem(
                     icon = Icons.Rounded.Widgets,
                     title = stringResource(Res.string.cpp_widget),
                     summary = stringResource(Res.string.cpp_theme),
-                    showArrow = true,
+                    position = PreferencePosition.MIDDLE,
                     onClick = { onNavigate(SettingsDestination.WIDGET) }
                 )
                 PreferenceItem(
                     icon = Icons.Rounded.Settings,
                     title = stringResource(Res.string.cpp_other),
-                    showArrow = true,
+                    position = PreferencePosition.BOTTOM,
                     onClick = { onNavigate(SettingsDestination.OTHER) }
                 )
             }
@@ -399,36 +408,23 @@ private fun MainSettingsScreen(
                 PreferenceItem(
                     icon = Icons.Rounded.FlashOn,
                     title = stringResource(Res.string.cpp_introduction),
-                    showArrow = true,
+                    position = PreferencePosition.TOP,
                     onClick = onStartWizard
                 )
                 PreferenceItem(
                     icon = Icons.Rounded.Info,
                     title = stringResource(Res.string.cpp_report_problem),
-                    showArrow = true,
+                    position = PreferencePosition.MIDDLE,
                     onClick = onReportBug
                 )
                 PreferenceItem(
                     icon = Icons.Rounded.Info,
                     title = stringResource(Res.string.cpp_about),
-                    showArrow = true,
+                    position = PreferencePosition.BOTTOM,
                     onClick = onOpenAbout
                 )
             }
         }
-    }
-
-    listDialog?.let { dialog ->
-        SelectionDialog(
-            title = dialog.title,
-            options = dialog.options,
-            selectedIndex = dialog.selectedIndex,
-            onDismiss = { listDialog = null },
-            onSelected = {
-                dialog.onSelected(it)
-                listDialog = null
-            }
-        )
     }
 }
 
@@ -451,8 +447,8 @@ private fun NumberFormatScreen(
     val notationOptions = OutputNotation.entries
 
     LazyColumn(
-        modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(16.dp),
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = SettingsContentPadding,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
@@ -461,6 +457,7 @@ private fun NumberFormatScreen(
                     icon = Icons.Rounded.Tune,
                     title = stringResource(Res.string.cpp_format),
                     summary = state.outputNotation.displayName,
+                    position = PreferencePosition.TOP,
                     onClick = {
                         listDialog = ListDialogState(
                             title = "Format",
@@ -474,12 +471,14 @@ private fun NumberFormatScreen(
                     icon = Icons.Rounded.Numbers,
                     title = stringResource(Res.string.cpp_precision),
                     summary = state.outputPrecision.toString(),
+                    position = PreferencePosition.MIDDLE,
                     onClick = { precisionDialog = true }
                 )
                 PreferenceItem(
                     icon = Icons.Rounded.TextFields,
                     title = stringResource(Res.string.cpp_thousands_separator),
                     summary = separatorSummary(state.outputSeparator),
+                    position = PreferencePosition.BOTTOM,
                     onClick = {
                         val selectedIndex = separatorValues.indexOf(state.outputSeparator).coerceAtLeast(0)
                         listDialog = ListDialogState(
@@ -496,17 +495,19 @@ private fun NumberFormatScreen(
         // Examples Card
         item {
             PreferenceGroup(title = stringResource(Res.string.cpp_examples)) {
-                ListItem(
-                    headlineContent = {
-                        Text(
-                            text = state.numberFormatExamples,
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontFamily = FontFamily.Monospace,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    },
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent)
-                )
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = preferenceItemShape(PreferencePosition.SINGLE),
+                    color = MaterialTheme.colorScheme.surfaceContainerLow
+                ) {
+                    Text(
+                        text = state.numberFormatExamples,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontFamily = FontFamily.Monospace,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)
+                    )
+                }
             }
         }
     }
@@ -545,7 +546,9 @@ private fun AppearanceScreen(
     state: SettingsUiState,
     languages: List<Language>,
     onLanguageChange: (String) -> Unit,
+    onAppearanceModeChange: (AppearanceMode) -> Unit,
     onThemeChange: (AppTheme) -> Unit,
+    onDynamicColorChange: (Boolean) -> Unit,
     onVibrateChange: (Boolean) -> Unit,
     onHighContrastChange: (Boolean) -> Unit,
     onHighlightExpressionsChange: (Boolean) -> Unit,
@@ -554,19 +557,10 @@ private fun AppearanceScreen(
     actions: SettingsActions // Access to new actions
 ) {
     var listDialog by remember { mutableStateOf<ListDialogState?>(null) }
-    
-    // Simplified Theme Options for Light/Dark/System
-    // We Map MATERIAL_YOU -> System, MATERIAL_LIGHT -> Light, MATERIAL_DARK -> Dark
-    // ignoring other legacy themes for this selector
-    val themeModeOptions = listOf(
-        AppTheme.MATERIAL_YOU to "System",
-        AppTheme.MATERIAL_LIGHT to "Light",
-        AppTheme.MATERIAL_DARK to "Dark"
-    )
 
     LazyColumn(
-        modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(16.dp),
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = SettingsContentPadding,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
@@ -575,27 +569,25 @@ private fun AppearanceScreen(
 
         item {
             PreferenceGroup(title = stringResource(Res.string.cpp_appearance)) {
-                // Color Picker
                 ThemeSelector(
                     currentSeedColor = state.themeSeedColor,
-                    isAmoled = state.isAmoledTheme,
+                    dynamicColorEnabled = state.dynamicColorEnabled,
+                    onDynamicColorChange = onDynamicColorChange,
                     onSeedColorChange = actions::setThemeSeedColor,
-                    onAmoledChange = { actions.setIsAmoledTheme(it) }
+                    position = PreferencePosition.TOP
                 )
 
-                HorizontalDivider()
-
-                // Light/Dark Mode
-                 PreferenceItem(
-                    icon = Icons.Rounded.LightMode,
-                    title = "Mode",
-                    summary = themeModeOptions.find { it.first == state.theme }?.second ?: "Dark",
-                    onClick = {
-                        listDialog = ListDialogState(
-                            title = "Mode",
-                            options = themeModeOptions.map { it.second },
-                            selectedIndex = themeModeOptions.indexOfFirst { it.first == state.theme }.coerceAtLeast(0),
-                            onSelected = { index -> onThemeChange(themeModeOptions[index].first) }
+                AppearanceModeSegmentedPreference(
+                    selectedMode = state.appearanceMode,
+                    position = if (languages.isNotEmpty()) PreferencePosition.MIDDLE else PreferencePosition.BOTTOM,
+                    onModeSelected = { mode ->
+                        onAppearanceModeChange(mode)
+                        onThemeChange(
+                            when (mode) {
+                                AppearanceMode.SYSTEM -> AppTheme.MATERIAL_YOU
+                                AppearanceMode.LIGHT -> AppTheme.MATERIAL_LIGHT
+                                AppearanceMode.DARK -> AppTheme.MATERIAL_DARK
+                            }
                         )
                     }
                 )
@@ -605,6 +597,7 @@ private fun AppearanceScreen(
                         icon = Icons.Rounded.Language,
                         title = stringResource(Res.string.cpp_language),
                         summary = languages.firstOrNull { it.code == state.languageCode }?.displayName ?: "System",
+                        position = PreferencePosition.BOTTOM,
                         onClick = {
                             listDialog = ListDialogState(
                                 title = "Language",
@@ -624,12 +617,14 @@ private fun AppearanceScreen(
                     icon = Icons.Rounded.Vibration,
                     title = stringResource(Res.string.cpp_prefs_vibrate_on_keypress),
                     checked = state.vibrateOnKeypress,
+                    position = PreferencePosition.TOP,
                     onCheckedChange = onVibrateChange
                 )
                 SwitchPreference(
                     icon = Icons.Rounded.Contrast,
                     title = stringResource(Res.string.cpp_high_contrast_text),
                     checked = state.highContrast,
+                    position = PreferencePosition.MIDDLE,
                     onCheckedChange = onHighContrastChange
                 )
                 SwitchPreference(
@@ -637,18 +632,21 @@ private fun AppearanceScreen(
                     title = stringResource(Res.string.cpp_highlight_expressions),
                     summary = stringResource(Res.string.cpp_highlight_expressions_summary),
                     checked = state.highlightExpressions,
+                    position = PreferencePosition.MIDDLE,
                     onCheckedChange = onHighlightExpressionsChange
                 )
                 SwitchPreference(
                     icon = Icons.Rounded.ScreenRotation,
                     title = stringResource(Res.string.cpp_prefs_auto_rotate_screen),
                     checked = state.rotateScreen,
+                    position = PreferencePosition.MIDDLE,
                     onCheckedChange = onRotateChange
                 )
                 SwitchPreference(
                     icon = Icons.Rounded.Fullscreen,
                     title = stringResource(Res.string.cpp_prefs_keep_screen_on),
                     checked = state.keepScreenOn,
+                    position = PreferencePosition.BOTTOM,
                     onCheckedChange = onKeepScreenOnChange
                 )
             }
@@ -670,143 +668,140 @@ private fun AppearanceScreen(
 }
 
 @Composable
-private fun ThemeSelector(
-    currentSeedColor: Int,
-    isAmoled: Boolean,
-    onSeedColorChange: (Int) -> Unit,
-    onAmoledChange: (Boolean) -> Unit
+private fun AppearanceModeSegmentedPreference(
+    selectedMode: AppearanceMode,
+    position: PreferencePosition,
+    onModeSelected: (AppearanceMode) -> Unit
 ) {
-    val colors = listOf(
-        0xFF13ABF1, // Blue (Default)
-        0xFFE91E63, // Pink
-        0xFFF44336, // Red
-        0xFFFF9800, // Orange
-        0xFF4CAF50, // Green
-        0xFF009688, // Teal
-        0xFF673AB7, // Deep Purple
-        0xFF3F51B5, // Indigo
-        0xFF795548, // Brown
-        0xFF607D8B  // Blue Grey
+    val options = listOf(
+        Triple(AppearanceMode.SYSTEM, "System", Icons.Rounded.BrightnessAuto),
+        Triple(AppearanceMode.LIGHT, "Light", Icons.Rounded.LightMode),
+        Triple(AppearanceMode.DARK, "Dark", Icons.Rounded.DarkMode)
     )
-
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text(
-            text = "Color Scheme",
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            items(colors) { colorInt ->
-                val color = Color(colorInt)
-                val isSelected = currentSeedColor == colorInt.toInt()
-                
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(color)
-                        .clickable { onSeedColorChange(colorInt.toInt()) }
-                        .then(
-                            if (isSelected) Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
-                            else Modifier
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (isSelected) {
-                        Icon(
-                            imageVector = Icons.Rounded.Check,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = preferenceItemShape(position),
+        color = MaterialTheme.colorScheme.surfaceContainerLow
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                options.forEachIndexed { index, (mode, label, icon) ->
+                    SegmentedButton(
+                        selected = selectedMode == mode,
+                        onClick = { onModeSelected(mode) },
+                        shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
+                        icon = {
+                            SegmentedButtonDefaults.Icon(active = selectedMode == mode) {
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(SegmentedButtonDefaults.IconSize)
+                                )
+                            }
+                        }
+                    ) {
+                        Text(label)
                     }
                 }
             }
         }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        Row(
-            modifier = Modifier.fillMaxWidth().clickable { onAmoledChange(!isAmoled) },
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "AMOLED Black",
-                    style = MaterialTheme.typography.bodyLarge
-                )
-                Text(
-                    text = "Pure black background for OLED screens",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Switch(
-                checked = isAmoled,
-                onCheckedChange = onAmoledChange
-            )
-        }
     }
 }
 
-// ============================================================================
-// ONSCREEN SCREEN
-// ============================================================================
-
 @Composable
-private fun OnscreenScreen(
-    state: SettingsUiState,
-    onShowAppIconChange: (Boolean) -> Unit,
-    onThemeChange: (SimpleTheme) -> Unit
+private fun ThemeSelector(
+    currentSeedColor: Int,
+    dynamicColorEnabled: Boolean,
+    onDynamicColorChange: (Boolean) -> Unit,
+    onSeedColorChange: (Int) -> Unit,
+    position: PreferencePosition = PreferencePosition.SINGLE
 ) {
-    var listDialog by remember { mutableStateOf<ListDialogState?>(null) }
-    val simpleThemes = SimpleTheme.entries
+    val colors = listOf(
+        0xFF13ABF1,
+        0xFFE91E63,
+        0xFFF44336,
+        0xFFFF9800,
+        0xFF4CAF50,
+        0xFF009688,
+        0xFF673AB7,
+        0xFF3F51B5
+    )
+    val dynamicColorAvailable = platformDynamicColorScheme(darkTheme = false) != null
 
-    LazyColumn(
+    Surface(
         modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        shape = preferenceItemShape(position),
+        color = MaterialTheme.colorScheme.surfaceContainerLow
     ) {
-        item {
-            PreferenceGroup(title = stringResource(Res.string.cpp_floating_calculator)) {
-                SwitchPreference(
-                    icon = Icons.Rounded.Visibility,
-                    title = stringResource(Res.string.cpp_enable),
-                    checked = state.onscreenShowAppIcon,
-                    onCheckedChange = onShowAppIconChange
-                )
-                PreferenceItem(
-                    icon = Icons.Rounded.Palette,
-                    title = stringResource(Res.string.cpp_theme),
-                    summary = state.onscreenTheme.displayName,
-                    enabled = state.onscreenShowAppIcon,
-                    onClick = {
-                        listDialog = ListDialogState(
-                            title = "Theme",
-                            options = simpleThemes.map { it.displayName },
-                            selectedIndex = simpleThemes.indexOf(state.onscreenTheme).coerceAtLeast(0),
-                            onSelected = { index -> onThemeChange(simpleThemes[index]) }
-                        )
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                item {
+                    val dynamicSelected = dynamicColorEnabled
+                    Surface(
+                        modifier = Modifier
+                            .size(width = 64.dp, height = 44.dp)
+                            .clip(RoundedCornerShape(if (dynamicSelected) 16.dp else 12.dp))
+                            .clickable(enabled = dynamicColorAvailable, role = Role.Button) {
+                                onDynamicColorChange(true)
+                            },
+                        color = if (dynamicColorAvailable) {
+                            MaterialTheme.colorScheme.primary.copy(alpha = if (dynamicSelected) 1f else 0.55f)
+                        } else {
+                            MaterialTheme.colorScheme.surfaceContainerHighest
+                        }
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(
+                                text = "Auto",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = if (dynamicColorAvailable) {
+                                    MaterialTheme.colorScheme.onPrimary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                }
+                            )
+                        }
                     }
+                }
+                items(colors) { colorInt ->
+                    val color = Color(colorInt)
+                    val isSelected = !dynamicColorEnabled && currentSeedColor == colorInt.toInt()
+
+                    Surface(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(RoundedCornerShape(if (isSelected) 16.dp else 12.dp))
+                            .clickable(role = Role.Button) {
+                                onDynamicColorChange(false)
+                                onSeedColorChange(colorInt.toInt())
+                            }
+                            .then(if (isSelected) Modifier.border(2.dp, MaterialTheme.colorScheme.onSurface, RoundedCornerShape(16.dp)) else Modifier),
+                        color = color
+                    ) {
+                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                            if (isSelected) {
+                            Icon(
+                                imageVector = Icons.Rounded.Check,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                    }
+                }
+            }
+            if (!dynamicColorAvailable) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Dynamic colors require Android 12+",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
-    }
-
-    listDialog?.let { dialog ->
-        SelectionDialog(
-            title = dialog.title,
-            options = dialog.options,
-            selectedIndex = dialog.selectedIndex,
-            onDismiss = { listDialog = null },
-            onSelected = {
-                dialog.onSelected(it)
-                listDialog = null
-            }
-        )
     }
 }
 
@@ -823,8 +818,8 @@ private fun WidgetScreen(
     val simpleThemes = SimpleTheme.entries
 
     LazyColumn(
-        modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(16.dp),
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = SettingsContentPadding,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
@@ -833,6 +828,7 @@ private fun WidgetScreen(
                     icon = Icons.Rounded.Palette,
                     title = stringResource(Res.string.cpp_theme),
                     summary = state.widgetTheme.displayName,
+                    position = PreferencePosition.SINGLE,
                     onClick = {
                         listDialog = ListDialogState(
                             title = "Theme",
@@ -868,14 +864,17 @@ private fun WidgetScreen(
 private fun OtherScreen(
     state: SettingsUiState,
     onCalculateOnFlyChange: (Boolean) -> Unit,
+    onRpnModeChange: (Boolean) -> Unit,
+    onTapeModeChange: (Boolean) -> Unit,
     onShowReleaseNotesChange: (Boolean) -> Unit,
+    onShowCalculationLatencyChange: (Boolean) -> Unit,
     onUseBackAsPreviousChange: (Boolean) -> Unit,
     onPlotImagChange: (Boolean) -> Unit,
     onLatexModeChange: (Boolean) -> Unit
 ) {
     LazyColumn(
-        modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(16.dp),
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = SettingsContentPadding,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
@@ -884,25 +883,53 @@ private fun OtherScreen(
                     icon = Icons.Rounded.Speed,
                     title = stringResource(Res.string.p_calculations_calculate_on_fly_title),
                     checked = state.calculateOnFly,
+                    position = PreferencePosition.TOP,
                     onCheckedChange = onCalculateOnFlyChange
+                )
+                SwitchPreference(
+                    icon = Icons.Rounded.Calculate,
+                    title = stringResource(Res.string.cpp_rpn_mode),
+                    summary = stringResource(Res.string.cpp_rpn_mode_summary),
+                    checked = state.rpnMode,
+                    position = PreferencePosition.MIDDLE,
+                    onCheckedChange = onRpnModeChange
+                )
+                SwitchPreference(
+                    icon = Icons.Rounded.History,
+                    title = stringResource(Res.string.cpp_tape_mode),
+                    summary = stringResource(Res.string.cpp_tape_mode_summary),
+                    checked = state.tapeMode,
+                    position = PreferencePosition.MIDDLE,
+                    onCheckedChange = onTapeModeChange
                 )
                 SwitchPreference(
                     icon = Icons.Rounded.History,
                     title = stringResource(Res.string.c_calc_show_release_notes_title),
                     checked = state.showReleaseNotes,
+                    position = PreferencePosition.MIDDLE,
                     onCheckedChange = onShowReleaseNotesChange
+                )
+                SwitchPreference(
+                    icon = Icons.Rounded.Speed,
+                    title = "Show calculation latency",
+                    summary = "Display timing diagnostics for calculations",
+                    checked = state.showCalculationLatency,
+                    position = PreferencePosition.MIDDLE,
+                    onCheckedChange = onShowCalculationLatencyChange
                 )
                 SwitchPreference(
                     icon = Icons.Rounded.Keyboard,
                     title = stringResource(Res.string.c_calc_use_back_button_as_prev_title),
                     checked = state.useBackAsPrevious,
+                    position = PreferencePosition.MIDDLE,
                     onCheckedChange = onUseBackAsPreviousChange
                 )
                 SwitchPreference(
-                    icon = Icons.Rounded.ShowChart,
+                    icon = Icons.Rounded.Calculate,
                     title = stringResource(Res.string.cpp_plot_imaginary_part),
                     summary = stringResource(Res.string.cpp_plot_imaginary_part_summary),
                     checked = state.plotImag,
+                    position = PreferencePosition.MIDDLE,
                     onCheckedChange = onPlotImagChange
                 )
                 SwitchPreference(
@@ -910,6 +937,7 @@ private fun OtherScreen(
                     title = "LaTeX Output Mode",
                     summary = "Generate LaTeX syntax instead of calculations",
                     checked = state.latexMode,
+                    position = PreferencePosition.BOTTOM,
                     onCheckedChange = onLatexModeChange
                 )
             }
@@ -925,7 +953,7 @@ private fun OtherScreen(
 private fun SupportProjectCard(onSupportProject: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraLarge,
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer
         ),
@@ -969,8 +997,110 @@ private fun SupportProjectCard(onSupportProject: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun PreferenceGroup(
+private fun InlineChoicePreference(
+    icon: ImageVector,
+    title: String,
+    summary: String?,
+    options: List<String>,
+    selectedIndex: Int,
+    position: PreferencePosition = PreferencePosition.SINGLE,
+    onOptionSelected: (Int) -> Unit
+) {
+    val resolvedSelectedIndex = selectedIndex.coerceIn(0, (options.size - 1).coerceAtLeast(0))
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(preferenceItemShape(position)),
+        shape = preferenceItemShape(position),
+        color = MaterialTheme.colorScheme.surfaceContainerLow
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Surface(
+                    modifier = Modifier.size(40.dp),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium
+                    )
+                    if (!summary.isNullOrBlank()) {
+                        Text(
+                            text = summary,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.45f),
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.72f)
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
+                ) {
+                    options.forEachIndexed { index, label ->
+                        ToggleButton(
+                            checked = resolvedSelectedIndex == index,
+                            onCheckedChange = { onOptionSelected(index) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .semantics { role = Role.RadioButton },
+                            shapes = when (index) {
+                                0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                                options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                                else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                            },
+                            colors = ToggleButtonDefaults.toggleButtonColors(
+                                checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        ) {
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.labelLarge.copy(
+                                    fontSize = if (options.size >= 4) 12.sp else 13.sp
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PreferenceGroup(
     title: String,
     content: @Composable () -> Unit
 ) {
@@ -979,133 +1109,138 @@ fun PreferenceGroup(
             text = title,
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
+            modifier = Modifier.padding(start = 12.dp, bottom = 8.dp)
         )
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.extraLarge,
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-            )
+        Column(
+            verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-            Column {
-                content()
-            }
+            content()
         }
     }
 }
 
 @Composable
-fun PreferenceItem(
+private fun PreferenceItem(
     icon: ImageVector,
     title: String,
     summary: String? = null,
-    showArrow: Boolean = false,
     enabled: Boolean = true,
+    position: PreferencePosition = PreferencePosition.SINGLE,
     onClick: () -> Unit
 ) {
-    ListItem(
+    Surface(
         modifier = Modifier
-            .clip(MaterialTheme.shapes.medium)
+            .fillMaxWidth()
+            .clip(preferenceItemShape(position))
             .clickable(enabled = enabled, onClick = onClick)
             .alpha(if (enabled) 1f else 0.5f),
-        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-        leadingContent = {
-            Surface(
-                modifier = Modifier.size(40.dp),
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
+        shape = preferenceItemShape(position),
+        color = MaterialTheme.colorScheme.surfaceContainerLow
+    ) {
+        ListItem(
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+            leadingContent = {
+                Surface(
+                    modifier = Modifier.size(40.dp),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            },
+            headlineContent = {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium
+                )
+            },
+            supportingContent = if (summary != null) {
+                {
+                    Text(
+                        text = summary,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-            }
-        },
-        headlineContent = {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium
-            )
-        },
-        supportingContent = if (summary != null) {
-            {
-                Text(
-                    text = summary,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        } else null,
-        trailingContent = if (showArrow) {
-            {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        } else null
-    )
+            } else null
+        )
+    }
 }
 
 @Composable
-fun SwitchPreference(
+private fun SwitchPreference(
     icon: ImageVector,
     title: String,
     summary: String? = null,
     checked: Boolean,
+    position: PreferencePosition = PreferencePosition.SINGLE,
     onCheckedChange: (Boolean) -> Unit
 ) {
-    ListItem(
+    Surface(
         modifier = Modifier
-            .clip(MaterialTheme.shapes.medium)
+            .fillMaxWidth()
+            .clip(preferenceItemShape(position))
             .clickable { onCheckedChange(!checked) },
-        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-        leadingContent = {
-            Surface(
-                modifier = Modifier.size(40.dp),
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
+        shape = preferenceItemShape(position),
+        color = MaterialTheme.colorScheme.surfaceContainerLow
+    ) {
+        ListItem(
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+            leadingContent = {
+                Surface(
+                    modifier = Modifier.size(40.dp),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            },
+            headlineContent = {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium
+                )
+            },
+            supportingContent = if (summary != null) {
+                {
+                    Text(
+                        text = summary,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-            }
-        },
-        headlineContent = {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium
-            )
-        },
-        supportingContent = if (summary != null) {
-            {
-                Text(
-                    text = summary,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+            } else null,
+            trailingContent = {
+                Switch(
+                    checked = checked,
+                    onCheckedChange = onCheckedChange
                 )
             }
-        } else null,
-        trailingContent = {
-            Switch(
-                checked = checked,
-                onCheckedChange = onCheckedChange
-            )
-        }
-    )
+        )
+    }
+}
+
+private fun preferenceItemShape(position: PreferencePosition): RoundedCornerShape = when (position) {
+    PreferencePosition.SINGLE -> RoundedCornerShape(20.dp)
+    PreferencePosition.TOP -> RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomStart = 10.dp, bottomEnd = 10.dp)
+    PreferencePosition.MIDDLE -> RoundedCornerShape(10.dp)
+    PreferencePosition.BOTTOM -> RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp, bottomStart = 20.dp, bottomEnd = 20.dp)
 }
 
 // ============================================================================
@@ -1135,7 +1270,7 @@ private fun SelectionDialog(
             modifier = Modifier
                 .fillMaxWidth(0.9f)
                 .padding(16.dp),
-            shape = MaterialTheme.shapes.extraLarge,
+            shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
             )
@@ -1201,7 +1336,7 @@ private fun PrecisionDialog(
             modifier = Modifier
                 .fillMaxWidth(0.9f)
                 .padding(16.dp),
-            shape = MaterialTheme.shapes.extraLarge,
+            shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
             )
@@ -1264,7 +1399,11 @@ private fun separatorSummary(separator: Char): String {
 
 @Composable
 private fun ThemePreview(theme: AppTheme, seedColor: Int = 0xFF13ABF1.toInt()) {
-    val (backgroundColor, accentColor) = getThemePreviewColors(theme, seedColor)
+    val (backgroundColor, accentColor) = if (theme == AppTheme.MATERIAL_YOU) {
+        MaterialTheme.colorScheme.surface to MaterialTheme.colorScheme.primary
+    } else {
+        getThemePreviewColors(theme, seedColor)
+    }
     val isLight = theme == AppTheme.MATERIAL_LIGHT || theme == AppTheme.MATERIAL_YOU // Approximation
     val textColor = if (isLight) Color.Black else Color.White
     val buttonColor = if (isLight) Color.LightGray.copy(alpha = 0.3f) else Color.DarkGray.copy(alpha = 0.5f)
@@ -1282,13 +1421,6 @@ private fun ThemePreview(theme: AppTheme, seedColor: Int = 0xFF13ABF1.toInt()) {
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            // Header: Theme Name
-            Text(
-                text = theme.displayName,
-                style = MaterialTheme.typography.titleMedium,
-                color = textColor.copy(alpha = 0.7f)
-            )
-            
             Spacer(modifier = Modifier.weight(1f))
             
             // Mock Display

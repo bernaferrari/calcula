@@ -25,6 +25,19 @@ class SettingsViewModel(
     private data class Group2(
         val outputSeparator: Char,
         val theme: String,
+        val dynamicColor: Boolean,
+        val themeSeed: Int,
+        val isAmoled: Boolean,
+        val language: String
+    )
+
+    private data class Group2Theme(
+        val outputSeparator: Char,
+        val theme: String,
+        val dynamicColor: Boolean
+    )
+
+    private data class Group2Meta(
         val themeSeed: Int,
         val isAmoled: Boolean,
         val language: String
@@ -39,18 +52,41 @@ class SettingsViewModel(
     )
 
     private data class Group4(
-        val showAppIcon: Boolean,
-        val onscreenTheme: String,
         val widgetTheme: String,
         val calcOnFly: Boolean,
+        val rpnMode: Boolean,
+        val tapeMode: Boolean,
         val releaseNotes: Boolean
     )
 
     private data class Group5(
         val backPrev: Boolean,
         val plotImag: Boolean,
-        val latexMode: Boolean
+        val latexMode: Boolean,
+        val showCalcLatency: Boolean
     )
+
+    private val group2Flow = combine(
+        combine(
+            preferences.settings.outputSeparator,
+            preferences.gui.theme,
+            preferences.gui.dynamicColor
+        ) { sep, theme, dynamicColor -> Group2Theme(sep, theme, dynamicColor) },
+        combine(
+            preferences.gui.themeSeed,
+            preferences.gui.isAmoled,
+            preferences.gui.language
+        ) { seed, amoled, lang -> Group2Meta(seed, amoled, lang) }
+    ) { theme, meta ->
+        Group2(
+            outputSeparator = theme.outputSeparator,
+            theme = theme.theme,
+            dynamicColor = theme.dynamicColor,
+            themeSeed = meta.themeSeed,
+            isAmoled = meta.isAmoled,
+            language = meta.language
+        )
+    }
 
     val state: StateFlow<SettingsUiState> = combine(
         combine(
@@ -60,14 +96,7 @@ class SettingsViewModel(
             preferences.settings.outputNotation,
             preferences.settings.outputPrecision
         ) { mode, angle, base, not, prec -> Group1(mode, angle, base, not, prec) },
-
-        combine(
-            preferences.settings.outputSeparator,
-            preferences.gui.theme,
-            preferences.gui.themeSeed,
-            preferences.gui.isAmoled,
-            preferences.gui.language
-        ) { sep, theme, seed, amoled, lang -> Group2(sep, theme, seed, amoled, lang) },
+        group2Flow,
 
         combine(
             preferences.gui.vibrateOnKeypress,
@@ -78,18 +107,21 @@ class SettingsViewModel(
         ) { vib, hc, hl, rot, keep -> Group3(vib, hc, hl, rot, keep) },
 
         combine(
-            preferences.onscreen.showAppIcon,
-            preferences.onscreen.theme,
             preferences.widget.theme,
             preferences.settings.calculateOnFly,
+            preferences.settings.rpnMode,
+            preferences.settings.tapeMode,
             preferences.gui.showReleaseNotes
-        ) { icon, onTheme, wTheme, fly, rel -> Group4(icon, onTheme, wTheme, fly, rel) },
+        ) { wTheme, fly, rpnMode, tapeMode, rel ->
+            Group4(wTheme, fly, rpnMode, tapeMode, rel)
+        },
 
         combine(
             preferences.gui.useBackAsPrevious,
             preferences.gui.plotImag,
-            preferences.gui.latexMode
-        ) { back, plot, latex -> Group5(back, plot, latex) }
+            preferences.gui.latexMode,
+            preferences.gui.showCalculationLatency
+        ) { back, plot, latex, showLatency -> Group5(back, plot, latex, showLatency) }
 
     ) { g1, g2, g3, g4, g5 ->
         SettingsUiState(
@@ -99,7 +131,9 @@ class SettingsViewModel(
             outputNotation = notationFromInt(g1.outputNotation),
             outputPrecision = g1.outputPrecision,
             outputSeparator = g2.outputSeparator,
+            appearanceMode = appearanceModeFromTheme(g2.theme),
             theme = themeFromStr(g2.theme),
+            dynamicColorEnabled = g2.dynamicColor,
             themeSeedColor = g2.themeSeed,
             isAmoledTheme = g2.isAmoled,
             languageCode = g2.language,
@@ -108,11 +142,12 @@ class SettingsViewModel(
             highlightExpressions = g3.highlight,
             rotateScreen = g3.rotate,
             keepScreenOn = g3.keepOn,
-            onscreenShowAppIcon = g4.showAppIcon,
-            onscreenTheme = simpleThemeFromStr(g4.onscreenTheme),
             widgetTheme = simpleThemeFromStr(g4.widgetTheme),
             calculateOnFly = g4.calcOnFly,
+            rpnMode = g4.rpnMode,
+            tapeMode = g4.tapeMode,
             showReleaseNotes = g4.releaseNotes,
+            showCalculationLatency = g5.showCalcLatency,
             useBackAsPrevious = g5.backPrev,
             plotImag = g5.plotImag,
             latexMode = g5.latexMode
@@ -144,8 +179,8 @@ class SettingsViewModel(
         val baseInt = when(base) {
             NumeralBase.DEC -> 0
             NumeralBase.HEX -> 1
-            NumeralBase.BIN -> 2
-            NumeralBase.OCT -> 0
+            NumeralBase.OCT -> 2
+            NumeralBase.BIN -> 3
         }
         viewModelScope.launch { preferences.settings.setNumeralBase(baseInt) }
     }
@@ -169,7 +204,7 @@ class SettingsViewModel(
 
     override fun setTheme(theme: AppTheme) {
         val themeStr = when(theme) {
-            AppTheme.MATERIAL_YOU -> "material_you"
+            AppTheme.MATERIAL_YOU -> "material_theme"
             AppTheme.MATERIAL_BLACK -> "material_black"
             AppTheme.MATERIAL_DARK -> "material_dark"
             AppTheme.MATERIAL_LIGHT -> "material_light"
@@ -178,6 +213,19 @@ class SettingsViewModel(
             AppTheme.METRO_PURPLE -> "metro_purple"
         }
         viewModelScope.launch { preferences.gui.setTheme(themeStr) }
+    }
+
+    override fun setAppearanceMode(mode: AppearanceMode) {
+        val themeStr = when (mode) {
+            AppearanceMode.SYSTEM -> "material_theme"
+            AppearanceMode.LIGHT -> "material_light"
+            AppearanceMode.DARK -> "material_dark"
+        }
+        viewModelScope.launch { preferences.gui.setTheme(themeStr) }
+    }
+
+    override fun setDynamicColor(enabled: Boolean) {
+        viewModelScope.launch { preferences.gui.setDynamicColor(enabled) }
     }
 
     override fun setThemeSeedColor(color: Int) {
@@ -212,14 +260,6 @@ class SettingsViewModel(
         viewModelScope.launch { preferences.gui.setKeepScreenOn(enabled) }
     }
 
-    override fun setOnscreenShowAppIcon(enabled: Boolean) {
-        viewModelScope.launch { preferences.onscreen.setShowAppIcon(enabled) }
-    }
-
-    override fun setOnscreenTheme(theme: SimpleTheme) {
-        viewModelScope.launch { preferences.onscreen.setTheme(simpleThemeToStr(theme)) }
-    }
-
     override fun setWidgetTheme(theme: SimpleTheme) {
         viewModelScope.launch { preferences.widget.setTheme(simpleThemeToStr(theme)) }
     }
@@ -228,8 +268,20 @@ class SettingsViewModel(
         viewModelScope.launch { preferences.settings.setCalculateOnFly(enabled) }
     }
 
+    override fun setRpnMode(enabled: Boolean) {
+        viewModelScope.launch { preferences.settings.setRpnMode(enabled) }
+    }
+
+    override fun setTapeMode(enabled: Boolean) {
+        viewModelScope.launch { preferences.settings.setTapeMode(enabled) }
+    }
+
     override fun setShowReleaseNotes(enabled: Boolean) {
         viewModelScope.launch { preferences.gui.setShowReleaseNotes(enabled) }
+    }
+
+    override fun setShowCalculationLatency(enabled: Boolean) {
+        viewModelScope.launch { preferences.gui.setShowCalculationLatency(enabled) }
     }
 
     override fun setUseBackAsPrevious(enabled: Boolean) {
@@ -254,6 +306,7 @@ class SettingsViewModel(
     }
 
     private fun themeFromStr(str: String): AppTheme = when(str) {
+        "material_theme" -> AppTheme.MATERIAL_YOU
         "material_you" -> AppTheme.MATERIAL_YOU
         "material_black" -> AppTheme.MATERIAL_BLACK
         "material_dark" -> AppTheme.MATERIAL_DARK
@@ -261,7 +314,13 @@ class SettingsViewModel(
         "metro_blue" -> AppTheme.METRO_BLUE
         "metro_green" -> AppTheme.METRO_GREEN
         "metro_purple" -> AppTheme.METRO_PURPLE
-        else -> AppTheme.MATERIAL_DARK
+        else -> AppTheme.MATERIAL_YOU
+    }
+
+    private fun appearanceModeFromTheme(str: String): AppearanceMode = when (str) {
+        "material_light" -> AppearanceMode.LIGHT
+        "material_dark" -> AppearanceMode.DARK
+        else -> AppearanceMode.SYSTEM
     }
     
     private fun simpleThemeFromStr(str: String): SimpleTheme = when(str) {
@@ -289,7 +348,8 @@ class SettingsViewModel(
     private fun baseFromInt(value: Int): NumeralBase = when(value) {
         0 -> NumeralBase.DEC
         1 -> NumeralBase.HEX
-        2 -> NumeralBase.BIN
+        2 -> NumeralBase.OCT
+        3 -> NumeralBase.BIN
         else -> NumeralBase.DEC
     }
 

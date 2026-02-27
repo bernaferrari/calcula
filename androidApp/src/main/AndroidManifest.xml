@@ -9,9 +9,6 @@
     <uses-permission android:name="com.android.vending.BILLING" />
     <uses-permission android:name="android.permission.VIBRATE" />
 
-    <!-- for onscreen -->
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-
     <supports-screens android:smallScreens="true" />
     <supports-screens android:normalScreens="true" />
     <supports-screens android:largeScreens="true" />
@@ -106,40 +103,6 @@
             android:name=".preferences.PurchaseDialogActivity"
             android:label="@string/cpp_purchase_title"
             android:theme="@style/Cpp.Theme.Translucent" />
-
-        <!-- ONSCREEN CONFIG -->
-
-        <activity
-            android:exported="true"
-            android:name=".floating.FloatingCalculatorActivity"
-            android:icon="@drawable/ic_launcher_window"
-            android:label="@string/cpp_app_name_on_screen"
-            android:launchMode="singleInstance"
-            android:theme="@style/Cpp.Theme.Translucent">
-
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-
-        </activity>
-
-        <service
-            android:name=".floating.FloatingCalculatorService"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="org.solovyev.android.calculator.floating.SHOW_WINDOW" />
-                <action android:name="org.solovyev.android.calculator.floating.SHOW_NOTIFICATION" />
-            </intent-filter>
-        </service>
-
-        <receiver android:name=".floating.FloatingCalculatorBroadcastReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="org.solovyev.android.calculator.floating.SHOW_WINDOW" />
-                <action android:name="org.solovyev.android.calculator.floating.SHOW_NOTIFICATION" />
-            </intent-filter>
-        </receiver>
 
         <!-- WIDGET CONFIG -->
 

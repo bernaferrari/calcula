@@ -51,14 +51,21 @@ enum class MathType(
         }
     },
 
-    binary_operation(600, false, false, MathGroupType.operation, listOf("−", "-", "+", "*", "×", "∙", "/", "^")) {
+    binary_operation(
+        600,
+        false,
+        false,
+        MathGroupType.operation,
+        listOf("−", "-", "+", "*", "×", "∙", "·", "⋅", "÷", "∕", "/", "^")
+    ) {
         override fun getSubstituteFromJscl(match: String): String? {
             return if (match == "-") "−" else null
         }
 
         override fun getSubstituteToJscl(match: String): String? {
             return when (match) {
-                "×", "∙" -> "*"
+                "×", "∙", "·", "⋅" -> "*"
+                "÷", "∕" -> "/"
                 "−" -> "-"
                 else -> null
             }

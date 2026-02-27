@@ -15,13 +15,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Save
@@ -34,16 +34,17 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,14 +56,15 @@ import androidx.compose.ui.unit.dp
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.solovyev.android.calculator.history.HistoryState
 import org.solovyev.android.calculator.ui.*
 
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.rounded.Calculate
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Save
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.FilledTonalButton
 
 @Composable
@@ -80,7 +82,9 @@ fun HistoryScreen(
     onClearSaved: () -> Unit,
     onBack: () -> Unit
 ) {
-    var selectedTab by remember { mutableStateOf(0) }
+    val pagerState = rememberPagerState(pageCount = { 2 })
+    val scope = rememberCoroutineScope()
+    val selectedTab = pagerState.currentPage
     val tabs = listOf(
         stringResource(Res.string.c_history),
         stringResource(Res.string.cpp_history_tab_saved)
@@ -89,16 +93,9 @@ fun HistoryScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(text = stringResource(Res.string.c_history)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(Res.string.cpp_back)
-                        )
-                    }
-                },
+            StandardTopAppBar(
+                title = stringResource(Res.string.c_history),
+                onBack = onBack,
                 actions = {
                     if (currentList.isNotEmpty()) {
                         IconButton(onClick = { if (selectedTab == 0) onClearRecent() else onClearSaved() }) {
@@ -118,48 +115,66 @@ fun HistoryScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            PrimaryTabRow(selectedTabIndex = selectedTab) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = selectedTab == index,
-                        onClick = { selectedTab = index },
-                        text = {
+            Surface(
+                color = MaterialTheme.colorScheme.surface
+            ) {
+                SingleChoiceSegmentedButtonRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 10.dp)
+                ) {
+                    tabs.forEachIndexed { index, title ->
+                        SegmentedButton(
+                            selected = selectedTab == index,
+                            onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
+                            shape = SegmentedButtonDefaults.itemShape(index = index, count = tabs.size),
+                            icon = {
+                                SegmentedButtonDefaults.Icon(active = selectedTab == index) {
+                                    Icon(
+                                        imageVector = if (index == 0) Icons.Rounded.History else Icons.Rounded.Save,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                        ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.Center
                             ) {
-                                Icon(
-                                    imageVector = if (index == 0) Icons.Rounded.History else Icons.Rounded.Save,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
                                 Text(text = title)
                             }
                         }
-                    )
+                    }
                 }
             }
 
-            if (currentList.isEmpty()) {
-                EmptyHistoryState(isRecent = selectedTab == 0, onStartCalculating = onBack)
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(currentList, key = { it.hashCode().toLong() }) { state ->
-                        HistoryCard(
-                            state = state,
-                            isRecent = selectedTab == 0,
-                            onUse = onUse,
-                            onCopyExpression = onCopyExpression,
-                            onCopyResult = onCopyResult,
-                            onSave = onSave,
-                            onEdit = onEdit,
-                            onDelete = onDelete
-                        )
+            HorizontalPager(
+                state = pagerState,
+                userScrollEnabled = true,
+                modifier = Modifier.fillMaxSize()
+            ) { page ->
+                val pageList = if (page == 0) recent else saved
+                if (pageList.isEmpty()) {
+                    EmptyHistoryState(isRecent = page == 0, onStartCalculating = onBack)
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(pageList, key = { state -> if (state.id != 0L) state.id else state.time }) { state ->
+                            HistoryCard(
+                                state = state,
+                                isRecent = page == 0,
+                                onUse = onUse,
+                                onCopyExpression = onCopyExpression,
+                                onCopyResult = onCopyResult,
+                                onSave = onSave,
+                                onEdit = onEdit,
+                                onDelete = onDelete
+                            )
+                        }
                     }
                 }
             }
@@ -194,7 +209,11 @@ private fun EmptyHistoryState(isRecent: Boolean, onStartCalculating: () -> Unit 
         Spacer(modifier = Modifier.height(24.dp))
         
         Text(
-            text = if (isRecent) stringResource(Res.string.cpp_history_empty) else "No saved calculations",
+            text = if (isRecent) {
+                stringResource(Res.string.cpp_history_empty)
+            } else {
+                stringResource(Res.string.cpp_history_empty_saved)
+            },
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center
@@ -204,9 +223,9 @@ private fun EmptyHistoryState(isRecent: Boolean, onStartCalculating: () -> Unit 
         
         Text(
             text = if (isRecent) {
-                "Your recent calculations will appear here automatically."
+                stringResource(Res.string.cpp_history_empty_recent_subtitle)
             } else {
-                "Save important results for quick access later."
+                stringResource(Res.string.cpp_history_empty_saved_subtitle)
             },
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -221,7 +240,7 @@ private fun EmptyHistoryState(isRecent: Boolean, onStartCalculating: () -> Unit 
             ) {
                 Icon(Icons.Rounded.Calculate, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Start Calculating")
+                Text(stringResource(Res.string.cpp_start_calculating))
             }
         }
     }
@@ -242,19 +261,7 @@ private fun HistoryCard(
     
     val expression = state.editor.getTextString()
     val result = state.display.text
-    
-    // Formatting date using kotlinx-datetime
-    val instant = Instant.fromEpochMilliseconds(state.time)
-    val localDateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
-    // Simple format: YYYY-MM-DD HH:MM - can be improved with platform specific formatter if really needed, 
-    // but consistent KMP format is often preferred.
-    // Let's do a simple manual format: "Jan 01, 14:30" style or "2023-01-01 14:30"
-    // Since we don't have java.text.DateFormat, we'll do a simple ISO-like or custom format.
-    val month = localDateTime.month.name.take(3).lowercase().replaceFirstChar { it.uppercase() }
-    val day = localDateTime.dayOfMonth
-    val hour = localDateTime.hour.toString().padStart(2, '0')
-    val minute = localDateTime.minute.toString().padStart(2, '0')
-    val timestamp = "$month $day, $hour:$minute"
+    val timestamp = remember(state.time) { formatHistoryTimestamp(state.time) }
 
 
     Card(
@@ -446,4 +453,21 @@ private fun HistoryCard(
             }
         }
     }
+}
+
+private fun formatHistoryTimestamp(epochMillis: Long): String {
+    return runCatching {
+        val localDateTime = Instant
+            .fromEpochMilliseconds(epochMillis)
+            .toLocalDateTime(TimeZone.currentSystemDefault())
+
+        val month = localDateTime.month.name
+            .take(3)
+            .lowercase()
+            .replaceFirstChar { it.uppercase() }
+        val day = localDateTime.day
+        val hour = localDateTime.hour.toString().padStart(2, '0')
+        val minute = localDateTime.minute.toString().padStart(2, '0')
+        "$month $day, $hour:$minute"
+    }.getOrDefault("--")
 }

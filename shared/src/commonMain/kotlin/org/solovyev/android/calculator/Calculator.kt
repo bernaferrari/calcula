@@ -1,12 +1,19 @@
 package org.solovyev.android.calculator
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.solovyev.android.calculator.calculations.CalculationCancelledEvent
 import org.solovyev.android.calculator.calculations.CalculationFailedEvent
 import org.solovyev.android.calculator.calculations.CalculationFinishedEvent
@@ -23,6 +30,7 @@ import kotlinx.atomicfu.atomic
 import jscl.math.function.Constants
 import jscl.math.Generic
 import jscl.NumeralBase
+import kotlin.time.Clock
 // import org.solovyev.android.calculator.preferences.PreferenceEntry
 
 interface ResourceProvider {
@@ -60,7 +68,23 @@ class Calculator(
     private val _calculationEvents = MutableSharedFlow<CalculationEvent>(extraBufferCapacity = 1)
     val calculationEvents: SharedFlow<CalculationEvent> = _calculationEvents.asSharedFlow()
 
+    private val _lastEvaluationLatencyMs = MutableStateFlow<Long?>(null)
+    val lastEvaluationLatencyMs: StateFlow<Long?> = _lastEvaluationLatencyMs.asStateFlow()
+
+    private val evaluationRequests = MutableSharedFlow<EvaluationRequest>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+
     private var calculateOnFly: Boolean = true
+
+    init {
+        scope.launch {
+            evaluationRequests.collectLatest { request ->
+                evaluateInternal(request)
+            }
+        }
+    }
 
     fun setCalculateOnFly(enabled: Boolean) {
         if (calculateOnFly != enabled) {
@@ -77,28 +101,12 @@ class Calculator(
     }
 
     fun evaluate(operation: JsclOperation, expression: String, sequence: Long) {
+        val request = EvaluationRequest(operation, expression, sequence)
+        if (evaluationRequests.tryEmit(request)) {
+            return
+        }
         scope.launch {
-            try {
-                // TODO: proper pre-processing and cancellation check
-                val result = operation.evaluate(expression, engine.getMathEngine())
-                val genericResult = try {
-                     operation.evaluateGeneric(expression, engine.getMathEngine())
-                } catch(e: Exception) {
-                     null
-                }
-                
-                emitCalculationFinished(CalculationFinishedEvent(
-                    operation,
-                    expression,
-                    sequence,
-                    genericResult,
-                    result,
-                    emptyList()
-                ))
-            } catch (e: Exception) {
-                // Check if parse exception or calculation exception
-                emitCalculationFailed(CalculationFailedEvent(operation, expression, sequence, e))
-            }
+            evaluationRequests.emit(request)
         }
     }
 
@@ -107,10 +115,15 @@ class Calculator(
      * Returns the result string or throws on error.
      */
     suspend fun evaluateForPreview(expression: String): String {
-        return try {
-            JsclOperation.numeric.evaluate(expression, engine.getMathEngine())
-        } catch (e: Exception) {
-            ""
+        return withContext(Dispatchers.Default) {
+            try {
+                val normalizedExpression = BitwiseInfixNormalizer.normalize(expression)
+                val preparedExpression = preprocessor.process(normalizedExpression).value
+                val genericResult = JsclOperation.numeric.evaluateGeneric(preparedExpression, engine.getMathEngine())
+                JsclOperation.numeric.getFromProcessor(engine).process(genericResult)
+            } catch (e: Exception) {
+                ""
+            }
         }
     }
 
@@ -133,6 +146,47 @@ class Calculator(
     }
 
     fun isCalculateOnFly(): Boolean = calculateOnFly
+
+    private suspend fun evaluateInternal(request: EvaluationRequest) {
+        if (calculateOnFly && request.sequence < editor.state.sequence) {
+            return
+        }
+        val startedAtMs = Clock.System.now().toEpochMilliseconds()
+        try {
+            val normalizedExpression = BitwiseInfixNormalizer.normalize(request.expression)
+            val preparedExpression = preprocessor.process(normalizedExpression).value
+            val genericResult = request.operation.evaluateGeneric(preparedExpression, engine.getMathEngine())
+            val result = request.operation.getFromProcessor(engine).process(genericResult)
+            val messages = collectMessages(engine.getMathEngine().getMessageRegistry())
+            val durationMs = (Clock.System.now().toEpochMilliseconds() - startedAtMs).coerceAtLeast(0L)
+            _lastEvaluationLatencyMs.value = durationMs
+
+            if (calculateOnFly && request.sequence < editor.state.sequence) {
+                return
+            }
+
+            emitCalculationFinished(
+                CalculationFinishedEvent(
+                    request.operation,
+                    request.expression,
+                    request.sequence,
+                    genericResult,
+                    result,
+                    messages
+                )
+            )
+        } catch (e: Exception) {
+            if (e is CancellationException) {
+                return
+            }
+            val durationMs = (Clock.System.now().toEpochMilliseconds() - startedAtMs).coerceAtLeast(0L)
+            _lastEvaluationLatencyMs.value = durationMs
+            if (calculateOnFly && request.sequence < editor.state.sequence) {
+                return
+            }
+            emitCalculationFailed(CalculationFailedEvent(request.operation, request.expression, request.sequence, e))
+        }
+    }
 
     private fun emitCalculationFinished(event: CalculationFinishedEvent) {
         _calculationFinished.tryEmit(event)
@@ -219,6 +273,12 @@ class Calculator(
         data class Failed(val event: CalculationFailedEvent) : CalculationEvent()
         data class Cancelled(val event: CalculationCancelledEvent) : CalculationEvent()
     }
+
+    private data class EvaluationRequest(
+        val operation: JsclOperation,
+        val expression: String,
+        val sequence: Long
+    )
 
     companion object {
         const val NO_SEQUENCE = -1L

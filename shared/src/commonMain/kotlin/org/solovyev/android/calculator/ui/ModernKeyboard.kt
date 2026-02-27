@@ -1,4 +1,3 @@
-@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 package org.solovyev.android.calculator.ui
 
 import androidx.compose.animation.core.Spring
@@ -27,7 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import androidx.compose.ui.input.pointer.pointerInput
@@ -46,6 +44,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
+import jscl.NumeralBase
+import org.solovyev.android.calculator.memory.MemoryRegisters
 
 /**
  * Modern keyboard with simplified layout and rounded buttons.
@@ -56,10 +56,15 @@ import kotlin.math.roundToLong
 @Composable
 fun ModernCalculatorKeyboard(
     actions: KeyboardActions,
+    numeralBase: NumeralBase = NumeralBase.dec,
+    bitwiseWordSize: Int = 64,
+    bitwiseSigned: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val icons = LocalKeyboardIcons.current
     var showScienceSheet by remember { mutableStateOf(false) }
+    val keyGap = 6.dp
+    val keyboardPadding = 4.dp
     
     if (showScienceSheet) {
         ScientificBottomSheet(
@@ -80,48 +85,66 @@ fun ModernCalculatorKeyboard(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(12.dp), // Comfortable outer padding
-        verticalArrangement = Arrangement.spacedBy(16.dp) // Generous vertical spacing
+            .padding(keyboardPadding),
+        verticalArrangement = Arrangement.spacedBy(keyGap)
     ) {
         // Row 1: Clear, (, ), /
         ButtonGroup(
             modifier = Modifier.fillMaxWidth().weight(1f),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(keyGap)
         ) {
             ModernButton(
                 text = "C",
                 buttonType = ButtonType.CONTROL,
+                directionTexts = DirectionTexts(up = "MC", down = "MR"),
                 onClick = { actions.onClear() },
+                onSwipeUp = { actions.onMemoryClear() },
+                onSwipeDown = { actions.onMemoryRecall() },
+                longPressOptions = listOf(
+                    "MS", "MR", "M+", "M-", "MC"
+                ) + MemoryRegisters.QUICK_REGISTERS,
+                onLongPressOptionSelected = { option ->
+                    when (option) {
+                        "MS" -> actions.onMemoryStore()
+                        "MR" -> actions.onMemoryRecall()
+                        "M+" -> actions.onMemoryPlus()
+                        "M-" -> actions.onMemoryMinus()
+                        "MC" -> actions.onMemoryClear()
+                        else -> actions.onMemoryRegisterSelected(option)
+                    }
+                },
                 modifier = Modifier.weight(1f).fillMaxHeight()
             )
             ModernButton(
                 text = "(",
                 buttonType = ButtonType.CONTROL,
-                directionTexts = DirectionTexts(up = "%"),
+                directionTexts = DirectionTexts(up = ")", down = "()"),
                 onClick = { actions.onSpecialClick("(") },
-                onSwipeUp = { actions.onOperatorClick("%") },
-                longPressOptions = listOf("(", ")", "()", "%"),
+                onSwipeUp = { actions.onSpecialClick(")") },
+                onSwipeDown = { actions.onSpecialClick("()") },
+                longPressOptions = listOf("(", ")", "()"),
                 onLongPressOptionSelected = { option ->
                     when (option) {
                         "()" -> actions.onSpecialClick("()")
-                        "%" -> actions.onOperatorClick("%")
                         else -> actions.onSpecialClick(option)
                     }
                 },
                 modifier = Modifier.weight(1f).fillMaxHeight()
             )
             ModernButton(
-                text = ")",
+                text = "%",
                 buttonType = ButtonType.CONTROL,
                 directionTexts = DirectionTexts(up = "ƒ"),
-                onClick = { actions.onSpecialClick(")") },
+                onClick = { actions.onOperatorClick("%") },
                 onSwipeUp = { showScienceSheet = true },
                 modifier = Modifier.weight(1f).fillMaxHeight()
             )
             ModernButton(
                 text = "÷",
                 buttonType = ButtonType.OPERATION,
+                directionTexts = DirectionTexts(up = "√"),
                 onClick = { actions.onOperatorClick("/") },
+                onSwipeUp = { actions.onFunctionClick("sqrt") },
                 modifier = Modifier.weight(1f).fillMaxHeight()
             )
         }
@@ -129,30 +152,50 @@ fun ModernCalculatorKeyboard(
         // Row 2: 7, 8, 9, ×
         ButtonGroup(
             modifier = Modifier.fillMaxWidth().weight(1f),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(keyGap)
         ) {
             ModernButton(
                 text = "7",
                 buttonType = ButtonType.DIGIT,
+                directionTexts = DirectionTexts(up = "i", down = "!"),
                 onClick = { actions.onNumberClick("7") },
+                enabled = isDigitAllowedForBase("7", numeralBase),
+                onSwipeUp = { actions.onSpecialClick("i") },
+                onSwipeDown = { actions.onSpecialClick("!") },
+                longPressOptions = listOf("i", "!", "0b:"),
+                onLongPressOptionSelected = { insertLegacyOption(actions, numeralBase, it) },
                 modifier = Modifier.weight(1f).fillMaxHeight()
             )
             ModernButton(
                 text = "8",
                 buttonType = ButtonType.DIGIT,
+                directionTexts = DirectionTexts(up = "ln", down = "lg"),
                 onClick = { actions.onNumberClick("8") },
+                enabled = isDigitAllowedForBase("8", numeralBase),
+                onSwipeUp = { actions.onFunctionClick("ln") },
+                onSwipeDown = { actions.onFunctionClick("log") },
+                longPressOptions = listOf("ln", "lg", "0d:"),
+                onLongPressOptionSelected = { insertLegacyOption(actions, numeralBase, it) },
                 modifier = Modifier.weight(1f).fillMaxHeight()
             )
             ModernButton(
                 text = "9",
                 buttonType = ButtonType.DIGIT,
                 onClick = { actions.onNumberClick("9") },
+                enabled = isDigitAllowedForBase("9", numeralBase),
+                longPressOptions = listOf("0x:"),
+                onLongPressOptionSelected = { insertLegacyOption(actions, numeralBase, it) },
                 modifier = Modifier.weight(1f).fillMaxHeight()
             )
             ModernButton(
                 text = "×",
                 buttonType = ButtonType.OPERATION,
+                directionTexts = DirectionTexts(up = "^", down = "^2"),
                 onClick = { actions.onOperatorClick("×") },
+                onSwipeUp = { actions.onSpecialClick("^") },
+                onSwipeDown = { actions.onSpecialClick("^2") },
+                longPressOptions = listOf("^", "^2"),
+                onLongPressOptionSelected = { insertLegacyOption(actions, numeralBase, it) },
                 modifier = Modifier.weight(1f).fillMaxHeight()
             )
         }
@@ -160,28 +203,44 @@ fun ModernCalculatorKeyboard(
         // Row 3: 4, 5, 6, -
         ButtonGroup(
             modifier = Modifier.fillMaxWidth().weight(1f),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(keyGap)
         ) {
             ModernButton(
                 text = "4",
                 buttonType = ButtonType.DIGIT,
-                directionTexts = DirectionTexts(up = "tan"),
+                directionTexts = DirectionTexts(up = "x", down = "y"),
                 onClick = { actions.onNumberClick("4") },
-                onSwipeUp = { actions.onFunctionClick("tan") },
-                longPressOptions = listOf("tan", "atan"),
-                onLongPressOptionSelected = { actions.onFunctionClick(it) },
+                enabled = isDigitAllowedForBase("4", numeralBase),
+                onSwipeUp = { actions.onSpecialClick("x") },
+                onSwipeDown = { actions.onSpecialClick("y") },
+                longPressOptions = listOf("x", "y"),
+                onLongPressOptionSelected = { insertLegacyOption(actions, numeralBase, it) },
                 modifier = Modifier.weight(1f).fillMaxHeight()
             )
             ModernButton(
                 text = "5",
                 buttonType = ButtonType.DIGIT,
+                directionTexts = DirectionTexts(up = "t", down = "j"),
                 onClick = { actions.onNumberClick("5") },
+                enabled = isDigitAllowedForBase("5", numeralBase),
+                onSwipeUp = { actions.onSpecialClick("t") },
+                onSwipeDown = { actions.onSpecialClick("j") },
+                longPressOptions = listOf("t", "j"),
+                onLongPressOptionSelected = { insertLegacyOption(actions, numeralBase, it) },
                 modifier = Modifier.weight(1f).fillMaxHeight()
             )
             ModernButton(
                 text = "6",
                 buttonType = ButtonType.DIGIT,
+                directionTexts = DirectionTexts(up = "E"),
                 onClick = { actions.onNumberClick("6") },
+                enabled = isDigitAllowedForBase("6", numeralBase),
+                onSwipeUp = { actions.onSpecialClick("E") },
+                longPressOptions = buildList {
+                    add("E")
+                    if (numeralBase == NumeralBase.hex) add("F")
+                },
+                onLongPressOptionSelected = { insertLegacyOption(actions, numeralBase, it) },
                 modifier = Modifier.weight(1f).fillMaxHeight()
             )
             ModernButton(
@@ -195,46 +254,70 @@ fun ModernCalculatorKeyboard(
         // Row 4: 1, 2, 3, +
         ButtonGroup(
             modifier = Modifier.fillMaxWidth().weight(1f),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(keyGap)
         ) {
             ModernButton(
                 text = "1",
                 buttonType = ButtonType.DIGIT,
+                directionTexts = DirectionTexts(up = "sin", down = "asin"),
                 onClick = { actions.onNumberClick("1") },
+                enabled = isDigitAllowedForBase("1", numeralBase),
+                onSwipeUp = { actions.onFunctionClick("sin") },
+                onSwipeDown = { actions.onFunctionClick("asin") },
+                longPressOptions = buildList {
+                    add("sin")
+                    add("asin")
+                    if (numeralBase == NumeralBase.hex) add("A")
+                },
+                onLongPressOptionSelected = { insertLegacyOption(actions, numeralBase, it) },
                 modifier = Modifier.weight(1f).fillMaxHeight()
             )
             ModernButton(
                 text = "2",
                 buttonType = ButtonType.DIGIT,
-                directionTexts = DirectionTexts(up = "sin"),
+                directionTexts = DirectionTexts(up = "cos", down = "acos"),
                 onClick = { actions.onNumberClick("2") },
-                onSwipeUp = { actions.onFunctionClick("sin") },
-                longPressOptions = listOf("sin", "asin"),
-                onLongPressOptionSelected = { actions.onFunctionClick(it) },
+                enabled = isDigitAllowedForBase("2", numeralBase),
+                onSwipeUp = { actions.onFunctionClick("cos") },
+                onSwipeDown = { actions.onFunctionClick("acos") },
+                longPressOptions = buildList {
+                    add("cos")
+                    add("acos")
+                    if (numeralBase == NumeralBase.hex) add("B")
+                },
+                onLongPressOptionSelected = { insertLegacyOption(actions, numeralBase, it) },
                 modifier = Modifier.weight(1f).fillMaxHeight()
             )
             ModernButton(
                 text = "3",
                 buttonType = ButtonType.DIGIT,
-                directionTexts = DirectionTexts(up = "cos"),
+                directionTexts = DirectionTexts(up = "tan", down = "atan"),
                 onClick = { actions.onNumberClick("3") },
-                onSwipeUp = { actions.onFunctionClick("cos") },
-                longPressOptions = listOf("cos", "acos"),
-                onLongPressOptionSelected = { actions.onFunctionClick(it) },
+                enabled = isDigitAllowedForBase("3", numeralBase),
+                onSwipeUp = { actions.onFunctionClick("tan") },
+                onSwipeDown = { actions.onFunctionClick("atan") },
+                longPressOptions = buildList {
+                    add("tan")
+                    add("atan")
+                    if (numeralBase == NumeralBase.hex) add("C")
+                },
+                onLongPressOptionSelected = { insertLegacyOption(actions, numeralBase, it) },
                 modifier = Modifier.weight(1f).fillMaxHeight()
             )
             ModernButton(
                 text = "+",
                 buttonType = ButtonType.OPERATION,
+                directionTexts = DirectionTexts(up = "°"),
                 onClick = { actions.onOperatorClick("+") },
+                onSwipeUp = { actions.onSpecialClick("°") },
                 modifier = Modifier.weight(1f).fillMaxHeight()
             )
         }
 
-        // Row 5: Delete, 0, ., Equals
+        // Row 5: Delete, 0, ., =
         ButtonGroup(
             modifier = Modifier.fillMaxWidth().weight(1f),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(keyGap)
         ) {
             // Replaced long label with icon for clarity in modern mode
             Box(
@@ -258,27 +341,45 @@ fun ModernCalculatorKeyboard(
             ModernButton(
                 text = "0",
                 buttonType = ButtonType.DIGIT,
+                directionTexts = DirectionTexts(up = "000", down = "00"),
                 onClick = { actions.onNumberClick("0") },
-                longPressOptions = listOf("k", "m", "b"),
-                onLongPressOptionSelected = { suffix ->
-                    actions.onSpecialClick(suffix)
-                },
+                enabled = isDigitAllowedForBase("0", numeralBase),
+                onSwipeUp = { actions.onNumberClick("000") },
+                onSwipeDown = { actions.onNumberClick("00") },
+                longPressOptions = listOf("000", "00"),
+                onLongPressOptionSelected = { insertLegacyOption(actions, numeralBase, it) },
                 modifier = Modifier.weight(1f).fillMaxHeight()
             )
             ModernButton(
                 text = ".",
                 buttonType = ButtonType.DIGIT,
+                directionTexts = DirectionTexts(up = ","),
                 onClick = { actions.onNumberClick(".") },
+                enabled = true,
+                onSwipeUp = { actions.onNumberClick(",") },
                 modifier = Modifier.weight(1f).fillMaxHeight()
             )
             ModernButton(
-                text = "=",
-                buttonType = ButtonType.OPERATION_HIGHLIGHTED,
-                onClick = { actions.onEquals() },
-                onLongClick = { actions.onSimplify() },
+                text = "ƒ",
+                buttonType = ButtonType.SPECIAL,
+                onClick = { actions.onOpenFunctions() },
+                onSwipeUp = { showScienceSheet = true },
                 modifier = Modifier.weight(1f).fillMaxHeight()
             )
         }
+    }
+}
+
+private fun insertLegacyOption(actions: KeyboardActions, numeralBase: NumeralBase, option: String) {
+    when (option) {
+        "sin", "asin", "cos", "acos", "tan", "atan", "ln" -> actions.onFunctionClick(option)
+        "lg" -> actions.onFunctionClick("log")
+        "A", "B", "C", "D", "E", "F" -> {
+            if (numeralBase == NumeralBase.hex) {
+                actions.onNumberClick(option)
+            }
+        }
+        else -> actions.onSpecialClick(option)
     }
 }
 
@@ -291,7 +392,8 @@ internal fun ModernButton(
     buttonType: ButtonType,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    shape: Shape = MaterialTheme.shapes.extraLarge, // Default to full pill/circle
+    enabled: Boolean = true,
+    shape: Shape = RoundedCornerShape(16.dp),
     directionTexts: DirectionTexts = DirectionTexts(),
     onLongClick: (() -> Unit)? = null,
     onSwipeUp: (() -> Unit)? = null,
@@ -322,23 +424,20 @@ internal fun ModernButton(
         label = "ModernButtonScale"
     )
 
-    // Modern color logic: Lighter, more tonal for digits.
-    val backgroundColor = when {
-        isPressed -> when (buttonType) {
-            ButtonType.DIGIT -> MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f)
-            ButtonType.OPERATION -> MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.8f)
-            ButtonType.OPERATION_HIGHLIGHTED -> MaterialTheme.colorScheme.primary.copy(alpha = 0.8f) // Primary for equals
-            ButtonType.CONTROL -> MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f)
-            ButtonType.SPECIAL -> MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f)
+    val baseBackgroundColor = when (buttonType) {
+        ButtonType.DIGIT -> MaterialTheme.colorScheme.surfaceContainerLow
+        ButtonType.OPERATION -> MaterialTheme.colorScheme.secondaryContainer
+        ButtonType.OPERATION_HIGHLIGHTED -> MaterialTheme.colorScheme.primary
+        ButtonType.CONTROL -> MaterialTheme.colorScheme.surfaceContainer
+        ButtonType.SPECIAL -> MaterialTheme.colorScheme.tertiaryContainer
+    }
+    val backgroundColor = if (isPressed) {
+        when (buttonType) {
+            ButtonType.OPERATION_HIGHLIGHTED -> baseBackgroundColor.copy(alpha = 0.85f)
+            else -> baseBackgroundColor.copy(alpha = 0.72f)
         }
-        else -> when (buttonType) {
-            // Digits are now clean/ghost-like, just on the surface (or very light container)
-            ButtonType.DIGIT -> Color.Transparent // Ghost style for digits
-            ButtonType.OPERATION -> MaterialTheme.colorScheme.secondaryContainer
-            ButtonType.OPERATION_HIGHLIGHTED -> MaterialTheme.colorScheme.primary
-            ButtonType.CONTROL -> MaterialTheme.colorScheme.surfaceContainer
-            ButtonType.SPECIAL -> MaterialTheme.colorScheme.surfaceContainerLow
-        }
+    } else {
+        baseBackgroundColor
     }
 
     val textColor = when (buttonType) {
@@ -354,7 +453,7 @@ internal fun ModernButton(
         MaterialTheme.colorScheme.onSurface
     } else {
         textColor
-    }
+    }.copy(alpha = if (enabled) 1f else 0.45f)
 
     val directionTextColor = effectiveTextColor.copy(alpha = 0.5f)
 
@@ -371,6 +470,7 @@ internal fun ModernButton(
 
     Box(
         modifier = modifier
+            .disabledAlpha(enabled)
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
@@ -380,7 +480,7 @@ internal fun ModernButton(
             .onSizeChanged { size ->
                 buttonSizePx = androidx.compose.ui.geometry.Size(size.width.toFloat(), size.height.toFloat())
             }
-            .pointerInput(onClick, onLongClick, onSwipeUp, onSwipeDown) {
+            .pointerInput(enabled, onClick, onLongClick, onSwipeUp, onSwipeDown) {
                 awaitEachGesture {
                     val down = awaitFirstDown()
                     isPressed = true
@@ -390,18 +490,28 @@ internal fun ModernButton(
                     var movedBeyondSlop = false
                     var longPressFired = false
                     var swipeHandled = false
+                    var longPressSelectionCanceled = false
 
                     while (true) {
                         val event = awaitPointerEvent()
                         val change = event.changes.firstOrNull { it.id == down.id } ?: break
 
                         if (change.changedToUpIgnoreConsumed()) {
-                            if (showLongPressOptions && effectiveLongPressOptions.isNotEmpty()) {
+                            if (!enabled) {
+                                HapticHelper.performSwipeFeedback(haptics, hapticsEnabled)
+                                showLongPressOptions = false
+                                isPressed = false
+                                break
+                            }
+                            if (showLongPressOptions && effectiveLongPressOptions.isNotEmpty() && !longPressSelectionCanceled) {
                                 val option = effectiveLongPressOptions[highlightedOption.coerceIn(0, effectiveLongPressOptions.lastIndex)]
                                 HapticHelper.performLongPressFeedback(haptics, hapticsEnabled)
                                 onLongPressOptionSelectedEffective(option)
                                 showLongPressOptions = false
                                 swipeHandled = true
+                            } else if (showLongPressOptions) {
+                                // User scrolled/dragged away while picker was open: dismiss without applying.
+                                showLongPressOptions = false
                             }
                             if (!longPressFired && !swipeHandled) {
                                 // Check for swipe
@@ -436,15 +546,22 @@ internal fun ModernButton(
                                 movedBeyondSlop = (lastPos - start).getDistance() > touchSlop
                             }
                             if (showLongPressOptions && effectiveLongPressOptions.isNotEmpty()) {
-                                val relative = lastPos.x - (buttonSizePx.width / 2f)
-                                val baseIndex = (effectiveLongPressOptions.size - 1) / 2f
-                                val rawIndex = (relative / optionWidthPx + baseIndex).roundToInt()
-                                highlightedOption = rawIndex.coerceIn(0, effectiveLongPressOptions.lastIndex)
+                                val dragFromStart = lastPos - start
+                                if (kotlin.math.abs(dragFromStart.y) > minDragDistancePx) {
+                                    longPressSelectionCanceled = true
+                                    showLongPressOptions = false
+                                } else {
+                                    val relative = lastPos.x - (buttonSizePx.width / 2f)
+                                    val baseIndex = (effectiveLongPressOptions.size - 1) / 2f
+                                    val rawIndex = (relative / optionWidthPx + baseIndex).roundToInt()
+                                    highlightedOption = rawIndex.coerceIn(0, effectiveLongPressOptions.lastIndex)
+                                }
                             }
                             change.consume()
                         }
 
                         if (!longPressFired &&
+                            enabled &&
                             effectiveLongPressOptions.isNotEmpty() &&
                             !movedBeyondSlop &&
                             (change.uptimeMillis - downTime) >= longPressTimeout
@@ -454,6 +571,7 @@ internal fun ModernButton(
                             highlightedOption = (effectiveLongPressOptions.size - 1) / 2
                             HapticHelper.performLongPressFeedback(haptics, hapticsEnabled)
                         } else if (onLongClick != null &&
+                            enabled &&
                             !longPressFired &&
                             !movedBeyondSlop &&
                             (change.uptimeMillis - downTime) >= longPressTimeout

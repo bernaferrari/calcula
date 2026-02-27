@@ -52,6 +52,26 @@ android {
             excludes += "META-INF/NOTICE.txt"
         }
     }
+
+    sourceSets {
+        getByName("main").assets.srcDir("build/generated/composeSharedAssets")
+    }
+}
+
+val syncSharedComposeResources by tasks.registering(Sync::class) {
+    val sharedPreparedResources = project(":shared")
+        .layout
+        .buildDirectory
+        .dir("generated/compose/resourceGenerator/preparedResources/commonMain/composeResources")
+
+    dependsOn(":shared:prepareComposeResourcesTaskForCommonMain")
+
+    from(sharedPreparedResources)
+    into(layout.buildDirectory.dir("generated/composeSharedAssets/composeResources/org.solovyev.android.calculator.ui"))
+}
+
+tasks.matching { it.name.startsWith("merge") && it.name.endsWith("Assets") }.configureEach {
+    dependsOn(syncSharedComposeResources)
 }
 
 dependencies {
@@ -59,7 +79,6 @@ dependencies {
     implementation(project(":shared"))
 
     // Compose
-    implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.material3)

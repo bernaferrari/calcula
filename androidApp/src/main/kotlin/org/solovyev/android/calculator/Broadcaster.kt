@@ -74,11 +74,12 @@ class Broadcaster(
 
     private fun observeThemeChanges() {
         scope.launch {
-            combine<String, String, Pair<String, String>>(
+            combine(
                 appPreferences.gui.theme,
+                appPreferences.gui.dynamicColor,
                 appPreferences.widget.theme
-            ) { theme, widgetTheme ->
-                theme to widgetTheme
+            ) { theme, dynamicColor, widgetTheme ->
+                Triple(theme, dynamicColor, widgetTheme)
             }.collect {
                 sendBroadcastIntent(ACTION_THEME_CHANGED)
             }

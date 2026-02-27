@@ -41,6 +41,13 @@ class VariablesViewModel(
 
     fun getDescription(variable: IConstant): String? = registry.getDescription(variable.name)
 
+    fun getValue(variable: IConstant): String? {
+        if (!variable.isDefined()) return null
+        return runCatching { variable.toString() }
+            .getOrNull()
+            ?.takeIf { it.isNotBlank() }
+    }
+
     fun getDisplayName(variable: IConstant): String {
         if (!variable.isDefined()) return variable.name
         val value = variable.toString()

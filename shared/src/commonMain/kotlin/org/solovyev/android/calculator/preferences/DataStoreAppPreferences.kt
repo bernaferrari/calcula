@@ -47,6 +47,10 @@ class DataStoreUiPreferences(private val dataStore: DataStore<Preferences>) : Ui
 
 class DataStoreSettingsPreferences(private val dataStore: DataStore<Preferences>) : SettingsPreferences {
     private val keyCalculateOnFly = booleanPreferencesKey("settings.calculateOnFly")
+    private val keyRpnMode = booleanPreferencesKey("settings.rpnMode")
+    private val keyTapeMode = booleanPreferencesKey("settings.tapeMode")
+    private val keyBitwiseWordSize = intPreferencesKey("settings.bitwiseWordSize")
+    private val keyBitwiseSigned = booleanPreferencesKey("settings.bitwiseSigned")
     private val keyAngleUnit = intPreferencesKey("settings.angleUnit")
     private val keyNumeralBase = intPreferencesKey("settings.numeralBase")
     private val keyOutputPrecision = intPreferencesKey("settings.outputPrecision")
@@ -55,6 +59,10 @@ class DataStoreSettingsPreferences(private val dataStore: DataStore<Preferences>
     private val keyMultiplicationSign = stringPreferencesKey("settings.multiplicationSign")
 
     override val calculateOnFly: Flow<Boolean> = dataStore.data.map { it[keyCalculateOnFly] ?: true }
+    override val rpnMode: Flow<Boolean> = dataStore.data.map { it[keyRpnMode] ?: false }
+    override val tapeMode: Flow<Boolean> = dataStore.data.map { it[keyTapeMode] ?: false }
+    override val bitwiseWordSize: Flow<Int> = dataStore.data.map { (it[keyBitwiseWordSize] ?: 64).coerceIn(1, 64) }
+    override val bitwiseSigned: Flow<Boolean> = dataStore.data.map { it[keyBitwiseSigned] ?: true }
     override val angleUnit: Flow<Int> = dataStore.data.map { it[keyAngleUnit] ?: 0 }
     override val numeralBase: Flow<Int> = dataStore.data.map { it[keyNumeralBase] ?: 0 }
     override val outputPrecision: Flow<Int> = dataStore.data.map { it[keyOutputPrecision] ?: 5 }
@@ -70,6 +78,18 @@ class DataStoreSettingsPreferences(private val dataStore: DataStore<Preferences>
 
     override suspend fun setCalculateOnFly(value: Boolean) {
         dataStore.edit { it[keyCalculateOnFly] = value }
+    }
+    override suspend fun setRpnMode(value: Boolean) {
+        dataStore.edit { it[keyRpnMode] = value }
+    }
+    override suspend fun setTapeMode(value: Boolean) {
+        dataStore.edit { it[keyTapeMode] = value }
+    }
+    override suspend fun setBitwiseWordSize(value: Int) {
+        dataStore.edit { it[keyBitwiseWordSize] = value.coerceIn(1, 64) }
+    }
+    override suspend fun setBitwiseSigned(value: Boolean) {
+        dataStore.edit { it[keyBitwiseSigned] = value }
     }
     override suspend fun setAngleUnit(value: Int) {
         dataStore.edit { it[keyAngleUnit] = value }
@@ -93,6 +113,7 @@ class DataStoreSettingsPreferences(private val dataStore: DataStore<Preferences>
 
 class DataStoreGuiPreferences(private val dataStore: DataStore<Preferences>) : GuiPreferences {
     private val keyTheme = stringPreferencesKey("gui.theme")
+    private val keyDynamicColor = booleanPreferencesKey("gui.dynamicColor")
     private val keyMode = stringPreferencesKey("gui.mode")
     private val keyLanguage = stringPreferencesKey("gui.language")
     private val keyShowReleaseNotes = booleanPreferencesKey("gui.showReleaseNotes")
@@ -101,6 +122,7 @@ class DataStoreGuiPreferences(private val dataStore: DataStore<Preferences>) : G
     private val keyKeepScreenOn = booleanPreferencesKey("gui.keepScreenOn")
     private val keyHighContrast = booleanPreferencesKey("gui.highContrast")
     private val keyVibrateOnKeypress = booleanPreferencesKey("gui.vibrateOnKeypress")
+    private val keyShowCalculationLatency = booleanPreferencesKey("gui.showCalculationLatency")
     private val keyLatexMode = booleanPreferencesKey("gui.latexMode")
     private val keyThemeSeed = intPreferencesKey("gui.themeSeed")
     private val keyIsAmoled = booleanPreferencesKey("gui.isAmoled")
@@ -109,6 +131,7 @@ class DataStoreGuiPreferences(private val dataStore: DataStore<Preferences>) : G
     private val keyPlotImag = booleanPreferencesKey("gui.plotImag")
 
     override val theme: Flow<String> = dataStore.data.map { it[keyTheme] ?: "material_theme" }
+    override val dynamicColor: Flow<Boolean> = dataStore.data.map { it[keyDynamicColor] ?: true }
     override val mode: Flow<String> = dataStore.data.map { it[keyMode] ?: "simple" }
     override val language: Flow<String> = dataStore.data.map { it[keyLanguage] ?: "system" }
     override val showReleaseNotes: Flow<Boolean> = dataStore.data.map { it[keyShowReleaseNotes] ?: true }
@@ -117,6 +140,7 @@ class DataStoreGuiPreferences(private val dataStore: DataStore<Preferences>) : G
     override val keepScreenOn: Flow<Boolean> = dataStore.data.map { it[keyKeepScreenOn] ?: true }
     override val highContrast: Flow<Boolean> = dataStore.data.map { it[keyHighContrast] ?: false }
     override val vibrateOnKeypress: Flow<Boolean> = dataStore.data.map { it[keyVibrateOnKeypress] ?: true }
+    override val showCalculationLatency: Flow<Boolean> = dataStore.data.map { it[keyShowCalculationLatency] ?: false }
     override val latexMode: Flow<Boolean> = dataStore.data.map { it[keyLatexMode] ?: false }
     override val themeSeed: Flow<Int> = dataStore.data.map { it[keyThemeSeed] ?: 0xFF13ABF1.toInt() }
     override val isAmoled: Flow<Boolean> = dataStore.data.map { it[keyIsAmoled] ?: false }
@@ -124,6 +148,7 @@ class DataStoreGuiPreferences(private val dataStore: DataStore<Preferences>) : G
     override val plotImag: Flow<Boolean> = dataStore.data.map { it[keyPlotImag] ?: false }
 
     override suspend fun setTheme(value: String) { dataStore.edit { it[keyTheme] = value } }
+    override suspend fun setDynamicColor(value: Boolean) { dataStore.edit { it[keyDynamicColor] = value } }
     override suspend fun setMode(value: String) { dataStore.edit { it[keyMode] = value } }
     override suspend fun setLanguage(value: String) { dataStore.edit { it[keyLanguage] = value } }
     override suspend fun setShowReleaseNotes(value: Boolean) { dataStore.edit { it[keyShowReleaseNotes] = value } }
@@ -132,6 +157,7 @@ class DataStoreGuiPreferences(private val dataStore: DataStore<Preferences>) : G
     override suspend fun setKeepScreenOn(value: Boolean) { dataStore.edit { it[keyKeepScreenOn] = value } }
     override suspend fun setHighContrast(value: Boolean) { dataStore.edit { it[keyHighContrast] = value } }
     override suspend fun setVibrateOnKeypress(value: Boolean) { dataStore.edit { it[keyVibrateOnKeypress] = value } }
+    override suspend fun setShowCalculationLatency(value: Boolean) { dataStore.edit { it[keyShowCalculationLatency] = value } }
     override suspend fun setLatexMode(value: Boolean) { dataStore.edit { it[keyLatexMode] = value } }
     override suspend fun setThemeSeed(value: Int) { dataStore.edit { it[keyThemeSeed] = value } }
     override suspend fun setIsAmoled(value: Boolean) { dataStore.edit { it[keyIsAmoled] = value } }

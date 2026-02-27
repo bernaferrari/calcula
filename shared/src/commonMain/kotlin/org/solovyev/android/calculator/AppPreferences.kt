@@ -21,6 +21,10 @@ interface UiPreferences {
 
 interface SettingsPreferences {
     val calculateOnFly: Flow<Boolean>
+    val rpnMode: Flow<Boolean>
+    val tapeMode: Flow<Boolean>
+    val bitwiseWordSize: Flow<Int>
+    val bitwiseSigned: Flow<Boolean>
     val angleUnit: Flow<Int>
     val numeralBase: Flow<Int>
     val outputPrecision: Flow<Int>
@@ -31,6 +35,10 @@ interface SettingsPreferences {
     fun getCalculateOnFlyBlocking(): Boolean
 
     suspend fun setCalculateOnFly(value: Boolean)
+    suspend fun setRpnMode(value: Boolean)
+    suspend fun setTapeMode(value: Boolean)
+    suspend fun setBitwiseWordSize(value: Int)
+    suspend fun setBitwiseSigned(value: Boolean)
     suspend fun setAngleUnit(value: Int)
     suspend fun setNumeralBase(value: Int)
     suspend fun setOutputPrecision(value: Int)
@@ -41,6 +49,7 @@ interface SettingsPreferences {
 
 interface GuiPreferences {
     val theme: Flow<String>
+    val dynamicColor: Flow<Boolean>
     val mode: Flow<String>
     val language: Flow<String>
     val showReleaseNotes: Flow<Boolean>
@@ -49,6 +58,7 @@ interface GuiPreferences {
     val keepScreenOn: Flow<Boolean>
     val highContrast: Flow<Boolean>
     val vibrateOnKeypress: Flow<Boolean>
+    val showCalculationLatency: Flow<Boolean>
 
     val latexMode: Flow<Boolean>
     val themeSeed: Flow<Int>
@@ -61,6 +71,7 @@ interface GuiPreferences {
     suspend fun setPlotImag(value: Boolean)
 
     suspend fun setTheme(value: String)
+    suspend fun setDynamicColor(value: Boolean)
     suspend fun setMode(value: String)
     suspend fun setLanguage(value: String)
     suspend fun setShowReleaseNotes(value: Boolean)
@@ -69,6 +80,7 @@ interface GuiPreferences {
     suspend fun setKeepScreenOn(value: Boolean)
     suspend fun setHighContrast(value: Boolean)
     suspend fun setVibrateOnKeypress(value: Boolean)
+    suspend fun setShowCalculationLatency(value: Boolean)
 
     suspend fun setLatexMode(value: Boolean)
     suspend fun setThemeSeed(value: Int)

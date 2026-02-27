@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import jscl.math.precision.Real
+import jscl.math.function.BitwiseRuntimeConfig
 // duplicate Real import removed
 // Registry imports removed as they are in same package
 import org.solovyev.android.calculator.preferences.PreferenceEntry
@@ -74,11 +75,19 @@ class Engine(
             val baseFlow = combine(
                 appPreferences.settings.angleUnit,
                 appPreferences.settings.numeralBase,
-                appPreferences.settings.outputPrecision
-            ) { angleUnitId, numeralBaseId, precision ->
+                appPreferences.settings.outputPrecision,
+                appPreferences.settings.bitwiseWordSize,
+                appPreferences.settings.bitwiseSigned
+            ) { angleUnitId, numeralBaseId, precision, bitwiseWordSize, bitwiseSigned ->
                 val angleUnit = AngleUnit.entries.getOrElse(angleUnitId) { AngleUnit.deg } // Assuming ordinal or mapping
                 val numeralBase = NumeralBase.entries.getOrElse(numeralBaseId) { NumeralBase.dec }
-                BaseSnapshot(angleUnit, numeralBase, precision)
+                BaseSnapshot(
+                    angleUnit = angleUnit,
+                    numeralBase = numeralBase,
+                    precision = precision,
+                    bitwiseWordSize = bitwiseWordSize.coerceIn(1, 64),
+                    bitwiseSigned = bitwiseSigned
+                )
             }
             val outputFlow = combine(
                 appPreferences.settings.outputNotation,
@@ -93,6 +102,8 @@ class Engine(
                     angleUnit = base.angleUnit,
                     numeralBase = base.numeralBase,
                     precision = base.precision,
+                    bitwiseWordSize = base.bitwiseWordSize,
+                    bitwiseSigned = base.bitwiseSigned,
                     notation = output.notation,
                     separator = output.separator,
                     multiplicationSign = output.multiplicationSign
@@ -104,6 +115,10 @@ class Engine(
                 mathEngine.setPrecision(snapshot.precision)
                 mathEngine.setNotation(snapshot.notation.notationId)
                 mathEngine.setGroupingSeparator(snapshot.separator)
+                BitwiseRuntimeConfig.update(
+                    wordSize = snapshot.bitwiseWordSize,
+                    signed = snapshot.bitwiseSigned
+                )
                 _changedEvents.emit(ChangedEvent)
             }
         }
@@ -113,6 +128,8 @@ class Engine(
         val angleUnit: AngleUnit,
         val numeralBase: NumeralBase,
         val precision: Int,
+        val bitwiseWordSize: Int,
+        val bitwiseSigned: Boolean,
         val notation: Notation,
         val separator: Char,
         val multiplicationSign: String?
@@ -121,7 +138,9 @@ class Engine(
     private data class BaseSnapshot(
         val angleUnit: AngleUnit,
         val numeralBase: NumeralBase,
-        val precision: Int
+        val precision: Int,
+        val bitwiseWordSize: Int,
+        val bitwiseSigned: Boolean
     )
 
     private data class OutputSnapshot(

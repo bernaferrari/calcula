@@ -1,7 +1,6 @@
 package org.solovyev.android.calculator.ui
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -16,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import jscl.NumeralBase
 
 /**
  * Unified calculator keyboard - clean, minimal design.
@@ -34,10 +34,15 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun UnifiedCalculatorKeyboard(
     actions: KeyboardActions,
+    numeralBase: NumeralBase = NumeralBase.dec,
+    bitwiseWordSize: Int = 64,
+    bitwiseSigned: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val icons = LocalKeyboardIcons.current
     var showScientificSheet by remember { mutableStateOf(false) }
+    val keyboardPadding = 4.dp
+    val keyGap = 6.dp
 
     if (showScientificSheet) {
         ScientificBottomSheet(
@@ -56,8 +61,8 @@ fun UnifiedCalculatorKeyboard(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(8.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+            .padding(keyboardPadding),
+        verticalArrangement = Arrangement.spacedBy(keyGap)
     ) {
         // Row 1: Clear, (, ), ÷
         KeyboardRow(modifier = Modifier.weight(1f)) {
@@ -92,17 +97,27 @@ fun UnifiedCalculatorKeyboard(
             UnifiedButton(
                 text = "7",
                 buttonType = ButtonType.DIGIT,
-                onClick = { actions.onNumberClick("7") }
+                onClick = { actions.onNumberClick("7") },
+                enabled = isDigitAllowedForBase("7", numeralBase),
+                onSwipeUp = { actions.onSpecialClick("i") },
+                onSwipeDown = { actions.onSpecialClick("!") },
+                onSwipeLeft = { actions.onSpecialClick("0b:") }
             )
             UnifiedButton(
                 text = "8",
                 buttonType = ButtonType.DIGIT,
-                onClick = { actions.onNumberClick("8") }
+                onClick = { actions.onNumberClick("8") },
+                enabled = isDigitAllowedForBase("8", numeralBase),
+                onSwipeUp = { actions.onFunctionClick("ln") },
+                onSwipeDown = { actions.onFunctionClick("log") },
+                onSwipeLeft = { actions.onSpecialClick("0d:") }
             )
             UnifiedButton(
                 text = "9",
                 buttonType = ButtonType.DIGIT,
-                onClick = { actions.onNumberClick("9") }
+                onClick = { actions.onNumberClick("9") },
+                enabled = isDigitAllowedForBase("9", numeralBase),
+                onSwipeLeft = { actions.onSpecialClick("0x:") }
             )
             UnifiedButton(
                 text = "×",
@@ -116,17 +131,28 @@ fun UnifiedCalculatorKeyboard(
             UnifiedButton(
                 text = "4",
                 buttonType = ButtonType.DIGIT,
-                onClick = { actions.onNumberClick("4") }
+                onClick = { actions.onNumberClick("4") },
+                enabled = isDigitAllowedForBase("4", numeralBase),
+                onSwipeUp = { actions.onSpecialClick("x") },
+                onSwipeDown = { actions.onSpecialClick("y") },
+                onSwipeLeft = { if (numeralBase == NumeralBase.hex) actions.onNumberClick("D") }
             )
             UnifiedButton(
                 text = "5",
                 buttonType = ButtonType.DIGIT,
-                onClick = { actions.onNumberClick("5") }
+                onClick = { actions.onNumberClick("5") },
+                enabled = isDigitAllowedForBase("5", numeralBase),
+                onSwipeUp = { actions.onSpecialClick("t") },
+                onSwipeDown = { actions.onSpecialClick("j") },
+                onSwipeLeft = { if (numeralBase == NumeralBase.hex) actions.onNumberClick("E") }
             )
             UnifiedButton(
                 text = "6",
                 buttonType = ButtonType.DIGIT,
-                onClick = { actions.onNumberClick("6") }
+                onClick = { actions.onNumberClick("6") },
+                enabled = isDigitAllowedForBase("6", numeralBase),
+                onSwipeUp = { actions.onSpecialClick("E") },
+                onSwipeLeft = { if (numeralBase == NumeralBase.hex) actions.onNumberClick("F") }
             )
             UnifiedButton(
                 text = "−",
@@ -140,17 +166,29 @@ fun UnifiedCalculatorKeyboard(
             UnifiedButton(
                 text = "1",
                 buttonType = ButtonType.DIGIT,
-                onClick = { actions.onNumberClick("1") }
+                onClick = { actions.onNumberClick("1") },
+                enabled = isDigitAllowedForBase("1", numeralBase),
+                onSwipeUp = { actions.onFunctionClick("sin") },
+                onSwipeDown = { actions.onFunctionClick("asin") },
+                onSwipeLeft = { if (numeralBase == NumeralBase.hex) actions.onNumberClick("A") }
             )
             UnifiedButton(
                 text = "2",
                 buttonType = ButtonType.DIGIT,
-                onClick = { actions.onNumberClick("2") }
+                onClick = { actions.onNumberClick("2") },
+                enabled = isDigitAllowedForBase("2", numeralBase),
+                onSwipeUp = { actions.onFunctionClick("cos") },
+                onSwipeDown = { actions.onFunctionClick("acos") },
+                onSwipeLeft = { if (numeralBase == NumeralBase.hex) actions.onNumberClick("B") }
             )
             UnifiedButton(
                 text = "3",
                 buttonType = ButtonType.DIGIT,
-                onClick = { actions.onNumberClick("3") }
+                onClick = { actions.onNumberClick("3") },
+                enabled = isDigitAllowedForBase("3", numeralBase),
+                onSwipeUp = { actions.onFunctionClick("tan") },
+                onSwipeDown = { actions.onFunctionClick("atan") },
+                onSwipeLeft = { if (numeralBase == NumeralBase.hex) actions.onNumberClick("C") }
             )
             UnifiedButton(
                 text = "+",
@@ -171,18 +209,22 @@ fun UnifiedCalculatorKeyboard(
             UnifiedButton(
                 text = "0",
                 buttonType = ButtonType.DIGIT,
-                onClick = { actions.onNumberClick("0") }
+                onClick = { actions.onNumberClick("0") },
+                enabled = isDigitAllowedForBase("0", numeralBase),
+                onSwipeUp = { actions.onNumberClick("0") }
             )
             UnifiedButton(
                 text = ".",
                 buttonType = ButtonType.DIGIT,
-                onClick = { actions.onNumberClick(".") }
+                onClick = { actions.onNumberClick(".") },
+                enabled = true,
+                onSwipeUp = { actions.onNumberClick(".") }
             )
             UnifiedButton(
-                text = "=",
-                buttonType = ButtonType.OPERATION_HIGHLIGHTED,
-                onClick = { actions.onEquals() },
-                onLongClick = { actions.onSimplify() }
+                text = "ƒ",
+                buttonType = ButtonType.SPECIAL,
+                onClick = { actions.onOpenFunctions() },
+                onSwipeUp = { showScientificSheet = true }
             )
         }
     }
@@ -190,12 +232,13 @@ fun UnifiedCalculatorKeyboard(
 
 @Composable
 private fun KeyboardRow(
+    gap: androidx.compose.ui.unit.Dp = 6.dp,
     modifier: Modifier = Modifier,
     content: @Composable RowScope.() -> Unit
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalArrangement = Arrangement.spacedBy(gap),
         content = content
     )
 }
@@ -206,10 +249,13 @@ private fun RowScope.UnifiedButton(
     buttonType: ButtonType,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     icon: androidx.compose.ui.graphics.painter.Painter? = null,
     onLongClick: (() -> Unit)? = null,
     onSwipeUp: (() -> Unit)? = null,
     onSwipeDown: (() -> Unit)? = null,
+    onSwipeLeft: (() -> Unit)? = null,
+    onSwipeRight: (() -> Unit)? = null,
     fontWeight: androidx.compose.ui.text.font.FontWeight = androidx.compose.ui.text.font.FontWeight.Normal
 ) {
     org.solovyev.android.calculator.ui.UnifiedButton(
@@ -219,10 +265,13 @@ private fun RowScope.UnifiedButton(
         modifier = modifier
             .weight(1f)
             .fillMaxHeight(),
+        enabled = enabled,
         icon = icon,
         onLongClick = onLongClick,
         onSwipeUp = onSwipeUp,
         onSwipeDown = onSwipeDown,
+        onSwipeLeft = onSwipeLeft,
+        onSwipeRight = onSwipeRight,
         fontWeight = fontWeight
     )
 }
