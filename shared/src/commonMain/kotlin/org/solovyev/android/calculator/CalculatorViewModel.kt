@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import org.solovyev.android.calculator.history.RoomHistory
 import org.solovyev.android.calculator.jscl.JsclOperation
 import org.solovyev.android.calculator.latex.LatexMapper
+
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map

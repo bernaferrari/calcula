@@ -7,9 +7,13 @@ interface AppPreferences {
     val gui: GuiPreferences
     val onscreen: OnscreenPreferences
     val widget: WidgetPreferences
+    val widgets: WidgetsPreferences
     val converter: ConverterPreferences
     val ui: UiPreferences
     val wizard: WizardPreferences
+    val theme: ThemePreferences
+    val haptics: HapticsPreferences
+    val history: HistoryPreferences
 }
 
 
@@ -111,9 +115,59 @@ interface ConverterPreferences {
     suspend fun getLastUnitsFrom(): Int?
     suspend fun getLastUnitsTo(): Int?
     suspend fun setLastUsed(dimension: Int, from: Int, to: Int)
+    
+    // Currency conversion support for widgets
+    suspend fun getLastFromCurrency(): String?
+    suspend fun getLastToCurrency(): String?
+    suspend fun getLastAmount(): String?
+    suspend fun setLastUsed(fromCurrency: String, toCurrency: String, amount: String)
 }
 
 interface WizardPreferences {
     val finished: Flow<Boolean>
     suspend fun setFinished(value: Boolean)
+}
+
+/**
+ * Widget-specific preferences for appearance and opacity.
+ */
+interface WidgetsPreferences {
+    suspend fun getCalculatorOpacity(): Float
+    suspend fun getQuickCalcOpacity(): Float
+    suspend fun getHistoryOpacity(): Float
+    suspend fun getConverterOpacity(): Float
+    suspend fun getSmartStackOpacity(): Float
+    
+    suspend fun setCalculatorOpacity(value: Float)
+    suspend fun setQuickCalcOpacity(value: Float)
+    suspend fun setHistoryOpacity(value: Float)
+    suspend fun setConverterOpacity(value: Float)
+    suspend fun setSmartStackOpacity(value: Float)
+}
+
+/**
+ * Theme preferences for dynamic colors and light/dark mode.
+ */
+interface ThemePreferences {
+    suspend fun useDynamicColors(): Boolean
+    suspend fun isLightTheme(): Boolean
+    
+    suspend fun setUseDynamicColors(value: Boolean)
+    suspend fun setLightTheme(value: Boolean)
+}
+
+/**
+ * Haptics preferences for vibration feedback.
+ */
+interface HapticsPreferences {
+    suspend fun isEnabled(): Boolean
+    suspend fun setEnabled(value: Boolean)
+}
+
+/**
+ * History preferences for accessing recent calculations.
+ */
+interface HistoryPreferences {
+    fun observeRecent(): Flow<List<org.solovyev.android.calculator.history.HistoryState>>
+    suspend fun clearRecent()
 }

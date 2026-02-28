@@ -26,6 +26,11 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -36,6 +41,7 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import org.solovyev.android.calculator.DisplayState
 import kotlin.math.abs
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun CalculatorDisplay(
@@ -69,6 +75,16 @@ fun CalculatorDisplay(
     val swipeThreshold = with(LocalDensity.current) { 80.dp.toPx() }
     val scrollState = rememberScrollState()
 
+    // Accessibility announcements
+    val calculationCompleted = state.valid && displayText.isNotEmpty()
+    val resultDescription = if (calculationCompleted) {
+        stringResource(Res.string.cpp_calculation_complete) + ": $displayText"
+    } else if (!state.valid && displayText.isNotEmpty()) {
+        stringResource(Res.string.cpp_error_invalid_expression)
+    } else {
+        displayText
+    }
+
     LaunchedEffect(displayText) {
         scrollState.animateScrollTo(scrollState.maxValue)
     }
@@ -78,6 +94,14 @@ fun CalculatorDisplay(
             .fillMaxWidth()
             .padding(vertical = 8.dp)
             .heightIn(min = 56.dp)
+            .semantics {
+                // Mark as heading for screen reader navigation
+                this.heading()
+                // Make this a live region so screen readers announce changes
+                this.liveRegion = LiveRegionMode.Polite
+                // Set content description for screen readers
+                this.contentDescription = resultDescription
+            }
             .graphicsLayer {
                 translationX = offsetX.value
                 translationY = offsetY.value

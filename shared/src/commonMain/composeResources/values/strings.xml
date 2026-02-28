@@ -222,4 +222,130 @@
     <string name="cpp_units_mass_t">t</string>
     <string name="cpp_units_mass_tons_uk">t (UK)</string>
     <string name="cpp_units_mass_tons_us">t (US)</string>
+
+    <!-- Accessibility -->
+    <string name="cpp_accessibility">Accessibility</string>
+    <string name="cpp_accessibility_summary">High contrast, font size, and motion settings</string>
+    <string name="cpp_accessibility_high_contrast">True high contrast mode</string>
+    <string name="cpp_accessibility_high_contrast_summary">Black and white colors with no transparency for maximum visibility</string>
+    <string name="cpp_accessibility_reduce_motion">Reduce motion</string>
+    <string name="cpp_accessibility_reduce_motion_summary">Minimize animations throughout the app</string>
+    <string name="cpp_accessibility_extended_haptics">Extended haptic feedback</string>
+    <string name="cpp_accessibility_extended_haptics_summary">Additional vibrations for actions and confirmations</string>
+    <string name="cpp_accessibility_font_scale">Font size scale</string>
+    <string name="cpp_button_clear">Clear button, swipe up for memory clear, swipe down for memory recall</string>
+    <string name="cpp_button_parentheses">Parentheses button, swipe up for close parenthesis, swipe down for both</string>
+    <string name="cpp_button_percent">Percent button, swipe up for functions</string>
+    <string name="cpp_button_divide">Divide button, swipe up for square root</string>
+    <string name="cpp_button_seven">7 button, swipe up for imaginary unit, swipe down for factorial</string>
+    <string name="cpp_button_eight">8 button, swipe up for natural log, swipe down for log base 10</string>
+    <string name="cpp_button_nine">9 button</string>
+    <string name="cpp_button_multiply">Multiply button, swipe up for power, swipe down for squared</string>
+    <string name="cpp_button_four">4 button, swipe up for x variable, swipe down for y variable</string>
+    <string name="cpp_button_five">5 button, swipe up for t variable, swipe down for j variable</string>
+    <string name="cpp_button_six">6 button, swipe up for scientific notation</string>
+    <string name="cpp_button_minus">Minus button</string>
+    <string name="cpp_button_one">1 button, swipe up for sine, swipe down for arc sine</string>
+    <string name="cpp_button_two">2 button, swipe up for cosine, swipe down for arc cosine</string>
+    <string name="cpp_button_three">3 button, swipe up for tangent, swipe down for arc tangent</string>
+    <string name="cpp_button_plus">Plus button, swipe up for degrees</string>
+    <string name="cpp_button_delete">Delete button, long press to clear all</string>
+    <string name="cpp_button_zero">0 button, swipe up for triple zero, swipe down for double zero</string>
+    <string name="cpp_button_decimal">Decimal button, swipe up for comma</string>
+    <string name="cpp_button_functions">Functions button, swipe up for scientific functions</string>
+    <string name="cpp_button_equals">Equals button, double tap for graph, long press for simplify</string>
+    <string name="cpp_display_result">Calculation result</string>
+    <string name="cpp_display_editor">Expression editor</string>
+    <string name="cpp_calculation_complete">Calculation complete</string>
+    <string name="cpp_error_invalid_expression">Invalid expression</string>
+
+    <!-- Enhanced Display -->
+    <string name="cpp_enter_expression_hint">Enter expression to calculate</string>
+    <string name="cpp_copied">Copied</string>
+    <string name="cpp_share_ready">Share ready</string>
+
+    <!-- Currency Converter -->
+    <string name="cpp_currency_converter">Currency Converter</string>
+    <string name="cpp_currency_select">Select Currency</string>
+    <string name="cpp_currency_search">Search currency or country</string>
+    <string name="cpp_currency_popular">Popular</string>
+    <string name="cpp_currency_offline">Using offline rates. Last update may be outdated.</string>
+    <string name="cpp_currency_rate_info">Exchange rate info</string>
+    <string name="cpp_currency_updated">Updated %s</string>
+    <string name="cpp_currency_also_equals">Also equals</string>
+    <string name="cpp_currency_history">Exchange Rate History</string>
+    <string name="cpp_currency_options">Options</string>
+    <string name="cpp_currency_show_multiple">Show multiple conversions</string>
+    <string name="cpp_currency_show_chart">Show rate history</string>
+    <string name="cpp_currency_decimal_places">Decimal places</string>
+    <string name="cpp_currency_no_results">No currencies found</string>
+    <string name="cpp_currency_swap">Swap currencies</string>
+    <string name="cpp_currency_refresh">Refresh rates</string>
+
+    <!-- Analytics -->
+    <string name="cpp_analytics">Analytics</string>
+    <string name="cpp_analytics_summary">Usage statistics and insights</string>
+    <string name="cpp_analytics_total_calculations">Total Calculations</string>
+    <string name="cpp_analytics_this_week">This Week</string>
+    <string name="cpp_analytics_this_month">This Month</string>
+    <string name="cpp_analytics_all_time">All Time</string>
+    <string name="cpp_analytics_favorite_functions">Favorite Functions</string>
+    <string name="cpp_analytics_calculation_patterns">Calculation Patterns</string>
+    <string name="cpp_analytics_peak_usage">Peak Usage Times</string>
+    <string name="cpp_analytics_average_session">Average Session</string>
+
+    <!-- Formula Library -->
+    <string name="cpp_formula_library">Formula Library</string>
+    <string name="cpp_formula_search">Search formulas</string>
+    <string name="cpp_formula_categories">Categories</string>
+    <string name="cpp_formula_physics">Physics</string>
+    <string name="cpp_formula_math">Mathematics</string>
+    <string name="cpp_formula_engineering">Engineering</string>
+    <string name="cpp_formula_finance">Finance</string>
+    <string name="cpp_formula_chemistry">Chemistry</string>
+    <string name="cpp_formula_recent">Recent</string>
+    <string name="cpp_formula_favorites">Favorites</string>
+    <string name="cpp_formula_no_results">No formulas found</string>
+    <string name="cpp_formula_use">Use Formula</string>
+    <string name="cpp_formula_variables">Variables</string>
+    <string name="cpp_formula_description">Description</string>
+
+    <!-- Tutorial & Help -->
+    <string name="cpp_tutorial_gestures">Show Gesture Tutorial</string>
+    <string name="cpp_tutorial_gestures_summary">Learn about swipes, long-press, and gestures</string>
+    <string name="cpp_tutorial_reset_hints">Reset All Hints</string>
+    <string name="cpp_tutorial_reset_hints_summary">Show all gesture hints again</string>
+    <string name="cpp_tutorial_swipe_up">Swipe Up</string>
+    <string name="cpp_tutorial_swipe_down">Swipe Down</string>
+    <string name="cpp_tutorial_swipe_left">Swipe Left</string>
+    <string name="cpp_tutorial_swipe_right">Swipe Right</string>
+    <string name="cpp_tutorial_long_press">Long Press</string>
+    <string name="cpp_tutorial_double_tap">Double Tap</string>
+    <string name="cpp_tutorial_try_it">Try it now!</string>
+
+    <!-- Accessibility Labels -->
+    <string name="cpp_a11y_navigate_back">Navigate back</string>
+    <string name="cpp_a11y_close">Close</string>
+    <string name="cpp_a11y_confirm">Confirm</string>
+    <string name="cpp_a11y_cancel">Cancel</string>
+    <string name="cpp_a11y_more_options">More options</string>
+    <string name="cpp_a11y_expand">Expand</string>
+    <string name="cpp_a11y_collapse">Collapse</string>
+    <string name="cpp_a11y_clear_search">Clear search</string>
+    <string name="cpp_a11y_voice_search">Voice search</string>
+
+    <!-- Loading & Error States -->
+    <string name="cpp_loading">Loading…</string>
+    <string name="cpp_error_network">Network error. Please check your connection.</string>
+    <string name="cpp_error_generic">Something went wrong. Please try again.</string>
+    <string name="cpp_error_retry">Retry</string>
+    <string name="cpp_error_offline">Offline mode</string>
+    <string name="cpp_empty_state_title">Nothing here yet</string>
+    <string name="cpp_empty_state_subtitle">Items will appear here when available</string>
+
+    <!-- Success Messages -->
+    <string name="cpp_success_saved">Saved successfully</string>
+    <string name="cpp_success_deleted">Deleted successfully</string>
+    <string name="cpp_success_copied">Copied to clipboard</string>
+    <string name="cpp_success_updated">Updated successfully</string>
 </resources>

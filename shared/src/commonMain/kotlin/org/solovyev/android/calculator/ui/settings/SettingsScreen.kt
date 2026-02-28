@@ -20,31 +20,31 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.FormatListBulleted
-import androidx.compose.material.icons.rounded.Calculate
-import androidx.compose.material.icons.rounded.Contrast
-import androidx.compose.material.icons.rounded.DarkMode
-import androidx.compose.material.icons.rounded.FlashOn
-import androidx.compose.material.icons.rounded.Fullscreen
-import androidx.compose.material.icons.rounded.History
-import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.Keyboard
-import androidx.compose.material.icons.rounded.Language
-import androidx.compose.material.icons.rounded.LightMode
-import androidx.compose.material.icons.rounded.BrightnessAuto
-import androidx.compose.material.icons.rounded.Numbers
-import androidx.compose.material.icons.rounded.Palette
-import androidx.compose.material.icons.rounded.PinDrop
-import androidx.compose.material.icons.rounded.ScreenRotation
-import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material.icons.rounded.Code
-import androidx.compose.material.icons.rounded.Speed
-import androidx.compose.material.icons.rounded.Star
-import androidx.compose.material.icons.rounded.TextFields
-import androidx.compose.material.icons.rounded.Tune
-import androidx.compose.material.icons.rounded.Vibration
-import androidx.compose.material.icons.rounded.Widgets
-import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.automirrored.filled.FormatListBulleted
+import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.material.icons.filled.Contrast
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.FlashOn
+import androidx.compose.material.icons.filled.Fullscreen
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Keyboard
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.BrightnessAuto
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.ScreenRotation
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.TextFields
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.Vibration
+import androidx.compose.material.icons.filled.Widgets
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -150,13 +150,28 @@ enum class SimpleTheme(val displayName: String) {
     METRO_BLUE("Metro Blue")
 }
 
+enum class OutputSeparator(val displayName: String, val symbol: Char) {
+    NONE("None", '\u0000'),
+    SPACE("Space", ' '),
+    COMMA("Comma", ','),
+    DOT("Dot", '.'),
+    UNDERSCORE("Underscore", '_')
+}
+
+enum class MultiplicationSign(val displayName: String, val symbol: String) {
+    DOT("Dot", "·"),
+    CROSS("Cross", "×"),
+    STAR("Star", "*")
+}
+
 data class SettingsUiState(
     val mode: CalculatorMode = CalculatorMode.SIMPLE,
     val angleUnit: AngleUnit = AngleUnit.DEG,
     val numeralBase: NumeralBase = NumeralBase.DEC,
     val outputNotation: OutputNotation = OutputNotation.PLAIN,
     val outputPrecision: Int = 5,
-    val outputSeparator: Char = ' ',
+    val outputSeparator: OutputSeparator = OutputSeparator.SPACE,
+    val multiplicationSign: MultiplicationSign = MultiplicationSign.CROSS,
     val appearanceMode: AppearanceMode = AppearanceMode.SYSTEM,
     val theme: AppTheme = AppTheme.MATERIAL_YOU,
     val themeSeedColor: Int = 0xFF13ABF1.toInt(),
@@ -177,6 +192,10 @@ data class SettingsUiState(
     val useBackAsPrevious: Boolean = false,
     val plotImag: Boolean = false,
     val latexMode: Boolean = false,
+    val bitwiseWordSize: Int = 32,
+    val bitwiseSigned: Boolean = false,
+    val reduceMotion: Boolean = false,
+    val fontScale: Float = 1.0f,
     val numberFormatExamples: String = "1,234.56\n0.001234"
 )
 
@@ -186,6 +205,7 @@ enum class SettingsDestination {
     MAIN,
     NUMBER_FORMAT,
     APPEARANCE,
+    ACCESSIBILITY,
     WIDGET,
     OTHER
 }
@@ -215,6 +235,8 @@ interface SettingsActions {
     fun setOutputNotation(notation: OutputNotation)
     fun setOutputPrecision(precision: Int)
     fun setOutputSeparator(separator: Char)
+    fun setOutputSeparator(separator: OutputSeparator)
+    fun setMultiplicationSign(sign: MultiplicationSign)
     fun setAppearanceMode(mode: AppearanceMode)
     fun setTheme(theme: AppTheme)
     fun setDynamicColor(enabled: Boolean)
@@ -235,6 +257,10 @@ interface SettingsActions {
     fun setUseBackAsPrevious(enabled: Boolean)
     fun setPlotImag(enabled: Boolean)
     fun setLatexMode(enabled: Boolean)
+    fun setReduceMotion(enabled: Boolean)
+    fun setFontScale(scale: Float)
+    fun setBitwiseWordSize(size: Int)
+    fun setBitwiseSigned(signed: Boolean)
 }
 
 // ============================================================================
@@ -271,7 +297,7 @@ fun SettingsScreen(
             state = state,
             onNotationChange = actions::setOutputNotation,
             onPrecisionChange = actions::setOutputPrecision,
-            onSeparatorChange = actions::setOutputSeparator
+            onSeparatorChange = { separator -> actions.setOutputSeparator(separator) }
         )
         SettingsDestination.APPEARANCE -> AppearanceScreen(
             state = state,
@@ -286,6 +312,12 @@ fun SettingsScreen(
             onRotateChange = actions::setRotateScreen,
             onKeepScreenOnChange = actions::setKeepScreenOn,
             actions = actions
+        )
+        SettingsDestination.ACCESSIBILITY -> AccessibilityScreen(
+            state = state,
+            onHighContrastChange = actions::setHighContrast,
+            onReduceMotionChange = actions::setReduceMotion,
+            onFontScaleChange = actions::setFontScale
         )
         SettingsDestination.WIDGET -> WidgetScreen(
             state = state,
@@ -334,7 +366,7 @@ private fun MainSettingsScreen(
         item {
             PreferenceGroup(title = stringResource(Res.string.cpp_prefs_basic)) {
                 InlineChoicePreference(
-                    icon = Icons.Rounded.Calculate,
+                    icon = Icons.Filled.Calculate,
                     title = stringResource(Res.string.cpp_mode),
                     summary = state.mode.displayName,
                     options = CalculatorMode.entries.map { it.displayName },
@@ -345,7 +377,7 @@ private fun MainSettingsScreen(
                     }
                 )
                 InlineChoicePreference(
-                    icon = Icons.Rounded.PinDrop,
+                    icon = Icons.Filled.LocationOn,
                     title = stringResource(Res.string.cpp_angles),
                     summary = state.angleUnit.displayName,
                     options = listOf("DEG", "RAD", "GRAD", "TURN"),
@@ -356,7 +388,7 @@ private fun MainSettingsScreen(
                     }
                 )
                 InlineChoicePreference(
-                    icon = Icons.Rounded.Numbers,
+                    icon = Icons.Filled.Edit,
                     title = stringResource(Res.string.cpp_radix),
                     summary = state.numeralBase.displayName,
                     options = listOf("DEC", "HEX", "OCT", "BIN"),
@@ -367,7 +399,7 @@ private fun MainSettingsScreen(
                     }
                 )
                 PreferenceItem(
-                    icon = Icons.AutoMirrored.Rounded.FormatListBulleted,
+                    icon = Icons.AutoMirrored.Filled.FormatListBulleted,
                     title = stringResource(Res.string.cpp_number_format),
                     summary = stringResource(Res.string.cpp_examples),
                     position = PreferencePosition.BOTTOM,
@@ -380,21 +412,21 @@ private fun MainSettingsScreen(
         item {
             PreferenceGroup(title = stringResource(Res.string.cpp_prefs_advanced)) {
                 PreferenceItem(
-                    icon = Icons.Rounded.Palette,
+                    icon = Icons.Filled.Palette,
                     title = stringResource(Res.string.cpp_appearance),
                     summary = stringResource(Res.string.cpp_theme),
                     position = PreferencePosition.TOP,
                     onClick = { onNavigate(SettingsDestination.APPEARANCE) }
                 )
                 PreferenceItem(
-                    icon = Icons.Rounded.Widgets,
+                    icon = Icons.Filled.Widgets,
                     title = stringResource(Res.string.cpp_widget),
                     summary = stringResource(Res.string.cpp_theme),
                     position = PreferencePosition.MIDDLE,
                     onClick = { onNavigate(SettingsDestination.WIDGET) }
                 )
                 PreferenceItem(
-                    icon = Icons.Rounded.Settings,
+                    icon = Icons.Filled.Settings,
                     title = stringResource(Res.string.cpp_other),
                     position = PreferencePosition.BOTTOM,
                     onClick = { onNavigate(SettingsDestination.OTHER) }
@@ -406,19 +438,19 @@ private fun MainSettingsScreen(
         item {
             PreferenceGroup(title = stringResource(Res.string.cpp_help)) {
                 PreferenceItem(
-                    icon = Icons.Rounded.FlashOn,
+                    icon = Icons.Filled.FlashOn,
                     title = stringResource(Res.string.cpp_introduction),
                     position = PreferencePosition.TOP,
                     onClick = onStartWizard
                 )
                 PreferenceItem(
-                    icon = Icons.Rounded.Info,
+                    icon = Icons.Filled.Info,
                     title = stringResource(Res.string.cpp_report_problem),
                     position = PreferencePosition.MIDDLE,
                     onClick = onReportBug
                 )
                 PreferenceItem(
-                    icon = Icons.Rounded.Info,
+                    icon = Icons.Filled.Info,
                     title = stringResource(Res.string.cpp_about),
                     position = PreferencePosition.BOTTOM,
                     onClick = onOpenAbout
@@ -454,7 +486,7 @@ private fun NumberFormatScreen(
         item {
             PreferenceGroup(title = stringResource(Res.string.cpp_number_format)) {
                 PreferenceItem(
-                    icon = Icons.Rounded.Tune,
+                    icon = Icons.Filled.Tune,
                     title = stringResource(Res.string.cpp_format),
                     summary = state.outputNotation.displayName,
                     position = PreferencePosition.TOP,
@@ -468,24 +500,25 @@ private fun NumberFormatScreen(
                     }
                 )
                 PreferenceItem(
-                    icon = Icons.Rounded.Numbers,
+                    icon = Icons.Filled.Edit,
                     title = stringResource(Res.string.cpp_precision),
                     summary = state.outputPrecision.toString(),
                     position = PreferencePosition.MIDDLE,
                     onClick = { precisionDialog = true }
                 )
                 PreferenceItem(
-                    icon = Icons.Rounded.TextFields,
+                    icon = Icons.Filled.TextFields,
                     title = stringResource(Res.string.cpp_thousands_separator),
-                    summary = separatorSummary(state.outputSeparator),
+                    summary = separatorSummary(state.outputSeparator.symbol),
                     position = PreferencePosition.BOTTOM,
                     onClick = {
-                        val selectedIndex = separatorValues.indexOf(state.outputSeparator).coerceAtLeast(0)
+                        val separatorValueSymbols = listOf('\u0000', ' ', ',', '\'')
+                        val selectedIndex = separatorValueSymbols.indexOf(state.outputSeparator.symbol).coerceAtLeast(0)
                         listDialog = ListDialogState(
                             title = "Thousands Separator",
                             options = separatorNames,
                             selectedIndex = selectedIndex,
-                            onSelected = { index -> onSeparatorChange(separatorValues[index]) }
+                            onSelected = { index -> onSeparatorChange(separatorValueSymbols[index]) }
                         )
                     }
                 )
@@ -594,7 +627,7 @@ private fun AppearanceScreen(
                 
                 if (languages.isNotEmpty()) {
                     PreferenceItem(
-                        icon = Icons.Rounded.Language,
+                        icon = Icons.Filled.Language,
                         title = stringResource(Res.string.cpp_language),
                         summary = languages.firstOrNull { it.code == state.languageCode }?.displayName ?: "System",
                         position = PreferencePosition.BOTTOM,
@@ -614,21 +647,21 @@ private fun AppearanceScreen(
         item {
             PreferenceGroup(title = stringResource(Res.string.cpp_prefs_advanced)) {
                 SwitchPreference(
-                    icon = Icons.Rounded.Vibration,
+                    icon = Icons.Filled.Vibration,
                     title = stringResource(Res.string.cpp_prefs_vibrate_on_keypress),
                     checked = state.vibrateOnKeypress,
                     position = PreferencePosition.TOP,
                     onCheckedChange = onVibrateChange
                 )
                 SwitchPreference(
-                    icon = Icons.Rounded.Contrast,
+                    icon = Icons.Filled.Contrast,
                     title = stringResource(Res.string.cpp_high_contrast_text),
                     checked = state.highContrast,
                     position = PreferencePosition.MIDDLE,
                     onCheckedChange = onHighContrastChange
                 )
                 SwitchPreference(
-                    icon = Icons.Rounded.Keyboard,
+                    icon = Icons.Filled.Keyboard,
                     title = stringResource(Res.string.cpp_highlight_expressions),
                     summary = stringResource(Res.string.cpp_highlight_expressions_summary),
                     checked = state.highlightExpressions,
@@ -636,14 +669,14 @@ private fun AppearanceScreen(
                     onCheckedChange = onHighlightExpressionsChange
                 )
                 SwitchPreference(
-                    icon = Icons.Rounded.ScreenRotation,
+                    icon = Icons.Filled.ScreenRotation,
                     title = stringResource(Res.string.cpp_prefs_auto_rotate_screen),
                     checked = state.rotateScreen,
                     position = PreferencePosition.MIDDLE,
                     onCheckedChange = onRotateChange
                 )
                 SwitchPreference(
-                    icon = Icons.Rounded.Fullscreen,
+                    icon = Icons.Filled.Fullscreen,
                     title = stringResource(Res.string.cpp_prefs_keep_screen_on),
                     checked = state.keepScreenOn,
                     position = PreferencePosition.BOTTOM,
@@ -674,9 +707,9 @@ private fun AppearanceModeSegmentedPreference(
     onModeSelected: (AppearanceMode) -> Unit
 ) {
     val options = listOf(
-        Triple(AppearanceMode.SYSTEM, "System", Icons.Rounded.BrightnessAuto),
-        Triple(AppearanceMode.LIGHT, "Light", Icons.Rounded.LightMode),
-        Triple(AppearanceMode.DARK, "Dark", Icons.Rounded.DarkMode)
+        Triple(AppearanceMode.SYSTEM, "System", Icons.Filled.BrightnessAuto),
+        Triple(AppearanceMode.LIGHT, "Light", Icons.Filled.LightMode),
+        Triple(AppearanceMode.DARK, "Dark", Icons.Filled.DarkMode)
     )
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -783,7 +816,7 @@ private fun ThemeSelector(
                         Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                             if (isSelected) {
                             Icon(
-                                imageVector = Icons.Rounded.Check,
+                                imageVector = Icons.Filled.Check,
                                 contentDescription = null,
                                 tint = Color.White,
                                 modifier = Modifier.size(20.dp)
@@ -799,6 +832,51 @@ private fun ThemeSelector(
                     text = "Dynamic colors require Android 12+",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+// ============================================================================
+// ACCESSIBILITY SCREEN
+// ============================================================================
+
+@Composable
+private fun AccessibilityScreen(
+    state: SettingsUiState,
+    onHighContrastChange: (Boolean) -> Unit,
+    onReduceMotionChange: (Boolean) -> Unit,
+    onFontScaleChange: (Float) -> Unit
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = SettingsContentPadding,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item {
+            PreferenceGroup(title = "Accessibility") {
+                SwitchPreference(
+                    icon = Icons.Filled.Contrast,
+                    title = stringResource(Res.string.cpp_high_contrast_text),
+                    checked = state.highContrast,
+                    position = PreferencePosition.TOP,
+                    onCheckedChange = onHighContrastChange
+                )
+                SwitchPreference(
+                    icon = Icons.Filled.Speed,
+                    title = "Reduce Motion",
+                    summary = "Minimize animations throughout the app",
+                    checked = state.reduceMotion,
+                    position = PreferencePosition.MIDDLE,
+                    onCheckedChange = onReduceMotionChange
+                )
+                PreferenceItem(
+                    icon = Icons.Filled.TextFields,
+                    title = "Font Scale",
+                    summary = "${(state.fontScale * 100).toInt()}%",
+                    position = PreferencePosition.BOTTOM,
+                    onClick = { }
                 )
             }
         }
@@ -825,7 +903,7 @@ private fun WidgetScreen(
         item {
             PreferenceGroup(title = stringResource(Res.string.cpp_widget)) {
                 PreferenceItem(
-                    icon = Icons.Rounded.Palette,
+                    icon = Icons.Filled.Palette,
                     title = stringResource(Res.string.cpp_theme),
                     summary = state.widgetTheme.displayName,
                     position = PreferencePosition.SINGLE,
@@ -880,14 +958,14 @@ private fun OtherScreen(
         item {
             PreferenceGroup(title = stringResource(Res.string.cpp_other)) {
                 SwitchPreference(
-                    icon = Icons.Rounded.Speed,
+                    icon = Icons.Filled.Speed,
                     title = stringResource(Res.string.p_calculations_calculate_on_fly_title),
                     checked = state.calculateOnFly,
                     position = PreferencePosition.TOP,
                     onCheckedChange = onCalculateOnFlyChange
                 )
                 SwitchPreference(
-                    icon = Icons.Rounded.Calculate,
+                    icon = Icons.Filled.Calculate,
                     title = stringResource(Res.string.cpp_rpn_mode),
                     summary = stringResource(Res.string.cpp_rpn_mode_summary),
                     checked = state.rpnMode,
@@ -895,7 +973,7 @@ private fun OtherScreen(
                     onCheckedChange = onRpnModeChange
                 )
                 SwitchPreference(
-                    icon = Icons.Rounded.History,
+                    icon = Icons.Filled.History,
                     title = stringResource(Res.string.cpp_tape_mode),
                     summary = stringResource(Res.string.cpp_tape_mode_summary),
                     checked = state.tapeMode,
@@ -903,14 +981,14 @@ private fun OtherScreen(
                     onCheckedChange = onTapeModeChange
                 )
                 SwitchPreference(
-                    icon = Icons.Rounded.History,
+                    icon = Icons.Filled.History,
                     title = stringResource(Res.string.c_calc_show_release_notes_title),
                     checked = state.showReleaseNotes,
                     position = PreferencePosition.MIDDLE,
                     onCheckedChange = onShowReleaseNotesChange
                 )
                 SwitchPreference(
-                    icon = Icons.Rounded.Speed,
+                    icon = Icons.Filled.Speed,
                     title = "Show calculation latency",
                     summary = "Display timing diagnostics for calculations",
                     checked = state.showCalculationLatency,
@@ -918,14 +996,14 @@ private fun OtherScreen(
                     onCheckedChange = onShowCalculationLatencyChange
                 )
                 SwitchPreference(
-                    icon = Icons.Rounded.Keyboard,
+                    icon = Icons.Filled.Keyboard,
                     title = stringResource(Res.string.c_calc_use_back_button_as_prev_title),
                     checked = state.useBackAsPrevious,
                     position = PreferencePosition.MIDDLE,
                     onCheckedChange = onUseBackAsPreviousChange
                 )
                 SwitchPreference(
-                    icon = Icons.Rounded.Calculate,
+                    icon = Icons.Filled.Calculate,
                     title = stringResource(Res.string.cpp_plot_imaginary_part),
                     summary = stringResource(Res.string.cpp_plot_imaginary_part_summary),
                     checked = state.plotImag,
@@ -933,7 +1011,7 @@ private fun OtherScreen(
                     onCheckedChange = onPlotImagChange
                 )
                 SwitchPreference(
-                    icon = Icons.Rounded.Code,
+                    icon = Icons.Filled.Code,
                     title = "LaTeX Output Mode",
                     summary = "Generate LaTeX syntax instead of calculations",
                     checked = state.latexMode,
@@ -973,7 +1051,7 @@ private fun SupportProjectCard(onSupportProject: () -> Unit) {
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.Star,
+                    imageVector = Icons.Filled.Star,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.size(24.dp)
@@ -1457,7 +1535,7 @@ private fun ThemePreview(theme: AppTheme, seedColor: Int = 0xFF13ABF1.toInt()) {
                         .background(buttonColor, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Rounded.Calculate, null, tint = textColor)
+                    Icon(Icons.Filled.Calculate, null, tint = textColor)
                 }
                 
                 // Equals Button

@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import org.solovyev.android.calculator.widget.CalculatorGlanceWidgetReceiver
+import org.solovyev.android.calculator.widgets.CalculatorWidgetReceiver
 
 class Broadcaster(
     private val application: Application,
@@ -62,10 +62,21 @@ class Broadcaster(
     }
 
     fun sendBroadcastIntent(action: String) {
-        val intent = Intent(action).apply {
-            setClass(application, CalculatorGlanceWidgetReceiver::class.java)
+        // Send to new widget receivers
+        val widgetReceivers = listOf(
+            CalculatorWidgetReceiver::class.java,
+            org.solovyev.android.calculator.widgets.QuickCalcWidgetReceiver::class.java,
+            org.solovyev.android.calculator.widgets.HistoryWidgetReceiver::class.java,
+            org.solovyev.android.calculator.widgets.ConverterWidgetReceiver::class.java,
+            org.solovyev.android.calculator.widgets.SmartStackWidgetReceiver::class.java
+        )
+        
+        widgetReceivers.forEach { receiverClass ->
+            val intent = Intent(action).apply {
+                setClass(application, receiverClass)
+            }
+            application.sendBroadcast(intent)
         }
-        application.sendBroadcast(intent)
 
         scope.launch {
             _events.emit(BroadcastEvent(action))
@@ -93,5 +104,6 @@ class Broadcaster(
         const val ACTION_EDITOR_STATE_CHANGED = "org.solovyev.android.calculator.EDITOR_STATE_CHANGED"
         const val ACTION_DISPLAY_STATE_CHANGED = "org.solovyev.android.calculator.DISPLAY_STATE_CHANGED"
         const val ACTION_THEME_CHANGED = "org.solovyev.android.calculator.THEME_CHANGED"
+        const val ACTION_HISTORY_CHANGED = "org.solovyev.android.calculator.HISTORY_CHANGED"
     }
 }

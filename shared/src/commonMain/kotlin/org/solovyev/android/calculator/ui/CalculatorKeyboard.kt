@@ -39,6 +39,7 @@ interface KeyboardActions {
     fun onSetNumeralBase(base: NumeralBase)
     fun onSetBitwiseWordSize(size: Int)
     fun onSetBitwiseSigned(signed: Boolean)
+    fun onSetBitwiseOverflow(overflow: Boolean)
     fun onCursorLeft()
     fun onCursorRight()
     fun onCursorToStart()
@@ -48,6 +49,15 @@ interface KeyboardActions {
     fun onOpenVars()
     fun onOpenFunctions()
     fun onOpenHistory()
+    fun onOpenGraph()
+
+    // Gesture tracking for tutorial system
+    fun onSwipeUp(buttonId: String) {}
+    fun onSwipeDown(buttonId: String) {}
+    fun onSwipeLeft(buttonId: String) {}
+    fun onSwipeRight(buttonId: String) {}
+    fun onLongPress(buttonId: String) {}
+    fun onDoubleTap(buttonId: String) {}
 }
 
 /**

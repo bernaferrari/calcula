@@ -34,7 +34,6 @@ fun CalculatorScreen(
     editorState: EditorState,
     previewResult: String? = null,
     unitHint: String? = null,
-    calculationLatencyMs: Long? = null,
     rpnMode: Boolean = false,
     rpnStack: List<String> = emptyList(),
     tapeMode: Boolean = false,
@@ -43,29 +42,15 @@ fun CalculatorScreen(
     onEditorTextChange: (String, Int) -> Unit,
     onEditorSelectionChange: (Int) -> Unit,
     onOpenHistory: () -> Unit,
-    onOpenConverter: () -> Unit,
-    onOpenFunctions: () -> Unit,
-    onOpenVars: () -> Unit,
-    onOpenGraph: () -> Unit,
     onOpenSettings: () -> Unit,
-    onPrevious: () -> Unit,
-    onPreviousStart: () -> Unit,
-    onNext: () -> Unit,
-    onNextEnd: () -> Unit,
     onCopy: () -> Unit,
-    onPaste: () -> Unit,
     onEquals: () -> Unit,
-    onSimplify: () -> Unit,
     onClearTape: () -> Unit = {},
-    showBottomToolbar: Boolean = false,
-    highlightExpressions: Boolean = true,
-    highContrast: Boolean = false,
     hapticsEnabled: Boolean = true,
     keyboard: @Composable (Modifier) -> Unit,
     modifier: Modifier = Modifier
 ) {
     CompositionLocalProvider(
-        LocalCalculatorHighContrast provides highContrast,
         LocalCalculatorHapticsEnabled provides hapticsEnabled
     ) {
         Scaffold(
@@ -81,7 +66,7 @@ fun CalculatorScreen(
                                 contentDescription = stringResource(Res.string.c_history)
                             )
                         }
-                        FilledTonalIconButton(onClick = onOpenFunctions) {
+                        FilledTonalIconButton(onClick = { /* TODO: Open functions dialog */ }) {
                             Icon(
                                 imageVector = Icons.Default.Calculate,
                                 contentDescription = stringResource(Res.string.c_functions)
@@ -95,29 +80,6 @@ fun CalculatorScreen(
                         }
                     }
                 )
-            },
-            bottomBar = {
-                if (showBottomToolbar) {
-                    Surface(
-                        tonalElevation = 2.dp,
-                        color = MaterialTheme.colorScheme.surfaceContainerLow
-                    ) {
-                        ModernModeBottomBar(
-                            onPrevious = onPrevious,
-                            onPreviousStart = onPreviousStart,
-                            onNext = onNext,
-                            onNextEnd = onNextEnd,
-                            onCopy = onCopy,
-                            onPaste = onPaste,
-                            onOpenConverter = onOpenConverter,
-                            onOpenGraph = onOpenGraph,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .navigationBarsPadding()
-                                .padding(horizontal = 6.dp, vertical = 4.dp)
-                        )
-                    }
-                }
             }
         ) { paddingValues ->
             Column(
@@ -148,16 +110,12 @@ fun CalculatorScreen(
                         editorState = editorState,
                         previewResult = previewResult,
                         unitHint = unitHint,
-                        calculationLatencyMs = calculationLatencyMs,
                         rpnMode = rpnMode,
                         rpnStack = rpnStack,
                         tapeMode = tapeMode,
                         tapeEntries = tapeEntries,
                         liveTapeEntry = liveTapeEntry,
-                        highlightExpressions = highlightExpressions,
                         onEquals = onEquals,
-                        onSimplify = onSimplify,
-                        onOpenGraph = onOpenGraph,
                         onClearTape = onClearTape,
                         onEditorTextChange = onEditorTextChange,
                         onEditorSelectionChange = onEditorSelectionChange,
@@ -185,16 +143,12 @@ private fun DisplayCard(
     editorState: EditorState,
     previewResult: String?,
     unitHint: String?,
-    calculationLatencyMs: Long?,
     rpnMode: Boolean,
     rpnStack: List<String>,
     tapeMode: Boolean,
     tapeEntries: List<TapeEntry>,
     liveTapeEntry: TapeEntry?,
-    highlightExpressions: Boolean,
     onEquals: () -> Unit,
-    onSimplify: () -> Unit,
-    onOpenGraph: () -> Unit,
     onClearTape: () -> Unit,
     onEditorTextChange: (String, Int) -> Unit,
     onEditorSelectionChange: (Int) -> Unit,
@@ -203,10 +157,7 @@ private fun DisplayCard(
     val inputFontSize = 30.sp
     val resultFontSize = 54.sp
     val previewText = previewResult?.takeIf { state.text.isEmpty() }
-    val diagnosticsText = listOfNotNull(
-        unitHint,
-        calculationLatencyMs?.let { "${it}ms" }
-    ).joinToString(separator = " · ")
+    val diagnosticsText = unitHint.orEmpty()
 
     Column(
         modifier = modifier,
@@ -247,8 +198,8 @@ private fun DisplayCard(
         CalculatorEditor(
             state = editorState,
             onTextChange = onEditorTextChange,
-            onSelectionChange = onEditorSelectionChange,
-            highlightExpressions = highlightExpressions,
+                onSelectionChange = onEditorSelectionChange,
+            highlightExpressions = true,
             minTextSize = inputFontSize,
             maxTextSize = inputFontSize,
             modifier = Modifier.fillMaxWidth()
@@ -274,9 +225,7 @@ private fun DisplayCard(
                         .width(74.dp)
                         .height(72.dp)
                         .combinedClickable(
-                            onClick = onEquals,
-                            onDoubleClick = onOpenGraph,
-                            onLongClick = onSimplify
+                            onClick = onEquals
                         ),
                     shape = RoundedCornerShape(12.dp),
                     color = when {

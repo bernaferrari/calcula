@@ -65,7 +65,8 @@ enum class ButtonType {
     OPERATION,
     OPERATION_HIGHLIGHTED,
     CONTROL,
-    SPECIAL
+    SPECIAL,
+    MEMORY
 }
 
 /**
@@ -125,6 +126,7 @@ fun CalculatorButton(
         ButtonType.DIGIT -> CircleShape // Pill/Circle for digits
         ButtonType.OPERATION, ButtonType.CONTROL -> RoundedCornerShape(16.dp) // Squircle for ops
         ButtonType.OPERATION_HIGHLIGHTED, ButtonType.SPECIAL -> MaterialTheme.shapes.extraLarge // Special shape
+        ButtonType.MEMORY -> RoundedCornerShape(16.dp)
     }
     
     // Enhanced spring spec for "bouncy" feel
@@ -144,6 +146,7 @@ fun CalculatorButton(
         ButtonType.OPERATION_HIGHLIGHTED -> MaterialTheme.colorScheme.tertiaryContainer
         ButtonType.CONTROL -> MaterialTheme.colorScheme.surfaceVariant
         ButtonType.SPECIAL -> MaterialTheme.colorScheme.primaryContainer
+        ButtonType.MEMORY -> MaterialTheme.colorScheme.secondaryContainer
     }
 
     val effectiveTextColor = when (buttonType) {
@@ -152,6 +155,7 @@ fun CalculatorButton(
         ButtonType.OPERATION_HIGHLIGHTED -> MaterialTheme.colorScheme.onTertiaryContainer
         ButtonType.CONTROL -> MaterialTheme.colorScheme.onSurfaceVariant
         ButtonType.SPECIAL -> MaterialTheme.colorScheme.onPrimaryContainer
+        ButtonType.MEMORY -> MaterialTheme.colorScheme.onSecondaryContainer
     }
 
     val directionTextStyle = TextStyle(

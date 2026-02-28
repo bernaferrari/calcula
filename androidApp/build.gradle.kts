@@ -102,6 +102,9 @@ dependencies {
     implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.glance.material3)
 
+    // WorkManager for widget updates
+    implementation(libs.androidx.work.runtime)
+
     // Koin
     implementation(libs.koin.android)
     implementation(libs.koin.compose)

@@ -1,14 +1,14 @@
 package org.solovyev.android.calculator.ui
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -16,11 +16,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,7 +40,6 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.compose.koinInject
-import org.jetbrains.compose.resources.stringResource
 import org.solovyev.android.calculator.AppPreferences
 import org.solovyev.android.calculator.CalculatorViewModel
 import org.solovyev.android.calculator.ui.theme.CalculatorTheme
@@ -52,15 +51,15 @@ import org.solovyev.android.calculator.ui.history.HistoryViewModel
 import org.solovyev.android.calculator.ui.about.AboutScreen
 import org.solovyev.android.calculator.GuiMode
 import org.solovyev.android.calculator.GuiTheme
-import org.solovyev.android.calculator.ui.converter.ConverterDialog
 import org.solovyev.android.calculator.ui.nb.CalculatorScreenWithStyle
 import org.solovyev.android.calculator.ui.nb.UiStyle
 import org.solovyev.android.calculator.ui.settings.SettingsDestination
 import org.solovyev.android.calculator.ui.settings.SettingsScreen
 import org.solovyev.android.calculator.ui.settings.SettingsViewModel
-import org.solovyev.android.calculator.ui.graphing.GraphingScreen
+import org.solovyev.android.calculator.ui.formulas.FormulaScreen
+import org.solovyev.android.calculator.formulas.FormulaViewModel
 
-// Navigation keys for Navigation 3
+// Navigation keys
 @Serializable
 data object OnboardingKey : NavKey
 
@@ -80,12 +79,11 @@ data object VariablesKey : NavKey
 data object FunctionsKey : NavKey
 
 @Serializable
-data object GraphKey : NavKey
+data object FormulasKey : NavKey
 
 @Serializable
 data object AboutKey : NavKey
 
-// SavedState configuration for multiplatform navigation
 private val navConfig = SavedStateConfiguration {
     serializersModule = SerializersModule {
         polymorphic(NavKey::class) {
@@ -95,7 +93,7 @@ private val navConfig = SavedStateConfiguration {
             subclass(SettingsKey::class, SettingsKey.serializer())
             subclass(VariablesKey::class, VariablesKey.serializer())
             subclass(FunctionsKey::class, FunctionsKey.serializer())
-            subclass(GraphKey::class, GraphKey.serializer())
+            subclass(FormulasKey::class, FormulasKey.serializer())
             subclass(AboutKey::class, AboutKey.serializer())
         }
     }
@@ -103,20 +101,34 @@ private val navConfig = SavedStateConfiguration {
 
 @Composable
 fun CalculatorApp(
+    initialExpression: String? = null,
+    openHistory: Boolean = false,
+    onInitialExpressionConsumed: () -> Unit = {},
     viewModel: CalculatorViewModel = koinViewModel(),
     historyViewModel: HistoryViewModel = koinViewModel(),
     settingsViewModel: SettingsViewModel = koinViewModel(),
     appPreferences: AppPreferences = koinInject()
 ) {
     val onboardingFinished by appPreferences.wizard.finished.collectAsState(initial = true)
-    
-    // Navigation 3 back stack with SavedStateConfiguration for multiplatform support
+
+    LaunchedEffect(initialExpression) {
+        initialExpression?.let { expression ->
+            viewModel.onEditorTextChange(expression, expression.length)
+            onInitialExpressionConsumed()
+        }
+    }
+
     val backStack = rememberNavBackStack(
         navConfig,
         if (!onboardingFinished) OnboardingKey else CalculatorKey
     )
 
-    var showConverter by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(openHistory, onboardingFinished) {
+        if (onboardingFinished && openHistory) {
+            backStack.add(HistoryKey)
+        }
+    }
+
     var settingsDestination by rememberSaveable { mutableStateOf(SettingsDestination.MAIN) }
 
     val themePreference by appPreferences.gui.theme.collectAsState(initial = GuiTheme.material_theme.id)
@@ -126,7 +138,6 @@ fun CalculatorApp(
     val themeSeed by appPreferences.gui.themeSeed.collectAsState(initial = 0xFF13ABF1.toInt())
     val dynamicColor by appPreferences.gui.dynamicColor.collectAsState(initial = true)
 
-    // Calculator State
     val displayState by viewModel.displayState.collectAsState()
     val editorState by viewModel.editorState.collectAsState()
     val previewResult by viewModel.previewResult.collectAsState()
@@ -137,15 +148,10 @@ fun CalculatorApp(
     val tapeMode by viewModel.tapeMode.collectAsState()
     val tapeEntries by viewModel.tapeEntries.collectAsState()
     val liveTapeEntry by viewModel.liveTapeEntry.collectAsState()
-    val memoryActiveRegister by viewModel.memoryActiveRegister.collectAsState()
     val numeralBase by viewModel.numeralBase.collectAsState()
-    val bitwiseWordSize by viewModel.bitwiseWordSize.collectAsState()
-    val bitwiseSigned by viewModel.bitwiseSigned.collectAsState()
-    val bitwiseOverflow by viewModel.bitwiseOverflow.collectAsState()
 
     val clipboardManager = LocalClipboardManager.current
 
-    // Map theme string to GuiTheme to determine dark/light mode
     val theme = GuiTheme.fromId(themePreference)
     val isDarkTheme = when (theme) {
         GuiTheme.material_dark -> true
@@ -162,44 +168,20 @@ fun CalculatorApp(
             backStack = backStack,
             modifier = Modifier.fillMaxSize(),
             transitionSpec = {
-                (
-                    slideInHorizontally(
-                        initialOffsetX = { width -> width / 3 },
-                        animationSpec = tween(durationMillis = 280)
-                    ) + fadeIn(animationSpec = tween(durationMillis = 220, delayMillis = 40))
-                ) togetherWith (
-                    slideOutHorizontally(
-                        targetOffsetX = { width -> -width / 4 },
-                        animationSpec = tween(durationMillis = 240)
-                    ) + fadeOut(animationSpec = tween(durationMillis = 180))
-                )
+                fadeIn(animationSpec = tween(200)) togetherWith
+                fadeOut(animationSpec = tween(150))
             },
             popTransitionSpec = {
-                (
-                    slideInHorizontally(
-                        initialOffsetX = { width -> -width / 3 },
-                        animationSpec = tween(durationMillis = 280)
-                    ) + fadeIn(animationSpec = tween(durationMillis = 220, delayMillis = 40))
-                ) togetherWith (
-                    slideOutHorizontally(
-                        targetOffsetX = { width -> width / 4 },
-                        animationSpec = tween(durationMillis = 240)
-                    ) + fadeOut(animationSpec = tween(durationMillis = 180))
-                )
+                fadeIn(animationSpec = tween(200)) togetherWith
+                fadeOut(animationSpec = tween(150))
             },
             onBack = { backStack.popOrCalculator() },
             entryProvider = entryProvider {
                 entry<OnboardingKey> {
                     OnboardingScreen(
-                        onComplete = { 
+                        onComplete = {
                             backStack.add(CalculatorKey)
                             backStack.remove(OnboardingKey)
-                        },
-                        onThemeSelected = { selectedTheme ->
-                            viewModel.setTheme(selectedTheme)
-                        },
-                        onModeSelected = { mode ->
-                            viewModel.setMode(mode)
                         }
                     )
                 }
@@ -210,7 +192,6 @@ fun CalculatorApp(
                         GuiMode.modern -> KeyboardMode.MODERN
                     }
 
-                    // Classic style keeps a dedicated result panel visible.
                     CalculatorScreenWithStyle(
                         uiStyle = UiStyle.CLASSIC,
                         keyboardMode = keyboardMode,
@@ -218,33 +199,29 @@ fun CalculatorApp(
                         editorState = editorState,
                         previewResult = previewResult,
                         unitHint = unitHint,
-                        calculationLatencyMs = calculationLatencyMs,
                         rpnMode = rpnMode,
                         rpnStack = rpnStack,
                         tapeMode = tapeMode,
                         tapeEntries = tapeEntries,
                         liveTapeEntry = liveTapeEntry,
-                        memoryActiveRegister = memoryActiveRegister,
+                        memoryActiveRegister = null,
                         numeralBase = numeralBase,
-                        bitwiseWordSize = bitwiseWordSize,
-                        bitwiseSigned = bitwiseSigned,
-                        bitwiseOverflow = bitwiseOverflow,
+                        bitwiseWordSize = 64,
+                        bitwiseSigned = true,
+                        bitwiseOverflow = false,
                         onEditorTextChange = { text, selection -> viewModel.onEditorTextChange(text, selection) },
                         onEditorSelectionChange = { viewModel.onEditorSelectionChange(it) },
                         onOpenHistory = { backStack.add(HistoryKey) },
-                        onOpenConverter = { showConverter = true },
-                        onOpenFunctions = { backStack.add(FunctionsKey) },
-                        onOpenVars = { backStack.add(VariablesKey) },
-                        onOpenGraph = { backStack.add(GraphKey) },
                         onOpenSettings = {
                             settingsDestination = SettingsDestination.MAIN
                             backStack.add(SettingsKey)
                         },
-                        highlightExpressions = true,
-                        highContrast = highContrast,
-                        hapticsEnabled = vibrateOnKeypress,
+                        onOpenFormulas = { backStack.add(FormulasKey) },
                         showBottomToolbar = true,
                         onClearTape = viewModel::clearTape,
+                        hapticsEnabled = vibrateOnKeypress,
+                        reduceMotion = false,
+                        fontScale = 1.0f,
                         keyboardActions = rememberKeyboardActions(
                             viewModel = viewModel,
                             onOpenSettings = {
@@ -254,27 +231,27 @@ fun CalculatorApp(
                             onOpenHistory = { backStack.add(HistoryKey) },
                             onOpenFunctions = { backStack.add(FunctionsKey) },
                             onOpenVars = { backStack.add(VariablesKey) },
-                        ),
+                        )
                     )
                 }
                 entry<HistoryKey> {
                     val recent by historyViewModel.recent.collectAsState()
                     val saved by historyViewModel.saved.collectAsState()
-                    
+
                     HistoryScreen(
                         recent = recent,
                         saved = saved,
-                        onUse = { state -> 
+                        onUse = { state ->
                             viewModel.onEditorTextChange(
                                 text = state.editor.getTextString(),
                                 selection = state.editor.selection
                             )
                             backStack.removeLastOrNull()
                         },
-                        onCopyExpression = { state -> 
+                        onCopyExpression = { state ->
                             clipboardManager.setText(AnnotatedString(state.editor.getTextString()))
                         },
-                        onCopyResult = { state -> 
+                        onCopyResult = { state ->
                             clipboardManager.setText(AnnotatedString(state.display.text))
                         },
                         onSave = historyViewModel::onSave,
@@ -285,6 +262,18 @@ fun CalculatorApp(
                         onBack = { backStack.popOrCalculator() }
                     )
                 }
+                entry<FormulasKey> {
+                    val formulaViewModel = koinViewModel<FormulaViewModel>()
+
+                    FormulaScreen(
+                        viewModel = formulaViewModel,
+                        onUseResult = { result ->
+                            viewModel.insert(result)
+                            backStack.popOrCalculator()
+                        },
+                        onBack = { backStack.popOrCalculator() }
+                    )
+                }
                 entry<VariablesKey> {
                     VariablesScreen(
                         onBack = { backStack.popOrCalculator() }
@@ -292,11 +281,6 @@ fun CalculatorApp(
                 }
                 entry<FunctionsKey> {
                     FunctionsScreen(
-                        onBack = { backStack.popOrCalculator() }
-                    )
-                }
-                entry<GraphKey> {
-                    GraphingScreen(
                         onBack = { backStack.popOrCalculator() }
                     )
                 }
@@ -325,60 +309,27 @@ fun CalculatorApp(
                         AnimatedContent(
                             targetState = settingsDestination,
                             transitionSpec = {
-                                if (settingsDestinationLevel(targetState) >= settingsDestinationLevel(initialState)) {
-                                    (
-                                        slideInHorizontally(
-                                            initialOffsetX = { width -> width / 3 },
-                                            animationSpec = tween(durationMillis = 260)
-                                        ) + fadeIn(animationSpec = tween(durationMillis = 200, delayMillis = 30))
-                                    ) togetherWith (
-                                        slideOutHorizontally(
-                                            targetOffsetX = { width -> -width / 4 },
-                                            animationSpec = tween(durationMillis = 220)
-                                        ) + fadeOut(animationSpec = tween(durationMillis = 160))
-                                    )
-                                } else {
-                                    (
-                                        slideInHorizontally(
-                                            initialOffsetX = { width -> -width / 3 },
-                                            animationSpec = tween(durationMillis = 260)
-                                        ) + fadeIn(animationSpec = tween(durationMillis = 200, delayMillis = 30))
-                                    ) togetherWith (
-                                        slideOutHorizontally(
-                                            targetOffsetX = { width -> width / 4 },
-                                            animationSpec = tween(durationMillis = 220)
-                                        ) + fadeOut(animationSpec = tween(durationMillis = 160))
-                                    )
-                                }
+                                fadeIn(animationSpec = tween(200)) togetherWith
+                                fadeOut(animationSpec = tween(150))
                             },
-                            label = "SettingsDestinationTransition"
+                            label = "SettingsTransition"
                         ) { destination ->
                             SettingsScreen(
                                 destination = destination,
                                 state = settingsState,
                                 actions = settingsViewModel,
                                 onNavigate = { nextDestination -> settingsDestination = nextDestination },
-                                onStartWizard = {
-                                    settingsDestination = SettingsDestination.MAIN
-                                    backStack.add(OnboardingKey)
-                                },
+                                onStartWizard = { settingsDestination = SettingsDestination.MAIN },
                                 onOpenAbout = { backStack.add(AboutKey) },
                                 onReportBug = {},
-                                onSupportProject = {},
                                 languages = emptyList(),
-                                adFreePurchased = true,
+                                adFreePurchased = true
                             )
                         }
                     }
                 }
             }
         )
-
-        if (showConverter) {
-            ConverterDialog(
-                onDismissRequest = { showConverter = false }
-            )
-        }
     }
 }
 
@@ -391,7 +342,7 @@ private fun SettingsScaffold(
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+        containerColor = MaterialTheme.colorScheme.surface,
         contentWindowInsets = WindowInsets.safeDrawing.only(
             WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom
         ),
@@ -399,14 +350,14 @@ private fun SettingsScaffold(
             StandardTopAppBar(
                 title = title,
                 onBack = onBack,
-                containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+                containerColor = MaterialTheme.colorScheme.surface
             )
         }
     ) { innerPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+                .background(MaterialTheme.colorScheme.surface)
                 .padding(innerPadding)
         ) {
             content()
@@ -416,19 +367,12 @@ private fun SettingsScaffold(
 
 @Composable
 private fun settingsTitle(destination: SettingsDestination): String = when (destination) {
-    SettingsDestination.MAIN -> stringResource(Res.string.cpp_settings)
-    SettingsDestination.NUMBER_FORMAT -> stringResource(Res.string.cpp_number_format)
-    SettingsDestination.APPEARANCE -> stringResource(Res.string.cpp_appearance)
-    SettingsDestination.WIDGET -> stringResource(Res.string.cpp_widget)
-    SettingsDestination.OTHER -> stringResource(Res.string.cpp_other)
-}
-
-private fun settingsDestinationLevel(destination: SettingsDestination): Int = when (destination) {
-    SettingsDestination.MAIN -> 0
-    SettingsDestination.NUMBER_FORMAT,
-    SettingsDestination.APPEARANCE,
-    SettingsDestination.WIDGET,
-    SettingsDestination.OTHER -> 1
+    SettingsDestination.MAIN -> "Settings"
+    SettingsDestination.NUMBER_FORMAT -> "Number Format"
+    SettingsDestination.APPEARANCE -> "Appearance"
+    SettingsDestination.ACCESSIBILITY -> "Accessibility"
+    SettingsDestination.WIDGET -> "Widget"
+    SettingsDestination.OTHER -> "Advanced"
 }
 
 private fun MutableList<NavKey>.popOrCalculator() {
@@ -450,7 +394,6 @@ private fun rememberKeyboardActions(
     onOpenFunctions: () -> Unit,
     onOpenVars: () -> Unit
 ): KeyboardActions {
-    val clipboardManager = LocalClipboardManager.current
     return object : KeyboardActions {
         override fun onNumberClick(number: String) = viewModel.onDigitPressed(number)
         override fun onOperatorClick(operator: String) = viewModel.onOperatorPressed(operator)
@@ -470,25 +413,29 @@ private fun rememberKeyboardActions(
         override fun onSetNumeralBase(base: jscl.NumeralBase) = viewModel.setNumeralBase(base)
         override fun onSetBitwiseWordSize(size: Int) = viewModel.setBitwiseWordSize(size)
         override fun onSetBitwiseSigned(signed: Boolean) = viewModel.setBitwiseSigned(signed)
+        override fun onSetBitwiseOverflow(overflow: Boolean) {}
         override fun onCursorLeft() = viewModel.moveCursorLeft()
         override fun onCursorRight() = viewModel.moveCursorRight()
         override fun onCursorToStart() = viewModel.moveCursorToStart()
         override fun onCursorToEnd() = viewModel.moveCursorToEnd()
         override fun onCopy() {
-            viewModel.getTextToCopy()?.let { text ->
-                clipboardManager.setText(AnnotatedString(text))
-                viewModel.onCopied()
-            }
+            // Handled at screen level
         }
         override fun onPaste() {
-            clipboardManager.getText()?.text?.let { text ->
-                if (text.isNotBlank()) {
-                    viewModel.onPasteText(text)
-                }
-            }
+            // Handled at screen level
         }
         override fun onOpenVars() = onOpenVars()
         override fun onOpenFunctions() = onOpenFunctions()
         override fun onOpenHistory() = onOpenHistory()
+        override fun onOpenGraph() {
+            // Navigate to graph screen - uses same route as functions for now
+            onOpenFunctions()
+        }
+        override fun onSwipeUp(buttonId: String) {}
+        override fun onSwipeDown(buttonId: String) {}
+        override fun onSwipeLeft(buttonId: String) {}
+        override fun onSwipeRight(buttonId: String) {}
+        override fun onLongPress(buttonId: String) {}
+        override fun onDoubleTap(buttonId: String) {}
     }
 }

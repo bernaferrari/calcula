@@ -93,6 +93,9 @@ fun UnifiedButton(
         ButtonType.SPECIAL -> {
             MaterialTheme.colorScheme.tertiaryContainer to MaterialTheme.colorScheme.onTertiaryContainer
         }
+        ButtonType.MEMORY -> {
+            MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer
+        }
     }
 
     val shape = RoundedCornerShape(cornerRadius)

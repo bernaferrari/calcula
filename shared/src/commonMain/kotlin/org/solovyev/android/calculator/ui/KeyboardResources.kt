@@ -13,6 +13,9 @@ import org.jetbrains.compose.resources.MissingResourceException
 
 val LocalCalculatorHighContrast = staticCompositionLocalOf { false }
 val LocalCalculatorHapticsEnabled = staticCompositionLocalOf { true }
+val LocalCalculatorReduceMotion = staticCompositionLocalOf { false }
+val LocalCalculatorExtendedHaptics = staticCompositionLocalOf { false }
+val LocalCalculatorFontScale = staticCompositionLocalOf { 1.0f }
 
 /**
  * Interface for all string labels used in the keyboard.

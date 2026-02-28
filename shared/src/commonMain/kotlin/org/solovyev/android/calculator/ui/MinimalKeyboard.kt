@@ -258,6 +258,7 @@ private fun CalculatorButton(
         ButtonType.CONTROL -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
         ButtonType.OPERATION_HIGHLIGHTED -> MaterialTheme.colorScheme.primary
         ButtonType.SPECIAL -> MaterialTheme.colorScheme.surfaceVariant
+        ButtonType.MEMORY -> MaterialTheme.colorScheme.secondaryContainer
     }
 
     val textColor = when (buttonType) {
@@ -266,6 +267,7 @@ private fun CalculatorButton(
         ButtonType.CONTROL -> MaterialTheme.colorScheme.onSurfaceVariant
         ButtonType.OPERATION_HIGHLIGHTED -> MaterialTheme.colorScheme.onPrimary
         ButtonType.SPECIAL -> MaterialTheme.colorScheme.onSurface
+        ButtonType.MEMORY -> MaterialTheme.colorScheme.onSecondaryContainer
     }
 
     Box(

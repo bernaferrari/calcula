@@ -130,4 +130,11 @@ by crowdin.net-->
   <string name="cpp_number_format_dec">Decimal</string>
   <string name="cpp_number_format_eng">Engineering</string>
   <string name="cpp_number_format_sci">Scientific</string>
+  
+  <!-- Widget Names -->
+  <string name="cpp_widget_calculator">Calculator++ (Interactive)</string>
+  <string name="cpp_widget_quick_calc">Quick Calc</string>
+  <string name="cpp_widget_history">History</string>
+  <string name="cpp_widget_converter">Currency Converter</string>
+  <string name="cpp_widget_smart_stack">Smart Stack</string>
 </resources>

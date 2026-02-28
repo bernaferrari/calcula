@@ -43,8 +43,11 @@ preference = "1.2.1"
 robolectric = "4.16.1"
 room = "2.8.4"
 sqlite = "2.6.2"
+work = "2.10.1"
 viewpager = "1.1.0"
+windowManager = "1.4.0"
 xerces = "2.12.2"
+ktor = "3.1.2"
 
 [libraries]
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "composeMultiplatform" }
@@ -90,6 +93,8 @@ androidx-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
 androidx-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 androidx-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 androidx-viewpager = { module = "androidx.viewpager:viewpager", version.ref = "viewpager" }
+androidx-window-manager = { module = "androidx.window:window", version.ref = "windowManager" }
+androidx-work-runtime = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
 # BigNum (KMP-compatible BigInteger/BigDecimal)
 bignum = { module = "com.ionspin.kotlin:bignum", version.ref = "bignum" }
 billing-ktx = { module = "com.android.billingclient:billing-ktx", version.ref = "billing" }
@@ -120,6 +125,12 @@ opencsv = { module = "com.opencsv:opencsv", version.ref = "opencsv" }
 play-services-ads = { module = "com.google.android.gms:play-services-ads", version.ref = "playServicesAds" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 xerces = { module = "xerces:xercesImpl", version.ref = "xerces" }
+# Ktor
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
+ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

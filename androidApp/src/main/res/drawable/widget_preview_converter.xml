@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="80dp"
+    android:viewportWidth="120"
+    android:viewportHeight="80">
+
+    <!-- Background rectangle with gradient-like colors -->
+    <path
+        android:fillColor="#FF1565C0"
+        android:pathData="M8,0h104c4.42,0 8,3.58 8,8v64c0,4.42 -3.58,8 -8,8h-104c-4.42,0 -8,-3.58 -8,-8v-64c0,-4.42 3.58,-8 8,-8z" />
+
+    <!-- Conversion header -->
+    <path
+        android:fillColor="#FF0D47A1"
+        android:pathData="M16,8h88v18h-88z" />
+
+    <!-- "Converter" text representation -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M24,19h40v3h-40z" />
+
+    <!-- From value box -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M16,32h52v16h-52z" />
+
+    <!-- From unit text -->
+    <path
+        android:fillColor="#FF1565C0"
+        android:pathData="M20,40h20v4h-20z" />
+
+    <!-- Arrow down -->
+    <path
+        android:fillColor="#FF64B5F6"
+        android:pathData="M72,36l6,8l6,-8h-12z" />
+
+    <!-- To value box -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M52,52h52v16h-52z" />
+
+    <!-- To unit text -->
+    <path
+        android:fillColor="#FF1565C0"
+        android:pathData="M56,60h20v4h-20z" />
+
+    <!-- Category icons row -->
+    <path
+        android:fillColor="#FF90CAF9"
+        android:pathData="M20,72h8v4h-8zM36,72h8v4h-8zM52,72h8v4h-8zM68,72h8v4h-8z" />
+
+</vector>

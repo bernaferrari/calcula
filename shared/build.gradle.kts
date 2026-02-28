@@ -50,7 +50,8 @@ kotlin {
             implementation(libs.compose.material3)
             implementation(libs.compose.ui)
             implementation(libs.compose.components.resources)
-            implementation(libs.androidx.material.icons.extended)
+
+
 
             // Internal - exposed as API so consumers can access jscl types
             api(project(":jscl"))
@@ -67,6 +68,11 @@ kotlin {
 
             // Material Kolor
             implementation(libs.materialkolor)
+
+            // Ktor
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization.kotlinx.json)
         }
 
         androidMain.dependencies {
@@ -74,9 +80,19 @@ kotlin {
             implementation(libs.androidx.appcompat)
             implementation(libs.androidx.core.ktx)
             implementation(libs.material)
+            implementation(libs.androidx.window.manager)
+            implementation(libs.androidx.material.icons.extended)
 
             // Koin Android
             implementation(libs.koin.android)
+
+            // Ktor Android engine
+            implementation(libs.ktor.client.okhttp)
+        }
+
+        iosMain.dependencies {
+            // Ktor iOS engine
+            implementation(libs.ktor.client.darwin)
         }
 
         commonTest.dependencies {

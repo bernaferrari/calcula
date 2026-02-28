@@ -106,11 +106,12 @@
 
         <!-- WIDGET CONFIG -->
 
+        <!-- Interactive Calculator Widget (4x4) -->
         <receiver
             android:exported="true"
-            android:name=".widget.CalculatorGlanceWidgetReceiver"
+            android:name=".widgets.CalculatorWidgetReceiver"
             android:icon="@drawable/ic_launcher"
-            android:label="@string/cpp_app_name">
+            android:label="@string/cpp_widget_calculator">
 
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -123,8 +124,100 @@
 
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/calculator_widget" />
+                android:resource="@xml/calculator_widget_new" />
         </receiver>
+
+        <!-- Quick Calc Widget (2x1) -->
+        <receiver
+            android:exported="true"
+            android:name=".widgets.QuickCalcWidgetReceiver"
+            android:icon="@drawable/ic_launcher"
+            android:label="@string/cpp_widget_quick_calc">
+
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="org.solovyev.android.calculator.THEME_CHANGED" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/quick_calc_widget" />
+        </receiver>
+
+        <!-- History Widget (3x2) -->
+        <receiver
+            android:exported="true"
+            android:name=".widgets.HistoryWidgetReceiver"
+            android:icon="@drawable/ic_launcher"
+            android:label="@string/cpp_widget_history">
+
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="org.solovyev.android.calculator.HISTORY_CHANGED" />
+                <action android:name="org.solovyev.android.calculator.THEME_CHANGED" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/history_widget" />
+        </receiver>
+
+        <!-- Currency Converter Widget (3x2) -->
+        <receiver
+            android:exported="true"
+            android:name=".widgets.ConverterWidgetReceiver"
+            android:icon="@drawable/ic_launcher"
+            android:label="@string/cpp_widget_converter">
+
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="org.solovyev.android.calculator.THEME_CHANGED" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/converter_widget" />
+        </receiver>
+
+        <!-- Smart Stack Widget (4x2) -->
+        <receiver
+            android:exported="true"
+            android:name=".widgets.SmartStackWidgetReceiver"
+            android:icon="@drawable/ic_launcher"
+            android:label="@string/cpp_widget_smart_stack">
+
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="org.solovyev.android.calculator.HISTORY_CHANGED" />
+                <action android:name="org.solovyev.android.calculator.THEME_CHANGED" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/smart_stack_widget" />
+        </receiver>
+
+        <!-- Widget Configuration Activity -->
+        <activity
+            android:name=".widgets.WidgetConfigurationActivity"
+            android:exported="false"
+            android:theme="@style/Cpp.Theme.Material"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
+        <!-- WorkManager initialization for widget updates -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup" />
+        </provider>
 
     </application>
 </manifest>

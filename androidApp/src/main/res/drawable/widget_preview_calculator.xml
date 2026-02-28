@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="80dp"
+    android:viewportWidth="120"
+    android:viewportHeight="80">
+
+    <!-- Background rectangle -->
+    <path
+        android:fillColor="#FF1A237E"
+        android:pathData="M8,0h104c4.42,0 8,3.58 8,8v64c0,4.42 -3.58,8 -8,8h-104c-4.42,0 -8,-3.58 -8,-8v-64c0,-4.42 3.58,-8 8,-8z" />
+
+    <!-- Calculator display area -->
+    <path
+        android:fillColor="#FF2C3E50"
+        android:pathData="M16,8h88v20h-88z" />
+
+    <!-- Display text "123+456" -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M24,22h4v2h-4zM30,22h12v2h-12zM44,22h4v2h-4zM50,22h12v2h-12z" />
+
+    <!-- Button grid rows -->
+    <path
+        android:fillColor="#FF34495E"
+        android:pathData="M16,32h20v10h-20zM40,32h20v10h-20zM64,32h20v10h-20zM88,32h16v10h-16z" />
+
+    <path
+        android:fillColor="#FF34495E"
+        android:pathData="M16,44h20v10h-20zM40,44h20v10h-20zM64,44h20v10h-20zM88,44h16v10h-16z" />
+
+    <path
+        android:fillColor="#FF34495E"
+        android:pathData="M16,56h20v10h-20zM40,56h20v10h-20zM64,56h20v10h-20zM88,56h16v10h-16z" />
+
+    <!-- Equals button (accent color) -->
+    <path
+        android:fillColor="#FF4CAF50"
+        android:pathData="M88,56h16v10h-16z" />
+
+    <!-- App icon circle -->
+    <path
+        android:fillColor="#FF5C6BC0"
+        android:pathData="M100,65c0,2.76 -2.24,5 -5,5s-5,-2.24 -5,-5 2.24,-5 5,-5 5,2.24 5,5z" />
+
+    <!-- Calculator symbol on icon -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M96,63h3v1h-3zM96,65h3v1h-3zM96,67h3v1h-3z" />
+
+</vector>

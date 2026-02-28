@@ -1,11 +1,17 @@
 package org.solovyev.android.calculator.history
 
+import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
+
+data class OperatorUsage(
+    @ColumnInfo(name = "firstChar") val firstChar: String,
+    @ColumnInfo(name = "count") val count: Int
+)
 
 @Dao
 interface HistoryDao {
@@ -41,4 +47,13 @@ interface HistoryDao {
 
     @Query("SELECT COUNT(*) FROM history_entries")
     suspend fun count(): Int
+
+    @Query("SELECT * FROM history_entries WHERE timestamp >= :since ORDER BY timestamp DESC")
+    fun getHistorySince(since: Long): Flow<List<HistoryEntry>>
+
+    @Query("SELECT * FROM history_entries WHERE timestamp BETWEEN :start AND :end ORDER BY timestamp DESC")
+    suspend fun getHistoryBetween(start: Long, end: Long): List<HistoryEntry>
+
+    @Query("SELECT DISTINCT substr(expression, 1, 1) as firstChar, COUNT(*) as count FROM history_entries GROUP BY firstChar")
+    suspend fun getOperatorUsage(): List<OperatorUsage>
 }

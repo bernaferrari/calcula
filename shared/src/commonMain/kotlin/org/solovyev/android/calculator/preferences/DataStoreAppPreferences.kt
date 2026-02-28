@@ -4,6 +4,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
@@ -12,20 +13,32 @@ import kotlinx.coroutines.flow.firstOrNull
 import org.solovyev.android.calculator.AppPreferences
 import org.solovyev.android.calculator.ConverterPreferences
 import org.solovyev.android.calculator.GuiPreferences
+import org.solovyev.android.calculator.HapticsPreferences
+import org.solovyev.android.calculator.HistoryPreferences
 import org.solovyev.android.calculator.OnscreenPreferences
 import org.solovyev.android.calculator.SettingsPreferences
+import org.solovyev.android.calculator.ThemePreferences
 import org.solovyev.android.calculator.UiPreferences
 import org.solovyev.android.calculator.WidgetPreferences
+import org.solovyev.android.calculator.WidgetsPreferences
 import org.solovyev.android.calculator.WizardPreferences
+import org.solovyev.android.calculator.history.HistoryState
 
-class DataStoreAppPreferences(private val dataStore: DataStore<Preferences>) : AppPreferences {
+class DataStoreAppPreferences(
+    private val dataStore: DataStore<Preferences>,
+    private val roomHistory: org.solovyev.android.calculator.history.RoomHistory
+) : AppPreferences {
     override val settings: SettingsPreferences = DataStoreSettingsPreferences(dataStore)
     override val gui: GuiPreferences = DataStoreGuiPreferences(dataStore)
     override val onscreen: OnscreenPreferences = DataStoreOnscreenPreferences(dataStore)
     override val widget: WidgetPreferences = DataStoreWidgetPreferences(dataStore)
+    override val widgets: WidgetsPreferences = DataStoreWidgetsPreferences(dataStore)
     override val converter: ConverterPreferences = DataStoreConverterPreferences(dataStore)
     override val ui: UiPreferences = DataStoreUiPreferences(dataStore)
     override val wizard: WizardPreferences = DataStoreWizardPreferences(dataStore)
+    override val theme: ThemePreferences = DataStoreThemePreferences(dataStore)
+    override val haptics: HapticsPreferences = DataStoreHapticsPreferences(dataStore)
+    override val history: HistoryPreferences = DataStoreHistoryPreferences(roomHistory)
 }
 
 class DataStoreUiPreferences(private val dataStore: DataStore<Preferences>) : UiPreferences {
@@ -189,6 +202,9 @@ class DataStoreConverterPreferences(private val dataStore: DataStore<Preferences
     private val keyLastDimension = intPreferencesKey("converter.lastDimension")
     private val keyLastUnitsFrom = intPreferencesKey("converter.lastUnitsFrom")
     private val keyLastUnitsTo = intPreferencesKey("converter.lastUnitsTo")
+    private val keyLastFromCurrency = stringPreferencesKey("converter.lastFromCurrency")
+    private val keyLastToCurrency = stringPreferencesKey("converter.lastToCurrency")
+    private val keyLastAmount = stringPreferencesKey("converter.lastAmount")
 
     override val lastDimension: Flow<Int> = dataStore.data.map { it[keyLastDimension] ?: -1 }
     override val lastUnitsFrom: Flow<Int> = dataStore.data.map { it[keyLastUnitsFrom] ?: -1 }
@@ -210,6 +226,23 @@ class DataStoreConverterPreferences(private val dataStore: DataStore<Preferences
             it[keyLastUnitsTo] = to
         }
     }
+
+    override suspend fun getLastFromCurrency(): String? =
+        dataStore.data.map { it[keyLastFromCurrency] }.firstOrNull() ?: "USD"
+
+    override suspend fun getLastToCurrency(): String? =
+        dataStore.data.map { it[keyLastToCurrency] }.firstOrNull() ?: "EUR"
+
+    override suspend fun getLastAmount(): String? =
+        dataStore.data.map { it[keyLastAmount] }.firstOrNull() ?: "100"
+
+    override suspend fun setLastUsed(fromCurrency: String, toCurrency: String, amount: String) {
+        dataStore.edit {
+            it[keyLastFromCurrency] = fromCurrency
+            it[keyLastToCurrency] = toCurrency
+            it[keyLastAmount] = amount
+        }
+    }
 }
 
 class DataStoreWizardPreferences(private val dataStore: DataStore<Preferences>) : WizardPreferences {
@@ -218,4 +251,82 @@ class DataStoreWizardPreferences(private val dataStore: DataStore<Preferences>) 
     override suspend fun setFinished(value: Boolean) {
         dataStore.edit { it[keyFinished] = value }
     }
+}
+
+class DataStoreWidgetsPreferences(private val dataStore: DataStore<Preferences>) : WidgetsPreferences {
+    private val keyCalculatorOpacity = floatPreferencesKey("widgets.calculatorOpacity")
+    private val keyQuickCalcOpacity = floatPreferencesKey("widgets.quickCalcOpacity")
+    private val keyHistoryOpacity = floatPreferencesKey("widgets.historyOpacity")
+    private val keyConverterOpacity = floatPreferencesKey("widgets.converterOpacity")
+    private val keySmartStackOpacity = floatPreferencesKey("widgets.smartStackOpacity")
+
+    override suspend fun getCalculatorOpacity(): Float = 
+        dataStore.data.map { it[keyCalculatorOpacity] }.firstOrNull() ?: 1.0f
+    override suspend fun getQuickCalcOpacity(): Float = 
+        dataStore.data.map { it[keyQuickCalcOpacity] }.firstOrNull() ?: 1.0f
+    override suspend fun getHistoryOpacity(): Float = 
+        dataStore.data.map { it[keyHistoryOpacity] }.firstOrNull() ?: 1.0f
+    override suspend fun getConverterOpacity(): Float = 
+        dataStore.data.map { it[keyConverterOpacity] }.firstOrNull() ?: 1.0f
+    override suspend fun getSmartStackOpacity(): Float = 
+        dataStore.data.map { it[keySmartStackOpacity] }.firstOrNull() ?: 1.0f
+
+    override suspend fun setCalculatorOpacity(value: Float) { 
+        dataStore.edit { it[keyCalculatorOpacity] = value.coerceIn(0.3f, 1.0f) } 
+    }
+    override suspend fun setQuickCalcOpacity(value: Float) { 
+        dataStore.edit { it[keyQuickCalcOpacity] = value.coerceIn(0.3f, 1.0f) } 
+    }
+    override suspend fun setHistoryOpacity(value: Float) { 
+        dataStore.edit { it[keyHistoryOpacity] = value.coerceIn(0.3f, 1.0f) } 
+    }
+    override suspend fun setConverterOpacity(value: Float) { 
+        dataStore.edit { it[keyConverterOpacity] = value.coerceIn(0.3f, 1.0f) } 
+    }
+    override suspend fun setSmartStackOpacity(value: Float) { 
+        dataStore.edit { it[keySmartStackOpacity] = value.coerceIn(0.3f, 1.0f) } 
+    }
+}
+
+class DataStoreThemePreferences(private val dataStore: DataStore<Preferences>) : ThemePreferences {
+    private val keyUseDynamicColors = booleanPreferencesKey("theme.useDynamicColors")
+    private val keyIsLightTheme = booleanPreferencesKey("theme.isLightTheme")
+
+    override suspend fun useDynamicColors(): Boolean = 
+        dataStore.data.map { it[keyUseDynamicColors] }.firstOrNull() ?: true
+    override suspend fun isLightTheme(): Boolean = 
+        dataStore.data.map { it[keyIsLightTheme] }.firstOrNull() ?: false
+
+    override suspend fun setUseDynamicColors(value: Boolean) { 
+        dataStore.edit { it[keyUseDynamicColors] = value } 
+    }
+    override suspend fun setLightTheme(value: Boolean) { 
+        dataStore.edit { it[keyIsLightTheme] = value } 
+    }
+}
+
+class DataStoreHapticsPreferences(private val dataStore: DataStore<Preferences>) : HapticsPreferences {
+    private val keyEnabled = booleanPreferencesKey("haptics.enabled")
+
+    override suspend fun isEnabled(): Boolean = 
+        dataStore.data.map { it[keyEnabled] }.firstOrNull() ?: true
+
+    override suspend fun setEnabled(value: Boolean) { 
+        dataStore.edit { it[keyEnabled] = value } 
+    }
+}
+
+/**
+ * HistoryPreferences implementation that delegates to RoomHistory.
+ * Note: This class should be instantiated with RoomHistory from Koin.
+ */
+class DataStoreHistoryPreferences(
+    private val roomHistory: org.solovyev.android.calculator.history.RoomHistory
+) : HistoryPreferences {
+    
+    override fun observeRecent(): Flow<List<HistoryState>> = 
+        roomHistory.observeRecent()
+    
+    override suspend fun clearRecent() = 
+        roomHistory.clearRecent()
 }

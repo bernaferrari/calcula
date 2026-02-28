@@ -1,11 +1,13 @@
 package org.solovyev.android.calculator.ui
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
@@ -17,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -44,6 +47,7 @@ import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -58,6 +62,8 @@ import org.solovyev.android.calculator.EditorState
  *
  * Features:
  * - Syntax highlighting (numbers, operators, functions, constants)
+ * - Matching parentheses highlighting
+ * - Error underline for invalid syntax
  * - Blinking cursor animation at the current cursor position
  * - Full text selection support with custom Material3 colors
  * - Click-to-position cursor support
@@ -71,7 +77,7 @@ import org.solovyev.android.calculator.EditorState
  * @param onTextChange Callback invoked when text changes
  * @param onSelectionChange Callback invoked when cursor selection changes
  * @param modifier Modifier to be applied to the editor
- *  * @param maxTextSize Maximum text size for auto-resizing
+ * @param maxTextSize Maximum text size for auto-resizing
  */
 import androidx.compose.foundation.layout.Row
 
@@ -89,17 +95,19 @@ fun CalculatorEditor(
     val scrollState = rememberScrollState()
     var textFieldValue by remember { mutableStateOf(TextFieldValue()) }
     var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
-    var fieldWidthPx by remember { mutableStateOf(0) }
+    var fieldWidthPx by remember { mutableIntStateOf(0) }
     val interactionSource = remember { MutableInteractionSource() }
     var editorFocused by remember { mutableStateOf(false) }
+    var cursorPosition by remember { mutableIntStateOf(0) }
     val disableSoftKeyboardInterceptor = remember {
         PlatformTextInputInterceptor { _, _ -> awaitCancellation() }
     }
-    
+
     // Track last synced values to detect meaningful external changes
     var lastExternalText by remember { mutableStateOf("") }
-    var lastExternalSelection by remember { mutableStateOf(-1) }
-    
+    var lastExternalSelection by remember { mutableIntStateOf(-1) }
+    var hasUserInteracted by remember { mutableStateOf(false) }
+
     // Only sync from external state when text/selection changed (ignore sequence-only updates).
     // Preserve active local range selection while focused so users can select/copy reliably.
     LaunchedEffect(state.sequence, state.text, state.selection) {
@@ -120,6 +128,7 @@ fun CalculatorEditor(
                 text = newText,
                 selection = TextRange(newSelection)
             )
+            cursorPosition = newSelection
             return@LaunchedEffect
         }
 
@@ -135,26 +144,37 @@ fun CalculatorEditor(
                 text = newText,
                 selection = targetSelection
             )
+            cursorPosition = newSelection
         }
     }
 
-    // Auto-scroll to keep cursor visible
+    // Reset scroll to start on initial load
+    LaunchedEffect(Unit) {
+        scrollState.scrollTo(0)
+    }
+
+    // Auto-scroll to keep cursor visible (only after user interaction)
     LaunchedEffect(textFieldValue.selection, textLayoutResult, fieldWidthPx) {
+        if (!hasUserInteracted) {
+            return@LaunchedEffect
+        }
         delay(50)
         val layout = textLayoutResult ?: return@LaunchedEffect
         val textLength = textFieldValue.text.length
         val layoutTextLength = layout.layoutInput.text.length
-        
+
         if (fieldWidthPx == 0 || textLength == 0 || layoutTextLength != textLength) {
             return@LaunchedEffect
         }
-        
-        val cursorPosition = textFieldValue.selection.end.coerceIn(0, textLength)
-        if (cursorPosition < 0 || cursorPosition > layoutTextLength) {
+
+        val cursorPos = textFieldValue.selection.end.coerceIn(0, textLength)
+        if (cursorPos < 0 || cursorPos > layoutTextLength) {
             return@LaunchedEffect
         }
-        
-        val cursorRect = layout.getCursorRect(cursorPosition)
+
+        cursorPosition = cursorPos
+
+        val cursorRect = layout.getCursorRect(cursorPos)
         val current = scrollState.value.toFloat()
         val minVisible = current
         val maxVisible = current + fieldWidthPx
@@ -178,7 +198,7 @@ fun CalculatorEditor(
             .fillMaxWidth()
             .background(Color.Transparent)
             .padding(horizontal = 10.dp, vertical = 6.dp)
-            .heightIn(min = 56.dp),
+            .height(80.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         CompositionLocalProvider(LocalTextSelectionColors provides customTextSelectionColors) {
@@ -190,12 +210,15 @@ fun CalculatorEditor(
                     onValueChange = { newValue ->
                         val oldValue = textFieldValue
                         textFieldValue = newValue
+                        cursorPosition = newValue.selection.end
 
                         if (newValue.text != oldValue.text) {
-                            // Text changed - notify parent
+                            // Text changed - notify parent and mark interaction
+                            hasUserInteracted = true
                             onTextChange(newValue.text, newValue.selection.start)
                         } else if (newValue.selection != oldValue.selection && newValue.selection.collapsed) {
                             // Only selection changed (user clicked/tapped) - notify parent
+                            hasUserInteracted = true
                             onSelectionChange(newValue.selection.start)
                         }
                     },
@@ -234,11 +257,14 @@ fun CalculatorEditor(
                     },
                     visualTransformation = if (highlightExpressions) {
                         SyntaxHighlightingVisualTransformation(
+                            text = textFieldValue.text,
+                            cursorPosition = cursorPosition,
                             primaryColor = MaterialTheme.colorScheme.primary,
                             secondaryColor = MaterialTheme.colorScheme.secondary,
                             tertiaryColor = MaterialTheme.colorScheme.tertiary,
                             baseColor = MaterialTheme.colorScheme.onBackground,
-                            surfaceVariantColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            surfaceVariantColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            errorColor = MaterialTheme.colorScheme.error
                         )
                     } else {
                         VisualTransformation.None
@@ -250,37 +276,50 @@ fun CalculatorEditor(
 }
 
 private class SyntaxHighlightingVisualTransformation(
+    private val text: String,
+    private val cursorPosition: Int,
     private val primaryColor: Color,
     private val secondaryColor: Color,
     private val tertiaryColor: Color,
     private val baseColor: Color,
-    private val surfaceVariantColor: Color
+    private val surfaceVariantColor: Color,
+    private val errorColor: Color
 ) : VisualTransformation {
-    override fun filter(text: AnnotatedString): TransformedText {
-        val annotatedString = highlightSyntax(text.text)
+    override fun filter(annotatedString: AnnotatedString): TransformedText {
+        val highlighted = highlightSyntax(text, cursorPosition)
         return TransformedText(
-            text = annotatedString,
+            text = highlighted,
             offsetMapping = OffsetMapping.Identity
         )
     }
 
-    private fun highlightSyntax(text: String): AnnotatedString {
+    private fun highlightSyntax(text: String, cursorPos: Int): AnnotatedString {
+        val matchingParenIndices = findMatchingParentheses(text, cursorPos)
+        val errorIndices = findSyntaxErrors(text)
+
         return buildAnnotatedString {
             var i = 0
             while (i < text.length) {
                 val char = text[i]
 
+                // Check if this position has an error
+                val hasError = i in errorIndices
+
+                // Check if this position is a matching parenthesis
+                val isMatchingParen = i in matchingParenIndices
+
                 when {
                     char.isDigit() || char == '.' -> {
                         val start = i
                         while (i < text.length && (text[i].isDigit() || text[i] == '.' ||
-                               text[i] == 'E' || text[i] == 'e')) {
+                               text[i] == 'E' || text[i] == 'e' || text[i] == '_')) {
                             i++
                         }
                         withStyle(
                             SpanStyle(
                                 color = secondaryColor,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Medium,
+                                textDecoration = if (hasError) TextDecoration.Underline else null
                             )
                         ) {
                             append(text.substring(start, i))
@@ -292,7 +331,8 @@ private class SyntaxHighlightingVisualTransformation(
                         withStyle(
                             SpanStyle(
                                 color = tertiaryColor,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                textDecoration = if (hasError) TextDecoration.Underline else null
                             )
                         ) {
                             append(char)
@@ -306,35 +346,72 @@ private class SyntaxHighlightingVisualTransformation(
                         }
                         val word = text.substring(start, i)
 
-                        if (isKnownFunction(word)) {
-                            withStyle(
-                                SpanStyle(
-                                    color = primaryColor,
-                                    fontStyle = FontStyle.Normal,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                            ) {
-                                append(word)
+                        when {
+                            isKnownFunction(word) -> {
+                                withStyle(
+                                    SpanStyle(
+                                        color = primaryColor,
+                                        fontStyle = FontStyle.Normal,
+                                        fontWeight = FontWeight.SemiBold,
+                                        textDecoration = if (hasError) TextDecoration.Underline else null
+                                    )
+                                ) {
+                                    append(word)
+                                }
                             }
-                        } else if (isKnownConstant(word)) {
-                            withStyle(
-                                SpanStyle(
-                                    color = secondaryColor,
-                                    fontWeight = FontWeight.Bold,
-                                    fontStyle = FontStyle.Italic
-                                )
-                            ) {
-                                append(word)
+                            isKnownConstant(word) -> {
+                                withStyle(
+                                    SpanStyle(
+                                        color = secondaryColor,
+                                        fontWeight = FontWeight.Bold,
+                                        fontStyle = FontStyle.Italic,
+                                        textDecoration = if (hasError) TextDecoration.Underline else null
+                                    )
+                                ) {
+                                    append(word)
+                                }
                             }
-                        } else {
-                            withStyle(SpanStyle(color = baseColor)) {
-                                append(word)
+                            else -> {
+                                withStyle(
+                                    SpanStyle(
+                                        color = baseColor,
+                                        textDecoration = if (hasError) TextDecoration.Underline else null
+                                    )
+                                ) {
+                                    append(word)
+                                }
                             }
                         }
                         continue
                     }
 
-                    char in "()[]{},\u0000" -> {
+                    char in "()[]{}" -> {
+                        val parenColor = when {
+                            isMatchingParen -> primaryColor
+                            hasError -> errorColor
+                            else -> surfaceVariantColor
+                        }
+                        val parenWeight = when {
+                            isMatchingParen -> FontWeight.ExtraBold
+                            else -> FontWeight.Bold
+                        }
+                        val parenBackground = when {
+                            isMatchingParen -> primaryColor.copy(alpha = 0.15f)
+                            else -> Color.Transparent
+                        }
+
+                        withStyle(
+                            SpanStyle(
+                                color = parenColor,
+                                fontWeight = parenWeight,
+                                background = parenBackground
+                            )
+                        ) {
+                            append(char)
+                        }
+                    }
+
+                    char == ',' -> {
                         withStyle(
                             SpanStyle(
                                 color = surfaceVariantColor,
@@ -346,7 +423,12 @@ private class SyntaxHighlightingVisualTransformation(
                     }
 
                     else -> {
-                        withStyle(SpanStyle(color = baseColor)) {
+                        withStyle(
+                            SpanStyle(
+                                color = baseColor,
+                                textDecoration = if (hasError) TextDecoration.Underline else null
+                            )
+                        ) {
                             append(char)
                         }
                     }
@@ -356,11 +438,159 @@ private class SyntaxHighlightingVisualTransformation(
         }
     }
 
+    private fun findMatchingParentheses(text: String, cursorPos: Int): Set<Int> {
+        val result = mutableSetOf<Int>()
+        if (cursorPos < 0 || cursorPos > text.length) return result
+
+        // Check if cursor is at or just after a parenthesis
+        val checkPositions = listOf(cursorPos - 1, cursorPos).filter { it in text.indices }
+
+        for (pos in checkPositions) {
+            when (text[pos]) {
+                '(', '[', '{' -> {
+                    val matching = findClosingMatch(text, pos, text[pos], getClosingBracket(text[pos]))
+                    if (matching >= 0) {
+                        result.add(pos)
+                        result.add(matching)
+                    }
+                }
+                ')', ']', '}' -> {
+                    val matching = findOpeningMatch(text, pos, text[pos], getOpeningBracket(text[pos]))
+                    if (matching >= 0) {
+                        result.add(pos)
+                        result.add(matching)
+                    }
+                }
+            }
+        }
+
+        return result
+    }
+
+    private fun getClosingBracket(opening: Char): Char = when (opening) {
+        '(' -> ')'
+        '[' -> ']'
+        '{' -> '}'
+        else -> opening
+    }
+
+    private fun getOpeningBracket(closing: Char): Char = when (closing) {
+        ')' -> '('
+        ']' -> '['
+        '}' -> '{'
+        else -> closing
+    }
+
+    private fun findClosingMatch(text: String, start: Int, opening: Char, closing: Char): Int {
+        var depth = 1
+        var i = start + 1
+        while (i < text.length && depth > 0) {
+            when (text[i]) {
+                opening -> depth++
+                closing -> {
+                    depth--
+                    if (depth == 0) return i
+                }
+            }
+            i++
+        }
+        return -1
+    }
+
+    private fun findOpeningMatch(text: String, start: Int, closing: Char, opening: Char): Int {
+        var depth = 1
+        var i = start - 1
+        while (i >= 0 && depth > 0) {
+            when (text[i]) {
+                closing -> depth++
+                opening -> {
+                    depth--
+                    if (depth == 0) return i
+                }
+            }
+            i--
+        }
+        return -1
+    }
+
+    private fun findSyntaxErrors(text: String): Set<Int> {
+        val errors = mutableSetOf<Int>()
+
+        // Check for mismatched parentheses
+        val stack = mutableListOf<Pair<Char, Int>>()
+        for ((i, char) in text.withIndex()) {
+            when (char) {
+                '(', '[', '{' -> stack.add(char to i)
+                ')', ']', '}' -> {
+                    if (stack.isEmpty()) {
+                        errors.add(i)
+                    } else {
+                        val (last, _) = stack.removeAt(stack.lastIndex)
+                        if (!areMatchingBrackets(last, char)) {
+                            errors.add(i)
+                        }
+                    }
+                }
+            }
+        }
+        // Unclosed opening brackets are errors
+        stack.forEach { (_, index) -> errors.add(index) }
+
+        // Check for invalid number formats (e.g., multiple decimals)
+        var inNumber = false
+        var hasDecimal = false
+        var numberStart = 0
+
+        for ((i, char) in text.withIndex()) {
+            when {
+                char.isDigit() || char == '_' -> {
+                    if (!inNumber) {
+                        inNumber = true
+                        numberStart = i
+                        hasDecimal = false
+                    }
+                }
+                char == '.' -> {
+                    if (inNumber) {
+                        if (hasDecimal) {
+                            // Second decimal in same number - mark as error
+                            for (j in numberStart..i) errors.add(j)
+                        }
+                        hasDecimal = true
+                    }
+                }
+                else -> {
+                    inNumber = false
+                    hasDecimal = false
+                }
+            }
+        }
+
+        // Check for consecutive operators (except negative sign)
+        val operators = setOf('+', '-', '*', '/', '^', '%', '÷', '×')
+        for (i in 1 until text.length) {
+            if (text[i] in operators && text[i - 1] in operators) {
+                if (text[i] != '-' || (i > 0 && text[i - 1] in setOf('e', 'E'))) {
+                    errors.add(i - 1)
+                    errors.add(i)
+                }
+            }
+        }
+
+        return errors
+    }
+
+    private fun areMatchingBrackets(opening: Char, closing: Char): Boolean {
+        return (opening == '(' && closing == ')') ||
+               (opening == '[' && closing == ']') ||
+               (opening == '{' && closing == '}')
+    }
+
     private fun isOperator(char: Char): Boolean {
         return char in setOf(
             '+', '-', '*', '/', '÷', '×', '·',
             '^', '%', '=', '!', '<', '>',
-            '≤', '≥', '≠', '∧', '∨', '⊕'
+            '≤', '≥', '≠', '∧', '∨', '⊕', '&', '|', '~'
         )
     }
 
@@ -379,7 +609,9 @@ private class SyntaxHighlightingVisualTransformation(
             "ceil", "floor", "round", "trunc",
             "max", "min", "gcd", "lcm",
             "fact", "factorial", "mod", "rem",
-            "deg", "rad", "re", "im", "arg"
+            "deg", "rad", "re", "im", "arg",
+            "sum", "prod", "product", "int", "integrate",
+            "diff", "derivative", "lim", "limit"
         )
     }
 
@@ -387,8 +619,8 @@ private class SyntaxHighlightingVisualTransformation(
         val lowerWord = word.lowercase()
         return lowerWord in setOf(
             "e", "pi", "π", "i", "j",
-            "inf", "infinity", "nan",
-            "true", "false"
+            "inf", "infinity", "∞", "nan",
+            "true", "false", "yes", "no"
         )
     }
 }

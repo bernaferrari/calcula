@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="80dp"
+    android:viewportWidth="120"
+    android:viewportHeight="80">
+
+    <!-- Background rectangle -->
+    <path
+        android:fillColor="#FF6A1B9A"
+        android:pathData="M8,0h104c4.42,0 8,3.58 8,8v64c0,4.42 -3.58,8 -8,8h-104c-4.42,0 -8,-3.58 -8,-8v-64c0,-4.42 3.58,-8 8,-8z" />
+
+    <!-- Stacked cards effect (card 3 - back) -->
+    <path
+        android:fillColor="#FF8E24AA"
+        android:pathData="M20,4h80c2.21,0 4,1.79 4,4v56c0,2.21 -1.79,4 -4,4h-80c-2.21,0 -4,-1.79 -4,-4v-56c0,-2.21 1.79,-4 4,-4z" />
+
+    <!-- Stacked cards effect (card 2 - middle) -->
+    <path
+        android:fillColor="#FFAB47BC"
+        android:pathData="M16,8h80c2.21,0 4,1.79 4,4v56c0,2.21 -1.79,4 -4,4h-80c-2.21,0 -4,-1.79 -4,-4v-56c0,-2.21 1.79,-4 4,-4z" />
+
+    <!-- Main card (front) -->
+    <path
+        android:fillColor="#FFCE93D8"
+        android:pathData="M12,12h80c2.21,0 4,1.79 4,4v56c0,2.21 -1.79,4 -4,4h-80c-2.21,0 -4,-1.79 -4,-4v-56c0,-2.21 1.79,-4 4,-4z" />
+
+    <!-- Card content header -->
+    <path
+        android:fillColor="#FF6A1B9A"
+        android:pathData="M20,20h64v12h-64z" />
+
+    <!-- Card title text -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M28,26h32v3h-32z" />
+
+    <!-- Card content area -->
+    <path
+        android:fillColor="#FFF3E5F5"
+        android:pathData="M20,36h64v24h-64z" />
+
+    <!-- Content lines -->
+    <path
+        android:fillColor="#FF6A1B9A"
+        android:pathData="M28,44h48v3h-48zM28,52h36v3h-36z" />
+
+    <!-- Stack indicator dots -->
+    <path
+        android:fillColor="#FFE1BEE7"
+        android:pathData="M96,24c0,1.1 -0.9,2 -2,2s-2,-0.9 -2,-2 0.9,-2 2,-2 2,0.9 2,2zM96,32c0,1.1 -0.9,2 -2,2s-2,-0.9 -2,-2 0.9,-2 2,-2 2,0.9 2,2zM96,40c0,1.1 -0.9,2 -2,2s-2,-0.9 -2,-2 0.9,-2 2,-2 2,0.9 2,2z" />
+
+</vector>

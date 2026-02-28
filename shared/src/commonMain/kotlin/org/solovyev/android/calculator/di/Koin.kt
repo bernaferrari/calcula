@@ -7,15 +7,14 @@ import jscl.JsclMathEngine
 import org.solovyev.android.calculator.history.*
 import org.solovyev.android.calculator.memory.*
 import org.solovyev.android.calculator.preferences.*
-import org.solovyev.android.calculator.ui.converter.ConverterViewModel
 import org.solovyev.android.calculator.ui.about.AboutViewModel
-import org.solovyev.android.calculator.ui.about.AboutActions
 import org.solovyev.android.calculator.ui.history.HistoryViewModel
 import org.solovyev.android.calculator.ui.settings.SettingsViewModel
 import org.solovyev.android.calculator.ui.variables.VariablesViewModel
 import org.solovyev.android.calculator.ui.functions.FunctionsViewModel
 import org.solovyev.android.calculator.ui.onboarding.OnboardingViewModel
 import org.solovyev.android.calculator.ui.graphing.GraphViewModel
+import org.solovyev.android.calculator.formulas.FormulaViewModel
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.context.startKoin
@@ -27,11 +26,11 @@ fun initKoin(appDeclaration: KoinAppDeclaration = {}) =
         modules(commonModule, platformModule)
     }
 
-// Base common module
+// Base common module - stripped to essentials
 val commonModule = module {
-    // Shared Singletons
+    // Core Singletons
     single<Notifier> { Notifier() }
-    single<AppPreferences> { DataStoreAppPreferences(get()) }
+    single<AppPreferences> { DataStoreAppPreferences(get(), get()) }
     single { JsclMathEngine.getInstance() }
     single<ErrorReporter> { DefaultErrorReporter() }
     single<FunctionsRegistry> { DefaultFunctionsRegistry(get()) }
@@ -39,20 +38,20 @@ val commonModule = module {
     single<PostfixFunctionsRegistry> { DefaultPostfixFunctionsRegistry(get()) }
     single<VariablesRegistry> { DefaultVariablesRegistry(get()) }
     singleOf(::Engine)
-    
+
     singleOf(::Editor)
     singleOf(::Display)
     singleOf(::Calculator)
     singleOf(::Keyboard)
     singleOf(::ToJsclTextProcessor)
-    
+
     // History and Memory
+    single<HistoryDao> { get<CalculatorDatabase>().historyDao() }
     singleOf(::RoomHistory)
     single<Memory> { DataStoreMemory(get()) }
 
     // ViewModels
     viewModelOf(::CalculatorViewModel)
-    viewModelOf(::ConverterViewModel)
     viewModelOf(::AboutViewModel)
     viewModelOf(::HistoryViewModel)
     viewModelOf(::SettingsViewModel)
@@ -60,6 +59,8 @@ val commonModule = module {
     viewModelOf(::FunctionsViewModel)
     viewModelOf(::OnboardingViewModel)
     viewModelOf(::GraphViewModel)
+    viewModelOf(::FormulaViewModel)
+
 }
 
 expect val platformModule: Module
