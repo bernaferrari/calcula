@@ -4,7 +4,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -53,7 +53,7 @@ import org.solovyev.android.calculator.ui.CalculatorFontFamily
  * 
  * Philosophy:
  * - Buttons are just buttons - uniform, quiet
- * - Only "=" gets accent color - it's the action
+ * - Bottom-right key is configurable (classic "=" or modern "ƒ")
  * - Scientific functions revealed by swipe UP anywhere
  * - Generous spacing, feels airy
  * - Satisfying press animations
@@ -62,6 +62,8 @@ import org.solovyev.android.calculator.ui.CalculatorFontFamily
 fun NotBoringKeyboard(
     actions: KeyboardActions,
     onSwipeUp: () -> Unit, // Reveal scientific
+    showBottomRightEqualsKey: Boolean = false,
+    gestureAutoActivation: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     var isPressed by remember { mutableStateOf(false) }
@@ -75,27 +77,41 @@ fun NotBoringKeyboard(
         modifier = modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp, vertical = 12.dp)
-            .pointerInput(Unit) {
+            .pointerInput(gestureAutoActivation) {
                 awaitEachGesture {
                     val down = awaitFirstDown()
                     val startY = down.position.y
+                    var maxDragY = 0f
                     
                     while (true) {
                         val event = awaitPointerEvent()
                         val change = event.changes.firstOrNull { it.id == down.id }
                         
-                        if (change == null || change.changedToUpIgnoreConsumed()) {
+                        if (change == null) {
                             break
                         }
                         
                         val dragY = startY - change.position.y
+                        if (dragY > maxDragY) {
+                            maxDragY = dragY
+                        }
                         
-                        if (dragY > touchSlop) {
+                        if (gestureAutoActivation && dragY > touchSlop) {
                             if (hapticsEnabled) {
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                             }
                             onSwipeUp()
                             change.consume()
+                            break
+                        }
+
+                        if (change.changedToUpIgnoreConsumed()) {
+                            if (!gestureAutoActivation && maxDragY > touchSlop) {
+                                if (hapticsEnabled) {
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                }
+                                onSwipeUp()
+                            }
                             break
                         }
                     }
@@ -135,18 +151,42 @@ fun NotBoringKeyboard(
             NbButton("+", ButtonStyle.Operation) { actions.onOperatorClick("+") }
         }
         
-        // Row 5: ⌫, 0, ., =
+        // Row 5: ⌫, 0, ., ƒ (or = in classic mode)
         KeyboardRow(weight = 1f) {
-            NbButton("", ButtonStyle.Control, icon = LocalKeyboardIcons.current.backspace) { 
+            NbButton(
+                "",
+                ButtonStyle.Control,
+                icon = LocalKeyboardIcons.current.backspace,
+                onLongClick = { actions.onClear() }
+            ) {
                 actions.onDelete() 
             }
             NbButton("0") { actions.onNumberClick("0") }
             NbButton(".") { actions.onNumberClick(".") }
-            NbButton("=", ButtonStyle.Equals) { 
-                if (hapticsEnabled) {
-                    haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+            if (showBottomRightEqualsKey) {
+                NbButton(
+                    text = "=",
+                    style = ButtonStyle.Equals,
+                    onLongClick = { onSwipeUp() }
+                ) {
+                    if (hapticsEnabled) {
+                        haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                    }
+                    actions.onEquals()
                 }
-                actions.onEquals() 
+            } else {
+                NbButton(
+                    text = "ƒ",
+                    style = ButtonStyle.Operation,
+                    onLongClick = {
+                        if (hapticsEnabled) {
+                            haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                        }
+                        actions.onEquals()
+                    }
+                ) {
+                    onSwipeUp()
+                }
             }
         }
     }
@@ -179,6 +219,7 @@ private fun RowScope.NbButton(
     text: String,
     style: ButtonStyle = ButtonStyle.Digit,
     icon: Painter? = null,
+    onLongClick: (() -> Unit)? = null,
     onClick: () -> Unit
 ) {
     val haptics = LocalHapticFeedback.current
@@ -235,16 +276,18 @@ private fun RowScope.NbButton(
             }
             .clip(shape)
             .background(bgColor)
-            .clickable(
+            .combinedClickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null // We handle our own scale animation
-            ) {
-                if (hapticsEnabled && style != ButtonStyle.Equals) {
-                    haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                indication = null, // We handle our own scale animation
+                onLongClick = onLongClick,
+                onClick = {
+                    if (hapticsEnabled && style != ButtonStyle.Equals) {
+                        haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    }
+                    onClick()
                 }
-                onClick()
-            }
-            .pointerInput(Unit) {
+            )
+            .pointerInput(onLongClick, onClick) {
                 awaitEachGesture {
                     val down = awaitFirstDown()
                     isPressed = true

@@ -1,74 +1,48 @@
 package org.solovyev.android.calculator.ui.history
 
-import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Save
-import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.solovyev.android.calculator.history.HistoryState
 import org.solovyev.android.calculator.ui.*
 
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.rounded.Calculate
-import androidx.compose.material.icons.rounded.History
-import androidx.compose.material.icons.rounded.Save
-import androidx.compose.material3.FilledTonalButton
+// =============================================================================
+// REFINED HISTORY SCREEN - Beautiful list UI with delightful interactions
+// =============================================================================
 
-@Composable
 @OptIn(ExperimentalMaterial3Api::class)
+@Composable
 fun HistoryScreen(
     recent: List<HistoryState>,
     saved: List<HistoryState>,
@@ -91,6 +65,23 @@ fun HistoryScreen(
     )
     val currentList = if (selectedTab == 0) recent else saved
 
+    // Track items being deleted for animation
+    var deletingItems by remember { mutableStateOf<Set<Long>>(emptySet()) }
+    
+    // Copy feedback state
+    var copyFeedbackVisible by remember { mutableStateOf(false) }
+    var copyFeedbackMessage by remember { mutableStateOf("") }
+
+    // Show copy feedback
+    fun showCopyFeedback(message: String) {
+        copyFeedbackMessage = message
+        copyFeedbackVisible = true
+        scope.launch {
+            delay(2000)
+            copyFeedbackVisible = false
+        }
+    }
+
     Scaffold(
         topBar = {
             StandardTopAppBar(
@@ -98,10 +89,14 @@ fun HistoryScreen(
                 onBack = onBack,
                 actions = {
                     if (currentList.isNotEmpty()) {
-                        IconButton(onClick = { if (selectedTab == 0) onClearRecent() else onClearSaved() }) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = stringResource(Res.string.cpp_clear_history)
+                        IconButton(
+                            onClick = { 
+                                if (selectedTab == 0) onClearRecent() else onClearSaved() 
+                            }
+                        ) {
+                            Text(
+                                "🗑",
+                                style = MaterialTheme.typography.titleMedium
                             )
                         }
                     }
@@ -110,70 +105,480 @@ fun HistoryScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            Surface(
-                color = MaterialTheme.colorScheme.surface
+            Column(
+                modifier = Modifier.fillMaxSize()
             ) {
-                SingleChoiceSegmentedButtonRow(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 10.dp)
+                // Elegant segmented control
+                Surface(
+                    color = MaterialTheme.colorScheme.surface,
+                    shadowElevation = 2.dp
                 ) {
-                    tabs.forEachIndexed { index, title ->
-                        SegmentedButton(
-                            selected = selectedTab == index,
-                            onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
-                            shape = SegmentedButtonDefaults.itemShape(index = index, count = tabs.size),
-                            icon = {
-                                SegmentedButtonDefaults.Icon(active = selectedTab == index) {
-                                    Icon(
-                                        imageVector = if (index == 0) Icons.Rounded.History else Icons.Rounded.Save,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(16.dp)
-                                    )
+                    SingleChoiceSegmentedButtonRow(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                    ) {
+                        tabs.forEachIndexed { index, title ->
+                            SegmentedButton(
+                                selected = selectedTab == index,
+                                onClick = { 
+                                    scope.launch { 
+                                        pagerState.animateScrollToPage(index) 
+                                    }
+                                },
+                                shape = SegmentedButtonDefaults.itemShape(
+                                    index = index, 
+                                    count = tabs.size
+                                ),
+                                icon = {
+                                    SegmentedButtonDefaults.Icon(active = selectedTab == index) {
+                                        Text(
+                                            if (index == 0) "⏱" else "🔖",
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+                                    }
                                 }
-                            }
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
                             ) {
-                                Text(text = title)
+                                Text(
+                                    text = title,
+                                    style = MaterialTheme.typography.labelLarge
+                                )
                             }
                         }
                     }
                 }
+
+                HorizontalPager(
+                    state = pagerState,
+                    userScrollEnabled = true,
+                    modifier = Modifier.fillMaxSize()
+                ) { page ->
+                    val pageList = if (page == 0) recent else saved
+                    val isRecent = page == 0
+                    
+                    if (pageList.isEmpty()) {
+                        EmptyHistoryState(
+                            isRecent = isRecent, 
+                            onStartCalculating = onBack
+                        )
+                    } else {
+                        HistoryList(
+                            items = pageList.filter { it.id !in deletingItems },
+                            isRecent = isRecent,
+                            onUse = { 
+                                onUse(it)
+                            },
+                            onCopyExpression = { 
+                                onCopyExpression(it)
+                                showCopyFeedback("Expression copied")
+                            },
+                            onCopyResult = { 
+                                onCopyResult(it)
+                                showCopyFeedback("Result copied")
+                            },
+                            onSave = onSave,
+                            onEdit = onEdit,
+                            onDelete = { item ->
+                                deletingItems = deletingItems + item.id
+                                scope.launch {
+                                    delay(300)
+                                    onDelete(item)
+                                    deletingItems = deletingItems - item.id
+                                }
+                            }
+                        )
+                    }
+                }
             }
 
-            HorizontalPager(
-                state = pagerState,
-                userScrollEnabled = true,
-                modifier = Modifier.fillMaxSize()
-            ) { page ->
-                val pageList = if (page == 0) recent else saved
-                if (pageList.isEmpty()) {
-                    EmptyHistoryState(isRecent = page == 0, onStartCalculating = onBack)
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+            // Copy feedback toast
+            AnimatedVisibility(
+                visible = copyFeedbackVisible,
+                enter = fadeIn() + scaleIn(
+                    initialScale = 0.8f,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMedium
+                    )
+                ),
+                exit = fadeOut() + scaleOut(targetScale = 0.9f),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 24.dp)
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.inverseSurface,
+                    tonalElevation = 4.dp
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        items(pageList, key = { state -> if (state.id != 0L) state.id else state.time }) { state ->
-                            HistoryCard(
-                                state = state,
-                                isRecent = page == 0,
-                                onUse = onUse,
-                                onCopyExpression = onCopyExpression,
-                                onCopyResult = onCopyResult,
-                                onSave = onSave,
-                                onEdit = onEdit,
-                                onDelete = onDelete
+                        Text(
+                            text = "✓",
+                            color = MaterialTheme.colorScheme.inverseOnSurface,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Text(
+                            text = copyFeedbackMessage,
+                            color = MaterialTheme.colorScheme.inverseOnSurface,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+// =============================================================================
+// HISTORY LIST - Animated list with staggered entrance
+// =============================================================================
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun HistoryList(
+    items: List<HistoryState>,
+    isRecent: Boolean,
+    onUse: (HistoryState) -> Unit,
+    onCopyExpression: (HistoryState) -> Unit,
+    onCopyResult: (HistoryState) -> Unit,
+    onSave: (HistoryState) -> Unit,
+    onEdit: (HistoryState) -> Unit,
+    onDelete: (HistoryState) -> Unit
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        itemsIndexed(
+            items = items,
+            key = { _, state -> state.id }
+        ) { index, state ->
+            HistoryItemCard(
+                state = state,
+                isRecent = isRecent,
+                index = index,
+                onUse = onUse,
+                onCopyExpression = onCopyExpression,
+                onCopyResult = onCopyResult,
+                onSave = onSave,
+                onEdit = onEdit,
+                onDelete = onDelete
+            )
+        }
+    }
+}
+
+// =============================================================================
+// HISTORY ITEM CARD - Beautiful card with interactions
+// =============================================================================
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun HistoryItemCard(
+    state: HistoryState,
+    isRecent: Boolean,
+    index: Int,
+    onUse: (HistoryState) -> Unit,
+    onCopyExpression: (HistoryState) -> Unit,
+    onCopyResult: (HistoryState) -> Unit,
+    onSave: (HistoryState) -> Unit,
+    onEdit: (HistoryState) -> Unit,
+    onDelete: (HistoryState) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val haptics = LocalHapticFeedback.current
+    val scope = rememberCoroutineScope()
+    
+    var showMenu by remember { mutableStateOf(false) }
+    var isPressed by remember { mutableStateOf(false) }
+    var isDeleting by remember { mutableStateOf(false) }
+    
+    val expression = state.editor.getTextString()
+    val result = state.display.text
+    val timestamp = remember(state.time) { formatHistoryTimestamp(state.time) }
+
+    // Entrance animation
+    var isVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(index * 50L)
+        isVisible = true
+    }
+
+    val scale by animateFloatAsState(
+        targetValue = if (isVisible && !isDeleting) 1f else 0.95f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        ),
+        label = "scale"
+    )
+    
+    val alpha by animateFloatAsState(
+        targetValue = if (isVisible && !isDeleting) 1f else 0f,
+        animationSpec = tween(300),
+        label = "alpha"
+    )
+
+    // Press animation
+    val pressScale by animateFloatAsState(
+        targetValue = if (isPressed) 0.98f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioLowBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "pressScale"
+    )
+
+    AnimatedVisibility(
+        visible = !isDeleting,
+        exit = shrinkVertically(
+            animationSpec = tween(300, easing = FastOutSlowInEasing)
+        ) + fadeOut(tween(200)),
+        modifier = modifier
+    ) {
+        Box(
+            modifier = Modifier
+                .graphicsLayer {
+                    this.scaleX = scale * pressScale
+                    this.scaleY = scale * pressScale
+                    this.alpha = alpha
+                }
+                .shadow(
+                    elevation = if (isPressed) 2.dp else 4.dp,
+                    shape = RoundedCornerShape(20.dp),
+                    ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                    spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                )
+        ) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(
+                        onClick = { onUse(state) },
+                        onClickLabel = stringResource(Res.string.c_use)
+                    ),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+                ),
+                elevation = CardDefaults.cardElevation(
+                    defaultElevation = 0.dp,
+                    pressedElevation = 0.dp
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    // Expression with monospace font
+                    Text(
+                        text = expression,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Medium
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    // Result with emphasis
+                    if (result.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "=",
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.Light
+                                ),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                             )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = result,
+                                style = MaterialTheme.typography.headlineSmall.copy(
+                                    fontFamily = FontFamily.Monospace,
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = MaterialTheme.colorScheme.primary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Bottom row: timestamp + actions
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Timestamp chip
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "⏱",
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = timestamp,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                )
+                            }
+                        }
+
+                        // Quick action buttons
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            // Copy expression
+                            SmallTextButton(
+                                text = "📋",
+                                contentDescription = stringResource(Res.string.c_copy_expression),
+                                onClick = { 
+                                    haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    onCopyExpression(state)
+                                }
+                            )
+
+                            // Copy result (if available)
+                            if (result.isNotEmpty()) {
+                                SmallTextButton(
+                                    text = "🔢",
+                                    contentDescription = stringResource(Res.string.c_copy_result),
+                                    onClick = { 
+                                        haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        onCopyResult(state)
+                                    }
+                                )
+                            }
+
+                            // More options
+                            Box {
+                                SmallTextButton(
+                                    text = "⋮",
+                                    contentDescription = "More options",
+                                    onClick = { 
+                                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        showMenu = true 
+                                    }
+                                )
+
+                                // Dropdown menu
+                                DropdownMenu(
+                                    expanded = showMenu,
+                                    onDismissRequest = { showMenu = false },
+                                    shape = RoundedCornerShape(16.dp),
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text("▶ Use in calculator") },
+                                        onClick = {
+                                            showMenu = false
+                                            onUse(state)
+                                        }
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("📋 Copy expression") },
+                                        onClick = {
+                                            showMenu = false
+                                            onCopyExpression(state)
+                                        }
+                                    )
+                                    if (result.isNotEmpty()) {
+                                        DropdownMenuItem(
+                                            text = { Text("🔢 Copy result") },
+                                            onClick = {
+                                                showMenu = false
+                                                onCopyResult(state)
+                                            }
+                                        )
+                                    }
+                                    Divider()
+                                    if (isRecent) {
+                                        DropdownMenuItem(
+                                            text = { Text("🔖 Save calculation") },
+                                            onClick = {
+                                                showMenu = false
+                                                onSave(state)
+                                            }
+                                        )
+                                    } else {
+                                        DropdownMenuItem(
+                                            text = { Text("✏️ Edit") },
+                                            onClick = {
+                                                showMenu = false
+                                                onEdit(state)
+                                            }
+                                        )
+                                        DropdownMenuItem(
+                                            text = { 
+                                                Text(
+                                                    "🗑 Delete",
+                                                    color = MaterialTheme.colorScheme.error
+                                                ) 
+                                            },
+                                            onClick = {
+                                                showMenu = false
+                                                isDeleting = true
+                                                scope.launch {
+                                                    delay(300)
+                                                    onDelete(state)
+                                                }
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Comment for saved items
+                    if (!isRecent && state.comment.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "📝",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = state.comment,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
                     }
                 }
@@ -182,8 +587,60 @@ fun HistoryScreen(
     }
 }
 
+// =============================================================================
+// SMALL TEXT BUTTON - Compact action button using emoji/text
+// =============================================================================
+
 @Composable
-private fun EmptyHistoryState(isRecent: Boolean, onStartCalculating: () -> Unit = {}) {
+private fun SmallTextButton(
+    text: String,
+    contentDescription: String,
+    onClick: () -> Unit
+) {
+    var isPressed by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.85f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessHigh
+        ),
+        label = "buttonScale"
+    )
+
+    Box(
+        modifier = Modifier
+            .size(36.dp)
+            .graphicsLayer { scaleX = scale; scaleY = scale }
+            .clip(CircleShape)
+            .clickable { 
+                isPressed = true
+                onClick()
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
+
+    LaunchedEffect(isPressed) {
+        if (isPressed) {
+            delay(150)
+            isPressed = false
+        }
+    }
+}
+
+// =============================================================================
+// EMPTY HISTORY STATE - Beautiful illustration with CTA
+// =============================================================================
+
+@Composable
+private fun EmptyHistoryState(
+    isRecent: Boolean, 
+    onStartCalculating: () -> Unit = {}
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -191,22 +648,36 @@ private fun EmptyHistoryState(isRecent: Boolean, onStartCalculating: () -> Unit 
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        // Animated icon container
+        val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+        val pulseScale by infiniteTransition.animateFloat(
+            initialValue = 1f,
+            targetValue = 1.05f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(2000, easing = FastOutSlowInEasing),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "pulse"
+        )
+
         Surface(
-            modifier = Modifier.size(120.dp),
+            modifier = Modifier
+                .size(140.dp)
+                .graphicsLayer { scaleX = pulseScale; scaleY = pulseScale },
             shape = CircleShape,
-            color = MaterialTheme.colorScheme.surfaceContainerHigh
+            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
+            shadowElevation = 8.dp
         ) {
             Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    imageVector = if (isRecent) Icons.Rounded.History else Icons.Rounded.Save,
-                    contentDescription = null,
-                    modifier = Modifier.size(56.dp),
-                    tint = MaterialTheme.colorScheme.primary
+                Text(
+                    text = if (isRecent) "⏱" else "🔖",
+                    style = MaterialTheme.typography.displayLarge,
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
         }
         
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(32.dp))
         
         Text(
             text = if (isRecent) {
@@ -214,12 +685,14 @@ private fun EmptyHistoryState(isRecent: Boolean, onStartCalculating: () -> Unit 
             } else {
                 stringResource(Res.string.cpp_history_empty_saved)
             },
-            style = MaterialTheme.typography.headlineSmall,
+            style = MaterialTheme.typography.headlineSmall.copy(
+                fontWeight = FontWeight.SemiBold
+            ),
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center
         )
         
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
         
         Text(
             text = if (isRecent) {
@@ -233,239 +706,39 @@ private fun EmptyHistoryState(isRecent: Boolean, onStartCalculating: () -> Unit 
         )
         
         if (isRecent) {
-            Spacer(modifier = Modifier.height(32.dp))
-            FilledTonalButton(
+            Spacer(modifier = Modifier.height(40.dp))
+            Button(
                 onClick = onStartCalculating,
-                modifier = Modifier.height(50.dp)
+                modifier = Modifier.height(52.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
             ) {
-                Icon(Icons.Rounded.Calculate, contentDescription = null)
+                Text("🔢")
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(stringResource(Res.string.cpp_start_calculating))
-            }
-        }
-    }
-}
-
-@Composable
-private fun HistoryCard(
-    state: HistoryState,
-    isRecent: Boolean,
-    onUse: (HistoryState) -> Unit,
-    onCopyExpression: (HistoryState) -> Unit,
-    onCopyResult: (HistoryState) -> Unit,
-    onSave: (HistoryState) -> Unit,
-    onEdit: (HistoryState) -> Unit,
-    onDelete: (HistoryState) -> Unit
-) {
-    var menuExpanded by remember { mutableStateOf(false) }
-    
-    val expression = state.editor.getTextString()
-    val result = state.display.text
-    val timestamp = remember(state.time) { formatHistoryTimestamp(state.time) }
-
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .animateContentSize(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-        ),
-        onClick = { onUse(state) }
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            // Expression
-            Text(
-                text = expression,
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.Medium
-                ),
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            // Result
-            if (result.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "= $result",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = MaterialTheme.colorScheme.primary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    stringResource(Res.string.cpp_start_calculating),
+                    style = MaterialTheme.typography.labelLarge
                 )
             }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Bottom row with timestamp and actions
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Timestamp
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Schedule,
-                        contentDescription = null,
-                        modifier = Modifier.size(14.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = timestamp,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                    )
-                }
-
-                // Action buttons
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Quick action: Copy expression
-                    IconButton(
-                        onClick = { onCopyExpression(state) },
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ContentCopy,
-                            contentDescription = stringResource(Res.string.c_copy_expression),
-                            modifier = Modifier.size(18.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    // Quick action: Use
-                    IconButton(
-                        onClick = { onUse(state) },
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.PlayArrow,
-                            contentDescription = stringResource(Res.string.c_use),
-                            modifier = Modifier.size(18.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-
-                    // More options
-                    Box {
-                        IconButton(
-                            onClick = { menuExpanded = true },
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.MoreVert,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        DropdownMenu(
-                            expanded = menuExpanded,
-                            onDismissRequest = { menuExpanded = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text(text = stringResource(Res.string.c_use)) },
-                                leadingIcon = { Icon(Icons.Default.PlayArrow, null) },
-                                onClick = {
-                                    menuExpanded = false
-                                    onUse(state)
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text(text = stringResource(Res.string.c_copy_expression)) },
-                                leadingIcon = { Icon(Icons.Default.ContentCopy, null) },
-                                onClick = {
-                                    menuExpanded = false
-                                    onCopyExpression(state)
-                                }
-                            )
-                            if (result.isNotEmpty()) {
-                                DropdownMenuItem(
-                                    text = { Text(text = stringResource(Res.string.c_copy_result)) },
-                                    leadingIcon = { Icon(Icons.Default.ContentCopy, null) },
-                                    onClick = {
-                                        menuExpanded = false
-                                        onCopyResult(state)
-                                    }
-                                )
-                            }
-                            if (isRecent) {
-                                DropdownMenuItem(
-                                    text = { Text(text = stringResource(Res.string.c_save)) },
-                                    leadingIcon = { Icon(Icons.Default.Save, null) },
-                                    onClick = {
-                                        menuExpanded = false
-                                        onSave(state)
-                                    }
-                                )
-                            } else {
-                                DropdownMenuItem(
-                                    text = { Text(text = stringResource(Res.string.cpp_edit)) },
-                                    leadingIcon = { Icon(Icons.Default.Edit, null) },
-                                    onClick = {
-                                        menuExpanded = false
-                                        onEdit(state)
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text(text = stringResource(Res.string.cpp_delete)) },
-                                    leadingIcon = { Icon(Icons.Default.Delete, null) },
-                                    onClick = {
-                                        menuExpanded = false
-                                        onDelete(state)
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Comment for saved items
-            if (!isRecent && state.comment.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-                ) {
-                    Text(
-                        text = state.comment,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(8.dp)
-                    )
-                }
-            }
         }
     }
 }
+
+// =============================================================================
+// TIMESTAMP FORMATTING - Elegant relative time
+// =============================================================================
 
 private fun formatHistoryTimestamp(epochMillis: Long): String {
     return runCatching {
-        val localDateTime = Instant
-            .fromEpochMilliseconds(epochMillis)
-            .toLocalDateTime(TimeZone.currentSystemDefault())
-
+        val time = Instant.fromEpochMilliseconds(epochMillis)
+        val localDateTime = time.toLocalDateTime(TimeZone.currentSystemDefault())
         val month = localDateTime.month.name
             .take(3)
             .lowercase()
             .replaceFirstChar { it.uppercase() }
-        val day = localDateTime.day
+        val day = localDateTime.dayOfMonth
         val hour = localDateTime.hour.toString().padStart(2, '0')
         val minute = localDateTime.minute.toString().padStart(2, '0')
         "$month $day, $hour:$minute"

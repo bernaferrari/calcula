@@ -1,6 +1,7 @@
 package org.solovyev.android.calculator
 
 import kotlinx.coroutines.flow.Flow
+import org.solovyev.android.calculator.sound.SoundPreferences
 
 interface AppPreferences {
     val settings: SettingsPreferences
@@ -14,6 +15,8 @@ interface AppPreferences {
     val theme: ThemePreferences
     val haptics: HapticsPreferences
     val history: HistoryPreferences
+    val sound: SoundPreferences
+    val gestures: GesturePreferences
 }
 
 
@@ -160,8 +163,38 @@ interface ThemePreferences {
  * Haptics preferences for vibration feedback.
  */
 interface HapticsPreferences {
+    val hapticOnReleaseEnabled: Flow<Boolean>
+
     suspend fun isEnabled(): Boolean
     suspend fun setEnabled(value: Boolean)
+
+    /**
+     * Whether to trigger haptic feedback when a gesture is released.
+     * This applies to both THRESHOLD and STICK_AND_RELEASE swipe modes.
+     */
+    suspend fun isHapticOnReleaseEnabled(): Boolean
+    suspend fun setHapticOnReleaseEnabled(value: Boolean)
+}
+
+/**
+ * Gesture preferences for swipe and slide activation settings.
+ */
+interface GesturePreferences {
+    /**
+     * When enabled, gestures auto-activate when dragging past 80% threshold.
+     * When disabled (default), user must lift finger to activate after passing threshold.
+     */
+    val gestureAutoActivationEnabled: Flow<Boolean>
+    /**
+     * When enabled, restore the classic bottom-right "=" key on modern/engineer keyboards.
+     * When disabled (default), the key is replaced by "ƒ" and "=" is available via display and long-press.
+     */
+    val bottomRightEqualsEnabled: Flow<Boolean>
+
+    suspend fun isGestureAutoActivationEnabled(): Boolean
+    suspend fun setGestureAutoActivationEnabled(enabled: Boolean)
+    suspend fun isBottomRightEqualsEnabled(): Boolean
+    suspend fun setBottomRightEqualsEnabled(enabled: Boolean)
 }
 
 /**

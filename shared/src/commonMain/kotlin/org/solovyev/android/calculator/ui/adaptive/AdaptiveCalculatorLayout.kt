@@ -9,8 +9,7 @@ import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+// Material icons not available in commonMain - using text alternatives
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -83,6 +82,7 @@ fun AdaptiveCalculatorLayout(
     highlightExpressions: Boolean,
     highContrast: Boolean,
     hapticsEnabled: Boolean,
+    hapticOnRelease: Boolean = true,
     reduceMotion: Boolean,
     extendedHaptics: Boolean,
     fontScale: Float,
@@ -100,6 +100,7 @@ fun AdaptiveCalculatorLayout(
     CompositionLocalProvider(
         LocalCalculatorHighContrast provides highContrast,
         LocalCalculatorHapticsEnabled provides hapticsEnabled,
+        LocalCalculatorHapticOnRelease provides hapticOnRelease,
         LocalCalculatorReduceMotion provides reduceMotion,
         LocalCalculatorExtendedHaptics provides extendedHaptics,
         LocalCalculatorFontScale provides fontScale,
@@ -367,21 +368,24 @@ private fun CompactCalculatorLayout(
                 title = stringResource(Res.string.cpp_app_name),
                 actions = {
                     FilledTonalIconButton(onClick = onOpenHistory) {
-                        Icon(
-                            imageVector = Icons.Default.History,
-                            contentDescription = stringResource(Res.string.c_history)
+                        Text(
+                            text = "H",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                     }
                     FilledTonalIconButton(onClick = onOpenFunctions) {
-                        Icon(
-                            imageVector = Icons.Default.Calculate,
-                            contentDescription = stringResource(Res.string.c_functions)
+                        Text(
+                            text = "f(x)",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                     }
                     FilledTonalIconButton(onClick = onOpenSettings) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = stringResource(Res.string.cpp_settings)
+                        Text(
+                            text = "S",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                     }
                 }
@@ -606,10 +610,10 @@ private fun ScientificFunctionsPanel(
             )
 
             val tools = listOf(
-                Triple("Functions", Icons.Default.Calculate, onOpenFunctions),
-                Triple("Variables", Icons.Default.Folder, onOpenVars),
-                Triple("Converter", Icons.Default.SwapHoriz, onOpenConverter),
-                Triple("Graph", Icons.Default.ShowChart, onOpenGraph)
+                Triple("Functions", "f(x)", onOpenFunctions),
+                Triple("Variables", "V", onOpenVars),
+                Triple("Converter", "⇄", onOpenConverter),
+                Triple("Graph", "📈", onOpenGraph)
             )
 
             tools.forEach { (label, icon, onClick) ->
@@ -618,10 +622,9 @@ private fun ScientificFunctionsPanel(
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
                 ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
+                    Text(
+                        text = icon,
+                        style = MaterialTheme.typography.bodyMedium
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(text = label, modifier = Modifier.weight(1f))
@@ -675,10 +678,10 @@ private fun HistorySidePanelAdaptive(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Default.History,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
+                Text(
+                    text = "H",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
@@ -863,18 +866,17 @@ private fun DiagnosticsRowCompact(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (showScientificNotation) {
-            FilledTonalIconButton(
-                onClick = onToggleScientificNotation,
-                modifier = Modifier.size(24.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Science,
-                    contentDescription = null,
-                    modifier = Modifier.size(14.dp)
-                )
+            if (showScientificNotation) {
+                FilledTonalIconButton(
+                    onClick = onToggleScientificNotation,
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Text(
+                        text = "∑",
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
             }
-        }
 
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),

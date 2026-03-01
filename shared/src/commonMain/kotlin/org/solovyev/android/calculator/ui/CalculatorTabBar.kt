@@ -20,10 +20,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -166,11 +162,10 @@ private fun TabChip(
                     onClick = onClose,
                     modifier = Modifier.size(28.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Close tab",
-                        modifier = Modifier.size(16.dp),
-                        tint = textColor.copy(alpha = 0.7f)
+                    Text(
+                        text = "✕",
+                        fontSize = 14.sp,
+                        color = textColor.copy(alpha = 0.7f)
                     )
                 }
             }
@@ -191,11 +186,10 @@ private fun AddTabButton(
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-        Icon(
-            imageVector = Icons.Default.Add,
-            contentDescription = "Add new tab",
-            modifier = Modifier.size(20.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        Text(
+            text = "+",
+            fontSize = 20.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

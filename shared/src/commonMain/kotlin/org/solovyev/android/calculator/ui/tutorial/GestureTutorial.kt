@@ -5,9 +5,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Swipe
+// Material icons not available in commonMain - using text alternatives
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -87,70 +85,21 @@ open class TutorialManager(private val dataStore: DataStore<Preferences>) {
 }
 
 /**
- * Subtle gesture hint banner shown below display
- * Dismissible, remembers dismissal
+ * OBSOLETE: Gesture hint banner - removed in favor of visual discovery.
+ * 
+ * The ModernKeyboard now uses pure visual gesture discovery:
+ * - Ambient hints: faint secondary functions fade in/out
+ * - Touch preview: functions appear when finger touches button
+ * - Success glow: confirms successful swipe
+ * 
+ * This composable is kept for backward compatibility but renders nothing.
  */
 @Composable
+@Deprecated("Use ModernKeyboard visual discovery instead", ReplaceWith(""))
 fun GestureHintBanner(
     tutorialManager: TutorialManager,
     modifier: Modifier = Modifier
 ) {
-    val scope = rememberCoroutineScope()
-    var dismissed by remember { mutableStateOf(false) }
-
-    LaunchedEffect(Unit) {
-        dismissed = tutorialManager.hintDismissed.first()
-    }
-
-    AnimatedVisibility(
-        visible = !dismissed,
-        enter = fadeIn(),
-        exit = fadeOut(),
-        modifier = modifier
-    ) {
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f),
-            shape = MaterialTheme.shapes.small
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Swipe,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-
-                Text(
-                    text = "Swipe buttons for more functions",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                    modifier = Modifier.weight(1f)
-                )
-
-                IconButton(
-                    onClick = {
-                        scope.launch {
-                            tutorialManager.dismissHint()
-                            dismissed = true
-                        }
-                    },
-                    modifier = Modifier.size(24.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Dismiss hint",
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                }
-            }
-        }
-    }
+    // Visual discovery in ModernKeyboard replaces this
+    // No text, no banners, no emojis - pure visual communication
 }

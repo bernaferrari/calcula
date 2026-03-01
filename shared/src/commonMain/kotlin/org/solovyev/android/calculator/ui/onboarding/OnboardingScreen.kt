@@ -1,38 +1,33 @@
 package org.solovyev.android.calculator.ui.onboarding
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
+// Material icons not available in commonMain - using text alternatives
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 import org.solovyev.android.calculator.ui.Res
 import org.solovyev.android.calculator.GuiTheme
 import org.solovyev.android.calculator.GuiMode
-
-/**
- * Modern Apple-style onboarding for Calculator++
- * 
- * Simple, elegant, and focused on just the essential setup choices.
- */
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 
 @Composable
 fun OnboardingScreen(
@@ -131,6 +126,7 @@ private fun WelcomeStep(onContinue: () -> Unit) {
     var visible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
+        delay(150)
         visible = true
     }
 
@@ -143,55 +139,82 @@ private fun WelcomeStep(onContinue: () -> Unit) {
     ) {
         Spacer(Modifier.weight(1f))
 
-        // Animated App Icon
+        // Animated App Icon with pulsing shadow
         AnimatedVisibility(
             visible = visible,
-            enter = scaleIn(initialScale = 0.5f, animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)) + fadeIn()
+            enter = scaleIn(
+                initialScale = 0.6f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessLow
+                )
+            ) + fadeIn(animationSpec = tween(500))
         ) {
+            val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+            val pulseScale by infiniteTransition.animateFloat(
+                initialValue = 1f,
+                targetValue = 1.05f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(2000, easing = FastOutSlowInEasing),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "pulseScale"
+            )
+
             Box(
                 modifier = Modifier
-                    .size(120.dp)
-                    .clip(RoundedCornerShape(32.dp))
+                    .size(140.dp)
+                    .graphicsLayer {
+                        scaleX = pulseScale
+                        scaleY = pulseScale
+                        shadowElevation = 20.dp.toPx()
+                    }
+                    .clip(RoundedCornerShape(36.dp))
                     .background(
                         brush = Brush.linearGradient(
                             colors = listOf(
                                 MaterialTheme.colorScheme.primary,
                                 MaterialTheme.colorScheme.tertiary
-                            )
+                            ),
+                            start = Offset(0f, 0f),
+                            end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
                         )
-                    )
-                    .clickable { }, // Consume clicks
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "π",
-                    fontSize = 72.sp,
+                    fontSize = 80.sp,
                     fontWeight = FontWeight.Light,
                     color = MaterialTheme.colorScheme.onPrimary
                 )
             }
         }
 
-        Spacer(Modifier.height(48.dp))
+        Spacer(Modifier.height(40.dp))
 
         AnimatedVisibility(
             visible = visible,
-            enter = slideInVertically(initialOffsetY = { 40 }, animationSpec = spring(stiffness = Spring.StiffnessLow)) + fadeIn(),
+            enter = slideInVertically(
+                initialOffsetY = { it / 4 },
+                animationSpec = spring(stiffness = Spring.StiffnessLow)
+            ) + fadeIn(animationSpec = tween(600, delayMillis = 200)),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = "Calculator++", // stringResource(Res.string.cpp_onboarding_title),
-                    style = MaterialTheme.typography.displaySmall,
+                    text = "Calculator++",
+                    style = MaterialTheme.typography.displayMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center
                 )
 
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(12.dp))
 
                 Text(
-                    text = "Precision tools for serious work.", // stringResource(Res.string.cpp_onboarding_subtitle),
-                    style = MaterialTheme.typography.headlineSmall,
+                    text = "Precision tools for serious work.",
+                    style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
@@ -202,7 +225,10 @@ private fun WelcomeStep(onContinue: () -> Unit) {
 
         AnimatedVisibility(
             visible = visible,
-            enter = slideInVertically(initialOffsetY = { 100 }, animationSpec = spring(stiffness = Spring.StiffnessLow)) + fadeIn()
+            enter = slideInVertically(
+                initialOffsetY = { it / 3 },
+                animationSpec = spring(stiffness = Spring.StiffnessLow)
+            ) + fadeIn(animationSpec = tween(600, delayMillis = 400))
         ) {
             Button(
                 onClick = onContinue,
@@ -212,17 +238,31 @@ private fun WelcomeStep(onContinue: () -> Unit) {
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary
-                )
+                ),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
             ) {
                 Text(
-                    text = "Continue", // stringResource(Res.string.cpp_onboarding_continue),
+                    text = "Get Started",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.SemiBold
                 )
             }
         }
 
-        Spacer(Modifier.height(100.dp))
+        Spacer(Modifier.height(48.dp))
+
+        AnimatedVisibility(
+            visible = visible,
+            enter = fadeIn(animationSpec = tween(600, delayMillis = 600))
+        ) {
+            Text(
+                text = "Free • No ads • Open source",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+            )
+        }
+
+        Spacer(Modifier.height(48.dp))
     }
 }
 
@@ -235,79 +275,105 @@ private fun ThemeStep(
     val themes = listOf(
         Triple(
             GuiTheme.material_theme,
-            "System", // stringResource(Res.string.cpp_theme_system),
-            "Use your device appearance and dynamic colors"
+            "System",
+            "Matches your device settings with dynamic colors"
         ),
         Triple(
             GuiTheme.material_light,
-            "Light", // stringResource(Res.string.cpp_theme_light),
-            "Bright surfaces with strong readability"
+            "Light",
+            "Clean and bright for daytime use"
         ),
         Triple(
             GuiTheme.material_dark,
-            "Dark", // stringResource(Res.string.cpp_theme_dark),
-            "Comfortable in low light and OLED friendly"
+            "Dark",
+            "Easy on the eyes in low light"
         )
     )
+
+    var visible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        delay(100)
+        visible = true
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 32.dp),
+            .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(Modifier.height(80.dp))
+        Spacer(Modifier.height(60.dp))
 
-        Text(
-            text = "Choose Appearance", // stringResource(Res.string.cpp_onboarding_choose_appearance),
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
+        AnimatedVisibility(
+            visible = visible,
+            enter = fadeIn() + slideInVertically(initialOffsetY = { -20 })
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "Choose Appearance",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
 
-        Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(8.dp))
 
-        Text(
-            text = "You can change this anytime in settings", // stringResource(Res.string.cpp_onboarding_appearance_hint),
-            fontSize = 15.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+                Text(
+                    text = "You can change this anytime in settings",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
 
-        Spacer(Modifier.height(48.dp))
+        Spacer(Modifier.height(40.dp))
 
         Column(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            themes.forEach { (theme, name, summary) ->
-                ThemeOption(
-                    theme = theme,
-                    name = name,
-                    summary = summary,
-                    isSelected = selectedTheme == theme,
-                    onClick = { onThemeSelected(theme) },
-                    modifier = Modifier.fillMaxWidth()
-                )
+            themes.forEachIndexed { index, (theme, name, summary) ->
+                AnimatedVisibility(
+                    visible = visible,
+                    enter = fadeIn(animationSpec = tween(400, delayMillis = index * 100)) +
+                            slideInHorizontally(initialOffsetX = { it / 3 }, animationSpec = tween(400, delayMillis = index * 100))
+                ) {
+                    ThemeOption(
+                        theme = theme,
+                        name = name,
+                        summary = summary,
+                        isSelected = selectedTheme == theme,
+                        onClick = { onThemeSelected(theme) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         }
 
         Spacer(Modifier.weight(1f))
 
-        FilledTonalButton(
-            onClick = onContinue,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(14.dp)
+        AnimatedVisibility(
+            visible = visible,
+            enter = fadeIn(animationSpec = tween(400, delayMillis = 400))
         ) {
-            Text(
-                text = "Continue", // stringResource(Res.string.cpp_onboarding_continue),
-                fontSize = 17.sp,
-                fontWeight = FontWeight.SemiBold
-            )
+            Button(
+                onClick = onContinue,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+            ) {
+                Text(
+                    text = "Continue",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
         }
 
-        Spacer(Modifier.height(100.dp))
+        Spacer(Modifier.height(48.dp))
     }
 }
 
@@ -320,74 +386,104 @@ private fun ThemeOption(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val haptics = LocalHapticFeedback.current
+    val scale by animateFloatAsState(
+        targetValue = if (isSelected) 1.02f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "scale"
+    )
+
     val containerColor by animateColorAsState(
         targetValue = if (isSelected) {
             MaterialTheme.colorScheme.primaryContainer
         } else {
-            MaterialTheme.colorScheme.surfaceContainerHigh
+            MaterialTheme.colorScheme.surfaceContainerLow
         },
+        animationSpec = tween(200),
         label = "themeOptionContainer"
     )
-    val outlineColor by animateColorAsState(
-        targetValue = if (isSelected) {
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.42f)
-        } else {
-            MaterialTheme.colorScheme.outline.copy(alpha = 0.18f)
-        },
-        label = "themeOptionOutline"
+
+    val elevation by animateDpAsState(
+        targetValue = if (isSelected) 4.dp else 1.dp,
+        label = "elevation"
     )
 
     Surface(
         modifier = modifier
-            .clip(RoundedCornerShape(18.dp))
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(18.dp),
+            .graphicsLayer { scaleX = scale; scaleY = scale }
+            .clip(RoundedCornerShape(20.dp))
+            .clickable {
+                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                onClick()
+            },
+        shape = RoundedCornerShape(20.dp),
         color = containerColor,
-        border = androidx.compose.foundation.BorderStroke(1.dp, outlineColor)
+        tonalElevation = elevation,
+        shadowElevation = elevation
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier = Modifier
-                    .size(52.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(
+            // Theme preview with depth
+            Surface(
+                modifier = Modifier.size(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                shadowElevation = 2.dp
+            ) {
+                Box(
+                    modifier = Modifier.background(
                         brush = when (theme) {
                             GuiTheme.material_dark -> Brush.verticalGradient(
-                                colors = listOf(Color(0xFF101114), Color(0xFF23252A))
+                                colors = listOf(Color(0xFF2A2A2E), Color(0xFF1A1A1E))
                             )
                             GuiTheme.material_light -> Brush.verticalGradient(
-                                colors = listOf(Color(0xFFFFFFFF), Color(0xFFEAECEF))
+                                colors = listOf(Color(0xFFFFFFFF), Color(0xFFF5F5F7))
                             )
-                            GuiTheme.material_theme -> Brush.verticalGradient(
+                            GuiTheme.material_theme -> Brush.linearGradient(
                                 colors = listOf(
-                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
-                                    MaterialTheme.colorScheme.tertiary.copy(alpha = 0.85f)
+                                    MaterialTheme.colorScheme.primary,
+                                    MaterialTheme.colorScheme.tertiary
                                 )
                             )
                         }
                     ),
-                contentAlignment = Alignment.Center
-            ) {
-                if (theme == GuiTheme.material_dark) {
-                    Box(
-                        modifier = Modifier
-                            .size(14.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFE7EAF0).copy(alpha = 0.92f))
-                    )
+                    contentAlignment = Alignment.Center
+                ) {
+                    when (theme) {
+                        GuiTheme.material_dark -> {
+                            Text(
+                                text = "☾",
+                                color = Color(0xFFE7EAF0),
+                                fontSize = 20.sp
+                            )
+                        }
+                        GuiTheme.material_light -> {
+                            Text(
+                                text = "☀",
+                                color = Color(0xFF5A5A5E),
+                                fontSize = 20.sp
+                            )
+                        }
+                        else -> {
+                            Text(
+                                text = "A",
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 }
             }
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = name,
-                    fontSize = 16.sp,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                     color = if (isSelected) {
                         MaterialTheme.colorScheme.onPrimaryContainer
@@ -395,33 +491,39 @@ private fun ThemeOption(
                         MaterialTheme.colorScheme.onSurface
                     }
                 )
-                Spacer(Modifier.height(2.dp))
+                Spacer(Modifier.height(4.dp))
                 Text(
                     text = summary,
-                    fontSize = 13.sp,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = if (isSelected) {
-                        MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.84f)
+                        MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                     } else {
                         MaterialTheme.colorScheme.onSurfaceVariant
                     }
                 )
             }
 
-            if (isSelected) {
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primary
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier
-                            .size(26.dp)
-                            .padding(5.dp)
-                    )
-                }
-            }
+            // Selection indicator
+                    AnimatedVisibility(
+                        visible = isSelected,
+                        enter = scaleIn(initialScale = 0.5f) + fadeIn(),
+                        exit = scaleOut(targetScale = 0.5f) + fadeOut()
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = "✓",
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
         }
     }
 }
@@ -431,111 +533,161 @@ private fun TipsStep(
     onComplete: () -> Unit
 ) {
     val tips = listOf(
-        "1" to ("Reuse Results" to "Tap a result to insert it into your expression"), // stringResource(Res.string.cpp_onboarding_tip1_title)
-        "2" to ("Scientific Functions" to "Use the f(x) key for trig, logs, and constants"), // stringResource(Res.string.cpp_onboarding_tip2_title)
-        "3" to ("History Shortcuts" to "Recent calculations appear above the keyboard") // stringResource(Res.string.cpp_onboarding_tip3_title)
+        Triple("👆", "Tap Results", "Tap any calculation result to reuse it instantly"),
+        Triple("f(x)", "Scientific Mode", "Swipe up on buttons for advanced functions"),
+        Triple("H", "History Access", "Swipe the display to see recent calculations")
     )
+
+    var visible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        delay(100)
+        visible = true
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 32.dp),
+            .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(Modifier.height(80.dp))
+        Spacer(Modifier.height(60.dp))
 
-        Text(
-            text = "Setup Complete", // stringResource(Res.string.cpp_onboarding_complete_title),
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
+        AnimatedVisibility(
+            visible = visible,
+            enter = fadeIn() + slideInVertically(initialOffsetY = { -20 })
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                // Success icon
+                Surface(
+                    modifier = Modifier.size(72.dp),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            text = "✓",
+                            style = MaterialTheme.typography.headlineLarge,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
 
-        Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(24.dp))
 
-        Text(
-            text = "A few essentials to get started", // stringResource(Res.string.cpp_onboarding_complete_subtitle),
-            fontSize = 15.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
-        )
+                Text(
+                    text = "You're All Set!",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
 
-        Spacer(Modifier.height(32.dp))
+                Spacer(Modifier.height(8.dp))
+
+                Text(
+                    text = "Here are a few tips to get the most out of Calculator++",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+
+        Spacer(Modifier.height(40.dp))
 
         Column(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            tips.forEach { (emoji, labels) ->
-                TipCard(
-                    leadingLabel = emoji,
-                    title = labels.first,
-                    subtitle = labels.second
-                )
+            tips.forEachIndexed { index, (icon, title, subtitle) ->
+                AnimatedVisibility(
+                    visible = visible,
+                    enter = fadeIn(animationSpec = tween(400, delayMillis = index * 150)) +
+                            slideInHorizontally(initialOffsetX = { it / 4 }, animationSpec = tween(400, delayMillis = index * 150))
+                ) {
+                    TipCard(
+                        icon = icon,
+                        title = title,
+                        subtitle = subtitle
+                    )
+                }
             }
         }
 
         Spacer(Modifier.weight(1f))
 
-        Button(
-            onClick = onComplete,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(14.dp)
+        AnimatedVisibility(
+            visible = visible,
+            enter = fadeIn(animationSpec = tween(400, delayMillis = 500))
         ) {
-            Text(
-                text = "Open Calculator", // stringResource(Res.string.cpp_onboarding_open_calculator),
-                fontSize = 17.sp,
-                fontWeight = FontWeight.SemiBold
-            )
+            Button(
+                onClick = onComplete,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+            ) {
+                Text(
+                    text = "Start Calculating",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
         }
 
-        Spacer(Modifier.height(100.dp))
+        Spacer(Modifier.height(48.dp))
     }
 }
 
 @Composable
 private fun TipCard(
-    leadingLabel: String,
+    icon: String,
     title: String,
     subtitle: String
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalAlignment = Alignment.CenterVertically
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Box(
+        Row(
             modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primaryContainer),
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 18.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = leadingLabel,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-        }
-        Column {
-            Text(
-                text = title,
-                fontSize = 17.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = subtitle,
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Surface(
+                modifier = Modifier.size(48.dp),
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.primaryContainer
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = icon,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+            }
+            Column {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }
@@ -583,11 +735,11 @@ private fun ModeOption(
         }
 
         if (isSelected) {
-            Icon(
-                imageVector = Icons.Default.Check,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp)
+            Text(
+                text = "✓",
+                color = MaterialTheme.colorScheme.primary,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
             )
         }
     }

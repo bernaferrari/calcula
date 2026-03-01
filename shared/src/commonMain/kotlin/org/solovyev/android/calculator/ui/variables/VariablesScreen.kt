@@ -15,17 +15,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -123,10 +117,7 @@ fun VariablesScreen(
                 onBack = onBack,
                 actions = {
                     IconButton(onClick = { showAddDialog = true }) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = stringResource(Res.string.c_var_create_var)
-                        )
+                        Text(text = "+")
                     }
                 }
             )
@@ -177,18 +168,12 @@ fun VariablesScreen(
                 onValueChange = { query = it },
                 singleLine = true,
                 leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = null
-                    )
+                    Text(text = "🔍")
                 },
                 trailingIcon = if (query.isNotEmpty()) {
                     {
                         IconButton(onClick = { query = "" }) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = null
-                            )
+                            Text(text = "✕")
                         }
                     }
                 } else {
@@ -309,7 +294,7 @@ private fun EmptyVariablesState(
         )
         Spacer(modifier = Modifier.height(18.dp))
         TextButton(onClick = onCreate) {
-            Icon(imageVector = Icons.Default.Add, contentDescription = null)
+            Text(text = "+")
             Spacer(modifier = Modifier.width(6.dp))
             Text(text = stringResource(Res.string.c_var_create_var))
         }
@@ -394,10 +379,7 @@ private fun VariableCard(
 
             if (!variable.isSystem()) {
                 IconButton(onClick = onDelete) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = stringResource(Res.string.removal_confirmation)
-                    )
+                    Text(text = "🗑")
                 }
             }
         }
@@ -469,7 +451,7 @@ private fun toVariableListItems(variables: List<IConstant>): List<VariableListIt
     val grouped = variables.groupBy { variable ->
         val c = variable.name.firstOrNull()?.uppercaseChar()
         if (c != null && c.isLetter()) c.toString() else "#"
-    }.toSortedMap()
+    }.toList().sortedBy { it.first }.toMap()
 
     return buildList {
         grouped.forEach { (header, group) ->

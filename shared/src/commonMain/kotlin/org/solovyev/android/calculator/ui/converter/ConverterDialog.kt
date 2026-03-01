@@ -19,11 +19,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.SwapVert
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -138,10 +133,7 @@ private fun ConverterSheetContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onCancel) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(Res.string.cpp_back)
-                )
+                Text(text = "←")
             }
             Spacer(modifier = Modifier.size(4.dp))
             Box(
@@ -276,11 +268,10 @@ private fun ConverterSheetContent(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier.rotate(animatedRotation)
                         ) {
-                            Icon(
-                                imageVector = Icons.Filled.SwapVert,
-                                contentDescription = stringResource(Res.string.cpp_swap),
-                                modifier = Modifier.size(22.dp),
-                                tint = MaterialTheme.colorScheme.onSecondaryContainer
+                            Text(
+                                text = "⇅",
+                                fontSize = 22.sp,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
                             )
                         }
                     }
@@ -348,11 +339,7 @@ private fun ConverterSheetContent(
                 onClick = onCopy,
                 enabled = state.output.isNotBlank()
             ) {
-                Icon(
-                    imageVector = Icons.Rounded.ContentCopy,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
+                Text(text = "📋")
                 Spacer(modifier = Modifier.size(6.dp))
                 Text(text = stringResource(Res.string.c_copy_result))
             }
@@ -361,11 +348,7 @@ private fun ConverterSheetContent(
                 onClick = onUse,
                 enabled = state.output.isNotBlank()
             ) {
-                Icon(
-                    imageVector = Icons.Rounded.Check,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
+                Text(text = "✓")
                 Spacer(modifier = Modifier.size(6.dp))
                 Text(text = stringResource(Res.string.c_use))
             }

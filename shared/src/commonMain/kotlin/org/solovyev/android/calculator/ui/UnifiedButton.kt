@@ -54,6 +54,7 @@ fun UnifiedButton(
     onSwipeDown: (() -> Unit)? = null,
     onSwipeLeft: (() -> Unit)? = null,
     onSwipeRight: (() -> Unit)? = null,
+    gestureAutoActivation: Boolean = false,
     fontSize: androidx.compose.ui.unit.TextUnit = 28.sp,
     cornerRadius: Dp = 16.dp,
     fontWeight: FontWeight = FontWeight.Normal
@@ -66,6 +67,7 @@ fun UnifiedButton(
     val longPressTimeout = 400L
     val touchSlop = with(density) { 8.dp.toPx() }
     val minDragDistancePx = with(density) { 30.dp.toPx() }
+    val autoActivationThresholdPx = with(density) { (minDragDistancePx * 0.8f).coerceAtLeast(16.dp.toPx()) }
 
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.92f else 1f,
@@ -76,25 +78,27 @@ fun UnifiedButton(
         label = "ButtonScale"
     )
 
-    // Unified color scheme
+    // Unified color scheme using calculator-specific colors
+    val calcColors = org.solovyev.android.calculator.ui.theme.calculatorColors()
+
     val (backgroundColor, textColor) = when (buttonType) {
         ButtonType.DIGIT -> {
-            MaterialTheme.colorScheme.surfaceContainerHigh to MaterialTheme.colorScheme.onSurface
+            calcColors.digitButtonBackground to calcColors.digitButtonText
         }
         ButtonType.OPERATION -> {
-            MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer
+            calcColors.operatorButtonBackground to calcColors.operatorButtonText
         }
         ButtonType.OPERATION_HIGHLIGHTED -> {
-            MaterialTheme.colorScheme.primary to MaterialTheme.colorScheme.onPrimary
+            calcColors.equalsButtonBackground to calcColors.equalsButtonText
         }
         ButtonType.CONTROL -> {
-            MaterialTheme.colorScheme.surfaceContainer to MaterialTheme.colorScheme.onSurfaceVariant
+            calcColors.controlButtonBackground to calcColors.controlButtonText
         }
         ButtonType.SPECIAL -> {
-            MaterialTheme.colorScheme.tertiaryContainer to MaterialTheme.colorScheme.onTertiaryContainer
+            calcColors.scientificButtonBackground to calcColors.scientificButtonText
         }
         ButtonType.MEMORY -> {
-            MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer
+            calcColors.memoryButtonBackground to calcColors.memoryButtonText
         }
     }
 
@@ -106,7 +110,16 @@ fun UnifiedButton(
         modifier = modifier
             .clip(shape)
             .background(effectiveBackgroundColor)
-            .pointerInput(enabled, onClick, onLongClick, onSwipeUp, onSwipeDown, onSwipeLeft, onSwipeRight) {
+            .pointerInput(
+                enabled,
+                onClick,
+                onLongClick,
+                onSwipeUp,
+                onSwipeDown,
+                onSwipeLeft,
+                onSwipeRight,
+                gestureAutoActivation
+            ) {
                 awaitEachGesture {
                     val down = awaitFirstDown()
                     isPressed = true
@@ -162,6 +175,26 @@ fun UnifiedButton(
                             lastPos = change.position
                             if (!movedBeyondSlop) {
                                 movedBeyondSlop = (lastPos - start).getDistance() > touchSlop
+                            }
+
+                            // Optionally activate swipe action during drag before finger lift.
+                            if (enabled && gestureAutoActivation && !actionHandled) {
+                                val delta = lastPos - start
+                                if (delta.getDistance() >= autoActivationThresholdPx) {
+                                    val swipeHandled = handleSwipe(
+                                        delta = delta,
+                                        onSwipeUp = onSwipeUp,
+                                        onSwipeDown = onSwipeDown,
+                                        onSwipeLeft = onSwipeLeft,
+                                        onSwipeRight = onSwipeRight,
+                                        haptics = haptics,
+                                        hapticsEnabled = hapticsEnabled
+                                    )
+                                    if (swipeHandled) {
+                                        actionHandled = true
+                                        isPressed = false
+                                    }
+                                }
                             }
                             change.consume()
                         }

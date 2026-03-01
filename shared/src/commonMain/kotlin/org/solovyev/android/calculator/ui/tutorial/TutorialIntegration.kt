@@ -8,10 +8,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.TouchApp
+// Material icons not available in commonMain - using text alternatives
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -45,6 +45,17 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Duration.Companion.milliseconds
+
+// KMP-compatible current time in milliseconds - platform-specific implementations provided
+internal expect fun getCurrentTimeMillis(): Long
+
+// Backward compatibility alias
+internal fun currentTimeMillis(): Long = getCurrentTimeMillis()
 
 
 /**
@@ -121,7 +132,7 @@ class TutorialPreferences(private val dataStore: DataStore<Preferences>) {
             totalCalculations = prefs[CALCULATION_COUNT_KEY] ?: 0,
             buttonTapCounts = emptyMap(), // Simplified for now
             lastInteractionTime = prefs[LAST_HINT_SHOWN_KEY] ?: 0L,
-            firstLaunchDate = prefs[FIRST_LAUNCH_DATE_KEY] ?: System.currentTimeMillis()
+            firstLaunchDate = prefs[FIRST_LAUNCH_DATE_KEY] ?: currentTimeMillis()
         )
     }
     
@@ -137,10 +148,10 @@ class TutorialPreferences(private val dataStore: DataStore<Preferences>) {
         dataStore.edit { prefs ->
             val current = prefs[BUTTON_PRESS_COUNT_KEY] ?: 0
             prefs[BUTTON_PRESS_COUNT_KEY] = current + 1
-            prefs[LAST_HINT_SHOWN_KEY] = System.currentTimeMillis()
+            prefs[LAST_HINT_SHOWN_KEY] = currentTimeMillis()
         }
     }
-    
+
     suspend fun incrementCalculations() {
         dataStore.edit { prefs ->
             val current = prefs[CALCULATION_COUNT_KEY] ?: 0
@@ -162,8 +173,8 @@ class TutorialPreferences(private val dataStore: DataStore<Preferences>) {
     
     suspend fun markHintShown(hintId: String) {
         dataStore.edit { prefs ->
-            prefs[longPreferencesKey(HINT_COOLDOWNS_KEY_PREFIX + hintId)] = System.currentTimeMillis()
-            prefs[LAST_HINT_SHOWN_KEY] = System.currentTimeMillis()
+            prefs[longPreferencesKey(HINT_COOLDOWNS_KEY_PREFIX + hintId)] = currentTimeMillis()
+            prefs[LAST_HINT_SHOWN_KEY] = currentTimeMillis()
         }
     }
     
@@ -172,14 +183,14 @@ class TutorialPreferences(private val dataStore: DataStore<Preferences>) {
     }
     
     suspend fun isInCooldown(hint: ContextualHint): Boolean {
-        val lastShown = getLastHintShownTime(hint.id)
-        return System.currentTimeMillis() - lastShown < hint.cooldownMs
+        val lastShown: Long = getLastHintShownTime(hint.id)
+        return ((currentTimeMillis() - lastShown) < hint.cooldownMs)
     }
     
     suspend fun initializeFirstLaunch() {
         dataStore.edit { prefs ->
             if (prefs[FIRST_LAUNCH_DATE_KEY] == null) {
-                prefs[FIRST_LAUNCH_DATE_KEY] = System.currentTimeMillis()
+                prefs[FIRST_LAUNCH_DATE_KEY] = currentTimeMillis()
             }
         }
     }
@@ -369,7 +380,8 @@ class TutorialViewModel(
      * Check if current time is in Do Not Disturb period
      */
     private fun isInDoNotDisturb(settings: TutorialSettings): Boolean {
-        val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+        val now = Instant.fromEpochMilliseconds(currentTimeMillis())
+        val hour: Int = now.toLocalDateTime(TimeZone.currentSystemDefault()).hour
         return if (settings.doNotDisturbStartHour > settings.doNotDisturbEndHour) {
             // Crosses midnight (e.g., 22:00 to 08:00)
             hour >= settings.doNotDisturbStartHour || hour < settings.doNotDisturbEndHour
@@ -540,11 +552,9 @@ fun ButtonHintIndicator(
                 .padding(2.dp),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = Icons.Default.TouchApp,
-                contentDescription = "Gesture hint",
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(16.dp)
+            Text(
+                text = "👆",
+                style = MaterialTheme.typography.bodyMedium
             )
         }
     }
@@ -555,8 +565,8 @@ fun ButtonHintIndicator(
  */
 fun TutorialPreferences.isFirstWeekOfUse(): Flow<Boolean> {
     return metrics.map { metrics ->
-        val daysSinceFirstLaunch = (System.currentTimeMillis() - metrics.firstLaunchDate) / (24 * 60 * 60 * 1000)
-        daysSinceFirstLaunch < 7
+        val daysSinceFirstLaunch: Long = (currentTimeMillis() - metrics.firstLaunchDate) / (24 * 60 * 60 * 1000)
+        (daysSinceFirstLaunch < 7)
     }
 }
 
@@ -564,7 +574,7 @@ fun TutorialPreferences.isFirstWeekOfUse(): Flow<Boolean> {
  * Extension function to get remaining cooldown time for a hint
  */
 suspend fun TutorialPreferences.getCooldownRemaining(hint: ContextualHint): Long {
-    val lastShown = getLastHintShownTime(hint.id)
-    val elapsed = System.currentTimeMillis() - lastShown
-    return (hint.cooldownMs - elapsed).coerceAtLeast(0)
+    val lastShown: Long = getLastHintShownTime(hint.id)
+    val elapsed: Long = currentTimeMillis() - lastShown
+    return (hint.cooldownMs - elapsed).coerceAtLeast(0L)
 }

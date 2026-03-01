@@ -139,23 +139,34 @@ fun CalculatorButton(
         label = "ButtonScale"
     )
 
-    // Color logic
+    // Color logic using calculator-specific color scheme
+    val calcColors = org.solovyev.android.calculator.ui.theme.calculatorColors()
+
     val backgroundColor = backgroundOverride ?: when (buttonType) {
-        ButtonType.DIGIT -> MaterialTheme.colorScheme.surfaceContainerHigh
-        ButtonType.OPERATION -> MaterialTheme.colorScheme.secondaryContainer
-        ButtonType.OPERATION_HIGHLIGHTED -> MaterialTheme.colorScheme.tertiaryContainer
-        ButtonType.CONTROL -> MaterialTheme.colorScheme.surfaceVariant
-        ButtonType.SPECIAL -> MaterialTheme.colorScheme.primaryContainer
-        ButtonType.MEMORY -> MaterialTheme.colorScheme.secondaryContainer
+        ButtonType.DIGIT -> calcColors.digitButtonBackground
+        ButtonType.OPERATION -> calcColors.operatorButtonBackground
+        ButtonType.OPERATION_HIGHLIGHTED -> calcColors.equalsButtonBackground
+        ButtonType.CONTROL -> calcColors.controlButtonBackground
+        ButtonType.SPECIAL -> calcColors.scientificButtonBackground
+        ButtonType.MEMORY -> calcColors.memoryButtonBackground
     }
 
     val effectiveTextColor = when (buttonType) {
-        ButtonType.DIGIT -> MaterialTheme.colorScheme.onSurface
-        ButtonType.OPERATION -> MaterialTheme.colorScheme.onSecondaryContainer
-        ButtonType.OPERATION_HIGHLIGHTED -> MaterialTheme.colorScheme.onTertiaryContainer
-        ButtonType.CONTROL -> MaterialTheme.colorScheme.onSurfaceVariant
-        ButtonType.SPECIAL -> MaterialTheme.colorScheme.onPrimaryContainer
-        ButtonType.MEMORY -> MaterialTheme.colorScheme.onSecondaryContainer
+        ButtonType.DIGIT -> calcColors.digitButtonText
+        ButtonType.OPERATION -> calcColors.operatorButtonText
+        ButtonType.OPERATION_HIGHLIGHTED -> calcColors.equalsButtonText
+        ButtonType.CONTROL -> calcColors.controlButtonText
+        ButtonType.SPECIAL -> calcColors.scientificButtonText
+        ButtonType.MEMORY -> calcColors.memoryButtonText
+    }
+
+    val pressedBackgroundColor = when (buttonType) {
+        ButtonType.DIGIT -> calcColors.digitButtonPressed
+        ButtonType.OPERATION -> calcColors.operatorButtonPressed
+        ButtonType.OPERATION_HIGHLIGHTED -> calcColors.equalsButtonPressed
+        ButtonType.CONTROL -> calcColors.controlButtonPressed
+        ButtonType.SPECIAL -> calcColors.scientificButtonPressed
+        ButtonType.MEMORY -> calcColors.memoryButtonPressed
     }
 
     val directionTextStyle = TextStyle(

@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+@Deprecated("Simple mode has been removed. Use ModernCalculatorKeyboard or UnifiedCalculatorKeyboard instead.", ReplaceWith("ModernCalculatorKeyboard"))
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MinimalCalculatorKeyboard(
@@ -49,7 +50,7 @@ fun MinimalCalculatorKeyboard(
             horizontalArrangement = Arrangement.spacedBy(horizontalSpacing)
         ) {
             CalculatorButton(
-                text = "AC",
+                text = "C",
                 buttonType = ButtonType.CONTROL,
                 onClick = { actions.onClear() },
                 fontSize = buttonFontSize,
@@ -252,22 +253,25 @@ private fun CalculatorButton(
         label = "ButtonScale"
     )
 
+    // Use calculator-specific color scheme
+    val calcColors = org.solovyev.android.calculator.ui.theme.calculatorColors()
+
     val backgroundColor = when (buttonType) {
-        ButtonType.DIGIT -> MaterialTheme.colorScheme.surfaceVariant
-        ButtonType.OPERATION -> MaterialTheme.colorScheme.primary
-        ButtonType.CONTROL -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
-        ButtonType.OPERATION_HIGHLIGHTED -> MaterialTheme.colorScheme.primary
-        ButtonType.SPECIAL -> MaterialTheme.colorScheme.surfaceVariant
-        ButtonType.MEMORY -> MaterialTheme.colorScheme.secondaryContainer
+        ButtonType.DIGIT -> calcColors.digitButtonBackground
+        ButtonType.OPERATION -> calcColors.operatorButtonBackground
+        ButtonType.CONTROL -> calcColors.controlButtonBackground
+        ButtonType.OPERATION_HIGHLIGHTED -> calcColors.equalsButtonBackground
+        ButtonType.SPECIAL -> calcColors.scientificButtonBackground
+        ButtonType.MEMORY -> calcColors.memoryButtonBackground
     }
 
     val textColor = when (buttonType) {
-        ButtonType.DIGIT -> MaterialTheme.colorScheme.onSurface
-        ButtonType.OPERATION -> MaterialTheme.colorScheme.onPrimary
-        ButtonType.CONTROL -> MaterialTheme.colorScheme.onSurfaceVariant
-        ButtonType.OPERATION_HIGHLIGHTED -> MaterialTheme.colorScheme.onPrimary
-        ButtonType.SPECIAL -> MaterialTheme.colorScheme.onSurface
-        ButtonType.MEMORY -> MaterialTheme.colorScheme.onSecondaryContainer
+        ButtonType.DIGIT -> calcColors.digitButtonText
+        ButtonType.OPERATION -> calcColors.operatorButtonText
+        ButtonType.CONTROL -> calcColors.controlButtonText
+        ButtonType.OPERATION_HIGHLIGHTED -> calcColors.equalsButtonText
+        ButtonType.SPECIAL -> calcColors.scientificButtonText
+        ButtonType.MEMORY -> calcColors.memoryButtonText
     }
 
     Box(

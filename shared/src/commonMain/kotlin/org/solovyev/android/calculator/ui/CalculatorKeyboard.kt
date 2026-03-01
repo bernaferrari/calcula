@@ -10,11 +10,9 @@ import org.solovyev.android.calculator.ui.nb.NotBoringKeyboard
  * Keyboard mode - different visual styles
  */
 enum class KeyboardMode {
-    SIMPLE,
     ENGINEER,
     MODERN,
-    MINIMAL,
-    NOT_BORING  // New: Andy-inspired, result-focused design
+    NOT_BORING  // Andy-inspired, result-focused design
 }
 
 /**
@@ -70,6 +68,8 @@ fun CalculatorKeyboard(
     numeralBase: NumeralBase = NumeralBase.dec,
     bitwiseWordSize: Int = 64,
     bitwiseSigned: Boolean = true,
+    gestureAutoActivation: Boolean = false,
+    showBottomRightEqualsKey: Boolean = false,
     modifier: Modifier = Modifier,
     onSwipeUpForScientific: () -> Unit = {}
 ) {
@@ -80,12 +80,8 @@ fun CalculatorKeyboard(
                 numeralBase = numeralBase,
                 bitwiseWordSize = bitwiseWordSize,
                 bitwiseSigned = bitwiseSigned,
-                modifier = modifier
-            )
-        }
-        KeyboardMode.MINIMAL, KeyboardMode.SIMPLE -> {
-            MinimalCalculatorKeyboard(
-                actions = actions,
+                gestureAutoActivation = gestureAutoActivation,
+                showBottomRightEqualsKey = showBottomRightEqualsKey,
                 modifier = modifier
             )
         }
@@ -93,6 +89,8 @@ fun CalculatorKeyboard(
             NotBoringKeyboard(
                 actions = actions,
                 onSwipeUp = onSwipeUpForScientific,
+                showBottomRightEqualsKey = showBottomRightEqualsKey,
+                gestureAutoActivation = gestureAutoActivation,
                 modifier = modifier
             )
         }
@@ -102,6 +100,8 @@ fun CalculatorKeyboard(
                 numeralBase = numeralBase,
                 bitwiseWordSize = bitwiseWordSize,
                 bitwiseSigned = bitwiseSigned,
+                gestureAutoActivation = gestureAutoActivation,
+                showBottomRightEqualsKey = showBottomRightEqualsKey,
                 modifier = modifier
             )
         }

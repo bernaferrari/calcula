@@ -17,17 +17,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -195,10 +189,7 @@ fun FunctionsScreen(
                 actions = {
                     if (selectedType == FunctionEntityType.Functions) {
                         IconButton(onClick = { showAddDialog = true }) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = stringResource(Res.string.function_create_function)
-                            )
+                            Text(text = "+")
                         }
                     }
                 }
@@ -291,18 +282,12 @@ fun FunctionsScreen(
                 onValueChange = { query = it },
                 singleLine = true,
                 leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = null
-                    )
+                    Text(text = "🔍")
                 },
                 trailingIcon = if (query.isNotEmpty()) {
                     {
                         IconButton(onClick = { query = "" }) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = null
-                            )
+                            Text(text = "✕")
                         }
                     }
                 } else {
@@ -442,10 +427,7 @@ private fun EmptyFunctionsState(
         if (selectedType == FunctionEntityType.Functions) {
             Spacer(modifier = Modifier.height(18.dp))
             TextButton(onClick = onCreate) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = null
-                )
+                Text(text = "+")
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(text = stringResource(Res.string.function_create_function))
             }
@@ -532,10 +514,7 @@ private fun FunctionCard(
 
             if (model.canDelete) {
                 IconButton(onClick = onDelete) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = stringResource(Res.string.cpp_delete)
-                    )
+                    Text(text = "🗑")
                 }
             }
         }
@@ -764,7 +743,7 @@ private fun toFunctionListItems(functions: List<FunctionUiModel>): List<Function
     val grouped = functions.groupBy { model ->
         val c = model.title.firstOrNull()?.uppercaseChar()
         if (c != null && c.isLetter()) c.toString() else "#"
-    }.toSortedMap()
+    }.toList().sortedBy { it.first }.toMap()
 
     return buildList {
         grouped.forEach { (header, group) ->
@@ -786,7 +765,7 @@ private fun toOperatorListItems(operators: List<OperatorUiModel>): List<Function
     val grouped = operators.groupBy { model ->
         val c = model.title.firstOrNull()?.uppercaseChar()
         if (c != null && c.isLetter()) c.toString() else "#"
-    }.toSortedMap()
+    }.toList().sortedBy { it.first }.toMap()
 
     return buildList {
         grouped.forEach { (header, group) ->

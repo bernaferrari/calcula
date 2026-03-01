@@ -16,13 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.TouchApp
+// Material icons not available in commonMain - using text alternatives
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -100,10 +94,10 @@ fun GestureHintOverlay(
                 ) {
                     // Direction icon
                     val directionIcon = when (hintData.direction) {
-                        GestureDirection.UP -> Icons.Default.KeyboardArrowUp
-                        GestureDirection.DOWN -> Icons.Default.KeyboardArrowDown
-                        GestureDirection.LEFT -> Icons.Default.KeyboardArrowLeft
-                        GestureDirection.RIGHT -> Icons.Default.KeyboardArrowRight
+                        GestureDirection.UP -> "↑"
+                        GestureDirection.DOWN -> "↓"
+                        GestureDirection.LEFT -> "←"
+                        GestureDirection.RIGHT -> "→"
                     }
 
                     Box(
@@ -115,11 +109,10 @@ fun GestureHintOverlay(
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = directionIcon,
-                            contentDescription = hintData.direction.name,
-                            modifier = Modifier.size(40.dp),
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        Text(
+                            text = directionIcon,
+                            style = MaterialTheme.typography.headlineLarge,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
 
@@ -166,11 +159,11 @@ fun GestureHintOverlay(
                         onClick = onDismiss,
                         modifier = Modifier.size(48.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Dismiss",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    Text(
+                        text = "✕",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                     }
                 }
             }
@@ -205,17 +198,16 @@ fun CompactGestureHint(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 val directionIcon = when (hintData.direction) {
-                    GestureDirection.UP -> Icons.Default.KeyboardArrowUp
-                    GestureDirection.DOWN -> Icons.Default.KeyboardArrowDown
-                    GestureDirection.LEFT -> Icons.Default.KeyboardArrowLeft
-                    GestureDirection.RIGHT -> Icons.Default.KeyboardArrowRight
+                    GestureDirection.UP -> "↑"
+                    GestureDirection.DOWN -> "↓"
+                    GestureDirection.LEFT -> "←"
+                    GestureDirection.RIGHT -> "→"
                 }
 
-                Icon(
-                    imageVector = directionIcon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.inverseOnSurface,
-                    modifier = Modifier.size(20.dp)
+                Text(
+                    text = directionIcon,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.inverseOnSurface
                 )
 
                 Column {
@@ -236,11 +228,10 @@ fun CompactGestureHint(
                     onClick = onDismiss,
                     modifier = Modifier.size(24.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Dismiss",
-                        tint = MaterialTheme.colorScheme.inverseOnSurface.copy(alpha = 0.7f),
-                        modifier = Modifier.size(16.dp)
+                    Text(
+                        text = "✕",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.inverseOnSurface.copy(alpha = 0.7f)
                     )
                 }
             }

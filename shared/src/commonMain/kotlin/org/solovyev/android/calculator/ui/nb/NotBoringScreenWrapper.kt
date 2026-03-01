@@ -7,6 +7,7 @@ import androidx.compose.ui.*
 import org.solovyev.android.calculator.DisplayState
 import org.solovyev.android.calculator.EditorState
 import org.solovyev.android.calculator.TapeEntry
+import org.solovyev.android.calculator.history.HistoryState
 import org.solovyev.android.calculator.ui.*
 import jscl.NumeralBase
 
@@ -31,6 +32,7 @@ fun CalculatorScreenWithStyle(
     tapeMode: Boolean = true,
     tapeEntries: List<TapeEntry> = emptyList(),
     liveTapeEntry: TapeEntry? = null,
+    recentHistory: List<HistoryState> = emptyList(),
     memoryActiveRegister: String? = null,
     numeralBase: NumeralBase = NumeralBase.dec,
     bitwiseWordSize: Int = 64,
@@ -40,10 +42,20 @@ fun CalculatorScreenWithStyle(
     onEditorSelectionChange: (Int) -> Unit,
     onOpenHistory: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenVariables: () -> Unit = {},
+    onOpenFunctions: () -> Unit = {},
+    onOpenConverter: () -> Unit = {},
+    onOpenGraph: () -> Unit = {},
     onOpenFormulas: () -> Unit = {},
+    onOpenAbout: () -> Unit = {},
     showBottomToolbar: Boolean = false,
     onClearTape: () -> Unit = {},
+    onHistoryItemClick: ((HistoryState) -> Unit)? = null,
+    onHistoryItemDelete: ((HistoryState) -> Unit)? = null,
     hapticsEnabled: Boolean = true,
+    soundsEnabled: Boolean = false,
+    gestureAutoActivation: Boolean = false,
+    showBottomRightEqualsKey: Boolean = false,
     reduceMotion: Boolean = false,
     fontScale: Float = 1.0f,
     keyboardActions: KeyboardActions,
@@ -64,7 +76,13 @@ fun CalculatorScreenWithStyle(
                 onEditorTextChange = onEditorTextChange,
                 onEditorSelectionChange = onEditorSelectionChange,
                 onOpenHistory = onOpenHistory,
+                onOpenVariables = onOpenVariables,
+                onOpenFunctions = onOpenFunctions,
                 onOpenSettings = onOpenSettings,
+                onOpenConverter = onOpenConverter,
+                onOpenGraph = onOpenGraph,
+                onOpenFormulas = onOpenFormulas,
+                onOpenAbout = onOpenAbout,
                 onCopy = keyboardActions::onCopy,
                 onEquals = keyboardActions::onEquals,
                 onClearTape = onClearTape,
@@ -76,6 +94,8 @@ fun CalculatorScreenWithStyle(
                         numeralBase = numeralBase,
                         bitwiseWordSize = bitwiseWordSize,
                         bitwiseSigned = bitwiseSigned,
+                        gestureAutoActivation = gestureAutoActivation,
+                        showBottomRightEqualsKey = showBottomRightEqualsKey,
                         modifier = keyboardModifier
                     )
                 },
@@ -93,7 +113,8 @@ fun CalculatorScreenWithStyle(
                 onOpenHistory = onOpenHistory,
                 keyboardActions = keyboardActions,
                 modifier = modifier,
-                hapticsEnabled = hapticsEnabled
+                hapticsEnabled = hapticsEnabled,
+                showBottomRightEqualsKey = showBottomRightEqualsKey
             )
         }
     }

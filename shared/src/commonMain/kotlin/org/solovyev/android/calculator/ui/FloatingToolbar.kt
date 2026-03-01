@@ -9,16 +9,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.LocalIndication
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.*
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,7 +40,7 @@ enum class FloatingToolbarColor {
  */
 data class FloatingToolbarItem(
     val label: String,
-    val icon: ImageVector? = null,
+    val icon: @Composable (() -> Unit)? = null,
     val onClick: () -> Unit,
     val onLongClick: (() -> Unit)? = null,
     val onDoubleClick: (() -> Unit)? = null
@@ -126,11 +122,7 @@ private fun FloatingToolbarButton(
                 )
         ) {
             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                Icon(
-                    imageVector = item.icon,
-                    contentDescription = item.label,
-                    modifier = Modifier.size(24.dp)
-                )
+                item.icon()
             }
         }
     } else {
@@ -186,31 +178,31 @@ fun CalculatorFloatingToolbar(
     val items = listOf(
         FloatingToolbarItem(
             label = "Prev",
-            icon = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+            icon = { Text(text = "←") },
             onClick = onPrevious,
             onLongClick = onCopy,
             onDoubleClick = onPreviousStart
         ),
         FloatingToolbarItem(
             label = "Next",
-            icon = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            icon = { Text(text = "→") },
             onClick = onNext,
             onLongClick = onPaste,
             onDoubleClick = onNextEnd
         ),
         FloatingToolbarItem(
             label = "Vars",
-            icon = Icons.Default.Functions,
+            icon = { Text(text = "∫") },
             onClick = onVariables
         ),
         FloatingToolbarItem(
             label = "Convert",
-            icon = Icons.Default.SwapHoriz,
+            icon = { Text(text = "⇄") },
             onClick = onConverter
         ),
         FloatingToolbarItem(
             label = "Graph",
-            icon = Icons.AutoMirrored.Filled.ShowChart,
+            icon = { Text(text = "📊") },
             onClick = onGraph
         )
     )
@@ -267,9 +259,8 @@ fun CollapsibleFloatingToolbar(
                         defaultElevation = 6.dp
                     )
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.MoreHoriz,
-                        contentDescription = if (expanded) "Collapse toolbar" else "Expand toolbar",
+                    Text(
+                        text = "⋯",
                         modifier = Modifier.rotate(rotation)
                     )
                 }
@@ -300,9 +291,8 @@ fun CollapsibleFloatingToolbar(
                         defaultElevation = 6.dp
                     )
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.MoreHoriz,
-                        contentDescription = if (expanded) "Collapse toolbar" else "Expand toolbar",
+                    Text(
+                        text = "⋯",
                         modifier = Modifier.rotate(rotation)
                     )
                 }

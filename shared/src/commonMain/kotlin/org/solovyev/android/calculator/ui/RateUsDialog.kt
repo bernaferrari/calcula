@@ -10,12 +10,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Star
-import androidx.compose.material.icons.rounded.StarOutline
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -54,11 +50,10 @@ fun RateUsDialog(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Rounded.Star,
-                    contentDescription = null,
-                    modifier = Modifier.size(32.dp),
-                    tint = MaterialTheme.colorScheme.primary
+                Text(
+                    text = "★",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
         },
@@ -90,11 +85,10 @@ fun RateUsDialog(
                     modifier = Modifier.padding(top = 8.dp)
                 ) {
                     repeat(5) { index ->
-                        Icon(
-                            imageVector = if (index < 4) Icons.Rounded.Star else Icons.Rounded.StarOutline,
-                            contentDescription = null,
-                            modifier = Modifier.size(28.dp),
-                            tint = if (index < 4) {
+                        Text(
+                            text = if (index < 4) "★" else "☆",
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = if (index < 4) {
                                 MaterialTheme.colorScheme.primary
                             } else {
                                 MaterialTheme.colorScheme.outlineVariant
@@ -111,11 +105,7 @@ fun RateUsDialog(
                     onDismissRequest()
                 }
             ) {
-                Icon(
-                    imageVector = Icons.Rounded.Star,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
+                Text(text = "★")
                 Spacer(modifier = Modifier.size(8.dp))
                 Text(stringResource(Res.string.cpp_rateus_ok))
             }

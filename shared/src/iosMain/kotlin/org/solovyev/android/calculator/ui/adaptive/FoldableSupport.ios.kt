@@ -1,5 +1,6 @@
 package org.solovyev.android.calculator.ui.adaptive
 
+import androidx.compose.runtime.Composable
 import kotlinx.coroutines.flow.*
 
 /**
@@ -23,6 +24,7 @@ actual class FoldableDetector {
 /**
  * iOS implementation - always returns flat state.
  */
+@Composable
 actual fun rememberFoldableState(): FoldableState {
     return FoldableState(posture = FoldPosture.FLAT)
 }

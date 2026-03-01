@@ -13,6 +13,8 @@ import org.solovyev.android.calculator.history.CalculatorDatabaseConstructor
 import org.solovyev.android.calculator.preferences.createDataStore
 import org.solovyev.android.calculator.ResourceProvider
 import org.solovyev.android.calculator.IosResourceProvider
+import org.solovyev.android.calculator.sound.IosSoundPlayer
+import org.solovyev.android.calculator.sound.SoundPlayer
 import org.solovyev.android.calculator.ui.about.AboutActions
 import org.solovyev.android.calculator.ui.about.IosAboutActions
 import org.solovyev.android.calculator.AppInfo
@@ -48,4 +50,7 @@ actual val platformModule: Module = module {
     single<ResourceProvider> { IosResourceProvider() }
     single<AboutActions> { IosAboutActions() }
     single<AppInfo> { IosAppInfo() }
+
+    // Sound
+    single<SoundPlayer> { IosSoundPlayer() }
 }

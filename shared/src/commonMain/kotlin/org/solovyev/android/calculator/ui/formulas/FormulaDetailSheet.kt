@@ -7,8 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+// Material icons not available in commonMain - using text alternatives
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -81,11 +80,8 @@ fun FormulaDetailSheet(
                     )
                 }
 
-                IconButton(onClick = { showInfo = !showInfo }) {
-                    Icon(
-                        Icons.Default.Info,
-                        contentDescription = "Show info"
-                    )
+                TextButton(onClick = { showInfo = !showInfo }) {
+                    Text("Info")
                 }
             }
 
@@ -175,11 +171,7 @@ fun FormulaDetailSheet(
                     },
                     modifier = Modifier.weight(2f)
                 ) {
-                    Icon(
-                        Icons.Default.Calculate,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
+                    Text("f(x)")
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Use in Calculator")
                 }
@@ -193,11 +185,7 @@ fun FormulaDetailSheet(
                     },
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 ) {
-                    Icon(
-                        Icons.Default.ContentCopy,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
+                    Text("⎘")
                     Spacer(modifier = Modifier.width(4.dp))
                     Text("Copy Result")
                 }
@@ -312,10 +300,10 @@ fun QuickFormulaSelector(
                     headlineContent = { Text(formula.name) },
                     supportingContent = { Text(formula.category.displayName, maxLines = 1) },
                     leadingContent = {
-                        Icon(
-                            Icons.Default.Calculate,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
+                        Text(
+                            text = "f(x)",
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.bodyMedium
                         )
                     },
                     modifier = Modifier.clickable(onClick = { onFormulaSelected(formula) })
@@ -329,7 +317,7 @@ fun QuickFormulaSelector(
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(Icons.Default.OpenInNew, contentDescription = null)
+                Text("→")
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Browse All Formulas")
             }

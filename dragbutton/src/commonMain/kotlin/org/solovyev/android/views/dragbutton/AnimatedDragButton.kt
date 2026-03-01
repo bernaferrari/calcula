@@ -594,6 +594,8 @@ private fun BoxScope.AnimatedDragButtonContent(
             isActiveDirection && hasTriggeredThreshold -> activeColor
             else -> contentColor.copy(alpha = targetAlpha)
         }
+
+        val slidePx = with(density) { slideOffset.toPx() }
         
         Text(
             text = config.text,
@@ -605,17 +607,13 @@ private fun BoxScope.AnimatedDragButtonContent(
                 .graphicsLayer {
                     scaleX = targetScale
                     scaleY = targetScale
-                }
-                .offset {
-                    when (direction) {
-                        DragDirection.up, DragDirection.down -> IntOffset(
-                            x = 0,
-                            y = with(density) { slideOffset.roundToPx() }
-                        )
-                        DragDirection.left, DragDirection.right -> IntOffset(
-                            x = with(density) { slideOffset.roundToPx() },
-                            y = 0
-                        )
+                    translationX = when (direction) {
+                        DragDirection.left, DragDirection.right -> slidePx
+                        else -> 0f
+                    }
+                    translationY = when (direction) {
+                        DragDirection.up, DragDirection.down -> slidePx
+                        else -> 0f
                     }
                 }
         )

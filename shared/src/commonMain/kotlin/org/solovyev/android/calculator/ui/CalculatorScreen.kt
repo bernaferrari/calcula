@@ -9,6 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -26,6 +27,10 @@ import org.jetbrains.compose.resources.stringResource
 import org.solovyev.android.calculator.DisplayState
 import org.solovyev.android.calculator.EditorState
 import org.solovyev.android.calculator.TapeEntry
+import org.solovyev.android.calculator.ui.animations.FlyingAnimationEvent
+import org.solovyev.android.calculator.ui.animations.FlyingAnimationHost
+import org.solovyev.android.calculator.ui.animations.LocalFlyingAnimationHost
+import org.solovyev.android.calculator.ui.animations.rememberFlyingAnimationState
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -42,7 +47,13 @@ fun CalculatorScreen(
     onEditorTextChange: (String, Int) -> Unit,
     onEditorSelectionChange: (Int) -> Unit,
     onOpenHistory: () -> Unit,
+    onOpenVariables: () -> Unit,
+    onOpenFunctions: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenConverter: () -> Unit,
+    onOpenGraph: () -> Unit,
+    onOpenFormulas: () -> Unit,
+    onOpenAbout: () -> Unit,
     onCopy: () -> Unit,
     onEquals: () -> Unit,
     onClearTape: () -> Unit = {},
@@ -50,89 +61,188 @@ fun CalculatorScreen(
     keyboard: @Composable (Modifier) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val flyingAnimationState = rememberFlyingAnimationState()
+
     CompositionLocalProvider(
-        LocalCalculatorHapticsEnabled provides hapticsEnabled
+        LocalCalculatorHapticsEnabled provides hapticsEnabled,
+        LocalFlyingAnimationHost provides { event: FlyingAnimationEvent ->
+            flyingAnimationState.triggerAnimation(event)
+        }
     ) {
-        Scaffold(
-            modifier = modifier.fillMaxSize(),
-            containerColor = MaterialTheme.colorScheme.surface,
-            topBar = {
-                StandardTopAppBar(
-                    title = stringResource(Res.string.cpp_app_name),
-                    actions = {
-                        FilledTonalIconButton(onClick = onOpenHistory) {
-                            Icon(
-                                imageVector = Icons.Default.History,
-                                contentDescription = stringResource(Res.string.c_history)
+        Box(modifier = modifier.fillMaxSize()) {
+            Scaffold(
+                modifier = Modifier.fillMaxSize(),
+                containerColor = MaterialTheme.colorScheme.surface,
+                topBar = {
+                    StandardTopAppBar(
+                        title = stringResource(Res.string.cpp_app_name),
+                        actions = {
+                            FilledTonalIconButton(onClick = onOpenHistory) {
+                                Icon(
+                                    imageVector = Icons.Default.History,
+                                    contentDescription = stringResource(Res.string.c_history)
+                                )
+                            }
+                            FilledTonalIconButton(onClick = onOpenFunctions) {
+                                Icon(
+                                    imageVector = Icons.Default.Calculate,
+                                    contentDescription = stringResource(Res.string.c_functions)
+                                )
+                            }
+                            FilledTonalIconButton(onClick = onOpenSettings) {
+                                Icon(
+                                    imageVector = Icons.Default.Settings,
+                                    contentDescription = stringResource(Res.string.cpp_settings)
+                                )
+                            }
+                            CalculatorTopOverflowMenu(
+                                onOpenVariables = onOpenVariables,
+                                onOpenFunctions = onOpenFunctions,
+                                onOpenFormulas = onOpenFormulas,
+                                onOpenGraph = onOpenGraph,
+                                onOpenConverter = onOpenConverter,
+                                onOpenSettings = onOpenSettings,
+                                onOpenAbout = onOpenAbout
                             )
                         }
-                        FilledTonalIconButton(onClick = { /* TODO: Open functions dialog */ }) {
-                            Icon(
-                                imageVector = Icons.Default.Calculate,
-                                contentDescription = stringResource(Res.string.c_functions)
-                            )
-                        }
-                        FilledTonalIconButton(onClick = onOpenSettings) {
-                            Icon(
-                                imageVector = Icons.Default.Settings,
-                                contentDescription = stringResource(Res.string.cpp_settings)
-                            )
-                        }
-                    }
-                )
-            }
-        ) { paddingValues ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.surface,
-                                MaterialTheme.colorScheme.surfaceContainerLowest
+                    )
+                }
+            ) { paddingValues ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.surface,
+                                    MaterialTheme.colorScheme.surfaceContainerLowest
+                                )
                             )
                         )
-                    )
-                    .padding(horizontal = 16.dp, vertical = 10.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                ElevatedCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = CardDefaults.elevatedCardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                    ),
-                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 6.dp)
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    DisplayCard(
-                        state = displayState,
-                        editorState = editorState,
-                        previewResult = previewResult,
-                        unitHint = unitHint,
-                        rpnMode = rpnMode,
-                        rpnStack = rpnStack,
-                        tapeMode = tapeMode,
-                        tapeEntries = tapeEntries,
-                        liveTapeEntry = liveTapeEntry,
-                        onEquals = onEquals,
-                        onClearTape = onClearTape,
-                        onEditorTextChange = onEditorTextChange,
-                        onEditorSelectionChange = onEditorSelectionChange,
+                    ElevatedCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(28.dp),
+                        colors = CardDefaults.elevatedCardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                        ),
+                        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 6.dp)
+                    ) {
+                        DisplayCard(
+                            state = displayState,
+                            editorState = editorState,
+                            previewResult = previewResult,
+                            unitHint = unitHint,
+                            rpnMode = rpnMode,
+                            rpnStack = rpnStack,
+                            tapeMode = tapeMode,
+                            tapeEntries = tapeEntries,
+                            liveTapeEntry = liveTapeEntry,
+                            onEquals = onEquals,
+                            onClearTape = onClearTape,
+                            onEditorTextChange = onEditorTextChange,
+                            onEditorSelectionChange = onEditorSelectionChange,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 10.dp)
+                        )
+                    }
+
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 10.dp)
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                ) {
-                    keyboard(Modifier.fillMaxSize())
+                            .weight(1f)
+                    ) {
+                        keyboard(Modifier.fillMaxSize())
+                    }
                 }
             }
+
+            FlyingAnimationHost(
+                state = flyingAnimationState,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+    }
+}
+
+@Composable
+private fun CalculatorTopOverflowMenu(
+    onOpenVariables: () -> Unit,
+    onOpenFunctions: () -> Unit,
+    onOpenFormulas: () -> Unit,
+    onOpenGraph: () -> Unit,
+    onOpenConverter: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onOpenAbout: () -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box {
+        IconButton(onClick = { expanded = true }) {
+            Icon(
+                imageVector = Icons.Default.MoreVert,
+                contentDescription = "More options"
+            )
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.cpp_variables)) },
+                onClick = {
+                    expanded = false
+                    onOpenVariables()
+                }
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.c_functions)) },
+                onClick = {
+                    expanded = false
+                    onOpenFunctions()
+                }
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.cpp_formula_library)) },
+                onClick = {
+                    expanded = false
+                    onOpenFormulas()
+                }
+            )
+            HorizontalDivider()
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.cpp_plotter)) },
+                onClick = {
+                    expanded = false
+                    onOpenGraph()
+                }
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.c_conversion_tool)) },
+                onClick = {
+                    expanded = false
+                    onOpenConverter()
+                }
+            )
+            HorizontalDivider()
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.cpp_settings)) },
+                onClick = {
+                    expanded = false
+                    onOpenSettings()
+                }
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.cpp_about)) },
+                onClick = {
+                    expanded = false
+                    onOpenAbout()
+                }
+            )
         }
     }
 }
@@ -156,7 +266,26 @@ private fun DisplayCard(
 ) {
     val inputFontSize = 30.sp
     val resultFontSize = 54.sp
-    val previewText = previewResult?.takeIf { state.text.isEmpty() }
+    val editorText = remember(editorState.text) { editorState.text.toString() }
+    var lastValidResultText by remember { mutableStateOf("") }
+    LaunchedEffect(state.sequence, state.valid, state.text, editorText) {
+        when {
+            state.valid && state.text.isNotBlank() -> {
+                lastValidResultText = state.text
+            }
+            state.valid && state.text.isBlank() && editorText.isBlank() -> {
+                // Explicit clear/reset: discard cached result.
+                lastValidResultText = ""
+            }
+        }
+    }
+    val resolvedResultText = when {
+        state.valid && state.text.isNotBlank() -> state.text
+        state.valid && state.text.isBlank() && editorText.isNotBlank() && lastValidResultText.isNotBlank() -> lastValidResultText
+        !state.valid && lastValidResultText.isNotBlank() -> lastValidResultText
+        else -> state.text
+    }
+    val previewText = previewResult?.takeIf { resolvedResultText.isEmpty() }
     val diagnosticsText = unitHint.orEmpty()
 
     Column(
@@ -213,7 +342,7 @@ private fun DisplayCard(
                 .height(110.dp),
             contentAlignment = Alignment.BottomEnd
         ) {
-            val hasResult = state.text.isNotEmpty()
+            val hasResult = resolvedResultText.isNotEmpty()
             val hasPreview = !previewText.isNullOrEmpty()
 
             Row(
@@ -252,7 +381,7 @@ private fun DisplayCard(
 
                 if (hasResult) {
                     AdaptiveResultText(
-                        text = state.text,
+                        text = resolvedResultText,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.weight(1f),
                         maxFontSize = resultFontSize
@@ -407,20 +536,27 @@ private fun AdaptiveResultText(
     minFontSize: androidx.compose.ui.unit.TextUnit = 14.sp,
     step: androidx.compose.ui.unit.TextUnit = 2.sp
 ) {
+    var renderText by remember(text) { mutableStateOf(text) }
     var fontSize by remember(text) { mutableStateOf(maxFontSize) }
     var maxLines by remember(text) { mutableStateOf(1) }
     var settled by remember(text) { mutableStateOf(false) }
+    var scientificFallbackApplied by remember(text) { mutableStateOf(false) }
     val scrollState = rememberScrollState()
     val multilineThreshold = 24.sp
 
-    LaunchedEffect(text, settled) {
+    LaunchedEffect(text) {
+        renderText = text
+        scientificFallbackApplied = false
+    }
+
+    LaunchedEffect(renderText, settled) {
         if (settled && maxLines == 1) {
             scrollState.scrollTo(scrollState.maxValue)
         }
     }
 
     Text(
-        text = text,
+        text = renderText,
         style = MaterialTheme.typography.displayMedium.copy(
             fontSize = fontSize,
             fontWeight = FontWeight.Bold,
@@ -442,6 +578,17 @@ private fun AdaptiveResultText(
             } else if (overflowed && fontSize > minFontSize) {
                 fontSize = (fontSize.value - step.value).coerceAtLeast(minFontSize.value).sp
                 settled = false
+            } else if (overflowed && !scientificFallbackApplied) {
+                val scientificFallback = toScientificFallback(text)
+                if (!scientificFallback.isNullOrBlank() && scientificFallback != renderText) {
+                    renderText = scientificFallback
+                    scientificFallbackApplied = true
+                    fontSize = maxFontSize
+                    maxLines = 1
+                    settled = false
+                } else {
+                    settled = true
+                }
             } else {
                 settled = true
             }
@@ -452,4 +599,62 @@ private fun AdaptiveResultText(
             modifier
         }
     )
+}
+
+private fun toScientificFallback(value: String, maxSignificantDigits: Int = 8): String? {
+    val cleaned = value
+        .trim()
+        .replace(" ", "")
+        .replace("\u00A0", "")
+        .replace("\u2009", "")
+        .replace("_", "")
+        .replace(",", "")
+    if (cleaned.isEmpty()) return null
+    if (cleaned.contains('∞') || cleaned.equals("nan", ignoreCase = true)) return null
+
+    val sign = when (cleaned.first()) {
+        '-' -> "-"
+        '+' -> ""
+        else -> ""
+    }
+    val unsigned = if (sign.isEmpty()) cleaned else cleaned.drop(1)
+    if (unsigned.isEmpty()) return null
+
+    val expSplit = unsigned.split('e', 'E')
+    if (expSplit.size !in 1..2) return null
+    val significand = expSplit[0]
+    val extraExponent = if (expSplit.size == 2) expSplit[1].toIntOrNull() ?: return null else 0
+
+    val significandRegex = Regex("""(?:\d+\.?\d*|\.\d+)""")
+    if (!significandRegex.matches(significand)) return null
+
+    val parts = significand.split('.', limit = 2)
+    val integerPart = parts[0]
+    val fractionalPart = parts.getOrElse(1) { "" }
+    val allDigits = integerPart + fractionalPart
+    if (allDigits.isEmpty()) return null
+    if (allDigits.all { it == '0' }) return "0"
+
+    val firstNonZeroInAll = allDigits.indexOfFirst { it != '0' }
+    if (firstNonZeroInAll < 0) return "0"
+    val significantDigits = allDigits.substring(firstNonZeroInAll)
+
+    val baseExponent = if (integerPart.any { it != '0' }) {
+        val firstNonZeroInInt = integerPart.indexOfFirst { it != '0' }
+        integerPart.length - firstNonZeroInInt - 1
+    } else {
+        val firstNonZeroInFrac = fractionalPart.indexOfFirst { it != '0' }
+        -(firstNonZeroInFrac + 1)
+    }
+
+    val exponent = baseExponent + extraExponent
+    val compactDigits = significantDigits.take(maxSignificantDigits.coerceAtLeast(1))
+    if (compactDigits.isEmpty()) return null
+    val mantissa = if (compactDigits.length == 1) {
+        compactDigits
+    } else {
+        compactDigits.first() + "." + compactDigits.drop(1)
+    }
+
+    return "$sign$mantissa" + "e" + exponent
 }

@@ -20,6 +20,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -42,6 +44,9 @@ import org.koin.compose.viewmodel.koinViewModel
 import org.koin.compose.koinInject
 import org.solovyev.android.calculator.AppPreferences
 import org.solovyev.android.calculator.CalculatorViewModel
+import org.solovyev.android.calculator.sound.CalculatorSoundManager
+import org.solovyev.android.calculator.sound.LocalCalculatorSoundManager
+import org.solovyev.android.calculator.sound.LocalCalculatorSoundsEnabled
 import org.solovyev.android.calculator.ui.theme.CalculatorTheme
 import org.solovyev.android.calculator.ui.variables.VariablesScreen
 import org.solovyev.android.calculator.ui.functions.FunctionsScreen
@@ -58,6 +63,8 @@ import org.solovyev.android.calculator.ui.settings.SettingsScreen
 import org.solovyev.android.calculator.ui.settings.SettingsViewModel
 import org.solovyev.android.calculator.ui.formulas.FormulaScreen
 import org.solovyev.android.calculator.formulas.FormulaViewModel
+import org.solovyev.android.calculator.ui.converter.ConverterDialog
+import org.solovyev.android.calculator.ui.graphing.GraphingScreen
 
 // Navigation keys
 @Serializable
@@ -84,6 +91,12 @@ data object FormulasKey : NavKey
 @Serializable
 data object AboutKey : NavKey
 
+@Serializable
+data object ConverterKey : NavKey
+
+@Serializable
+data object GraphKey : NavKey
+
 private val navConfig = SavedStateConfiguration {
     serializersModule = SerializersModule {
         polymorphic(NavKey::class) {
@@ -95,6 +108,8 @@ private val navConfig = SavedStateConfiguration {
             subclass(FunctionsKey::class, FunctionsKey.serializer())
             subclass(FormulasKey::class, FormulasKey.serializer())
             subclass(AboutKey::class, AboutKey.serializer())
+            subclass(ConverterKey::class, ConverterKey.serializer())
+            subclass(GraphKey::class, GraphKey.serializer())
         }
     }
 }
@@ -125,7 +140,7 @@ fun CalculatorApp(
 
     LaunchedEffect(openHistory, onboardingFinished) {
         if (onboardingFinished && openHistory) {
-            backStack.add(HistoryKey)
+            backStack.pushUnique(HistoryKey)
         }
     }
 
@@ -137,6 +152,21 @@ fun CalculatorApp(
     val vibrateOnKeypress by appPreferences.gui.vibrateOnKeypress.collectAsState(initial = true)
     val themeSeed by appPreferences.gui.themeSeed.collectAsState(initial = 0xFF13ABF1.toInt())
     val dynamicColor by appPreferences.gui.dynamicColor.collectAsState(initial = true)
+    val soundEnabled by appPreferences.sound.enabled.collectAsState(initial = true)
+    val soundIntensity by appPreferences.sound.intensity.collectAsState(initial = 70)
+    val gestureAutoActivation by appPreferences.gestures.gestureAutoActivationEnabled.collectAsState(initial = false)
+    val showBottomRightEqualsKey by appPreferences.gestures.bottomRightEqualsEnabled.collectAsState(initial = false)
+
+    // Initialize and cleanup sound manager
+    val soundManager = koinInject<CalculatorSoundManager>()
+    LaunchedEffect(Unit) {
+        soundManager.initialize()
+    }
+    DisposableEffect(Unit) {
+        onDispose {
+            soundManager.release()
+        }
+    }
 
     val displayState by viewModel.displayState.collectAsState()
     val editorState by viewModel.editorState.collectAsState()
@@ -180,59 +210,84 @@ fun CalculatorApp(
                 entry<OnboardingKey> {
                     OnboardingScreen(
                         onComplete = {
-                            backStack.add(CalculatorKey)
+                            backStack.pushUnique(CalculatorKey)
                             backStack.remove(OnboardingKey)
                         }
                     )
                 }
                 entry<CalculatorKey> {
                     val keyboardMode = when (GuiMode.fromId(modeState)) {
-                        GuiMode.simple -> KeyboardMode.MINIMAL
+                        GuiMode.simple -> KeyboardMode.MODERN
                         GuiMode.engineer -> KeyboardMode.ENGINEER
                         GuiMode.modern -> KeyboardMode.MODERN
                     }
 
-                    CalculatorScreenWithStyle(
-                        uiStyle = UiStyle.CLASSIC,
-                        keyboardMode = keyboardMode,
-                        displayState = displayState,
-                        editorState = editorState,
-                        previewResult = previewResult,
-                        unitHint = unitHint,
-                        rpnMode = rpnMode,
-                        rpnStack = rpnStack,
-                        tapeMode = tapeMode,
-                        tapeEntries = tapeEntries,
-                        liveTapeEntry = liveTapeEntry,
-                        memoryActiveRegister = null,
-                        numeralBase = numeralBase,
-                        bitwiseWordSize = 64,
-                        bitwiseSigned = true,
-                        bitwiseOverflow = false,
-                        onEditorTextChange = { text, selection -> viewModel.onEditorTextChange(text, selection) },
-                        onEditorSelectionChange = { viewModel.onEditorSelectionChange(it) },
-                        onOpenHistory = { backStack.add(HistoryKey) },
-                        onOpenSettings = {
-                            settingsDestination = SettingsDestination.MAIN
-                            backStack.add(SettingsKey)
-                        },
-                        onOpenFormulas = { backStack.add(FormulasKey) },
-                        showBottomToolbar = true,
-                        onClearTape = viewModel::clearTape,
-                        hapticsEnabled = vibrateOnKeypress,
-                        reduceMotion = false,
-                        fontScale = 1.0f,
-                        keyboardActions = rememberKeyboardActions(
-                            viewModel = viewModel,
+                    val recentHistory by viewModel.recentHistory.collectAsState()
+
+                    // Provide sound manager and enabled state via CompositionLocal
+                    CompositionLocalProvider(
+                        LocalCalculatorSoundManager provides soundManager,
+                        LocalCalculatorSoundsEnabled provides soundEnabled
+                    ) {
+                        CalculatorScreenWithStyle(
+                            uiStyle = UiStyle.CLASSIC,
+                            keyboardMode = keyboardMode,
+                            displayState = displayState,
+                            editorState = editorState,
+                            previewResult = previewResult,
+                            unitHint = unitHint,
+                            rpnMode = rpnMode,
+                            rpnStack = rpnStack,
+                            tapeMode = tapeMode,
+                            tapeEntries = tapeEntries,
+                            liveTapeEntry = liveTapeEntry,
+                            recentHistory = recentHistory,
+                            memoryActiveRegister = null,
+                            numeralBase = numeralBase,
+                            bitwiseWordSize = 64,
+                            bitwiseSigned = true,
+                            bitwiseOverflow = false,
+                            onEditorTextChange = { text, selection -> viewModel.onEditorTextChange(text, selection) },
+                            onEditorSelectionChange = { viewModel.onEditorSelectionChange(it) },
+                            onOpenHistory = { backStack.pushUnique(HistoryKey) },
                             onOpenSettings = {
                                 settingsDestination = SettingsDestination.MAIN
-                                backStack.add(SettingsKey)
+                                backStack.pushUnique(SettingsKey)
                             },
-                            onOpenHistory = { backStack.add(HistoryKey) },
-                            onOpenFunctions = { backStack.add(FunctionsKey) },
-                            onOpenVars = { backStack.add(VariablesKey) },
+                            onOpenVariables = { backStack.pushUnique(VariablesKey) },
+                            onOpenFunctions = { backStack.pushUnique(FunctionsKey) },
+                            onOpenConverter = { backStack.pushUnique(ConverterKey) },
+                            onOpenGraph = { backStack.pushUnique(GraphKey) },
+                            onOpenFormulas = { backStack.pushUnique(FormulasKey) },
+                            onOpenAbout = { backStack.pushUnique(AboutKey) },
+                            showBottomToolbar = true,
+                            onClearTape = viewModel::clearTape,
+                            onHistoryItemClick = { state ->
+                                viewModel.onEditorTextChange(
+                                    text = state.editor.getTextString(),
+                                    selection = state.editor.selection
+                                )
+                            },
+                            onHistoryItemDelete = null, // Optional - can be implemented
+                            hapticsEnabled = vibrateOnKeypress,
+                            soundsEnabled = soundEnabled,
+                            gestureAutoActivation = gestureAutoActivation,
+                            showBottomRightEqualsKey = showBottomRightEqualsKey,
+                            reduceMotion = false,
+                            fontScale = 1.0f,
+                            keyboardActions = rememberKeyboardActions(
+                                viewModel = viewModel,
+                                onOpenSettings = {
+                                    settingsDestination = SettingsDestination.MAIN
+                                    backStack.pushUnique(SettingsKey)
+                                },
+                                onOpenHistory = { backStack.pushUnique(HistoryKey) },
+                                onOpenFunctions = { backStack.pushUnique(FunctionsKey) },
+                                onOpenVars = { backStack.pushUnique(VariablesKey) },
+                                onOpenGraph = { backStack.pushUnique(GraphKey) }
+                            )
                         )
-                    )
+                    }
                 }
                 entry<HistoryKey> {
                     val recent by historyViewModel.recent.collectAsState()
@@ -246,7 +301,7 @@ fun CalculatorApp(
                                 text = state.editor.getTextString(),
                                 selection = state.editor.selection
                             )
-                            backStack.removeLastOrNull()
+                            backStack.popOrCalculator()
                         },
                         onCopyExpression = { state ->
                             clipboardManager.setText(AnnotatedString(state.editor.getTextString()))
@@ -289,6 +344,17 @@ fun CalculatorApp(
                         onBack = { backStack.popOrCalculator() }
                     )
                 }
+                entry<ConverterKey> {
+                    ConverterDialog(
+                        onDismissRequest = { backStack.popOrCalculator() }
+                    )
+                }
+                entry<GraphKey> {
+                    GraphingScreen(
+                        initialExpression = editorState.text.toString(),
+                        onBack = { backStack.popOrCalculator() }
+                    )
+                }
                 entry<SettingsKey> {
                     val settingsState by settingsViewModel.state.collectAsState()
 
@@ -320,7 +386,7 @@ fun CalculatorApp(
                                 actions = settingsViewModel,
                                 onNavigate = { nextDestination -> settingsDestination = nextDestination },
                                 onStartWizard = { settingsDestination = SettingsDestination.MAIN },
-                                onOpenAbout = { backStack.add(AboutKey) },
+                                onOpenAbout = { backStack.pushUnique(AboutKey) },
                                 onReportBug = {},
                                 languages = emptyList(),
                                 adFreePurchased = true
@@ -386,13 +452,19 @@ private fun MutableList<NavKey>.popOrCalculator() {
     }
 }
 
+private fun MutableList<NavKey>.pushUnique(key: NavKey) {
+    if (lastOrNull() == key) return
+    add(key)
+}
+
 @Composable
 private fun rememberKeyboardActions(
     viewModel: CalculatorViewModel,
     onOpenSettings: () -> Unit,
     onOpenHistory: () -> Unit,
     onOpenFunctions: () -> Unit,
-    onOpenVars: () -> Unit
+    onOpenVars: () -> Unit,
+    onOpenGraph: () -> Unit
 ): KeyboardActions {
     return object : KeyboardActions {
         override fun onNumberClick(number: String) = viewModel.onDigitPressed(number)
@@ -427,10 +499,7 @@ private fun rememberKeyboardActions(
         override fun onOpenVars() = onOpenVars()
         override fun onOpenFunctions() = onOpenFunctions()
         override fun onOpenHistory() = onOpenHistory()
-        override fun onOpenGraph() {
-            // Navigate to graph screen - uses same route as functions for now
-            onOpenFunctions()
-        }
+        override fun onOpenGraph() = onOpenGraph()
         override fun onSwipeUp(buttonId: String) {}
         override fun onSwipeDown(buttonId: String) {}
         override fun onSwipeLeft(buttonId: String) {}

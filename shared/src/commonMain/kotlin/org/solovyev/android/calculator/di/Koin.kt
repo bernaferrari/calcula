@@ -7,6 +7,8 @@ import jscl.JsclMathEngine
 import org.solovyev.android.calculator.history.*
 import org.solovyev.android.calculator.memory.*
 import org.solovyev.android.calculator.preferences.*
+import org.solovyev.android.calculator.sound.CalculatorSoundManager
+import org.solovyev.android.calculator.sound.SoundPlayer
 import org.solovyev.android.calculator.ui.about.AboutViewModel
 import org.solovyev.android.calculator.ui.history.HistoryViewModel
 import org.solovyev.android.calculator.ui.settings.SettingsViewModel
@@ -14,6 +16,7 @@ import org.solovyev.android.calculator.ui.variables.VariablesViewModel
 import org.solovyev.android.calculator.ui.functions.FunctionsViewModel
 import org.solovyev.android.calculator.ui.onboarding.OnboardingViewModel
 import org.solovyev.android.calculator.ui.graphing.GraphViewModel
+import org.solovyev.android.calculator.ui.converter.ConverterViewModel
 import org.solovyev.android.calculator.formulas.FormulaViewModel
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
@@ -50,6 +53,9 @@ val commonModule = module {
     singleOf(::RoomHistory)
     single<Memory> { DataStoreMemory(get()) }
 
+    // Sound
+    single { CalculatorSoundManager(get(), get<AppPreferences>().sound) }
+
     // ViewModels
     viewModelOf(::CalculatorViewModel)
     viewModelOf(::AboutViewModel)
@@ -59,6 +65,7 @@ val commonModule = module {
     viewModelOf(::FunctionsViewModel)
     viewModelOf(::OnboardingViewModel)
     viewModelOf(::GraphViewModel)
+    viewModelOf(::ConverterViewModel)
     viewModelOf(::FormulaViewModel)
 
 }

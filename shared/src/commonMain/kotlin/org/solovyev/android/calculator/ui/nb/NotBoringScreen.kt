@@ -18,7 +18,7 @@ import org.solovyev.android.calculator.ui.*
  * A reimagined calculator UI inspired by Not Boring Apps philosophy:
  * - Result is the absolute hero - massive, bold, confident
  * - No chrome - swipe gestures reveal history/scientific
- * - Clean, minimal keyboard - only = gets accent color
+ * - Clean, minimal keyboard with configurable bottom-right action key
  * - Satisfying micro-interactions that feel delightful, not distracting
  * 
  * Gestures:
@@ -37,13 +37,16 @@ fun NotBoringScreen(
     keyboardActions: KeyboardActions,
     modifier: Modifier = Modifier,
     highContrast: Boolean = false,
-    hapticsEnabled: Boolean = true
+    hapticsEnabled: Boolean = true,
+    hapticOnRelease: Boolean = true,
+    showBottomRightEqualsKey: Boolean = false
 ) {
     var showScientific by remember { mutableStateOf(false) }
-    
+
     CompositionLocalProvider(
         LocalCalculatorHighContrast provides highContrast,
-        LocalCalculatorHapticsEnabled provides hapticsEnabled
+        LocalCalculatorHapticsEnabled provides hapticsEnabled,
+        org.solovyev.android.calculator.ui.LocalCalculatorHapticOnRelease provides hapticOnRelease
     ) {
         Scaffold(
             modifier = modifier.fillMaxSize(),
@@ -77,6 +80,7 @@ fun NotBoringScreen(
                     NotBoringKeyboard(
                         actions = keyboardActions,
                         onSwipeUp = { showScientific = true },
+                        showBottomRightEqualsKey = showBottomRightEqualsKey,
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(min = 320.dp)

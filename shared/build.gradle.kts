@@ -47,6 +47,8 @@ kotlin {
             // Compose Multiplatform
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
+            implementation(libs.compose.material)
+            implementation(compose.materialIconsExtended)
             implementation(libs.compose.material3)
             implementation(libs.compose.ui)
             implementation(libs.compose.components.resources)
@@ -81,7 +83,7 @@ kotlin {
             implementation(libs.androidx.core.ktx)
             implementation(libs.material)
             implementation(libs.androidx.window.manager)
-            implementation(libs.androidx.material.icons.extended)
+            implementation(libs.androidx.compose.material.icons.extended)
 
             // Koin Android
             implementation(libs.koin.android)

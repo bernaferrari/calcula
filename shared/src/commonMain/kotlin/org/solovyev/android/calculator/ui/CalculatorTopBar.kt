@@ -3,13 +3,9 @@ package org.solovyev.android.calculator.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -108,9 +104,9 @@ fun CalculatorOverflowMenu(
 
     Box(modifier = modifier) {
         IconButton(onClick = { menuExpanded = true }) {
-            Icon(
-                imageVector = Icons.Default.MoreVert,
-                contentDescription = "Menu"
+            Text(
+                text = "⋮",
+                style = MaterialTheme.typography.titleMedium
             )
         }
         DropdownMenu(
@@ -168,7 +164,7 @@ private fun MenuOption(
         text = { Text(text = text) },
         onClick = onClick,
         trailingIcon = if (selected) {
-            { Icon(imageVector = Icons.Default.Check, contentDescription = null) }
+            { Text(text = "✓") }
         } else {
             null
         }

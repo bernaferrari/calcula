@@ -2,10 +2,7 @@ package org.solovyev.android.calculator.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import kotlinx.coroutines.runBlocking
@@ -13,6 +10,7 @@ import org.jetbrains.compose.resources.MissingResourceException
 
 val LocalCalculatorHighContrast = staticCompositionLocalOf { false }
 val LocalCalculatorHapticsEnabled = staticCompositionLocalOf { true }
+val LocalCalculatorHapticOnRelease = staticCompositionLocalOf { true }
 val LocalCalculatorReduceMotion = staticCompositionLocalOf { false }
 val LocalCalculatorExtendedHaptics = staticCompositionLocalOf { false }
 val LocalCalculatorFontScale = staticCompositionLocalOf { 1.0f }
@@ -97,11 +95,9 @@ private val hasBackspaceComposeResource: Boolean by lazy {
 }
 
 class KmpKeyboardIcons : KeyboardIcons {
-    override val backspace: Painter @Composable get() = if (hasBackspaceComposeResource) {
-        painterResource(Res.drawable.ic_backspace_white_48dp)
-    } else {
-        rememberVectorPainter(Icons.AutoMirrored.Filled.Backspace)
-    }
+    // Note: Backspace icon should be provided as a drawable resource
+    // Material icons are not available in commonMain
+    override val backspace: Painter @Composable get() = painterResource(Res.drawable.ic_backspace_white_48dp)
 
     override val copy: Painter @Composable get() = painterResource(Res.drawable.ic_content_copy_white_48dp)
     override val paste: Painter @Composable get() = painterResource(Res.drawable.ic_content_paste_white_48dp)

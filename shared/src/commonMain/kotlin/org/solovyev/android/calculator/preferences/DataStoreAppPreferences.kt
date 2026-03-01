@@ -22,7 +22,9 @@ import org.solovyev.android.calculator.UiPreferences
 import org.solovyev.android.calculator.WidgetPreferences
 import org.solovyev.android.calculator.WidgetsPreferences
 import org.solovyev.android.calculator.WizardPreferences
+import org.solovyev.android.calculator.GesturePreferences
 import org.solovyev.android.calculator.history.HistoryState
+import org.solovyev.android.calculator.sound.SoundPreferences
 
 class DataStoreAppPreferences(
     private val dataStore: DataStore<Preferences>,
@@ -39,6 +41,8 @@ class DataStoreAppPreferences(
     override val theme: ThemePreferences = DataStoreThemePreferences(dataStore)
     override val haptics: HapticsPreferences = DataStoreHapticsPreferences(dataStore)
     override val history: HistoryPreferences = DataStoreHistoryPreferences(roomHistory)
+    override val sound: SoundPreferences = DataStoreSoundPreferences(dataStore)
+    override val gestures: GesturePreferences = DataStoreGesturePreferences(dataStore)
 }
 
 class DataStoreUiPreferences(private val dataStore: DataStore<Preferences>) : UiPreferences {
@@ -307,12 +311,22 @@ class DataStoreThemePreferences(private val dataStore: DataStore<Preferences>) :
 
 class DataStoreHapticsPreferences(private val dataStore: DataStore<Preferences>) : HapticsPreferences {
     private val keyEnabled = booleanPreferencesKey("haptics.enabled")
+    private val keyHapticOnRelease = booleanPreferencesKey("haptics.onRelease")
 
-    override suspend fun isEnabled(): Boolean = 
+    override val hapticOnReleaseEnabled: Flow<Boolean> = dataStore.data.map { it[keyHapticOnRelease] ?: true }
+
+    override suspend fun isEnabled(): Boolean =
         dataStore.data.map { it[keyEnabled] }.firstOrNull() ?: true
 
-    override suspend fun setEnabled(value: Boolean) { 
-        dataStore.edit { it[keyEnabled] = value } 
+    override suspend fun setEnabled(value: Boolean) {
+        dataStore.edit { it[keyEnabled] = value }
+    }
+
+    override suspend fun isHapticOnReleaseEnabled(): Boolean =
+        dataStore.data.map { it[keyHapticOnRelease] }.firstOrNull() ?: true
+
+    override suspend fun setHapticOnReleaseEnabled(value: Boolean) {
+        dataStore.edit { it[keyHapticOnRelease] = value }
     }
 }
 
@@ -323,10 +337,69 @@ class DataStoreHapticsPreferences(private val dataStore: DataStore<Preferences>)
 class DataStoreHistoryPreferences(
     private val roomHistory: org.solovyev.android.calculator.history.RoomHistory
 ) : HistoryPreferences {
-    
-    override fun observeRecent(): Flow<List<HistoryState>> = 
+
+    override fun observeRecent(): Flow<List<HistoryState>> =
         roomHistory.observeRecent()
-    
-    override suspend fun clearRecent() = 
+
+    override suspend fun clearRecent() =
         roomHistory.clearRecent()
+}
+
+/**
+ * DataStore implementation of SoundPreferences.
+ */
+class DataStoreSoundPreferences(private val dataStore: DataStore<Preferences>) : SoundPreferences {
+    private val keyEnabled = booleanPreferencesKey("sound.enabled")
+    private val keyIntensity = intPreferencesKey("sound.intensity")
+    private val keyRespectSilentMode = booleanPreferencesKey("sound.respectSilentMode")
+
+    override val enabled: Flow<Boolean> = dataStore.data.map { it[keyEnabled] ?: true }
+    override val intensity: Flow<Int> = dataStore.data.map { (it[keyIntensity] ?: 70).coerceIn(0, 100) }
+    override val respectSilentMode: Flow<Boolean> = dataStore.data.map { it[keyRespectSilentMode] ?: true }
+
+    override suspend fun isEnabled(): Boolean =
+        dataStore.data.map { it[keyEnabled] }.firstOrNull() ?: true
+
+    override suspend fun getIntensity(): Int =
+        (dataStore.data.map { it[keyIntensity] }.firstOrNull() ?: 70).coerceIn(0, 100)
+
+    override suspend fun shouldRespectSilentMode(): Boolean =
+        dataStore.data.map { it[keyRespectSilentMode] }.firstOrNull() ?: true
+
+    override suspend fun setEnabled(value: Boolean) {
+        dataStore.edit { it[keyEnabled] = value }
+    }
+
+    override suspend fun setIntensity(value: Int) {
+        dataStore.edit { it[keyIntensity] = value.coerceIn(0, 100) }
+    }
+
+    override suspend fun setRespectSilentMode(value: Boolean) {
+        dataStore.edit { it[keyRespectSilentMode] = value }
+    }
+}
+
+/**
+ * DataStore implementation of GesturePreferences.
+ */
+class DataStoreGesturePreferences(private val dataStore: DataStore<Preferences>) : GesturePreferences {
+    private val keyGestureAutoActivation = booleanPreferencesKey("gestures.autoActivation")
+    private val keyBottomRightEquals = booleanPreferencesKey("gestures.bottomRightEquals")
+
+    override val gestureAutoActivationEnabled: Flow<Boolean> = dataStore.data.map { it[keyGestureAutoActivation] ?: false }
+    override val bottomRightEqualsEnabled: Flow<Boolean> = dataStore.data.map { it[keyBottomRightEquals] ?: false }
+
+    override suspend fun isGestureAutoActivationEnabled(): Boolean =
+        dataStore.data.map { it[keyGestureAutoActivation] }.firstOrNull() ?: false
+
+    override suspend fun setGestureAutoActivationEnabled(enabled: Boolean) {
+        dataStore.edit { it[keyGestureAutoActivation] = enabled }
+    }
+
+    override suspend fun isBottomRightEqualsEnabled(): Boolean =
+        dataStore.data.map { it[keyBottomRightEquals] }.firstOrNull() ?: false
+
+    override suspend fun setBottomRightEqualsEnabled(enabled: Boolean) {
+        dataStore.edit { it[keyBottomRightEquals] = enabled }
+    }
 }

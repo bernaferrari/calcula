@@ -10,6 +10,8 @@ import org.solovyev.android.calculator.history.*
 import org.solovyev.android.calculator.language.AndroidLanguages
 import org.solovyev.android.calculator.language.Languages
 import org.solovyev.android.calculator.preferences.createDataStore
+import org.solovyev.android.calculator.sound.AndroidSoundPlayer
+import org.solovyev.android.calculator.sound.SoundPlayer
 import org.solovyev.android.calculator.ui.about.AboutActions
 import org.solovyev.android.calculator.ui.about.AndroidAboutActions
 
@@ -35,4 +37,7 @@ actual val platformModule: Module = module {
     single<ResourceProvider> { AndroidResourceProvider(androidContext()) }
     single<AboutActions> { AndroidAboutActions(get()) }
     single<AppInfo> { AndroidAppInfo(get()) }
+
+    // Sound
+    single<SoundPlayer> { AndroidSoundPlayer(androidContext()) }
 }

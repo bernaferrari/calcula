@@ -22,12 +22,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.Lightbulb
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -159,278 +153,78 @@ class SubtleHintManager(private val dataStore: DataStore<Preferences>) {
 }
 
 /**
- * Static hint bar displayed below the display area.
- * Shows for first 3 app launches, user can dismiss with X.
- * Never shows again after dismiss.
+ * OBSOLETE: Static hint bar - removed in favor of visual discovery in ModernKeyboard.
  *
- * @param hintText The text to display (default: "Swipe buttons for more")
- * @param modifier Modifier for styling
- * @param onDismiss Callback when user dismisses the hint
+ * Visual discovery provides:
+ * - Ambient hints: faint secondary functions fade in/out
+ * - Touch preview: functions appear when finger touches button
+ * - Success glow: confirms successful swipe
+ *
+ * This composable is kept for backward compatibility but renders nothing.
  */
 @Composable
+@Deprecated("Use ModernKeyboard visual discovery instead", ReplaceWith(""))
 fun StaticHintBar(
     modifier: Modifier = Modifier,
-    hintText: String = "Swipe buttons for more",
+    hintText: String = "",
     onDismiss: () -> Unit = {}
 ) {
-    val haptic = LocalHapticFeedback.current
-    var visible by remember { mutableStateOf(false) }
-
-    LaunchedEffect(Unit) {
-        delay(300) // Slight delay for smooth slide-in after display appears
-        visible = true
-    }
-
-    AnimatedVisibility(
-        visible = visible,
-        enter = expandVertically(
-            animationSpec = tween(400),
-            expandFrom = Alignment.Top
-        ) + fadeIn(animationSpec = tween(400)),
-        exit = shrinkVertically(
-            animationSpec = tween(300),
-            shrinkTowards = Alignment.Top
-        ) + fadeOut(animationSpec = tween(300))
-    ) {
-        Surface(
-            modifier = modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.surfaceContainer,
-            tonalElevation = 1.dp
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Lightbulb,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Text(
-                        text = hintText,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-
-                IconButton(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
-                        visible = false
-                        onDismiss()
-                    },
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Dismiss hint",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
-        }
-    }
+    // Visual discovery in ModernKeyboard replaces text-based hints
 }
 
 /**
- * Subtle arrow indicators for buttons with swipe actions.
- * Shows tiny "▲" and "▼" on buttons, 30% opacity.
- * Only on first launch, fades out after 10 seconds.
+ * OBSOLETE: Subtle arrow indicators - replaced by visual discovery in ModernKeyboard.
  *
- * @param hasSwipeUp Whether this button has a swipe-up action
- * @param hasSwipeDown Whether this button has a swipe-down action
- * @param modifier Modifier for positioning
+ * ModernKeyboard now shows the actual function labels (sin, cos, etc.) rather
+ * than generic arrows. This provides immediate value and clearer communication.
+ *
+ * Kept for backward compatibility.
  */
 @Composable
+@Deprecated("Use ModernKeyboard visual discovery instead", ReplaceWith(""))
 fun ButtonSubtleIndicators(
     hasSwipeUp: Boolean,
     hasSwipeDown: Boolean,
     modifier: Modifier = Modifier,
-    autoFadeDelay: Long = 10000L // 10 seconds
+    autoFadeDelay: Long = 10000L
 ) {
-    var visible by remember { mutableStateOf(true) }
-    val alpha by animateFloatAsState(
-        targetValue = if (visible) 0.3f else 0f,
-        animationSpec = tween(durationMillis = 800),
-        label = "indicator_alpha"
-    )
-
-    LaunchedEffect(Unit) {
-        delay(autoFadeDelay)
-        visible = false
-    }
-
-    if (!hasSwipeUp && !hasSwipeDown) return
-
-    Box(
-        modifier = modifier.alpha(alpha),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            if (hasSwipeUp) {
-                Icon(
-                    imageVector = Icons.Default.KeyboardArrowUp,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                    modifier = Modifier.size(10.dp)
-                )
-            }
-            if (hasSwipeDown) {
-                Icon(
-                    imageVector = Icons.Default.KeyboardArrowDown,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                    modifier = Modifier.size(10.dp)
-                )
-            }
-        }
-    }
+    // ModernKeyboard shows actual function names as hints, not generic arrows
 }
 
 /**
- * Alternative version of button indicators that persists until user interacts.
- * Shows on long-press preview or first launch with longer duration.
+ * OBSOLETE: Persistent button indicators - replaced by visual discovery.
+ *
+ * ModernKeyboard shows actual function labels that are more informative
+ * than generic arrows.
+ *
+ * Kept for backward compatibility.
  */
 @Composable
+@Deprecated("Use ModernKeyboard visual discovery instead", ReplaceWith(""))
 fun PersistentButtonIndicators(
     hasSwipeUp: Boolean,
     hasSwipeDown: Boolean,
     isPressed: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val targetAlpha = when {
-        isPressed -> 0.5f
-        else -> 0.3f
-    }
-    val alpha by animateFloatAsState(
-        targetValue = targetAlpha,
-        animationSpec = tween(durationMillis = 200),
-        label = "persistent_indicator_alpha"
-    )
-
-    if (!hasSwipeUp && !hasSwipeDown) return
-
-    Box(
-        modifier = modifier.alpha(alpha),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(0.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            if (hasSwipeUp) {
-                Text(
-                    text = "▲",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = 8.sp,
-                        lineHeight = 8.sp
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                )
-            }
-            if (hasSwipeDown) {
-                Text(
-                    text = "▼",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = 8.sp,
-                        lineHeight = 8.sp
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                )
-            }
-        }
-    }
+    // ModernKeyboard shows actual function names as hints
 }
 
 /**
- * Small help button that shows in the corner of scientific buttons.
- * Tap shows: "Swipe up for sin, down for asin"
- * Non-intrusive, only appears on buttons with swipe actions.
+ * OBSOLETE: Help button indicator - replaced by visual discovery.
  *
- * @param helpText The help text to show
- * @param modifier Modifier for positioning
+ * ModernKeyboard's touch preview shows available functions directly
+ * when the user touches a button. No need for help tooltips.
+ *
+ * Kept for backward compatibility.
  */
 @Composable
+@Deprecated("Use ModernKeyboard visual discovery instead", ReplaceWith(""))
 fun ButtonHelpIndicator(
     helpText: String,
     modifier: Modifier = Modifier
 ) {
-    var showTooltip by remember { mutableStateOf(false) }
-    val haptic = LocalHapticFeedback.current
-
-    Box(modifier = modifier) {
-        Surface(
-            modifier = Modifier
-                .size(16.dp)
-                .clip(CircleShape)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
-                        showTooltip = !showTooltip
-                    }
-                ),
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Text(
-                    text = "?",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
-        AnimatedVisibility(
-            visible = showTooltip,
-            enter = fadeIn(animationSpec = tween(150)) +
-                    expandVertically(animationSpec = tween(150)),
-            exit = fadeOut(animationSpec = tween(150)) +
-                    shrinkVertically(animationSpec = tween(150))
-        ) {
-            Surface(
-                modifier = Modifier
-                    .padding(top = 20.dp)
-                    .clickable { showTooltip = false },
-                shape = RoundedCornerShape(8.dp),
-                color = MaterialTheme.colorScheme.inverseSurface,
-                tonalElevation = 4.dp
-            ) {
-                Text(
-                    text = helpText,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.inverseOnSurface,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-                )
-            }
-        }
-
-        // Auto-hide tooltip after 3 seconds
-        LaunchedEffect(showTooltip) {
-            if (showTooltip) {
-                delay(3000)
-                showTooltip = false
-            }
-        }
-    }
+    // Touch preview in ModernKeyboard provides this information visually
 }
 
 /**
@@ -474,52 +268,33 @@ fun GestureHintsSettingsItem(
 }
 
 /**
- * Container that manages the hint bar visibility based on app state.
- * Use this in the main calculator screen.
+ * OBSOLETE: Container for hint bar - replaced by visual discovery.
  *
- * @param hintManager The SubtleHintManager instance
- * @param modifier Modifier for the container
- * @param content Content below the hint bar (typically the keyboard)
+ * ModernKeyboard manages its own discovery hints internally through
+ * GestureDiscoveryState. No external container needed.
+ *
+ * Kept for backward compatibility.
  */
 @Composable
+@Deprecated("ModernKeyboard handles discovery internally", ReplaceWith("content()"))
 fun HintBarContainer(
     hintManager: SubtleHintManager,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
-    val scope = rememberCoroutineScope()
-    var showHintBar by remember { mutableStateOf(false) }
-
-    LaunchedEffect(Unit) {
-        showHintBar = hintManager.shouldShowHintBar()
-    }
-
-    Column(modifier = modifier) {
-        if (showHintBar) {
-            StaticHintBar(
-                onDismiss = {
-                    scope.launch {
-                        hintManager.dismissHintBar()
-                    }
-                    showHintBar = false
-                }
-            )
-        }
-        content()
-    }
+    content()
 }
 
 /**
- * Integration component that wraps a calculator button with subtle indicators.
- * Automatically manages indicator visibility based on hint state.
+ * OBSOLETE: Button wrapper for hints - replaced by visual discovery.
  *
- * @param hintManager The SubtleHintManager instance
- * @param hasSwipeUp Whether this button has swipe-up action
- * @param hasSwipeDown Whether this button has swipe-down action
- * @param modifier Modifier for positioning
- * @param content The button content to wrap
+ * ModernKeyboard's ModernButton composable handles hint display internally
+ * through GestureDiscoveryState and shows actual function labels.
+ *
+ * Kept for backward compatibility.
  */
 @Composable
+@Deprecated("ModernKeyboard handles discovery internally", ReplaceWith("content()"))
 fun SubtleHintButtonWrapper(
     hintManager: SubtleHintManager,
     hasSwipeUp: Boolean,
@@ -527,70 +302,19 @@ fun SubtleHintButtonWrapper(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
-    val scope = rememberCoroutineScope()
-    var showIndicators by remember { mutableStateOf(false) }
-
-    LaunchedEffect(Unit) {
-        showIndicators = hintManager.shouldShowButtonIndicators()
-        if (showIndicators) {
-            // Mark as shown so they don't appear again
-            hintManager.markButtonIndicatorsShown()
-        }
-    }
-
-    Box(modifier = modifier) {
-        content()
-
-        if (showIndicators) {
-            ButtonSubtleIndicators(
-                hasSwipeUp = hasSwipeUp,
-                hasSwipeDown = hasSwipeDown,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = 4.dp)
-            )
-        }
-    }
+    content()
 }
 
 /**
- * Preview/Development helper to demonstrate the hint system.
- * Not intended for production use.
+ * OBSOLETE: Demo helper - no longer needed.
+ *
+ * ModernKeyboard's visual discovery is self-demonstrating through
+ * ambient hints and touch previews.
  */
 @Composable
+@Deprecated("Visual discovery is self-demonstrating", ReplaceWith(""))
 fun SubtleGestureHintsDemo(
     hintManager: SubtleHintManager
 ) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        // Demo hint bar
-        StaticHintBar(
-            onDismiss = {}
-        )
-
-        // Demo button with indicators
-        Box(
-            modifier = Modifier
-                .size(64.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(MaterialTheme.colorScheme.primaryContainer),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("sin", style = MaterialTheme.typography.titleMedium)
-
-            ButtonSubtleIndicators(
-                hasSwipeUp = true,
-                hasSwipeDown = true,
-                modifier = Modifier.align(Alignment.TopCenter)
-            )
-        }
-
-        // Demo help indicator
-        ButtonHelpIndicator(
-            helpText = "Swipe up for sin, down for asin",
-            modifier = Modifier.padding(8.dp)
-        )
-    }
+    // ModernKeyboard demonstrates gestures through actual use
 }

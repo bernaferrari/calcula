@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.slideInVertically
@@ -26,17 +27,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.rounded.Code
-import androidx.compose.material.icons.rounded.Email
-import androidx.compose.material.icons.rounded.Favorite
-import androidx.compose.material.icons.rounded.Language
-import androidx.compose.material.icons.rounded.NewReleases
-import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.rounded.Policy
-import androidx.compose.material.icons.rounded.Star
-import androidx.compose.material.icons.rounded.Translate
+// Material icons not available in commonMain - using text alternatives
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -60,12 +51,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
@@ -171,62 +166,66 @@ private fun AboutTab(
     var cardsVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
+        delay(100)
         headerVisible = true
         delay(150)
         cardsVisible = true
     }
 
     val headerScale by animateFloatAsState(
-        targetValue = if (headerVisible) 1f else 0.8f,
+        targetValue = if (headerVisible) 1f else 0.9f,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
         label = "headerScale"
     )
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        // Hero Header Card
+        // Hero Header Card with improved design
         item {
             AnimatedVisibility(
                 visible = headerVisible,
-                enter = fadeIn() + scaleIn(initialScale = 0.9f)
+                enter = fadeIn() + scaleIn(initialScale = 0.95f, animationSpec = spring(stiffness = Spring.StiffnessLow))
             ) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .scale(headerScale),
-                    shape = MaterialTheme.shapes.extraLarge,
+                    shape = RoundedCornerShape(28.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(
-                                Brush.verticalGradient(
+                                Brush.linearGradient(
                                     colors = listOf(
                                         MaterialTheme.colorScheme.primaryContainer,
-                                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f)
-                                    )
+                                        MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+                                    ),
+                                    start = Offset(0f, 0f),
+                                    end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
                                 )
                             )
                     ) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(32.dp),
+                                .padding(28.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            // App icon placeholder - you can replace with actual icon
+                            // App icon with animated shadow
                             Surface(
                                 modifier = Modifier.size(100.dp),
-                                shape = CircleShape,
+                                shape = RoundedCornerShape(28.dp),
                                 color = MaterialTheme.colorScheme.surface,
-                                tonalElevation = 4.dp,
-                                shadowElevation = 8.dp
+                                shadowElevation = 8.dp,
+                                tonalElevation = 2.dp
                             ) {
                                 Box(
                                     contentAlignment = Alignment.Center,
@@ -234,7 +233,9 @@ private fun AboutTab(
                                 ) {
                                     Text(
                                         text = "π",
-                                        style = MaterialTheme.typography.displayMedium,
+                                        style = MaterialTheme.typography.displayMedium.copy(
+                                            fontWeight = FontWeight.Light
+                                        ),
                                         color = MaterialTheme.colorScheme.primary
                                     )
                                 }
@@ -245,28 +246,28 @@ private fun AboutTab(
                             Text(
                                 text = stringResource(Res.string.cpp_app_name),
                                 style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
 
-                            Spacer(modifier = Modifier.height(4.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
 
                             Surface(
                                 shape = RoundedCornerShape(50),
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                             ) {
                                 Text(
                                     text = "Version ${data.versionName}",
-                                    style = MaterialTheme.typography.labelMedium,
+                                    style = MaterialTheme.typography.labelLarge,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
                                 )
                             }
 
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
 
                             Text(
-                                text = "A powerful scientific calculator\nfor Android & iOS",
+                                text = "Scientific calculator for Android & iOS",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
                                 textAlign = TextAlign.Center
@@ -277,11 +278,12 @@ private fun AboutTab(
             }
         }
 
-        // Quick Actions
+        // Quick Actions with improved cards
         item {
             AnimatedVisibility(
                 visible = cardsVisible,
-                enter = fadeIn() + slideInVertically { it / 2 }
+                enter = fadeIn(animationSpec = tween(400, delayMillis = 100)) +
+                        slideInVertically(initialOffsetY = { it / 3 }, animationSpec = tween(400, delayMillis = 100))
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -289,7 +291,7 @@ private fun AboutTab(
                 ) {
                     QuickActionCard(
                         modifier = Modifier.weight(1f),
-                        icon = Icons.Rounded.Star,
+                        icon = "★",
                         title = "Rate",
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                         contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
@@ -297,7 +299,7 @@ private fun AboutTab(
                     )
                     QuickActionCard(
                         modifier = Modifier.weight(1f),
-                        icon = Icons.Rounded.Code,
+                        icon = "⚙",
                         title = "Source",
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -305,7 +307,7 @@ private fun AboutTab(
                     )
                     QuickActionCard(
                         modifier = Modifier.weight(1f),
-                        icon = Icons.Rounded.Favorite,
+                        icon = "♥",
                         title = "Support",
                         containerColor = MaterialTheme.colorScheme.errorContainer,
                         contentColor = MaterialTheme.colorScheme.onErrorContainer,
@@ -319,23 +321,24 @@ private fun AboutTab(
         item {
             AnimatedVisibility(
                 visible = cardsVisible,
-                enter = fadeIn() + slideInVertically { it / 2 }
+                enter = fadeIn(animationSpec = tween(400, delayMillis = 200)) +
+                        slideInVertically(initialOffsetY = { it / 3 }, animationSpec = tween(400, delayMillis = 200))
             ) {
                 AboutSection(title = "Developer") {
                     AboutListItem(
-                        icon = Icons.Rounded.Person,
+                        icon = "👤",
                         title = "Created by",
                         subtitle = "serso aka se.solovyev",
                         onClick = { actions.openDeveloperWebsite() }
                     )
                     AboutListItem(
-                        icon = Icons.Rounded.Email,
+                        icon = "✉",
                         title = "Contact",
                         subtitle = "se.solovyev@gmail.com",
                         onClick = { actions.sendEmail() }
                     )
                     AboutListItem(
-                        icon = Icons.Rounded.Language,
+                        icon = "🌐",
                         title = "Website",
                         subtitle = "se.solovyev.org",
                         onClick = { actions.openWebsite() }
@@ -348,16 +351,17 @@ private fun AboutTab(
         item {
             AnimatedVisibility(
                 visible = cardsVisible,
-                enter = fadeIn() + slideInVertically { it / 2 }
+                enter = fadeIn(animationSpec = tween(400, delayMillis = 300)) +
+                        slideInVertically(initialOffsetY = { it / 3 }, animationSpec = tween(400, delayMillis = 300))
             ) {
                 AboutSection(title = "Legal & Open Source") {
                     AboutListItem(
-                        icon = Icons.Rounded.Policy,
+                        icon = "🛡",
                         title = "License",
                         subtitle = "Apache License 2.0"
                     )
                     AboutListItem(
-                        icon = Icons.Rounded.Code,
+                        icon = "⚙",
                         title = "Libraries",
                         subtitle = "Simple XML, JSCL"
                     )
@@ -370,11 +374,12 @@ private fun AboutTab(
             item {
                 AnimatedVisibility(
                     visible = cardsVisible,
-                    enter = fadeIn() + slideInVertically { it / 2 }
+                    enter = fadeIn(animationSpec = tween(400, delayMillis = 400)) +
+                            slideInVertically(initialOffsetY = { it / 3 }, animationSpec = tween(400, delayMillis = 400))
                 ) {
                     AboutSection(title = stringResource(Res.string.cpp_translators_text)) {
                         AboutListItem(
-                            icon = Icons.Rounded.Translate,
+                            icon = "🌐",
                             title = "Contributors",
                             subtitle = translators
                         )
@@ -387,15 +392,15 @@ private fun AboutTab(
         item {
             AnimatedVisibility(
                 visible = cardsVisible,
-                enter = fadeIn()
+                enter = fadeIn(animationSpec = tween(400, delayMillis = 500))
             ) {
                 Text(
-                    text = "Copyright 2009-2025",
+                    text = "© 2009-2025 Calculator++",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 16.dp),
+                        .padding(vertical = 20.dp),
                     textAlign = TextAlign.Center
                 )
             }
@@ -406,17 +411,23 @@ private fun AboutTab(
 @Composable
 private fun QuickActionCard(
     modifier: Modifier = Modifier,
-    icon: ImageVector,
+    icon: String,
     title: String,
     containerColor: Color,
     contentColor: Color,
     onClick: () -> Unit
 ) {
+    val haptics = LocalHapticFeedback.current
+
     Card(
         modifier = modifier,
-        shape = MaterialTheme.shapes.large,
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = containerColor),
-        onClick = onClick
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        onClick = {
+            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            onClick()
+        }
     ) {
         Column(
             modifier = Modifier
@@ -424,17 +435,25 @@ private fun QuickActionCard(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = contentColor,
-                modifier = Modifier.size(28.dp)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+            Surface(
+                shape = CircleShape,
+                color = contentColor.copy(alpha = 0.12f),
+                modifier = Modifier.size(44.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = icon,
+                        fontSize = 22.sp,
+                        color = contentColor
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = title,
                 style = MaterialTheme.typography.labelLarge,
-                color = contentColor
+                color = contentColor,
+                fontWeight = FontWeight.SemiBold
             )
         }
     }
@@ -448,16 +467,17 @@ private fun AboutSection(
     Column {
         Text(
             text = title,
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
+            modifier = Modifier.padding(start = 4.dp, bottom = 12.dp)
         )
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.extraLarge,
+            shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-            )
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
         ) {
             Column {
                 content()
@@ -468,57 +488,65 @@ private fun AboutSection(
 
 @Composable
 private fun AboutListItem(
-    icon: ImageVector,
+    icon: String,
     title: String,
     subtitle: String,
     onClick: (() -> Unit)? = null
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(
-                if (onClick != null) {
-                    Modifier
-                        .clip(MaterialTheme.shapes.medium)
-                        .clickable(onClick = onClick)
-                } else Modifier
-            )
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
+    val haptics = LocalHapticFeedback.current
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = Color.Transparent,
+        onClick = {
+            if (onClick != null) {
+                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                onClick()
+            }
+        },
+        enabled = onClick != null
     ) {
-        Surface(
-            modifier = Modifier.size(44.dp),
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(22.dp)
+            Surface(
+                modifier = Modifier.size(44.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+            ) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    Text(
+                        text = icon,
+                        fontSize = 22.sp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-        }
-        Spacer(modifier = Modifier.width(16.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium
-            )
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        if (onClick != null) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            if (onClick != null) {
+                Text(
+                    text = "›",
+                    fontSize = 24.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                )
+            }
         }
     }
 }
@@ -558,11 +586,10 @@ private fun ReleaseNotesTab(releaseNotesContent: String) {
                             color = MaterialTheme.colorScheme.secondary
                         ) {
                             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                                Icon(
-                                    imageVector = Icons.Rounded.NewReleases,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSecondary,
-                                    modifier = Modifier.size(24.dp)
+                                Text(
+                                    text = "🎉",
+                                    fontSize = 24.sp,
+                                    color = MaterialTheme.colorScheme.onSecondary
                                 )
                             }
                         }

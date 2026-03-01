@@ -8,12 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.filled.ShowChart
-import androidx.compose.material.icons.filled.SwapHoriz
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -42,10 +36,7 @@ fun ModernModeBottomBar(
         BottomToolbarActionButton(
             label = null,
             icon = {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                    contentDescription = "Previous"
-                )
+                Text(text = "←")
             },
             onClick = onPrevious,
             onLongClick = onPreviousStart,
@@ -54,10 +45,7 @@ fun ModernModeBottomBar(
         BottomToolbarActionButton(
             label = null,
             icon = {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = "Next"
-                )
+                Text(text = "→")
             },
             onClick = onNext,
             onLongClick = onNextEnd,
@@ -66,10 +54,7 @@ fun ModernModeBottomBar(
         BottomToolbarActionButton(
             label = "Graph",
             icon = {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ShowChart,
-                    contentDescription = "Graph"
-                )
+                Text(text = "📊")
             },
             onClick = onOpenGraph,
             modifier = Modifier.weight(1f)
@@ -77,10 +62,7 @@ fun ModernModeBottomBar(
         BottomToolbarActionButton(
             label = "Convert",
             icon = {
-                Icon(
-                    imageVector = Icons.Default.SwapHoriz,
-                    contentDescription = "Converter"
-                )
+                Text(text = "⇄")
             },
             onClick = onOpenConverter,
             modifier = Modifier.weight(1f)

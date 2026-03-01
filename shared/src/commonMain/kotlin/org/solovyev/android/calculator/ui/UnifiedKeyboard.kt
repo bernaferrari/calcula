@@ -25,7 +25,7 @@ import jscl.NumeralBase
  * - Row 2: 7, 8, 9, ×
  * - Row 3: 4, 5, 6, −
  * - Row 4: 1, 2, 3, +
- * - Row 5: ⌫, 0, ., =
+ * - Row 5: ⌫, 0, ., ƒ (or = in classic mode)
  * 
  * Advanced features available via gestures (no visible hints):
  * - Long press: secondary actions
@@ -37,6 +37,8 @@ fun UnifiedCalculatorKeyboard(
     numeralBase: NumeralBase = NumeralBase.dec,
     bitwiseWordSize: Int = 64,
     bitwiseSigned: Boolean = true,
+    gestureAutoActivation: Boolean = false,
+    showBottomRightEqualsKey: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val icons = LocalKeyboardIcons.current
@@ -67,12 +69,14 @@ fun UnifiedCalculatorKeyboard(
         // Row 1: Clear, (, ), ÷
         KeyboardRow(modifier = Modifier.weight(1f)) {
             UnifiedButton(
+                gestureAutoActivation = gestureAutoActivation,
                 text = "C",
                 buttonType = ButtonType.CONTROL,
                 onClick = { actions.onClear() },
                 fontWeight = androidx.compose.ui.text.font.FontWeight.Medium
             )
             UnifiedButton(
+                gestureAutoActivation = gestureAutoActivation,
                 text = "(",
                 buttonType = ButtonType.CONTROL,
                 onClick = { actions.onSpecialClick("(") },
@@ -80,12 +84,14 @@ fun UnifiedCalculatorKeyboard(
                 onLongClick = { actions.onSpecialClick(")") }
             )
             UnifiedButton(
+                gestureAutoActivation = gestureAutoActivation,
                 text = ")",
                 buttonType = ButtonType.CONTROL,
                 onClick = { actions.onSpecialClick(")") },
                 onSwipeUp = { showScientificSheet = true }
             )
             UnifiedButton(
+                gestureAutoActivation = gestureAutoActivation,
                 text = "÷",
                 buttonType = ButtonType.OPERATION,
                 onClick = { actions.onOperatorClick("/") }
@@ -95,6 +101,7 @@ fun UnifiedCalculatorKeyboard(
         // Row 2: 7, 8, 9, ×
         KeyboardRow(modifier = Modifier.weight(1f)) {
             UnifiedButton(
+                gestureAutoActivation = gestureAutoActivation,
                 text = "7",
                 buttonType = ButtonType.DIGIT,
                 onClick = { actions.onNumberClick("7") },
@@ -104,6 +111,7 @@ fun UnifiedCalculatorKeyboard(
                 onSwipeLeft = { actions.onSpecialClick("0b:") }
             )
             UnifiedButton(
+                gestureAutoActivation = gestureAutoActivation,
                 text = "8",
                 buttonType = ButtonType.DIGIT,
                 onClick = { actions.onNumberClick("8") },
@@ -113,6 +121,7 @@ fun UnifiedCalculatorKeyboard(
                 onSwipeLeft = { actions.onSpecialClick("0d:") }
             )
             UnifiedButton(
+                gestureAutoActivation = gestureAutoActivation,
                 text = "9",
                 buttonType = ButtonType.DIGIT,
                 onClick = { actions.onNumberClick("9") },
@@ -120,6 +129,7 @@ fun UnifiedCalculatorKeyboard(
                 onSwipeLeft = { actions.onSpecialClick("0x:") }
             )
             UnifiedButton(
+                gestureAutoActivation = gestureAutoActivation,
                 text = "×",
                 buttonType = ButtonType.OPERATION,
                 onClick = { actions.onOperatorClick("×") }
@@ -129,6 +139,7 @@ fun UnifiedCalculatorKeyboard(
         // Row 3: 4, 5, 6, −
         KeyboardRow(modifier = Modifier.weight(1f)) {
             UnifiedButton(
+                gestureAutoActivation = gestureAutoActivation,
                 text = "4",
                 buttonType = ButtonType.DIGIT,
                 onClick = { actions.onNumberClick("4") },
@@ -138,6 +149,7 @@ fun UnifiedCalculatorKeyboard(
                 onSwipeLeft = { if (numeralBase == NumeralBase.hex) actions.onNumberClick("D") }
             )
             UnifiedButton(
+                gestureAutoActivation = gestureAutoActivation,
                 text = "5",
                 buttonType = ButtonType.DIGIT,
                 onClick = { actions.onNumberClick("5") },
@@ -147,6 +159,7 @@ fun UnifiedCalculatorKeyboard(
                 onSwipeLeft = { if (numeralBase == NumeralBase.hex) actions.onNumberClick("E") }
             )
             UnifiedButton(
+                gestureAutoActivation = gestureAutoActivation,
                 text = "6",
                 buttonType = ButtonType.DIGIT,
                 onClick = { actions.onNumberClick("6") },
@@ -155,6 +168,7 @@ fun UnifiedCalculatorKeyboard(
                 onSwipeLeft = { if (numeralBase == NumeralBase.hex) actions.onNumberClick("F") }
             )
             UnifiedButton(
+                gestureAutoActivation = gestureAutoActivation,
                 text = "−",
                 buttonType = ButtonType.OPERATION,
                 onClick = { actions.onOperatorClick("−") }
@@ -164,6 +178,7 @@ fun UnifiedCalculatorKeyboard(
         // Row 4: 1, 2, 3, +
         KeyboardRow(modifier = Modifier.weight(1f)) {
             UnifiedButton(
+                gestureAutoActivation = gestureAutoActivation,
                 text = "1",
                 buttonType = ButtonType.DIGIT,
                 onClick = { actions.onNumberClick("1") },
@@ -173,6 +188,7 @@ fun UnifiedCalculatorKeyboard(
                 onSwipeLeft = { if (numeralBase == NumeralBase.hex) actions.onNumberClick("A") }
             )
             UnifiedButton(
+                gestureAutoActivation = gestureAutoActivation,
                 text = "2",
                 buttonType = ButtonType.DIGIT,
                 onClick = { actions.onNumberClick("2") },
@@ -182,6 +198,7 @@ fun UnifiedCalculatorKeyboard(
                 onSwipeLeft = { if (numeralBase == NumeralBase.hex) actions.onNumberClick("B") }
             )
             UnifiedButton(
+                gestureAutoActivation = gestureAutoActivation,
                 text = "3",
                 buttonType = ButtonType.DIGIT,
                 onClick = { actions.onNumberClick("3") },
@@ -191,6 +208,7 @@ fun UnifiedCalculatorKeyboard(
                 onSwipeLeft = { if (numeralBase == NumeralBase.hex) actions.onNumberClick("C") }
             )
             UnifiedButton(
+                gestureAutoActivation = gestureAutoActivation,
                 text = "+",
                 buttonType = ButtonType.OPERATION,
                 onClick = { actions.onOperatorClick("+") }
@@ -200,6 +218,7 @@ fun UnifiedCalculatorKeyboard(
         // Row 5: ⌫, 0, ., =
         KeyboardRow(modifier = Modifier.weight(1f)) {
             UnifiedButton(
+                gestureAutoActivation = gestureAutoActivation,
                 text = "",
                 buttonType = ButtonType.CONTROL,
                 icon = icons.backspace,
@@ -207,6 +226,7 @@ fun UnifiedCalculatorKeyboard(
                 onLongClick = { actions.onClear() }
             )
             UnifiedButton(
+                gestureAutoActivation = gestureAutoActivation,
                 text = "0",
                 buttonType = ButtonType.DIGIT,
                 onClick = { actions.onNumberClick("0") },
@@ -214,18 +234,32 @@ fun UnifiedCalculatorKeyboard(
                 onSwipeUp = { actions.onNumberClick("0") }
             )
             UnifiedButton(
+                gestureAutoActivation = gestureAutoActivation,
                 text = ".",
                 buttonType = ButtonType.DIGIT,
                 onClick = { actions.onNumberClick(".") },
                 enabled = true,
                 onSwipeUp = { actions.onNumberClick(".") }
             )
-            UnifiedButton(
-                text = "ƒ",
-                buttonType = ButtonType.SPECIAL,
-                onClick = { actions.onOpenFunctions() },
-                onSwipeUp = { showScientificSheet = true }
-            )
+            if (showBottomRightEqualsKey) {
+                UnifiedButton(
+                    gestureAutoActivation = gestureAutoActivation,
+                    text = "=",
+                    buttonType = ButtonType.OPERATION_HIGHLIGHTED,
+                    onClick = { actions.onEquals() },
+                    onLongClick = { actions.onOpenFunctions() },
+                    onSwipeUp = { showScientificSheet = true }
+                )
+            } else {
+                UnifiedButton(
+                    gestureAutoActivation = gestureAutoActivation,
+                    text = "ƒ",
+                    buttonType = ButtonType.SPECIAL,
+                    onClick = { actions.onOpenFunctions() },
+                    onLongClick = { actions.onEquals() },
+                    onSwipeUp = { showScientificSheet = true }
+                )
+            }
         }
     }
 }
@@ -256,6 +290,7 @@ private fun RowScope.UnifiedButton(
     onSwipeDown: (() -> Unit)? = null,
     onSwipeLeft: (() -> Unit)? = null,
     onSwipeRight: (() -> Unit)? = null,
+    gestureAutoActivation: Boolean = false,
     fontWeight: androidx.compose.ui.text.font.FontWeight = androidx.compose.ui.text.font.FontWeight.Normal
 ) {
     org.solovyev.android.calculator.ui.UnifiedButton(
@@ -272,6 +307,7 @@ private fun RowScope.UnifiedButton(
         onSwipeDown = onSwipeDown,
         onSwipeLeft = onSwipeLeft,
         onSwipeRight = onSwipeRight,
+        gestureAutoActivation = gestureAutoActivation,
         fontWeight = fontWeight
     )
 }
