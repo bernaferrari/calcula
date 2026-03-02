@@ -4,15 +4,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import jscl.NumeralBase
-import org.solovyev.android.calculator.ui.nb.NotBoringKeyboard
 
 /**
  * Keyboard mode - different visual styles
  */
 enum class KeyboardMode {
     ENGINEER,
-    MODERN,
-    NOT_BORING  // Andy-inspired, result-focused design
+    MODERN
 }
 
 /**
@@ -68,42 +66,41 @@ fun CalculatorKeyboard(
     numeralBase: NumeralBase = NumeralBase.dec,
     bitwiseWordSize: Int = 64,
     bitwiseSigned: Boolean = true,
+    isSimpleMode: Boolean = false,
     gestureAutoActivation: Boolean = false,
     showBottomRightEqualsKey: Boolean = false,
-    modifier: Modifier = Modifier,
-    onSwipeUpForScientific: () -> Unit = {}
+    layerUpEnabled: Boolean = true,
+    layerDownEnabled: Boolean = true,
+    modifier: Modifier = Modifier
 ) {
-    when (mode) {
-        KeyboardMode.MODERN -> {
-            ModernCalculatorKeyboard(
-                actions = actions,
-                numeralBase = numeralBase,
-                bitwiseWordSize = bitwiseWordSize,
-                bitwiseSigned = bitwiseSigned,
-                gestureAutoActivation = gestureAutoActivation,
-                showBottomRightEqualsKey = showBottomRightEqualsKey,
-                modifier = modifier
-            )
-        }
-        KeyboardMode.NOT_BORING -> {
-            NotBoringKeyboard(
-                actions = actions,
-                onSwipeUp = onSwipeUpForScientific,
-                showBottomRightEqualsKey = showBottomRightEqualsKey,
-                gestureAutoActivation = gestureAutoActivation,
-                modifier = modifier
-            )
-        }
-        KeyboardMode.ENGINEER -> {
-            UnifiedCalculatorKeyboard(
-                actions = actions,
-                numeralBase = numeralBase,
-                bitwiseWordSize = bitwiseWordSize,
-                bitwiseSigned = bitwiseSigned,
-                gestureAutoActivation = gestureAutoActivation,
-                showBottomRightEqualsKey = showBottomRightEqualsKey,
-                modifier = modifier
-            )
+    CompositionLocalProvider(
+        LocalCalculatorLayerUpEnabled provides layerUpEnabled,
+        LocalCalculatorLayerDownEnabled provides layerDownEnabled
+    ) {
+        when (mode) {
+            KeyboardMode.MODERN -> {
+                ModernCalculatorKeyboard(
+                    actions = actions,
+                    numeralBase = numeralBase,
+                    bitwiseWordSize = bitwiseWordSize,
+                    bitwiseSigned = bitwiseSigned,
+                    isSimpleMode = isSimpleMode,
+                    gestureAutoActivation = gestureAutoActivation,
+                    showBottomRightEqualsKey = showBottomRightEqualsKey,
+                    modifier = modifier
+                )
+            }
+            KeyboardMode.ENGINEER -> {
+                UnifiedCalculatorKeyboard(
+                    actions = actions,
+                    numeralBase = numeralBase,
+                    bitwiseWordSize = bitwiseWordSize,
+                    bitwiseSigned = bitwiseSigned,
+                    gestureAutoActivation = gestureAutoActivation,
+                    showBottomRightEqualsKey = showBottomRightEqualsKey,
+                    modifier = modifier
+                )
+            }
         }
     }
 }

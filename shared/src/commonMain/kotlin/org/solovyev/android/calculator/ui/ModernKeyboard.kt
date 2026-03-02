@@ -2,6 +2,7 @@ package org.solovyev.android.calculator.ui
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.*
@@ -16,6 +17,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -53,6 +55,8 @@ import org.solovyev.android.calculator.ui.LocalCalculatorHapticsEnabled
 import org.solovyev.android.calculator.ui.animations.FlyingAnimationEvent
 import org.solovyev.android.calculator.ui.animations.FlyingAnimationType
 import org.solovyev.android.calculator.ui.animations.LocalFlyingAnimationHost
+import org.solovyev.android.calculator.ui.tokens.CalculatorButtonBorderTokens
+import org.solovyev.android.calculator.ui.tokens.CalculatorGestureTokens
 
 /**
  * Modern keyboard with swipe gestures as the core feature.
@@ -64,6 +68,7 @@ fun ModernCalculatorKeyboard(
     numeralBase: NumeralBase = NumeralBase.dec,
     bitwiseWordSize: Int = 64,
     bitwiseSigned: Boolean = true,
+    isSimpleMode: Boolean = false,
     gestureAutoActivation: Boolean = false,
     showBottomRightEqualsKey: Boolean = false,
     modifier: Modifier = Modifier
@@ -83,6 +88,7 @@ fun ModernCalculatorKeyboard(
                 actions.onNumberClick(it)
                 showScienceSheet = false
             },
+            showInverseTrigonometric = !isSimpleMode,
             onDismissRequest = { showScienceSheet = false }
         )
     }
@@ -118,27 +124,28 @@ fun ModernCalculatorKeyboard(
                 gestureAutoActivation = gestureAutoActivation
             )
             ModernButton(
-                text = "(",
+                text = "()",
                 buttonType = ButtonType.CONTROL,
-                directionTexts = DirectionTexts(up = ")", down = "()"),
+                directionTexts = DirectionTexts(up = "(", down = ")", left = "(…)"),
                 contentDescription = stringResource(Res.string.cpp_button_parentheses),
-                onClick = { actions.onSpecialClick("(") },
-                onSwipeUp = { actions.onSpecialClick(")") },
-                onSwipeDown = { actions.onSpecialClick("()") },
+                onClick = { actions.onSpecialClick("()") },
+                onSwipeUp = { actions.onSpecialClick("(") },
+                onSwipeDown = { actions.onSpecialClick(")") },
+                onSwipeLeft = { actions.onSpecialClick("(…)") },
                 modifier = Modifier.weight(1f),
                 gestureAutoActivation = gestureAutoActivation
             )
             ModernButton(
                 text = "%",
                 buttonType = ButtonType.CONTROL,
-                directionTexts = DirectionTexts(up = "ƒ"),
+                directionTexts = DirectionTexts(up = "f"),
                 contentDescription = stringResource(Res.string.cpp_button_percent),
                 onClick = { actions.onOperatorClick("%") },
                 onSwipeUp = { showScienceSheet = true },
                 modifier = Modifier.weight(1f)
             )
             ModernButton(
-                text = "÷",
+                text = "/",
                 buttonType = ButtonType.OPERATION,
                 directionTexts = DirectionTexts(up = "√"),
                 contentDescription = stringResource(Res.string.cpp_button_divide),
@@ -149,7 +156,7 @@ fun ModernCalculatorKeyboard(
             )
         }
 
-        // Row 2: 7, 8, 9, ×
+        // Row 2: 7, 8, 9, *
         ButtonRow(modifier = Modifier.weight(1f)) {
             ModernButton(
                 text = "7",
@@ -185,11 +192,11 @@ fun ModernCalculatorKeyboard(
                 gestureAutoActivation = gestureAutoActivation
             )
             ModernButton(
-                text = "×",
+                text = "*",
                 buttonType = ButtonType.OPERATION,
                 directionTexts = DirectionTexts(up = "^", down = "^2"),
                 contentDescription = stringResource(Res.string.cpp_button_multiply),
-                onClick = { actions.onOperatorClick("×") },
+                onClick = { actions.onOperatorClick("*") },
                 onSwipeUp = { actions.onSpecialClick("^") },
                 onSwipeDown = { actions.onSpecialClick("^2") },
                 modifier = Modifier.weight(1f)
@@ -234,10 +241,10 @@ fun ModernCalculatorKeyboard(
                 gestureAutoActivation = gestureAutoActivation
             )
             ModernButton(
-                text = "−",
+                text = "-",
                 buttonType = ButtonType.OPERATION,
                 contentDescription = stringResource(Res.string.cpp_button_minus),
-                onClick = { actions.onOperatorClick("−") },
+                onClick = { actions.onOperatorClick("-") },
                 modifier = Modifier.weight(1f)
             )
         }
@@ -247,36 +254,45 @@ fun ModernCalculatorKeyboard(
             ModernButton(
                 text = "1",
                 buttonType = ButtonType.DIGIT,
-                directionTexts = DirectionTexts(up = "sin", down = "asin"),
+                directionTexts = DirectionTexts(
+                    up = "sin",
+                    down = if (isSimpleMode) null else "asin"
+                ),
                 contentDescription = stringResource(Res.string.cpp_button_one),
                 onClick = { actions.onNumberClick("1") },
                 enabled = isDigitAllowedForBase("1", numeralBase),
                 onSwipeUp = { actions.onFunctionClick("sin") },
-                onSwipeDown = { actions.onFunctionClick("asin") },
+                onSwipeDown = if (isSimpleMode) null else ({ actions.onFunctionClick("asin") }),
                 modifier = Modifier.weight(1f),
                 gestureAutoActivation = gestureAutoActivation
             )
             ModernButton(
                 text = "2",
                 buttonType = ButtonType.DIGIT,
-                directionTexts = DirectionTexts(up = "cos", down = "acos"),
+                directionTexts = DirectionTexts(
+                    up = "cos",
+                    down = if (isSimpleMode) null else "acos"
+                ),
                 contentDescription = stringResource(Res.string.cpp_button_two),
                 onClick = { actions.onNumberClick("2") },
                 enabled = isDigitAllowedForBase("2", numeralBase),
                 onSwipeUp = { actions.onFunctionClick("cos") },
-                onSwipeDown = { actions.onFunctionClick("acos") },
+                onSwipeDown = if (isSimpleMode) null else ({ actions.onFunctionClick("acos") }),
                 modifier = Modifier.weight(1f),
                 gestureAutoActivation = gestureAutoActivation
             )
             ModernButton(
                 text = "3",
                 buttonType = ButtonType.DIGIT,
-                directionTexts = DirectionTexts(up = "tan", down = "atan"),
+                directionTexts = DirectionTexts(
+                    up = "tan",
+                    down = if (isSimpleMode) null else "atan"
+                ),
                 contentDescription = stringResource(Res.string.cpp_button_three),
                 onClick = { actions.onNumberClick("3") },
                 enabled = isDigitAllowedForBase("3", numeralBase),
                 onSwipeUp = { actions.onFunctionClick("tan") },
-                onSwipeDown = { actions.onFunctionClick("atan") },
+                onSwipeDown = if (isSimpleMode) null else ({ actions.onFunctionClick("atan") }),
                 modifier = Modifier.weight(1f)
             )
             ModernButton(
@@ -291,7 +307,7 @@ fun ModernCalculatorKeyboard(
             )
         }
 
-        // Row 5: Delete, 0, ., ƒ (or = in classic mode)
+        // Row 5: Delete, 0, ., =
         ButtonRow(modifier = Modifier.weight(1f)) {
             Box(
                 modifier = Modifier.weight(1f),
@@ -304,9 +320,9 @@ fun ModernCalculatorKeyboard(
                     onClick = { actions.onDelete() },
                     onLongClick = { actions.onClear() },
                     modifier = Modifier.fillMaxSize(),
-                gestureAutoActivation = gestureAutoActivation
-            )
-            Icon(
+                    gestureAutoActivation = gestureAutoActivation
+                )
+                Icon(
                     painter = icons.backspace,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -334,30 +350,17 @@ fun ModernCalculatorKeyboard(
                 onSwipeUp = { actions.onNumberClick(",") },
                 modifier = Modifier.weight(1f)
             )
-            if (showBottomRightEqualsKey) {
-                ModernButton(
-                    text = "=",
-                    buttonType = ButtonType.OPERATION_HIGHLIGHTED,
-                    contentDescription = stringResource(Res.string.cpp_button_equals),
-                    onClick = { actions.onEquals() },
-                    onLongClick = { actions.onOpenFunctions() },
-                    onSwipeUp = { showScienceSheet = true },
-                    isEqualsButton = true,
-                    modifier = Modifier.weight(1f),
-                    gestureAutoActivation = gestureAutoActivation
-                )
-            } else {
-                ModernButton(
-                    text = "ƒ",
-                    buttonType = ButtonType.SPECIAL,
-                    contentDescription = stringResource(Res.string.c_functions),
-                    onClick = { actions.onOpenFunctions() },
-                    onLongClick = { actions.onEquals() },
-                    onSwipeUp = { showScienceSheet = true },
-                    modifier = Modifier.weight(1f),
-                    gestureAutoActivation = gestureAutoActivation
-                )
-            }
+            ModernButton(
+                text = "=",
+                buttonType = ButtonType.OPERATION_HIGHLIGHTED,
+                contentDescription = stringResource(Res.string.cpp_button_equals),
+                onClick = { actions.onEquals() },
+                onLongClick = { actions.onOpenFunctions() },
+                onSwipeUp = { showScienceSheet = true },
+                isEqualsButton = true,
+                modifier = Modifier.weight(1f),
+                gestureAutoActivation = gestureAutoActivation
+            )
         }
     }
 }
@@ -408,15 +411,34 @@ internal fun ModernButton(
     var showRipple by remember { mutableStateOf(false) }
     var dragProgress by remember { mutableFloatStateOf(0f) }
     var dragDirection by remember { mutableStateOf<GestureDragDirection?>(null) }
+    var lastEligibleDragDirection by remember { mutableStateOf<GestureDragDirection?>(null) }
+    var lastEligibleDragProgress by remember { mutableFloatStateOf(0f) }
+    var indicatorDirection by remember { mutableStateOf<GestureDragDirection?>(null) }
+    var returnHintDirection by remember { mutableStateOf<GestureDragDirection?>(null) }
+    var returnHintProgress by remember { mutableFloatStateOf(0f) }
+    var returnHintAnimationTrigger by remember { mutableIntStateOf(0) }
     val viewConfig = LocalViewConfiguration.current
     val haptics = LocalHapticFeedback.current
     val hapticsEnabled = LocalCalculatorHapticsEnabled.current
+    val layerUpEnabled = LocalCalculatorLayerUpEnabled.current
+    val layerDownEnabled = LocalCalculatorLayerDownEnabled.current
     val longPressTimeout = (viewConfig.longPressTimeoutMillis * 0.6f).roundToLong()
     val touchSlop = viewConfig.touchSlop
     val density = LocalDensity.current
     val minDragDistancePx = with(density) { 20.dp.toPx() }
     val optionWidthPx = with(density) { 48.dp.toPx() }
-    val autoActivationThresholdPx = with(density) { (minDragDistancePx * 0.8f).coerceAtLeast(16.dp.toPx()) }
+    val autoActivationThresholdPx = with(density) {
+        (minDragDistancePx * CalculatorGestureTokens.AutoActivationThresholdRatio)
+            .coerceAtLeast(CalculatorGestureTokens.AutoActivationMinDistance.toPx())
+    }
+    val effectiveDirectionTexts = remember(directionTexts, layerUpEnabled, layerDownEnabled) {
+        directionTexts.copy(
+            up = if (layerUpEnabled) directionTexts.up else null,
+            down = if (layerDownEnabled) directionTexts.down else null
+        )
+    }
+    val effectiveOnSwipeUp = if (layerUpEnabled) onSwipeUp else null
+    val effectiveOnSwipeDown = if (layerDownEnabled) onSwipeDown else null
 
     // Get flying animation host
     val flyingAnimationHost = LocalFlyingAnimationHost.current
@@ -431,10 +453,10 @@ internal fun ModernButton(
     }
 
     fun labelFor(direction: GestureDragDirection): String? = when (direction) {
-        GestureDragDirection.UP -> directionTexts.up
-        GestureDragDirection.DOWN -> directionTexts.down
-        GestureDragDirection.LEFT -> directionTexts.left
-        GestureDragDirection.RIGHT -> directionTexts.right
+        GestureDragDirection.UP -> effectiveDirectionTexts.up
+        GestureDragDirection.DOWN -> effectiveDirectionTexts.down
+        GestureDragDirection.LEFT -> effectiveDirectionTexts.left
+        GestureDragDirection.RIGHT -> effectiveDirectionTexts.right
     }
 
     val directionHintSpec = remember { DirectionHintSpec() }
@@ -493,16 +515,31 @@ internal fun ModernButton(
         return fallback + translation
     }
 
-    fun invokeSwipe(direction: GestureDragDirection, animationStart: Offset): Boolean {
+    fun animationProgressFor(direction: GestureDragDirection): Float {
+        val live = if (dragDirection == direction) dragProgress else 0f
+        if (live > 0f) return live
+        if (lastEligibleDragDirection == direction) return lastEligibleDragProgress
+        return 0f
+    }
+
+    fun startHintRecovery(direction: GestureDragDirection, progress: Float) {
+        val clamped = progress.coerceIn(0f, 1f)
+        if (clamped <= 0f) return
+        returnHintDirection = direction
+        returnHintProgress = clamped
+        returnHintAnimationTrigger += 1
+    }
+
+    fun invokeSwipe(direction: GestureDragDirection, animationStart: Offset, animationProgress: Float): Boolean {
         val triggered = when (direction) {
             GestureDragDirection.UP -> {
-                if (onSwipeUp == null) return false
-                onSwipeUp()
+                if (effectiveOnSwipeUp == null) return false
+                effectiveOnSwipeUp()
                 true
             }
             GestureDragDirection.DOWN -> {
-                if (onSwipeDown == null) return false
-                onSwipeDown()
+                if (effectiveOnSwipeDown == null) return false
+                effectiveOnSwipeDown()
                 true
             }
             GestureDragDirection.LEFT -> {
@@ -519,13 +556,14 @@ internal fun ModernButton(
         if (!triggered) return false
         if (hapticsEnabled) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
         gestureCompleted = true
+        startHintRecovery(direction, animationProgress)
         labelFor(direction)?.let { hint -> triggerFlyingText(hint, animationStart) }
         return true
     }
 
     fun supportsSwipe(direction: GestureDragDirection): Boolean = when (direction) {
-        GestureDragDirection.UP -> onSwipeUp != null
-        GestureDragDirection.DOWN -> onSwipeDown != null
+        GestureDragDirection.UP -> effectiveOnSwipeUp != null
+        GestureDragDirection.DOWN -> effectiveOnSwipeDown != null
         GestureDragDirection.LEFT -> onSwipeLeft != null
         GestureDragDirection.RIGHT -> onSwipeRight != null
     }
@@ -546,7 +584,6 @@ internal fun ModernButton(
         targetValue = when {
             isPressed -> 0f
             gestureCompleted -> 4f
-            isEqualsButton -> 6f
             else -> 2f
         },
         animationSpec = spring(dampingRatio = 0.6f, stiffness = 400f),
@@ -561,12 +598,30 @@ internal fun ModernButton(
         label = "rippleProgress"
     )
 
-    // Pulse animation for equals button
-    val pulseScale by animateFloatAsState(
-        targetValue = if (gestureCompleted && isEqualsButton) 1.15f else 1f,
-        animationSpec = spring(dampingRatio = 0.4f, stiffness = 300f),
-        label = "pulseScale"
-    )
+    // Gesture feedback should always settle back to idle state.
+    LaunchedEffect(gestureCompleted) {
+        if (gestureCompleted) {
+            delay(130L)
+            gestureCompleted = false
+        }
+    }
+
+    LaunchedEffect(returnHintAnimationTrigger) {
+        val direction = returnHintDirection ?: return@LaunchedEffect
+        val start = returnHintProgress.coerceIn(0f, 1f)
+        if (start <= 0f) return@LaunchedEffect
+        animate(
+            initialValue = start,
+            targetValue = 0f,
+            animationSpec = tween(durationMillis = 220, easing = FastOutSlowInEasing)
+        ) { value, _ ->
+            returnHintProgress = value
+        }
+        if (returnHintDirection == direction) {
+            returnHintDirection = null
+            returnHintProgress = 0f
+        }
+    }
 
     val baseBackgroundColor = when (buttonType) {
         ButtonType.DIGIT -> MaterialTheme.colorScheme.surfaceContainerLowest
@@ -597,6 +652,15 @@ internal fun ModernButton(
         ButtonType.SPECIAL -> MaterialTheme.colorScheme.onSecondaryContainer
         ButtonType.MEMORY -> MaterialTheme.colorScheme.onSecondary
     }
+    val borderColor = rememberButtonBorderColor(
+        enabled = enabled,
+        pressed = isPressed,
+        emphasis = if (buttonType == ButtonType.DIGIT) {
+            ButtonBorderEmphasis.DIGIT
+        } else {
+            ButtonBorderEmphasis.ACCENT
+        }
+    )
 
     val effectiveLongPressOptions = longPressOptions
     val onLongPressOptionSelectedEffective = onLongPressOptionSelected
@@ -604,7 +668,7 @@ internal fun ModernButton(
     Box(
         modifier = modifier
             .fillMaxHeight()
-            .scale(if (isEqualsButton) scale * pulseScale else scale)
+            .scale(scale)
             .shadow(
                 elevation = elevation.dp,
                 shape = shape,
@@ -614,6 +678,7 @@ internal fun ModernButton(
             )
             .clip(shape)
             .background(if (enabled) backgroundColor else backgroundColor.copy(alpha = 0.3f))
+            .border(CalculatorButtonBorderTokens.Width, borderColor, shape)
             .then(
                 // Ripple effect on press
                 if (showRipple) {
@@ -638,11 +703,13 @@ internal fun ModernButton(
                 enabled,
                 onClick,
                 onLongClick,
-                onSwipeUp,
-                onSwipeDown,
+                effectiveOnSwipeUp,
+                effectiveOnSwipeDown,
                 onSwipeLeft,
                 onSwipeRight,
-                gestureAutoActivation
+                gestureAutoActivation,
+                layerUpEnabled,
+                layerDownEnabled
             ) {
                 awaitEachGesture {
                     val down = awaitFirstDown()
@@ -657,9 +724,13 @@ internal fun ModernButton(
                     var longPressFired = false
                     var swipeHandled = false
                     var longPressSelectionCanceled = false
-                    var autoActivated = false
+                    var wasAtOrAboveAutoThreshold = false
                     dragProgress = 0f
                     dragDirection = null
+                    lastEligibleDragDirection = null
+                    lastEligibleDragProgress = 0f
+                    returnHintDirection = null
+                    returnHintProgress = 0f
 
                     // Enhanced haptic feedback on press
                     if (hapticsEnabled && enabled) {
@@ -687,16 +758,18 @@ internal fun ModernButton(
                             } else if (showLongPressOptions) {
                                 showLongPressOptions = false
                             }
-                            if (!longPressFired && !swipeHandled && !autoActivated) {
+                            if (!longPressFired && !swipeHandled) {
                                 val delta = lastPos - start
                                 val releaseDirection = detectDragDirection(delta, touchSlop)
                                 if (releaseDirection != null &&
                                     supportsSwipe(releaseDirection) &&
                                     releaseDirection.axisDistance(delta) > minDragDistancePx
                                 ) {
+                                    val releaseProgress = animationProgressFor(releaseDirection)
                                     swipeHandled = invokeSwipe(
                                         releaseDirection,
-                                        flyingStartForDirection(releaseDirection, dragProgress)
+                                        flyingStartForDirection(releaseDirection, releaseProgress),
+                                        releaseProgress
                                     )
                                 }
                                 if (!swipeHandled) {
@@ -719,6 +792,13 @@ internal fun ModernButton(
 
                         if (change.positionChanged()) {
                             lastPos = change.position
+                            if (swipeHandled) {
+                                // After auto-trigger, return to idle visuals immediately and wait for finger lift.
+                                dragDirection = null
+                                dragProgress = 0f
+                                change.consume()
+                                continue
+                            }
                             if (!movedBeyondSlop) {
                                 movedBeyondSlop = (lastPos - start).getDistance() > touchSlop
                             }
@@ -732,23 +812,41 @@ internal fun ModernButton(
                             val detectedDirection = detectDragDirection(delta, touchSlop)
                             val activeDirection = detectedDirection?.takeIf { supportsSwipe(it) }
                             if (activeDirection != null) {
+                                val computedProgress = normalizedDragProgress(
+                                    axisDistancePx = activeDirection.axisDistance(delta),
+                                    thresholdPx = effectiveThresholdPx,
+                                    touchSlopPx = touchSlop
+                                )
                                 dragDirection = activeDirection
-                                dragProgress = (activeDirection.axisDistance(delta) / effectiveThresholdPx).coerceIn(0f, 1.2f)
+                                dragProgress = computedProgress
+                                lastEligibleDragDirection = activeDirection
+                                lastEligibleDragProgress = computedProgress
                             } else {
                                 dragDirection = null
                                 dragProgress = 0f
                             }
 
                             // Auto-activation in modern mode when threshold is reached (no finger lift needed).
-                            if (enabled && !autoActivated && !swipeHandled && activeDirection != null && dragProgress >= 1f) {
-                                if (invokeSwipe(activeDirection, flyingStartForDirection(activeDirection, dragProgress))) {
-                                    autoActivated = true
+                            val reachedAutoThreshold = activeDirection != null && dragProgress >= 1f
+                            if (enabled &&
+                                activeDirection != null &&
+                                reachedAutoThreshold &&
+                                !wasAtOrAboveAutoThreshold
+                            ) {
+                                val autoProgress = animationProgressFor(activeDirection)
+                                if (invokeSwipe(
+                                        activeDirection,
+                                        flyingStartForDirection(activeDirection, autoProgress),
+                                        autoProgress
+                                    )
+                                ) {
                                     swipeHandled = true
                                     isPressed = false
                                     dragProgress = 0f
                                     dragDirection = null
                                 }
                             }
+                            wasAtOrAboveAutoThreshold = reachedAutoThreshold
 
                             if (showLongPressOptions && effectiveLongPressOptions.isNotEmpty()) {
                                 val dragFromStart = lastPos - start
@@ -791,6 +889,8 @@ internal fun ModernButton(
                     }
                     dragProgress = 0f
                     dragDirection = null
+                    lastEligibleDragDirection = null
+                    lastEligibleDragProgress = 0f
                 }
             },
         contentAlignment = Alignment.Center
@@ -829,6 +929,7 @@ internal fun ModernButton(
                                     style = TextStyle(
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.SemiBold,
+                                        fontFamily = CalculatorFontFamily,
                                         color = if (isSelected)
                                             MaterialTheme.colorScheme.onPrimaryContainer
                                         else
@@ -842,12 +943,41 @@ internal fun ModernButton(
             }
         }
 
-        val isDraggingHintVisible = dragDirection != null && dragProgress > 0f
         val clampedDragProgress = dragProgress.coerceIn(0f, 1f)
-        val anyDragActive = dragDirection != null
+        val anyDragActive = dragDirection != null && dragProgress > 0f
+        LaunchedEffect(dragDirection) {
+            if (dragDirection != null) {
+                indicatorDirection = dragDirection
+            }
+        }
+        val indicatorVisibility = if (anyDragActive) 1f else 0f
+        val indicatorFillProgress = if (anyDragActive) clampedDragProgress else 0f
+        val activeIndicatorDirection = dragDirection ?: indicatorDirection
+        val thresholdReached = dragProgress >= 1f
+        val indicatorColor = if (thresholdReached) {
+            MaterialTheme.colorScheme.tertiary
+        } else {
+            MaterialTheme.colorScheme.primary
+        }
 
-        directionTexts.up?.let { upText ->
+        if (activeIndicatorDirection != null && indicatorVisibility > 0.001f) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .drawBehind {
+                        drawDirectionalProgressOverlay(
+                            direction = activeIndicatorDirection,
+                            progress = indicatorFillProgress,
+                            visibility = indicatorVisibility,
+                            color = indicatorColor
+                        )
+                    }
+            )
+        }
+
+        effectiveDirectionTexts.up?.let { upText ->
             val active = dragDirection == GestureDragDirection.UP
+            val recovering = !active && returnHintDirection == GestureDragDirection.UP && returnHintProgress > 0f
             Text(
                 text = upText,
                 modifier = Modifier
@@ -862,7 +992,11 @@ internal fun ModernButton(
                         )
                     }
                     .graphicsLayer {
-                        val p = if (active) clampedDragProgress else 0f
+                        val p = when {
+                            active -> clampedDragProgress
+                            recovering -> returnHintProgress.coerceIn(0f, 1f)
+                            else -> 0f
+                        }
                         val translation = hintTranslation(GestureDragDirection.UP, p)
                         translationX = translation.x
                         translationY = translation.y
@@ -872,19 +1006,22 @@ internal fun ModernButton(
                         alpha = when {
                             active -> 0.95f
                             anyDragActive -> 0.45f
+                            recovering -> 0.55f + (0.25f * (1f - p))
                             else -> 0.9f
                         }
                     },
                 style = TextStyle(
                     fontSize = 12.sp,
                     color = textColor.copy(alpha = 0.95f),
+                    fontFamily = CalculatorFontFamily,
                     fontWeight = if (active) FontWeight.Bold else FontWeight.SemiBold
                 )
             )
         }
 
-        directionTexts.down?.let { downText ->
+        effectiveDirectionTexts.down?.let { downText ->
             val active = dragDirection == GestureDragDirection.DOWN
+            val recovering = !active && returnHintDirection == GestureDragDirection.DOWN && returnHintProgress > 0f
             Text(
                 text = downText,
                 modifier = Modifier
@@ -899,7 +1036,11 @@ internal fun ModernButton(
                         )
                     }
                     .graphicsLayer {
-                        val p = if (active) clampedDragProgress else 0f
+                        val p = when {
+                            active -> clampedDragProgress
+                            recovering -> returnHintProgress.coerceIn(0f, 1f)
+                            else -> 0f
+                        }
                         val translation = hintTranslation(GestureDragDirection.DOWN, p)
                         translationX = translation.x
                         translationY = translation.y
@@ -909,19 +1050,22 @@ internal fun ModernButton(
                         alpha = when {
                             active -> 0.95f
                             anyDragActive -> 0.45f
+                            recovering -> 0.55f + (0.25f * (1f - p))
                             else -> 0.9f
                         }
                     },
                 style = TextStyle(
                     fontSize = 12.sp,
                     color = textColor.copy(alpha = 0.95f),
+                    fontFamily = CalculatorFontFamily,
                     fontWeight = if (active) FontWeight.Bold else FontWeight.SemiBold
                 )
             )
         }
 
-        directionTexts.left?.let { leftText ->
+        effectiveDirectionTexts.left?.let { leftText ->
             val active = dragDirection == GestureDragDirection.LEFT
+            val recovering = !active && returnHintDirection == GestureDragDirection.LEFT && returnHintProgress > 0f
             Text(
                 text = leftText,
                 modifier = Modifier
@@ -936,7 +1080,11 @@ internal fun ModernButton(
                         )
                     }
                     .graphicsLayer {
-                        val p = if (active) clampedDragProgress else 0f
+                        val p = when {
+                            active -> clampedDragProgress
+                            recovering -> returnHintProgress.coerceIn(0f, 1f)
+                            else -> 0f
+                        }
                         val translation = hintTranslation(GestureDragDirection.LEFT, p)
                         translationX = translation.x
                         translationY = translation.y
@@ -946,19 +1094,22 @@ internal fun ModernButton(
                         alpha = when {
                             active -> 0.95f
                             anyDragActive -> 0.45f
+                            recovering -> 0.52f + (0.23f * (1f - p))
                             else -> 0.85f
                         }
                     },
                 style = TextStyle(
                     fontSize = 11.sp,
                     color = textColor.copy(alpha = 0.95f),
+                    fontFamily = CalculatorFontFamily,
                     fontWeight = if (active) FontWeight.Bold else FontWeight.SemiBold
                 )
             )
         }
 
-        directionTexts.right?.let { rightText ->
+        effectiveDirectionTexts.right?.let { rightText ->
             val active = dragDirection == GestureDragDirection.RIGHT
+            val recovering = !active && returnHintDirection == GestureDragDirection.RIGHT && returnHintProgress > 0f
             Text(
                 text = rightText,
                 modifier = Modifier
@@ -973,7 +1124,11 @@ internal fun ModernButton(
                         )
                     }
                     .graphicsLayer {
-                        val p = if (active) clampedDragProgress else 0f
+                        val p = when {
+                            active -> clampedDragProgress
+                            recovering -> returnHintProgress.coerceIn(0f, 1f)
+                            else -> 0f
+                        }
                         val translation = hintTranslation(GestureDragDirection.RIGHT, p)
                         translationX = translation.x
                         translationY = translation.y
@@ -983,27 +1138,22 @@ internal fun ModernButton(
                         alpha = when {
                             active -> 0.95f
                             anyDragActive -> 0.45f
+                            recovering -> 0.52f + (0.23f * (1f - p))
                             else -> 0.85f
                         }
                     },
                 style = TextStyle(
                     fontSize = 11.sp,
                     color = textColor.copy(alpha = 0.95f),
+                    fontFamily = CalculatorFontFamily,
                     fontWeight = if (active) FontWeight.Bold else FontWeight.SemiBold
                 )
             )
         }
 
-        if (isDraggingHintVisible) {
-            val progress = dragProgress.coerceIn(0f, 1f)
-            val thresholdReached = dragProgress >= 1f
-            val indicatorColor = if (thresholdReached) {
-                MaterialTheme.colorScheme.tertiary
-            } else {
-                MaterialTheme.colorScheme.primary
-            }
-
-            when (dragDirection) {
+        if (activeIndicatorDirection != null && indicatorVisibility > 0.001f) {
+            val progress = indicatorFillProgress.coerceIn(0f, 1f)
+            when (activeIndicatorDirection) {
                 GestureDragDirection.UP, GestureDragDirection.DOWN -> {
                     Box(
                         modifier = Modifier
@@ -1012,12 +1162,16 @@ internal fun ModernButton(
                             .width(4.dp)
                             .height(40.dp)
                             .clip(RoundedCornerShape(999.dp))
+                            .graphicsLayer {
+                                alpha = indicatorVisibility
+                                scaleY = 0.92f + (0.08f * indicatorVisibility)
+                            }
                             .background(textColor.copy(alpha = 0.18f))
                     ) {
                         Box(
                             modifier = Modifier
                                 .align(
-                                    if (dragDirection == GestureDragDirection.UP) {
+                                    if (activeIndicatorDirection == GestureDragDirection.UP) {
                                         Alignment.BottomCenter
                                     } else {
                                         Alignment.TopCenter
@@ -1038,12 +1192,16 @@ internal fun ModernButton(
                             .width(40.dp)
                             .height(4.dp)
                             .clip(RoundedCornerShape(999.dp))
+                            .graphicsLayer {
+                                alpha = indicatorVisibility
+                                scaleX = 0.92f + (0.08f * indicatorVisibility)
+                            }
                             .background(textColor.copy(alpha = 0.18f))
                     ) {
                         Box(
                             modifier = Modifier
                                 .align(
-                                    if (dragDirection == GestureDragDirection.RIGHT) {
+                                    if (activeIndicatorDirection == GestureDragDirection.RIGHT) {
                                         Alignment.CenterStart
                                     } else {
                                         Alignment.CenterEnd
@@ -1052,11 +1210,9 @@ internal fun ModernButton(
                                 .fillMaxHeight()
                                 .fillMaxWidth(progress)
                                 .background(indicatorColor)
-                        )
+                            )
                     }
                 }
-
-                null -> Unit
             }
         }
 
@@ -1072,8 +1228,9 @@ internal fun ModernButton(
                 scaleY = s
             },
             style = TextStyle(
-                fontSize = if (isEqualsButton) 30.sp else 24.sp,
+                fontSize = 24.sp,
                 color = textColor,
+                fontFamily = CalculatorFontFamily,
                 fontWeight = if (buttonType == ButtonType.OPERATION || buttonType == ButtonType.OPERATION_HIGHLIGHTED) FontWeight.SemiBold else FontWeight.Medium,
                 textAlign = TextAlign.Center
             )
@@ -1094,6 +1251,16 @@ private data class DirectionHintSpec(
     val horizontalTravelFraction: Float = 0.09f
 )
 
+private fun normalizedDragProgress(
+    axisDistancePx: Float,
+    thresholdPx: Float,
+    touchSlopPx: Float
+): Float {
+    val effectiveDistance = (axisDistancePx - touchSlopPx).coerceAtLeast(0f)
+    val effectiveThreshold = thresholdPx.coerceAtLeast(1f)
+    return (effectiveDistance / effectiveThreshold).coerceIn(0f, 1.2f)
+}
+
 private fun detectDragDirection(
     delta: Offset,
     touchSlop: Float
@@ -1111,6 +1278,75 @@ private fun detectDragDirection(
 private fun GestureDragDirection.axisDistance(delta: Offset): Float = when (this) {
     GestureDragDirection.UP, GestureDragDirection.DOWN -> kotlin.math.abs(delta.y)
     GestureDragDirection.LEFT, GestureDragDirection.RIGHT -> kotlin.math.abs(delta.x)
+}
+
+private fun DrawScope.drawDirectionalProgressOverlay(
+    direction: GestureDragDirection,
+    progress: Float,
+    visibility: Float,
+    color: Color
+) {
+    val p = progress.coerceIn(0f, 1f)
+    val v = visibility.coerceIn(0f, 1f)
+    if (p <= 0f || v <= 0f) return
+
+    val strongAlpha = (0.06f + (0.18f * p)) * v
+    val softAlpha = strongAlpha * 0.12f
+    val overlayHeight = size.height * p
+    val overlayWidth = size.width * p
+
+    when (direction) {
+        GestureDragDirection.UP -> {
+            val top = size.height - overlayHeight
+            drawRect(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        color.copy(alpha = softAlpha),
+                        color.copy(alpha = strongAlpha)
+                    )
+                ),
+                topLeft = Offset(0f, top),
+                size = Size(size.width, overlayHeight)
+            )
+        }
+        GestureDragDirection.DOWN -> {
+            drawRect(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        color.copy(alpha = strongAlpha),
+                        color.copy(alpha = softAlpha)
+                    )
+                ),
+                topLeft = Offset.Zero,
+                size = Size(size.width, overlayHeight)
+            )
+        }
+        GestureDragDirection.LEFT -> {
+            val left = size.width - overlayWidth
+            drawRect(
+                brush = Brush.horizontalGradient(
+                    colors = listOf(
+                        color.copy(alpha = softAlpha),
+                        color.copy(alpha = strongAlpha)
+                    )
+                ),
+                topLeft = Offset(left, 0f),
+                size = Size(overlayWidth, size.height)
+            )
+        }
+        GestureDragDirection.RIGHT -> {
+            drawRect(
+                brush = Brush.horizontalGradient(
+                    colors = listOf(
+                        color.copy(alpha = strongAlpha),
+                        color.copy(alpha = softAlpha)
+                    )
+                ),
+                topLeft = Offset.Zero,
+                size = Size(overlayWidth, size.height)
+            )
+        }
+    }
 }
 
 // Ripple draw function

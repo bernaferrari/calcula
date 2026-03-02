@@ -3,9 +3,22 @@ package org.solovyev.android.calculator.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.TextFields
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -21,7 +34,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import org.solovyev.android.calculator.ui.*
@@ -51,7 +66,7 @@ fun CalculatorTopBar(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = "Calculator", // Simplified title
+                    text = stringResource(Res.string.cpp_app_name),
                     style = MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.SemiBold
                     ),
@@ -101,80 +116,73 @@ fun CalculatorOverflowMenu(
     modifier: Modifier = Modifier
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
-
-    Box(modifier = modifier) {
-        IconButton(onClick = { menuExpanded = true }) {
-            Text(
-                text = "⋮",
-                style = MaterialTheme.typography.titleMedium
-            )
-        }
-        DropdownMenu(
-            expanded = menuExpanded,
-            onDismissRequest = { menuExpanded = false }
-        ) {
-            MenuAction(text = stringResource(Res.string.cpp_variables)) {
+    val entries = listOf(
+        CalculatorMenuEntry.Action(
+            label = stringResource(Res.string.cpp_variables),
+            icon = Icons.Filled.TextFields,
+            onClick = {
                 menuExpanded = false
                 onOpenVariables()
             }
-            MenuAction(text = stringResource(Res.string.c_functions)) {
+        ),
+        CalculatorMenuEntry.Action(
+            label = stringResource(Res.string.c_functions),
+            icon = Icons.Filled.Code,
+            onClick = {
                 menuExpanded = false
                 onOpenFunctions()
             }
-            MenuAction(text = stringResource(Res.string.cpp_settings)) {
-                menuExpanded = false
-                onOpenSettings()
-            }
-            MenuAction(text = stringResource(Res.string.c_history)) {
+        ),
+        CalculatorMenuEntry.Divider,
+        CalculatorMenuEntry.Action(
+            label = stringResource(Res.string.c_history),
+            icon = Icons.Filled.History,
+            onClick = {
                 menuExpanded = false
                 onOpenHistory()
             }
-            MenuAction(text = stringResource(Res.string.cpp_plotter)) {
+        ),
+        CalculatorMenuEntry.Action(
+            label = stringResource(Res.string.cpp_plotter),
+            icon = Icons.Filled.Speed,
+            onClick = {
                 menuExpanded = false
                 onOpenPlotter()
             }
-            MenuAction(text = stringResource(Res.string.c_conversion_tool)) {
+        ),
+        CalculatorMenuEntry.Action(
+            label = stringResource(Res.string.c_conversion_tool),
+            icon = Icons.Filled.Tune,
+            onClick = {
                 menuExpanded = false
                 onOpenConverter()
             }
-            MenuAction(text = stringResource(Res.string.cpp_about)) {
+        ),
+        CalculatorMenuEntry.Divider,
+        CalculatorMenuEntry.Action(
+            label = stringResource(Res.string.cpp_settings),
+            icon = Icons.Filled.Settings,
+            onClick = {
+                menuExpanded = false
+                onOpenSettings()
+            }
+        ),
+        CalculatorMenuEntry.Action(
+            label = stringResource(Res.string.cpp_about),
+            icon = Icons.Filled.Info,
+            onClick = {
                 menuExpanded = false
                 onOpenAbout()
             }
-        }
+        )
+    )
+
+    Box(modifier = modifier) {
+        CalculatorOverflowIconButton(onClick = { menuExpanded = true })
+        CalculatorOverflowDropdownMenu(
+            expanded = menuExpanded,
+            onDismissRequest = { menuExpanded = false },
+            entries = entries
+        )
     }
-}
-
-@Composable
-private fun MenuSectionHeader(text: String) {
-    DropdownMenuItem(
-        text = { Text(text = text, style = MaterialTheme.typography.labelLarge) },
-        onClick = {},
-        enabled = false
-    )
-}
-
-@Composable
-private fun MenuOption(
-    text: String,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    DropdownMenuItem(
-        text = { Text(text = text) },
-        onClick = onClick,
-        trailingIcon = if (selected) {
-            { Text(text = "✓") }
-        } else {
-            null
-        }
-    )
-}
-
-@Composable
-private fun MenuAction(text: String, onClick: () -> Unit) {
-    DropdownMenuItem(
-        text = { Text(text = text) },
-        onClick = onClick
-    )
 }

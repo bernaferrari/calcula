@@ -1,38 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="c_release_notes_for_title">"Release notes for version "</string>
-    <string name="cpp_release_notes_143">★ App language can be changed in settings\n★ Floating
-        calculator themes\n★ Widget themes\n★ Various bugfixes, stability and usability improvements</string>
-    <string name="cpp_release_notes_148">★ New graph plotter\n★ Improved user interface: main and
-        additional screens, dialogs, menus, etc\n★ Redesigned unit converter\n★ Memory button (MC,
-        M+, M)\n★ Floating calculator for Android M\n★ Auto-save of recent history\n★ Faster
+    <string name="cpp_release_notes_143">- App language can be changed in settings\n- Floating
+        calculator themes\n- Widget themes\n- Various bugfixes, stability and usability improvements</string>
+    <string name="cpp_release_notes_148">- New graph plotter\n- Improved user interface: main and
+        additional screens, dialogs, menus, etc\n- Redesigned unit converter\n- Memory button (MC,
+        M+, M)\n- Floating calculator for Android M\n- Auto-save of recent history\n- Faster
         start-ups, less memory consumption</string>
-    <string name="cpp_release_notes_150">★ Copy/paste buttons\n★ AMOLED theme\n★ Fixed formatting of
-        small numbers\n★ Faster graph plotter\n★ Numeral base conversion\n★ E button in Variables
+    <string name="cpp_release_notes_150">- Copy/paste buttons\n- AMOLED theme\n- Fixed formatting of
+        small numbers\n- Faster graph plotter\n- Numeral base conversion\n- E button in Variables
         Editor</string>
-    <string name="cpp_release_notes_152">★ High contrast text option\n★ Redesigned settings\n★ More
-        number format options: scientific and engineering notations\n★ Small UI tweaks\n★ Bugs fixes</string>
+    <string name="cpp_release_notes_152">- High contrast text option\n- Redesigned settings\n- More
+        number format options: scientific and engineering notations\n- Small UI tweaks\n- Bugs fixes</string>
     <string name="c_history">History</string>
-    <string name="cpp_glyph_paste">"\uD83D\uDCCB"</string> <!-- Clipboard -->
-    <string name="cpp_glyph_copy">"\u274F"</string> <!-- Square with shadow or similar -->
-    <string name="cpp_glyph_left">"\u2190"</string>
-    <string name="cpp_glyph_right">"\u2192"</string>
-    <string name="cpp_glyph_backspace">"\u232B"</string>
-    <string name="cpp_glyph_history">"\uD83D\uDD52"</string> <!-- Clock -->
-    <string name="cpp_glyph_undo">"\u21A9"</string>
-    <string name="cpp_glyph_redo">"\u21AA"</string>
-    <string name="cpp_glyph_fast_back">"\u219E"</string> <!-- Two-headed arrow left -->
-    <string name="cpp_glyph_fast_forward">"\u21A0"</string> <!-- Two-headed arrow right -->
+    <string name="cpp_glyph_paste">"P"</string>
+    <string name="cpp_glyph_copy">"C"</string>
+    <string name="cpp_glyph_left">"&lt;"</string>
+    <string name="cpp_glyph_right">"&gt;"</string>
+    <string name="cpp_glyph_backspace">"DEL"</string>
+    <string name="cpp_glyph_history">"H"</string>
+    <string name="cpp_glyph_undo">"U"</string>
+    <string name="cpp_glyph_redo">"R"</string>
+    <string name="cpp_glyph_fast_back">"&lt;&lt;"</string>
+    <string name="cpp_glyph_fast_forward">"&gt;&gt;"</string>
     <string name="cpp_kb_clear">C</string>
-    <string name="cpp_kb_variables">π</string>
-    <string name="cpp_kb_functions">ƒ</string>
-    <string name="cpp_kb_operators">∂</string>
+    <string name="cpp_kb_variables">VAR</string>
+    <string name="cpp_kb_functions">FUN</string>
+    <string name="cpp_kb_operators">OPS</string>
     <string name="cpp_kb_memory_recall">M</string>
     <string name="cpp_kb_memory_plus">M+</string>
     <string name="cpp_kb_memory_minus">M-</string>
     <string name="cpp_kb_memory_clear">MC</string>
     <string name="cpp_settings">Settings</string>
-    <string name="cpp_glyph_graph">"\uD83D\uDCC8"</string> <!-- Chart increasing -->
+    <string name="cpp_glyph_graph">"G"</string>
 
     <string name="cpp_history_tab_saved">Saved</string>
     <string name="cpp_back">Back</string>
@@ -42,6 +42,9 @@
     <string name="cpp_history_empty_recent_subtitle">Your recent calculations will appear here automatically.</string>
     <string name="cpp_history_empty_saved_subtitle">Save important results for quick access later.</string>
     <string name="cpp_start_calculating">Start Calculating</string>
+    <string name="cpp_skip">Skip</string>
+    <string name="cpp_got_it">Got it</string>
+    <string name="cpp_copy">Copy</string>
     <string name="c_copy_expression">Copy expression</string>
     <string name="c_use">Use</string>
     <string name="c_copy_result">Copy result</string>
@@ -49,6 +52,12 @@
     <string name="cpp_edit">Edit</string>
     <string name="cpp_delete">Delete</string>
     <string name="cpp_scientific_functions">Scientific Functions</string>
+    <string name="cpp_scientific_tab_trig">Trig</string>
+    <string name="cpp_scientific_tab_power">Power</string>
+    <string name="cpp_scientific_tab_more">More</string>
+    <string name="cpp_scientific_group_trigonometric">Trigonometric Functions</string>
+    <string name="cpp_scientific_group_power">Power &amp; Logarithms</string>
+    <string name="cpp_scientific_group_constants">Mathematical Constants</string>
 
     <!-- About Screen -->
     <string name="cpp_about">About</string>
@@ -64,6 +73,14 @@
     <string name="cpp_mode_engineer">Engineer</string>
     <string name="cpp_mode_simple">Simple</string>
     <string name="cpp_mode_modern">Modern</string>
+    <string name="cpp_layers">Layers</string>
+    <string name="cpp_layers_title">Gesture Layers</string>
+    <string name="cpp_layer_up">Layer Up</string>
+    <string name="cpp_layer_up_summary">Enable swipe-up functions on keys</string>
+    <string name="cpp_layer_down">Layer Down</string>
+    <string name="cpp_layer_down_summary">Enable swipe-down functions on keys</string>
+    <string name="cpp_layer_engineer">Layer Engineer</string>
+    <string name="cpp_layer_engineer_summary">Allow Engineer keyboard mode when selected</string>
     <string name="cpp_angles">Angles</string>
     <string name="cpp_radix">Radix</string>
     <string name="cpp_number_format">Number Format</string>
@@ -77,16 +94,32 @@
     <string name="cpp_report_problem">Report Problem</string>
     <string name="cpp_theme">Theme</string>
     <string name="cpp_language">Language</string>
+    <string name="cpp_search_settings">Search settings...</string>
+    <string name="cpp_settings_search_results">Search results</string>
+    <string name="cpp_settings_search_no_results">No settings found for "%1$s"</string>
     <string name="cpp_prefs_vibrate_on_keypress">Vibrate on keypress</string>
+    <string name="cpp_settings_haptic_release">Haptic on gesture release</string>
+    <string name="cpp_settings_haptic_release_summary">Vibrate when function is activated</string>
+    <string name="cpp_settings_slide_to_activate">Slide to activate</string>
+    <string name="cpp_settings_slide_to_activate_summary">Auto-activate gestures at 80% threshold without lifting finger</string>
+    <string name="cpp_settings_classic_equals_key">Classic = key on keyboard</string>
+    <string name="cpp_settings_classic_equals_key_summary">Show '=' at bottom-right. Off uses f(x); long-press still triggers '='.</string>
     <string name="cpp_high_contrast_text">High contrast text</string>
     <string name="cpp_highlight_expressions">Highlight expressions</string>
     <string name="cpp_highlight_expressions_summary">Color-code operators and functions</string>
     <string name="cpp_prefs_auto_rotate_screen">Auto-rotate screen</string>
     <string name="cpp_prefs_keep_screen_on">Keep screen on</string>
     <string name="cpp_enable">Enable</string>
+    <string name="cpp_disable">Disable</string>
     <string name="cpp_format">Format</string>
     <string name="cpp_precision">Precision</string>
     <string name="cpp_thousands_separator">Thousands separator</string>
+    <string name="cpp_separator_none">None</string>
+    <string name="cpp_separator_space">Space</string>
+    <string name="cpp_separator_comma">Comma</string>
+    <string name="cpp_separator_apostrophe">Apostrophe</string>
+    <string name="cpp_separator_comma_with_symbol">Comma (,)</string>
+    <string name="cpp_separator_apostrophe_with_symbol">Apostrophe (')</string>
     <string name="p_calculations_calculate_on_fly_title">Calculate on the fly</string>
     <string name="cpp_rpn_mode">RPN mode</string>
     <string name="cpp_rpn_mode_summary">Use Reverse Polish Notation with stack registers</string>
@@ -94,12 +127,27 @@
     <string name="cpp_tape_mode_summary">Show a live running paper tape above the editor</string>
     <string name="cpp_tape">Tape</string>
     <string name="cpp_clear_tape">Clear tape</string>
+    <string name="cpp_cursor_previous">Move cursor left</string>
+    <string name="cpp_cursor_next">Move cursor right</string>
     <string name="c_calc_show_release_notes_title">Show release notes</string>
     <string name="c_calc_use_back_button_as_prev_title">Use back as previous</string>
     <string name="cpp_plot_imaginary_part">Plot imaginary part</string>
     <string name="cpp_plot_imaginary_part_summary">Show imaginary values on graphs</string>
+    <string name="cpp_settings_preview">Preview</string>
+    <string name="cpp_settings_sample_text_at">Sample Text at %1$d%%</string>
+    <string name="cpp_settings_sample_text_subtitle">This is how text will appear throughout the app</string>
+    <string name="cpp_settings_font_small">Small</string>
+    <string name="cpp_settings_font_large">Large</string>
+    <string name="cpp_settings_show_calculation_latency">Show calculation latency</string>
+    <string name="cpp_settings_show_calculation_latency_summary">Display timing diagnostics for calculations</string>
+    <string name="cpp_settings_latex_output_mode">LaTeX Output Mode</string>
+    <string name="cpp_settings_latex_output_mode_summary">Generate LaTeX syntax instead of calculations</string>
+    <string name="cpp_settings_dynamic_colors_unavailable">Dynamic colors require Android 12+</string>
     <string name="c_calc_ad_free_title">Remove Ads</string>
     <string name="c_calc_ad_free_summary">Support the project and enjoy ad-free experience</string>
+    <string name="cpp_auto">Auto</string>
+    <string name="cpp_cancel">Cancel</string>
+    <string name="cpp_ok">OK</string>
 
     <!-- Navigation -->
     <string name="cpp_plotter">Plotter</string>
@@ -116,12 +164,20 @@
 
     <string name="cpp_onboarding_title">Calculator++</string>
     <string name="cpp_onboarding_subtitle">Precision tools for serious work.</string>
+    <string name="cpp_onboarding_tagline_simple">Simple. Elegant. Powerful.</string>
     <string name="cpp_onboarding_continue">Continue</string>
     <string name="cpp_onboarding_choose_appearance">Choose Appearance</string>
     <string name="cpp_onboarding_appearance_hint">You can change this anytime in settings</string>
+    <string name="cpp_onboarding_free_open_source">Free - No ads - Open source</string>
+    <string name="cpp_onboarding_gesture_title">Pro Tip</string>
+    <string name="cpp_onboarding_gesture_heading">Swipe buttons for more functions</string>
+    <string name="cpp_onboarding_gesture_body">Swipe up, down, left, or right on any button to access alternate functions. Long press for more options.</string>
     <string name="cpp_theme_system">System</string>
+    <string name="cpp_theme_system_summary">Matches your device settings with dynamic colors</string>
     <string name="cpp_theme_light">Light</string>
+    <string name="cpp_theme_light_summary">Clean and bright for daytime use</string>
     <string name="cpp_theme_dark">Dark</string>
+    <string name="cpp_theme_dark_summary">Easy on the eyes in low light</string>
     <string name="cpp_onboarding_complete_title">Setup Complete</string>
     <string name="cpp_onboarding_complete_subtitle">A few essentials to get started</string>
     <string name="cpp_onboarding_tip1_title">Reuse Results</string>
@@ -160,6 +216,7 @@
     <string name="function_edit_function">Edit Function</string>
     <string name="cpp_function_body">Function Body</string>
     <string name="cpp_parameters">Parameters</string>
+    <string name="cpp_parameters_example">x, y</string>
     <string name="cpp_parameter">Parameter</string>
     <string name="cpp_add_parameter">Add Parameter</string>
     <string name="function_already_exists">Function already exists</string>
@@ -171,6 +228,10 @@
     <string name="cpp_from">From</string>
     <string name="cpp_to">To</string>
     <string name="cpp_swap">Swap</string>
+    <string name="cpp_expression_copied">Expression copied</string>
+    <string name="cpp_result_copied">Result copied</string>
+    <string name="cpp_history_edit_saved_entry">Edit saved entry</string>
+    <string name="cpp_comment">Comment</string>
 
     <!-- Rate Us Dialog -->
     <string name="cpp_rateus_title">Enjoying %s?</string>
@@ -296,6 +357,7 @@
 
     <!-- Formula Library -->
     <string name="cpp_formula_library">Formula Library</string>
+    <string name="cpp_formula_quick_title">Quick Formulas</string>
     <string name="cpp_formula_search">Search formulas</string>
     <string name="cpp_formula_categories">Categories</string>
     <string name="cpp_formula_physics">Physics</string>
@@ -309,6 +371,73 @@
     <string name="cpp_formula_use">Use Formula</string>
     <string name="cpp_formula_variables">Variables</string>
     <string name="cpp_formula_description">Description</string>
+    <string name="cpp_formula_results_count">%1$d results</string>
+    <string name="cpp_formula_ready">Formula ready</string>
+    <string name="cpp_formula_empty_title">No formulas available</string>
+    <string name="cpp_formula_empty_subtitle">Formulas will appear here when available</string>
+    <string name="cpp_formula_try_adjusting_search">Try adjusting your search terms</string>
+    <string name="cpp_formula_expression_label">Formula</string>
+    <string name="cpp_formula_input_values">Input Values</string>
+    <string name="cpp_formula_calculate">Calculate</string>
+    <string name="cpp_formula_result">Result</string>
+    <string name="cpp_default_value_format">Default: %1$s</string>
+    <string name="cpp_formula_category_physics_desc">Physical laws and equations</string>
+    <string name="cpp_formula_category_math_desc">Algebra, geometry, and calculus</string>
+    <string name="cpp_formula_category_finance_desc">Loans, interest, and investments</string>
+    <string name="cpp_formula_category_engineering_desc">Circuit analysis and structural calculations</string>
+    <string name="cpp_formula_category_health_desc">BMI, BMR, and fitness</string>
+    <string name="cpp_formula_category_everyday_desc">Conversions and daily utilities</string>
+    <string name="cpp_formula_category_custom_desc">Your saved custom formulas</string>
+
+    <!-- Adaptive / Graph -->
+    <string name="cpp_tools">Tools</string>
+    <string name="cpp_constants">Constants</string>
+    <string name="cpp_panel_not_available">Panel not available</string>
+    <string name="cpp_graph_reset_view">Reset graph view</string>
+    <string name="cpp_graph_expression_prefix">y =</string>
+    <string name="cpp_graph_input_placeholder">sin(x)</string>
+    <string name="cpp_graph_plot">Plot</string>
+    <string name="cpp_graph_add_function">Add function</string>
+    <string name="cpp_graph_update_function">Update function</string>
+    <string name="cpp_graph_quick_examples">Quick examples</string>
+    <string name="cpp_graph_functions">Functions</string>
+    <string name="cpp_graph_no_functions">No functions added</string>
+    <string name="cpp_graph_clear_all">Clear functions</string>
+    <string name="cpp_graph_edit_function_a11y">Edit function %1$s</string>
+    <string name="cpp_graph_show_function_a11y">Show function %1$s</string>
+    <string name="cpp_graph_hide_function_a11y">Hide function %1$s</string>
+    <string name="cpp_graph_delete_function_a11y">Delete function %1$s</string>
+    <string name="cpp_graph_x_range">X range</string>
+    <string name="cpp_graph_y_range">Y range</string>
+    <string name="cpp_graph_set_range">Set graph range</string>
+    <string name="cpp_graph_x_min">X min</string>
+    <string name="cpp_graph_x_max">X max</string>
+    <string name="cpp_graph_y_min">Y min</string>
+    <string name="cpp_graph_y_max">Y max</string>
+    <string name="cpp_graph_invalid_bounds">Enter valid bounds where max is greater than min</string>
+
+    <!-- About -->
+    <string name="cpp_version_format">Version %1$s</string>
+    <string name="cpp_about_tagline">Scientific calculator for Android and iOS</string>
+    <string name="cpp_about_rate">Rate</string>
+    <string name="cpp_about_source">Source</string>
+    <string name="cpp_about_support">Support</string>
+    <string name="cpp_about_developer">Developer</string>
+    <string name="cpp_about_created_by">Created by</string>
+    <string name="cpp_about_contact">Contact</string>
+    <string name="cpp_about_website">Website</string>
+    <string name="cpp_about_developer_identity">serso aka se.solovyev</string>
+    <string name="cpp_about_developer_email">se.solovyev@gmail.com</string>
+    <string name="cpp_about_developer_site">se.solovyev.org</string>
+    <string name="cpp_about_legal_open_source">Legal and Open Source</string>
+    <string name="cpp_about_license">License</string>
+    <string name="cpp_about_license_value">Apache License 2.0</string>
+    <string name="cpp_about_libraries">Libraries</string>
+    <string name="cpp_about_libraries_value">Simple XML, JSCL</string>
+    <string name="cpp_about_contributors">Contributors</string>
+    <string name="cpp_about_whats_new">What is new in each version</string>
+    <string name="cpp_about_no_release_notes">No release notes available.</string>
+    <string name="cpp_copyright_format">(c) 2009-%1$d Calculator++</string>
 
     <!-- Tutorial & Help -->
     <string name="cpp_tutorial_gestures">Show Gesture Tutorial</string>

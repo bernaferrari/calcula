@@ -7,7 +7,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-// Material icons not available in commonMain - using text alternatives
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material3.Icon
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,7 +30,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
-import org.solovyev.android.calculator.ui.Res
+import org.solovyev.android.calculator.ui.*
+import org.solovyev.android.calculator.ui.tokens.CalculatorCornerRadius
+import org.solovyev.android.calculator.ui.tokens.CalculatorElevation
+import org.solovyev.android.calculator.ui.tokens.CalculatorPadding
+import org.solovyev.android.calculator.ui.tokens.CalculatorSpacing
 import org.solovyev.android.calculator.GuiTheme
 import org.solovyev.android.calculator.GuiMode
 
@@ -39,6 +48,7 @@ fun OnboardingScreen(
     var currentStep by remember { mutableStateOf(0) }
     var selectedTheme by remember { mutableStateOf(GuiTheme.material_theme) }
     val haptic = LocalHapticFeedback.current
+    val reduceMotion = LocalCalculatorReduceMotion.current
 
     Box(
         modifier = modifier
@@ -56,18 +66,23 @@ fun OnboardingScreen(
         AnimatedContent(
             targetState = currentStep,
             transitionSpec = {
-                slideInHorizontally(
-                    initialOffsetX = { it },
-                    animationSpec = spring(stiffness = Spring.StiffnessLow, dampingRatio = Spring.DampingRatioNoBouncy)
-                ) togetherWith slideOutHorizontally(
-                    targetOffsetX = { -it },
-                    animationSpec = spring(stiffness = Spring.StiffnessLow, dampingRatio = Spring.DampingRatioNoBouncy)
-                )
+                if (reduceMotion) {
+                    fadeIn(animationSpec = tween(90)) togetherWith fadeOut(animationSpec = tween(70))
+                } else {
+                    slideInHorizontally(
+                        initialOffsetX = { it },
+                        animationSpec = spring(stiffness = Spring.StiffnessLow, dampingRatio = Spring.DampingRatioNoBouncy)
+                    ) togetherWith slideOutHorizontally(
+                        targetOffsetX = { -it },
+                        animationSpec = spring(stiffness = Spring.StiffnessLow, dampingRatio = Spring.DampingRatioNoBouncy)
+                    )
+                }
             },
             modifier = Modifier.fillMaxSize()
         ) { step ->
             when (step) {
                 0 -> WelcomeStep(
+                    reduceMotion = reduceMotion,
                     onContinue = { 
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         currentStep = 1 
@@ -75,6 +90,7 @@ fun OnboardingScreen(
                 )
                 1 -> ThemeStep(
                     selectedTheme = selectedTheme,
+                    reduceMotion = reduceMotion,
                     onThemeSelected = { 
                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         selectedTheme = it
@@ -85,6 +101,7 @@ fun OnboardingScreen(
                     }
                 )
                 2 -> TipsStep(
+                    reduceMotion = reduceMotion,
                     onComplete = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         // Persist theme only when finishing onboarding to avoid activity recreation
@@ -101,8 +118,8 @@ fun OnboardingScreen(
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 48.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(bottom = CalculatorPadding.XLarge),
+            horizontalArrangement = Arrangement.spacedBy(CalculatorSpacing.Small)
         ) {
             repeat(3) { index ->
                 Box(
@@ -122,18 +139,21 @@ fun OnboardingScreen(
 }
 
 @Composable
-private fun WelcomeStep(onContinue: () -> Unit) {
+private fun WelcomeStep(
+    reduceMotion: Boolean,
+    onContinue: () -> Unit
+) {
     var visible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        delay(150)
+        delay(if (reduceMotion) 0 else 150)
         visible = true
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 32.dp),
+            .padding(horizontal = CalculatorSpacing.XXLarge),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -150,16 +170,20 @@ private fun WelcomeStep(onContinue: () -> Unit) {
                 )
             ) + fadeIn(animationSpec = tween(500))
         ) {
-            val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-            val pulseScale by infiniteTransition.animateFloat(
-                initialValue = 1f,
-                targetValue = 1.05f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(2000, easing = FastOutSlowInEasing),
-                    repeatMode = RepeatMode.Reverse
-                ),
-                label = "pulseScale"
-            )
+            val pulseScale = if (reduceMotion) {
+                1f
+            } else {
+                val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+                infiniteTransition.animateFloat(
+                    initialValue = 1f,
+                    targetValue = 1.05f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(2000, easing = FastOutSlowInEasing),
+                        repeatMode = RepeatMode.Reverse
+                    ),
+                    label = "pulseScale"
+                ).value
+            }
 
             Box(
                 modifier = Modifier
@@ -169,7 +193,7 @@ private fun WelcomeStep(onContinue: () -> Unit) {
                         scaleY = pulseScale
                         shadowElevation = 20.dp.toPx()
                     }
-                    .clip(RoundedCornerShape(36.dp))
+                    .clip(RoundedCornerShape(CalculatorCornerRadius.Display))
                     .background(
                         brush = Brush.linearGradient(
                             colors = listOf(
@@ -182,16 +206,16 @@ private fun WelcomeStep(onContinue: () -> Unit) {
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "π",
-                    fontSize = 80.sp,
-                    fontWeight = FontWeight.Light,
-                    color = MaterialTheme.colorScheme.onPrimary
+                Icon(
+                    imageVector = Icons.Filled.Calculate,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.size(80.dp)
                 )
             }
         }
 
-        Spacer(Modifier.height(40.dp))
+        Spacer(Modifier.height(CalculatorSpacing.XXLarge))
 
         AnimatedVisibility(
             visible = visible,
@@ -203,17 +227,17 @@ private fun WelcomeStep(onContinue: () -> Unit) {
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = "Calculator++",
+                    text = stringResource(Res.string.cpp_onboarding_title),
                     style = MaterialTheme.typography.displayMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(CalculatorSpacing.Medium))
 
                 Text(
-                    text = "Precision tools for serious work.",
+                    text = stringResource(Res.string.cpp_onboarding_subtitle),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
@@ -235,75 +259,76 @@ private fun WelcomeStep(onContinue: () -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(CalculatorCornerRadius.Large),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary
                 ),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = CalculatorElevation.Elevated)
             ) {
                 Text(
-                    text = "Get Started",
+                    text = stringResource(Res.string.cpp_onboarding_continue),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
             }
         }
 
-        Spacer(Modifier.height(48.dp))
+        Spacer(Modifier.height(CalculatorPadding.XLarge))
 
         AnimatedVisibility(
             visible = visible,
             enter = fadeIn(animationSpec = tween(600, delayMillis = 600))
         ) {
             Text(
-                text = "Free • No ads • Open source",
+                text = stringResource(Res.string.cpp_onboarding_free_open_source),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
         }
 
-        Spacer(Modifier.height(48.dp))
+        Spacer(Modifier.height(CalculatorPadding.XLarge))
     }
 }
 
 @Composable
 private fun ThemeStep(
     selectedTheme: GuiTheme,
+    reduceMotion: Boolean,
     onThemeSelected: (GuiTheme) -> Unit,
     onContinue: () -> Unit
 ) {
     val themes = listOf(
         Triple(
             GuiTheme.material_theme,
-            "System",
-            "Matches your device settings with dynamic colors"
+            stringResource(Res.string.cpp_theme_system),
+            stringResource(Res.string.cpp_theme_system_summary)
         ),
         Triple(
             GuiTheme.material_light,
-            "Light",
-            "Clean and bright for daytime use"
+            stringResource(Res.string.cpp_theme_light),
+            stringResource(Res.string.cpp_theme_light_summary)
         ),
         Triple(
             GuiTheme.material_dark,
-            "Dark",
-            "Easy on the eyes in low light"
+            stringResource(Res.string.cpp_theme_dark),
+            stringResource(Res.string.cpp_theme_dark_summary)
         )
     )
 
     var visible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        delay(100)
+        delay(if (reduceMotion) 0 else 100)
         visible = true
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 24.dp),
+            .padding(horizontal = CalculatorPadding.XLarge),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(Modifier.height(60.dp))
+        Spacer(Modifier.height(CalculatorSpacing.XXLarge + CalculatorSpacing.XLarge))
 
         AnimatedVisibility(
             visible = visible,
@@ -311,23 +336,23 @@ private fun ThemeStep(
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = "Choose Appearance",
+                    text = stringResource(Res.string.cpp_onboarding_choose_appearance),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(CalculatorSpacing.Small))
 
                 Text(
-                    text = "You can change this anytime in settings",
+                    text = stringResource(Res.string.cpp_onboarding_appearance_hint),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
 
-        Spacer(Modifier.height(40.dp))
+        Spacer(Modifier.height(CalculatorSpacing.XXLarge))
 
         Column(
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -362,18 +387,18 @@ private fun ThemeStep(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                shape = RoundedCornerShape(CalculatorCornerRadius.Large),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = CalculatorElevation.Elevated)
             ) {
                 Text(
-                    text = "Continue",
+                    text = stringResource(Res.string.cpp_onboarding_continue),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
             }
         }
 
-        Spacer(Modifier.height(48.dp))
+        Spacer(Modifier.height(CalculatorPadding.XLarge))
     }
 }
 
@@ -404,19 +429,19 @@ private fun ThemeOption(
     )
 
     val elevation by animateDpAsState(
-        targetValue = if (isSelected) 4.dp else 1.dp,
+        targetValue = if (isSelected) CalculatorElevation.Elevated else CalculatorElevation.Subtle,
         label = "elevation"
     )
 
     Surface(
         modifier = modifier
             .graphicsLayer { scaleX = scale; scaleY = scale }
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(CalculatorCornerRadius.ExtraLarge))
             .clickable {
                 haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 onClick()
             },
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(CalculatorCornerRadius.ExtraLarge),
         color = containerColor,
         tonalElevation = elevation,
         shadowElevation = elevation
@@ -424,15 +449,18 @@ private fun ThemeOption(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                .padding(
+                    horizontal = CalculatorPadding.Large,
+                    vertical = CalculatorPadding.Standard
+                ),
+            horizontalArrangement = Arrangement.spacedBy(CalculatorSpacing.Large),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Theme preview with depth
             Surface(
                 modifier = Modifier.size(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                shadowElevation = 2.dp
+                shape = RoundedCornerShape(CalculatorCornerRadius.Large),
+                shadowElevation = CalculatorElevation.Standard
             ) {
                 Box(
                     modifier = Modifier.background(
@@ -455,17 +483,17 @@ private fun ThemeOption(
                 ) {
                     when (theme) {
                         GuiTheme.material_dark -> {
-                            Text(
-                                text = "☾",
-                                color = Color(0xFFE7EAF0),
-                                fontSize = 20.sp
+                            Icon(
+                                imageVector = Icons.Filled.DarkMode,
+                                contentDescription = null,
+                                tint = Color(0xFFE7EAF0)
                             )
                         }
                         GuiTheme.material_light -> {
-                            Text(
-                                text = "☀",
-                                color = Color(0xFF5A5A5E),
-                                fontSize = 20.sp
+                            Icon(
+                                imageVector = Icons.Filled.LightMode,
+                                contentDescription = null,
+                                tint = Color(0xFF5A5A5E)
                             )
                         }
                         else -> {
@@ -515,11 +543,10 @@ private fun ThemeOption(
                             modifier = Modifier.size(28.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
-                                Text(
-                                    text = "✓",
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold
+                                Icon(
+                                    imageVector = Icons.Filled.Check,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onPrimary
                                 )
                             }
                         }
@@ -530,28 +557,29 @@ private fun ThemeOption(
 
 @Composable
 private fun TipsStep(
+    reduceMotion: Boolean,
     onComplete: () -> Unit
 ) {
     val tips = listOf(
-        Triple("👆", "Tap Results", "Tap any calculation result to reuse it instantly"),
-        Triple("f(x)", "Scientific Mode", "Swipe up on buttons for advanced functions"),
-        Triple("H", "History Access", "Swipe the display to see recent calculations")
+        Triple("Tap", stringResource(Res.string.cpp_onboarding_tip1_title), stringResource(Res.string.cpp_onboarding_tip1_subtitle)),
+        Triple("f(x)", stringResource(Res.string.cpp_onboarding_tip2_title), stringResource(Res.string.cpp_onboarding_tip2_subtitle)),
+        Triple("H", stringResource(Res.string.cpp_onboarding_tip3_title), stringResource(Res.string.cpp_onboarding_tip3_subtitle))
     )
 
     var visible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        delay(100)
+        delay(if (reduceMotion) 0 else 100)
         visible = true
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 24.dp),
+            .padding(horizontal = CalculatorPadding.XLarge),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(Modifier.height(60.dp))
+        Spacer(Modifier.height(CalculatorSpacing.XXLarge + CalculatorSpacing.XLarge))
 
         AnimatedVisibility(
             visible = visible,
@@ -565,27 +593,28 @@ private fun TipsStep(
                     color = MaterialTheme.colorScheme.primaryContainer
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            text = "✓",
-                            style = MaterialTheme.typography.headlineLarge,
-                            color = MaterialTheme.colorScheme.primary
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(36.dp)
                         )
                     }
                 }
 
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(CalculatorPadding.XLarge))
 
                 Text(
-                    text = "You're All Set!",
+                    text = stringResource(Res.string.cpp_onboarding_complete_title),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(CalculatorSpacing.Small))
 
                 Text(
-                    text = "Here are a few tips to get the most out of Calculator++",
+                    text = stringResource(Res.string.cpp_onboarding_complete_subtitle),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
@@ -593,7 +622,7 @@ private fun TipsStep(
             }
         }
 
-        Spacer(Modifier.height(40.dp))
+        Spacer(Modifier.height(CalculatorSpacing.XXLarge))
 
         Column(
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -625,18 +654,18 @@ private fun TipsStep(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                shape = RoundedCornerShape(CalculatorCornerRadius.Large),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = CalculatorElevation.Elevated)
             ) {
                 Text(
-                    text = "Start Calculating",
+                    text = stringResource(Res.string.cpp_start_calculating),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
             }
         }
 
-        Spacer(Modifier.height(48.dp))
+        Spacer(Modifier.height(CalculatorPadding.XLarge))
     }
 }
 
@@ -648,22 +677,25 @@ private fun TipCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(CalculatorCornerRadius.ExtraLarge),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = CalculatorElevation.Subtle)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 18.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                .padding(
+                    horizontal = CalculatorPadding.Large,
+                    vertical = CalculatorPadding.Large - 2.dp
+                ),
+            horizontalArrangement = Arrangement.spacedBy(CalculatorSpacing.Large),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
                 modifier = Modifier.size(48.dp),
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(CalculatorCornerRadius.Large),
                 color = MaterialTheme.colorScheme.primaryContainer
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -681,7 +713,7 @@ private fun TipCard(
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                Spacer(Modifier.height(2.dp))
+                Spacer(Modifier.height(CalculatorSpacing.XSmall))
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodyMedium,
@@ -735,11 +767,10 @@ private fun ModeOption(
         }
 
         if (isSelected) {
-            Text(
-                text = "✓",
-                color = MaterialTheme.colorScheme.primary,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
+            Icon(
+                imageVector = Icons.Filled.Check,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
             )
         }
     }

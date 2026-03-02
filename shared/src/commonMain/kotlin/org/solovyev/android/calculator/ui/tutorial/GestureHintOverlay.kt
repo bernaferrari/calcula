@@ -16,7 +16,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-// Material icons not available in commonMain - using text alternatives
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -30,7 +31,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 
 /**
@@ -94,10 +94,10 @@ fun GestureHintOverlay(
                 ) {
                     // Direction icon
                     val directionIcon = when (hintData.direction) {
-                        GestureDirection.UP -> "↑"
-                        GestureDirection.DOWN -> "↓"
-                        GestureDirection.LEFT -> "←"
-                        GestureDirection.RIGHT -> "→"
+                        GestureDirection.UP -> "Up"
+                        GestureDirection.DOWN -> "Down"
+                        GestureDirection.LEFT -> "Left"
+                        GestureDirection.RIGHT -> "Right"
                     }
 
                     Box(
@@ -159,11 +159,11 @@ fun GestureHintOverlay(
                         onClick = onDismiss,
                         modifier = Modifier.size(48.dp)
                     ) {
-                    Text(
-                        text = "✕",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                        Icon(
+                            imageVector = Icons.Filled.Clear,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
@@ -198,10 +198,10 @@ fun CompactGestureHint(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 val directionIcon = when (hintData.direction) {
-                    GestureDirection.UP -> "↑"
-                    GestureDirection.DOWN -> "↓"
-                    GestureDirection.LEFT -> "←"
-                    GestureDirection.RIGHT -> "→"
+                    GestureDirection.UP -> "Up"
+                    GestureDirection.DOWN -> "Down"
+                    GestureDirection.LEFT -> "Left"
+                    GestureDirection.RIGHT -> "Right"
                 }
 
                 Text(
@@ -228,10 +228,10 @@ fun CompactGestureHint(
                     onClick = onDismiss,
                     modifier = Modifier.size(24.dp)
                 ) {
-                    Text(
-                        text = "✕",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.inverseOnSurface.copy(alpha = 0.7f)
+                    Icon(
+                        imageVector = Icons.Filled.Clear,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.inverseOnSurface.copy(alpha = 0.7f)
                     )
                 }
             }

@@ -58,7 +58,7 @@ fun MinimalCalculatorKeyboard(
                 modifier = Modifier.weight(1f)
             )
             CalculatorButton(
-                text = "±",
+                text = "+/-",
                 buttonType = ButtonType.CONTROL,
                 onClick = { actions.onSpecialClick("±") },
                 fontSize = buttonFontSize,
@@ -74,7 +74,7 @@ fun MinimalCalculatorKeyboard(
                 modifier = Modifier.weight(1f)
             )
             CalculatorButton(
-                text = "÷",
+                text = "/",
                 buttonType = ButtonType.OPERATION,
                 onClick = { actions.onOperatorClick("/") },
                 fontSize = buttonFontSize,
@@ -112,9 +112,9 @@ fun MinimalCalculatorKeyboard(
                 modifier = Modifier.weight(1f)
             )
             CalculatorButton(
-                text = "×",
+                text = "*",
                 buttonType = ButtonType.OPERATION,
-                onClick = { actions.onOperatorClick("×") },
+                onClick = { actions.onOperatorClick("*") },
                 fontSize = buttonFontSize,
                 cornerRadius = buttonCornerRadius,
                 modifier = Modifier.weight(1f)
@@ -150,9 +150,9 @@ fun MinimalCalculatorKeyboard(
                 modifier = Modifier.weight(1f)
             )
             CalculatorButton(
-                text = "−",
+                text = "-",
                 buttonType = ButtonType.OPERATION,
-                onClick = { actions.onOperatorClick("−") },
+                onClick = { actions.onOperatorClick("-") },
                 fontSize = buttonFontSize,
                 cornerRadius = buttonCornerRadius,
                 modifier = Modifier.weight(1f)

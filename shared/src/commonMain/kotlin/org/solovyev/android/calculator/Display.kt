@@ -19,7 +19,6 @@ import org.solovyev.android.calculator.calculations.CalculationFinishedEvent
 import org.solovyev.android.calculator.calculations.ConversionFailedEvent
 import org.solovyev.android.calculator.calculations.ConversionFinishedEvent
 import kotlinx.atomicfu.atomic
-import org.solovyev.android.calculator.UiPreferences
 
 class Display(
     private val notifier: Notifier,
@@ -30,6 +29,7 @@ class Display(
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private val initialized = atomic(false)
+    private val showFixableErrorDialogEnabled = atomic(true)
 
     private val _stateFlow = MutableStateFlow(DisplayState.empty())
     val stateFlow: StateFlow<DisplayState> = _stateFlow.asStateFlow()
@@ -37,12 +37,14 @@ class Display(
     private val _changedEvents = MutableSharedFlow<ChangedEvent>()
     val changedEvents: SharedFlow<ChangedEvent> = _changedEvents.asSharedFlow()
 
-    private val uiPreferences: UiPreferences
-        get() = appPreferences.ui
-
     fun init() {
         if (!initialized.compareAndSet(false, true)) {
             return
+        }
+        scope.launch {
+            appPreferences.ui.showFixableErrorDialog.collect { enabled ->
+                showFixableErrorDialogEnabled.value = enabled
+            }
         }
         scope.launch { calculator.calculationFinished.collect(::onCalculationFinished) }
         scope.launch { calculator.calculationCancelled.collect(::onCalculationCancelled) }
@@ -70,7 +72,7 @@ class Display(
     fun onCalculationFinished(e: CalculationFinishedEvent) {
         if (e.sequence < _stateFlow.value.sequence) return
         setState(DisplayState.createValid(e.operation, e.result, e.stringResult, e.sequence))
-        if (e.messages.isNotEmpty() && uiPreferences.getShowFixableErrorDialogBlocking()) {
+        if (e.messages.isNotEmpty() && showFixableErrorDialogEnabled.value) {
             notifier.showFixableErrorDialog(e.messages)
         }
     }

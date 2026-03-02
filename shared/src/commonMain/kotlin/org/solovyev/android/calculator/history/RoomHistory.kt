@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Clock
 import org.solovyev.android.calculator.DisplayState
 import org.solovyev.android.calculator.EditorState
+import kotlinx.coroutines.runBlocking
 
 /**
  * History implementation using Room for persistence.
@@ -19,8 +20,10 @@ class RoomHistory(private val historyDao: HistoryDao) : History {
         historyDao.getSavedHistory().map { list -> list.map { it.toState() } }
 
     override fun getLast(): EditorState {
-        // Warning: This is a placeholder. Sync API requires re-architecture or removing usage.
-        return EditorState.empty() 
+        val lastEntry = runBlocking { historyDao.getLastEntry() }
+        return lastEntry?.let {
+            EditorState.create(it.expression, it.editorSelection)
+        } ?: EditorState.empty()
     }
     
     override suspend fun addEntry(state: HistoryState) {

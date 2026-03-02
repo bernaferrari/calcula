@@ -21,11 +21,11 @@ import jscl.NumeralBase
  * Unified calculator keyboard - clean, minimal design.
  * 
  * Layout:
- * - Row 1: Clear, (, ), ÷
- * - Row 2: 7, 8, 9, ×
- * - Row 3: 4, 5, 6, −
+ * - Row 1: Clear, (, ), /
+ * - Row 2: 7, 8, 9, *
+ * - Row 3: 4, 5, 6, -
  * - Row 4: 1, 2, 3, +
- * - Row 5: ⌫, 0, ., ƒ (or = in classic mode)
+ * - Row 5: backspace, 0, ., =
  * 
  * Advanced features available via gestures (no visible hints):
  * - Long press: secondary actions
@@ -66,7 +66,7 @@ fun UnifiedCalculatorKeyboard(
             .padding(keyboardPadding),
         verticalArrangement = Arrangement.spacedBy(keyGap)
     ) {
-        // Row 1: Clear, (, ), ÷
+        // Row 1: Clear, (, ), /
         KeyboardRow(modifier = Modifier.weight(1f)) {
             UnifiedButton(
                 gestureAutoActivation = gestureAutoActivation,
@@ -92,13 +92,13 @@ fun UnifiedCalculatorKeyboard(
             )
             UnifiedButton(
                 gestureAutoActivation = gestureAutoActivation,
-                text = "÷",
+                text = "/",
                 buttonType = ButtonType.OPERATION,
                 onClick = { actions.onOperatorClick("/") }
             )
         }
 
-        // Row 2: 7, 8, 9, ×
+        // Row 2: 7, 8, 9, *
         KeyboardRow(modifier = Modifier.weight(1f)) {
             UnifiedButton(
                 gestureAutoActivation = gestureAutoActivation,
@@ -130,13 +130,13 @@ fun UnifiedCalculatorKeyboard(
             )
             UnifiedButton(
                 gestureAutoActivation = gestureAutoActivation,
-                text = "×",
+                text = "*",
                 buttonType = ButtonType.OPERATION,
-                onClick = { actions.onOperatorClick("×") }
+                onClick = { actions.onOperatorClick("*") }
             )
         }
 
-        // Row 3: 4, 5, 6, −
+        // Row 3: 4, 5, 6, -
         KeyboardRow(modifier = Modifier.weight(1f)) {
             UnifiedButton(
                 gestureAutoActivation = gestureAutoActivation,
@@ -169,9 +169,9 @@ fun UnifiedCalculatorKeyboard(
             )
             UnifiedButton(
                 gestureAutoActivation = gestureAutoActivation,
-                text = "−",
+                text = "-",
                 buttonType = ButtonType.OPERATION,
-                onClick = { actions.onOperatorClick("−") }
+                onClick = { actions.onOperatorClick("-") }
             )
         }
 
@@ -215,7 +215,7 @@ fun UnifiedCalculatorKeyboard(
             )
         }
 
-        // Row 5: ⌫, 0, ., =
+        // Row 5: backspace, 0, ., =
         KeyboardRow(modifier = Modifier.weight(1f)) {
             UnifiedButton(
                 gestureAutoActivation = gestureAutoActivation,
@@ -241,25 +241,14 @@ fun UnifiedCalculatorKeyboard(
                 enabled = true,
                 onSwipeUp = { actions.onNumberClick(".") }
             )
-            if (showBottomRightEqualsKey) {
-                UnifiedButton(
-                    gestureAutoActivation = gestureAutoActivation,
-                    text = "=",
-                    buttonType = ButtonType.OPERATION_HIGHLIGHTED,
-                    onClick = { actions.onEquals() },
-                    onLongClick = { actions.onOpenFunctions() },
-                    onSwipeUp = { showScientificSheet = true }
-                )
-            } else {
-                UnifiedButton(
-                    gestureAutoActivation = gestureAutoActivation,
-                    text = "ƒ",
-                    buttonType = ButtonType.SPECIAL,
-                    onClick = { actions.onOpenFunctions() },
-                    onLongClick = { actions.onEquals() },
-                    onSwipeUp = { showScientificSheet = true }
-                )
-            }
+            UnifiedButton(
+                gestureAutoActivation = gestureAutoActivation,
+                text = "=",
+                buttonType = ButtonType.OPERATION_HIGHLIGHTED,
+                onClick = { actions.onEquals() },
+                onLongClick = { actions.onOpenFunctions() },
+                onSwipeUp = { showScientificSheet = true }
+            )
         }
     }
 }

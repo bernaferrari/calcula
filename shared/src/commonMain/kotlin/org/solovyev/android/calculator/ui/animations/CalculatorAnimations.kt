@@ -9,6 +9,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 // Material icons not available in commonMain - using alternatives
 import androidx.compose.runtime.*
@@ -33,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
 import kotlin.math.*
 import kotlin.random.Random
 
@@ -1336,11 +1339,18 @@ fun CopyFeedbackButton(
         modifier = modifier,
         content = {
             // Placeholder for ContentCopy icon
-            Text("Copy", color = MaterialTheme.colorScheme.onPrimaryContainer)
+            Text(
+                stringResource(Res.string.cpp_copy),
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
         },
         successContent = {
             // Placeholder for Check icon
-            Text("✓", color = MaterialTheme.colorScheme.onTertiaryContainer)
+            Icon(
+                imageVector = Icons.Filled.Check,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onTertiaryContainer
+            )
         }
     )
 }
@@ -1863,7 +1873,11 @@ fun CelebrationDemo(
             description = "You've solved 10 problems correctly in a row",
             icon = {
                 // Placeholder for Check icon
-                Text("✓", color = MaterialTheme.colorScheme.onSecondary)
+                Icon(
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSecondary
+                )
             },
             visible = trigger,
             onDismiss = onComplete,
@@ -2067,10 +2081,10 @@ fun CopyFeedbackToast(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "✓",
-                    color = MaterialTheme.colorScheme.inverseOnSurface,
-                    style = MaterialTheme.typography.bodyMedium
+                Icon(
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.inverseOnSurface
                 )
                 Text(
                     text = message,

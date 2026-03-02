@@ -9,15 +9,26 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.LocalIndication
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.TextFields
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material3.Icon
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Layout orientation for the floating toolbar
@@ -58,7 +69,9 @@ fun FloatingToolbar(
     modifier: Modifier = Modifier,
     layout: FloatingToolbarLayout = FloatingToolbarLayout.HORIZONTAL,
     colorScheme: FloatingToolbarColor = FloatingToolbarColor.STANDARD,
-    expanded: Boolean = true
+    expanded: Boolean = true,
+    leadingContent: (@Composable RowScope.() -> Unit)? = null,
+    trailingContent: (@Composable RowScope.() -> Unit)? = null
 ) {
     val colors = when (colorScheme) {
         FloatingToolbarColor.STANDARD -> FloatingToolbarDefaults.standardFloatingToolbarColors()
@@ -76,7 +89,9 @@ fun FloatingToolbar(
                 HorizontalFloatingToolbar(
                     expanded = true,
                     colors = colors,
-                    modifier = Modifier.padding(6.dp),
+                    modifier = Modifier,
+                    leadingContent = leadingContent,
+                    trailingContent = trailingContent,
                     content = {
                         items.forEach { item ->
                             FloatingToolbarButton(item)
@@ -113,6 +128,7 @@ private fun FloatingToolbarButton(
             color = Color.Transparent,
             modifier = modifier
                 .size(48.dp)
+                .semantics { contentDescription = item.label }
                 .combinedClickable(
                     interactionSource = interactionSource,
                     indication = LocalIndication.current,
@@ -177,32 +193,57 @@ fun CalculatorFloatingToolbar(
 ) {
     val items = listOf(
         FloatingToolbarItem(
-            label = "Prev",
-            icon = { Text(text = "←") },
+            label = stringResource(Res.string.cpp_cursor_previous),
+            icon = {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = null
+                )
+            },
             onClick = onPrevious,
             onLongClick = onCopy,
             onDoubleClick = onPreviousStart
         ),
         FloatingToolbarItem(
-            label = "Next",
-            icon = { Text(text = "→") },
+            label = stringResource(Res.string.cpp_cursor_next),
+            icon = {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = null
+                )
+            },
             onClick = onNext,
             onLongClick = onPaste,
             onDoubleClick = onNextEnd
         ),
         FloatingToolbarItem(
-            label = "Vars",
-            icon = { Text(text = "∫") },
+            label = stringResource(Res.string.cpp_variables),
+            icon = {
+                Icon(
+                    imageVector = Icons.Filled.TextFields,
+                    contentDescription = null
+                )
+            },
             onClick = onVariables
         ),
         FloatingToolbarItem(
-            label = "Convert",
-            icon = { Text(text = "⇄") },
+            label = stringResource(Res.string.c_conversion_tool),
+            icon = {
+                Icon(
+                    imageVector = Icons.Filled.Tune,
+                    contentDescription = null
+                )
+            },
             onClick = onConverter
         ),
         FloatingToolbarItem(
-            label = "Graph",
-            icon = { Text(text = "📊") },
+            label = stringResource(Res.string.cpp_plotter),
+            icon = {
+                Icon(
+                    imageVector = Icons.Filled.Calculate,
+                    contentDescription = null
+                )
+            },
             onClick = onGraph
         )
     )
@@ -259,8 +300,9 @@ fun CollapsibleFloatingToolbar(
                         defaultElevation = 6.dp
                     )
                 ) {
-                    Text(
-                        text = "⋯",
+                    Icon(
+                        imageVector = Icons.Filled.MoreVert,
+                        contentDescription = stringResource(Res.string.cpp_a11y_more_options),
                         modifier = Modifier.rotate(rotation)
                     )
                 }
@@ -291,8 +333,9 @@ fun CollapsibleFloatingToolbar(
                         defaultElevation = 6.dp
                     )
                 ) {
-                    Text(
-                        text = "⋯",
+                    Icon(
+                        imageVector = Icons.Filled.MoreVert,
+                        contentDescription = stringResource(Res.string.cpp_a11y_more_options),
                         modifier = Modifier.rotate(rotation)
                     )
                 }

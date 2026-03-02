@@ -16,6 +16,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.ui.platform.LocalFocusManager
+import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,6 +27,8 @@ fun StandardTopAppBar(
     containerColor: Color = MaterialTheme.colorScheme.surface,
     actions: @Composable RowScope.() -> Unit = {}
 ) {
+    val focusManager = LocalFocusManager.current
+
     TopAppBar(
         title = {
             Text(
@@ -34,10 +38,13 @@ fun StandardTopAppBar(
         },
         navigationIcon = {
             if (onBack != null) {
-                IconButton(onClick = onBack) {
+                IconButton(onClick = {
+                    focusManager.clearFocus(force = true)
+                    onBack()
+                }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
+                        contentDescription = stringResource(Res.string.cpp_a11y_navigate_back),
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }

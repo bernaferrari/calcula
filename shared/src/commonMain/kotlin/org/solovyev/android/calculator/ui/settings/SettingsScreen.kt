@@ -75,6 +75,7 @@ import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -82,9 +83,6 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
@@ -93,6 +91,8 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -100,6 +100,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -127,6 +128,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import org.jetbrains.compose.resources.stringResource
+import org.solovyev.android.calculator.ui.*
 import org.solovyev.android.calculator.ui.Res
 import org.solovyev.android.calculator.ui.c_calc_ad_free_summary
 import org.solovyev.android.calculator.ui.c_calc_ad_free_title
@@ -142,7 +144,6 @@ import org.solovyev.android.calculator.ui.cpp_highlight_expressions
 import org.solovyev.android.calculator.ui.cpp_highlight_expressions_summary
 import org.solovyev.android.calculator.ui.cpp_introduction
 import org.solovyev.android.calculator.ui.cpp_language
-import org.solovyev.android.calculator.ui.cpp_mode
 import org.solovyev.android.calculator.ui.cpp_number_format
 import org.solovyev.android.calculator.ui.cpp_other
 import org.solovyev.android.calculator.ui.cpp_plot_imaginary_part
@@ -289,6 +290,14 @@ enum class SettingsDestination {
     OTHER
 }
 
+private data class SettingsSearchResultItem(
+    val id: String,
+    val icon: ImageVector,
+    val title: String,
+    val summary: String? = null,
+    val onClick: () -> Unit
+)
+
 // ============================================================================
 // CONSTANTS - Premium Spacing & Animation
 // ============================================================================
@@ -316,6 +325,14 @@ private enum class PreferencePosition {
 private const val ANIMATION_DURATION_SHORT = 150
 private const val ANIMATION_DURATION_MEDIUM = 250
 private const val ANIMATION_DURATION_LONG = 350
+
+private fun matchesSearch(query: String, vararg values: String?): Boolean {
+    val normalizedQuery = query.trim().lowercase()
+    if (normalizedQuery.isEmpty()) return true
+    return values.any { value ->
+        value?.lowercase()?.contains(normalizedQuery) == true
+    }
+}
 
 // ============================================================================
 // SETTINGS ACTIONS INTERFACE
@@ -380,7 +397,6 @@ fun SettingsScreen(
         SettingsDestination.MAIN -> MainSettingsScreen(
             state = state,
             adFreePurchased = adFreePurchased,
-            onModeChange = actions::setMode,
             onAngleUnitChange = actions::setAngleUnit,
             onNumeralBaseChange = actions::setNumeralBase,
             onNavigate = onNavigate,
@@ -438,7 +454,6 @@ fun SettingsScreen(
 private fun MainSettingsScreen(
     state: SettingsUiState,
     adFreePurchased: Boolean,
-    onModeChange: (CalculatorMode) -> Unit,
     onAngleUnitChange: (AngleUnit) -> Unit,
     onNumeralBaseChange: (NumeralBase) -> Unit,
     onNavigate: (SettingsDestination) -> Unit,
@@ -447,136 +462,284 @@ private fun MainSettingsScreen(
     onOpenAbout: () -> Unit,
     onSupportProject: () -> Unit
 ) {
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+    val normalizedSearchQuery = searchQuery.trim().lowercase()
+    val searchItems = buildList {
+        add(
+            SettingsSearchResultItem(
+                id = "number_format",
+                icon = Icons.AutoMirrored.Filled.FormatListBulleted,
+                title = stringResource(Res.string.cpp_number_format),
+                summary = stringResource(Res.string.cpp_examples),
+                onClick = {
+                    searchQuery = ""
+                    onNavigate(SettingsDestination.NUMBER_FORMAT)
+                }
+            )
+        )
+        add(
+            SettingsSearchResultItem(
+                id = "appearance",
+                icon = Icons.Default.Palette,
+                title = stringResource(Res.string.cpp_appearance),
+                summary = stringResource(Res.string.cpp_theme),
+                onClick = {
+                    searchQuery = ""
+                    onNavigate(SettingsDestination.APPEARANCE)
+                }
+            )
+        )
+        add(
+            SettingsSearchResultItem(
+                id = "accessibility",
+                icon = Icons.Default.TextFields,
+                title = stringResource(Res.string.cpp_accessibility),
+                onClick = {
+                    searchQuery = ""
+                    onNavigate(SettingsDestination.ACCESSIBILITY)
+                }
+            )
+        )
+        add(
+            SettingsSearchResultItem(
+                id = "widget",
+                icon = Icons.Default.Widgets,
+                title = stringResource(Res.string.cpp_widget),
+                summary = stringResource(Res.string.cpp_theme),
+                onClick = {
+                    searchQuery = ""
+                    onNavigate(SettingsDestination.WIDGET)
+                }
+            )
+        )
+        add(
+            SettingsSearchResultItem(
+                id = "other",
+                icon = Icons.Default.Settings,
+                title = stringResource(Res.string.cpp_other),
+                onClick = {
+                    searchQuery = ""
+                    onNavigate(SettingsDestination.OTHER)
+                }
+            )
+        )
+        add(
+            SettingsSearchResultItem(
+                id = "introduction",
+                icon = Icons.Default.FlashOn,
+                title = stringResource(Res.string.cpp_introduction),
+                onClick = {
+                    searchQuery = ""
+                    onStartWizard()
+                }
+            )
+        )
+        add(
+            SettingsSearchResultItem(
+                id = "report_problem",
+                icon = Icons.Default.Info,
+                title = stringResource(Res.string.cpp_report_problem),
+                onClick = {
+                    searchQuery = ""
+                    onReportBug()
+                }
+            )
+        )
+        add(
+            SettingsSearchResultItem(
+                id = "about",
+                icon = Icons.Default.Info,
+                title = stringResource(Res.string.cpp_about),
+                onClick = {
+                    searchQuery = ""
+                    onOpenAbout()
+                }
+            )
+        )
+        if (!adFreePurchased) {
+            add(
+                SettingsSearchResultItem(
+                    id = "support_project",
+                    icon = Icons.Default.Star,
+                    title = stringResource(Res.string.c_calc_ad_free_title),
+                    summary = stringResource(Res.string.c_calc_ad_free_summary),
+                    onClick = {
+                        searchQuery = ""
+                        onSupportProject()
+                    }
+                )
+            )
+        }
+    }
+    val filteredSearchItems = if (normalizedSearchQuery.isEmpty()) {
+        emptyList()
+    } else {
+        searchItems.filter { item ->
+            item.title.lowercase().contains(normalizedSearchQuery) ||
+                item.summary.orEmpty().lowercase().contains(normalizedSearchQuery)
+        }
+    }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = SettingsContentPadding,
         verticalArrangement = Arrangement.spacedBy(SectionSpacing)
     ) {
-        // Search Bar - Premium experience
         item {
             SettingsSearchBar(
-                placeholder = "Search settings...",
-                onSearch = { query ->
-                    // Handle search - would filter settings in real implementation
-                }
+                query = searchQuery,
+                placeholder = stringResource(Res.string.cpp_search_settings),
+                onQueryChange = { searchQuery = it },
+                onSearch = { searchQuery = it }
             )
         }
 
-        // Support Project Card - Premium styling
-        if (!adFreePurchased) {
+        if (normalizedSearchQuery.isNotEmpty()) {
             item {
-                AnimatedVisibility(
-                    visible = true,
-                    enter = fadeIn() + expandVertically(),
-                    exit = fadeOut() + shrinkVertically()
+                PreferenceGroup(
+                    title = stringResource(Res.string.cpp_settings_search_results),
+                    icon = Icons.Default.Search
                 ) {
-                    SupportProjectCard(onSupportProject = onSupportProject)
+                    if (filteredSearchItems.isEmpty()) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(preferenceItemShape(PreferencePosition.SINGLE)),
+                            shape = preferenceItemShape(PreferencePosition.SINGLE),
+                            color = MaterialTheme.colorScheme.surfaceContainerLow
+                        ) {
+                            Text(
+                                text = stringResource(Res.string.cpp_settings_search_no_results, searchQuery),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 18.dp)
+                            )
+                        }
+                    } else {
+                        filteredSearchItems.forEachIndexed { index, item ->
+                            val position = when {
+                                filteredSearchItems.size == 1 -> PreferencePosition.SINGLE
+                                index == 0 -> PreferencePosition.TOP
+                                index == filteredSearchItems.lastIndex -> PreferencePosition.BOTTOM
+                                else -> PreferencePosition.MIDDLE
+                            }
+                            PreferenceItem(
+                                icon = item.icon,
+                                title = item.title,
+                                summary = item.summary,
+                                position = position,
+                                onClick = item.onClick
+                            )
+                        }
+                    }
                 }
             }
-        }
-
-        // Calculator Section - Logical grouping
-        item {
-            PreferenceGroup(
-                title = stringResource(Res.string.cpp_prefs_basic),
-                icon = Icons.Default.Calculate
-            ) {
-                InlineChoicePreference(
-                    icon = Icons.Default.Code,
-                    title = stringResource(Res.string.cpp_mode),
-                    summary = state.mode.displayName,
-                    options = CalculatorMode.entries.map { it.displayName },
-                    selectedIndex = CalculatorMode.entries.indexOf(state.mode).coerceAtLeast(0),
-                    position = PreferencePosition.TOP,
-                    onOptionSelected = { index ->
-                        onModeChange(CalculatorMode.entries[index])
+        } else {
+            // Support Project Card - Premium styling
+            if (!adFreePurchased) {
+                item {
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
+                        SupportProjectCard(onSupportProject = onSupportProject)
                     }
-                )
-                InlineChoicePreference(
-                    icon = Icons.Default.LocationOn,
-                    title = stringResource(Res.string.cpp_angles),
-                    summary = state.angleUnit.displayName,
-                    options = listOf("DEG", "RAD", "GRAD", "TURN"),
-                    selectedIndex = AngleUnit.entries.indexOf(state.angleUnit).coerceAtLeast(0),
-                    position = PreferencePosition.MIDDLE,
-                    onOptionSelected = { index ->
-                        onAngleUnitChange(AngleUnit.entries[index])
-                    }
-                )
-                InlineChoicePreference(
-                    icon = Icons.Default.Edit,
-                    title = stringResource(Res.string.cpp_radix),
-                    summary = state.numeralBase.displayName,
-                    options = listOf("DEC", "HEX", "OCT", "BIN"),
-                    selectedIndex = NumeralBase.entries.indexOf(state.numeralBase).coerceAtLeast(0),
-                    position = PreferencePosition.MIDDLE,
-                    onOptionSelected = { index ->
-                        onNumeralBaseChange(NumeralBase.entries[index])
-                    }
-                )
-                PreferenceItem(
-                    icon = Icons.AutoMirrored.Filled.FormatListBulleted,
-                    title = stringResource(Res.string.cpp_number_format),
-                    summary = stringResource(Res.string.cpp_examples),
-                    position = PreferencePosition.BOTTOM,
-                    onClick = { onNavigate(SettingsDestination.NUMBER_FORMAT) }
-                )
+                }
             }
-        }
 
-        // Appearance & Advanced Section
-        item {
-            PreferenceGroup(
-                title = stringResource(Res.string.cpp_prefs_advanced),
-                icon = Icons.Default.Tune
-            ) {
-                PreferenceItem(
-                    icon = Icons.Default.Palette,
-                    title = stringResource(Res.string.cpp_appearance),
-                    summary = stringResource(Res.string.cpp_theme),
-                    position = PreferencePosition.TOP,
-                    onClick = { onNavigate(SettingsDestination.APPEARANCE) }
-                )
-                PreferenceItem(
-                    icon = Icons.Default.Widgets,
-                    title = stringResource(Res.string.cpp_widget),
-                    summary = stringResource(Res.string.cpp_theme),
-                    position = PreferencePosition.MIDDLE,
-                    onClick = { onNavigate(SettingsDestination.WIDGET) }
-                )
-                PreferenceItem(
-                    icon = Icons.Default.Settings,
-                    title = stringResource(Res.string.cpp_other),
-                    position = PreferencePosition.BOTTOM,
-                    onClick = { onNavigate(SettingsDestination.OTHER) }
-                )
+            // Calculator Section - Logical grouping
+            item {
+                PreferenceGroup(
+                    title = stringResource(Res.string.cpp_prefs_basic),
+                    icon = Icons.Default.Calculate
+                ) {
+                    InlineChoicePreference(
+                        icon = Icons.Default.LocationOn,
+                        title = stringResource(Res.string.cpp_angles),
+                        summary = state.angleUnit.displayName,
+                        options = listOf("DEG", "RAD", "GRAD", "TURN"),
+                        selectedIndex = AngleUnit.entries.indexOf(state.angleUnit).coerceAtLeast(0),
+                        position = PreferencePosition.TOP,
+                        onOptionSelected = { index ->
+                            onAngleUnitChange(AngleUnit.entries[index])
+                        }
+                    )
+                    InlineChoicePreference(
+                        icon = Icons.Default.Edit,
+                        title = stringResource(Res.string.cpp_radix),
+                        summary = state.numeralBase.displayName,
+                        options = listOf("DEC", "HEX", "OCT", "BIN"),
+                        selectedIndex = NumeralBase.entries.indexOf(state.numeralBase).coerceAtLeast(0),
+                        position = PreferencePosition.MIDDLE,
+                        onOptionSelected = { index ->
+                            onNumeralBaseChange(NumeralBase.entries[index])
+                        }
+                    )
+                    PreferenceItem(
+                        icon = Icons.AutoMirrored.Filled.FormatListBulleted,
+                        title = stringResource(Res.string.cpp_number_format),
+                        summary = stringResource(Res.string.cpp_examples),
+                        position = PreferencePosition.BOTTOM,
+                        onClick = { onNavigate(SettingsDestination.NUMBER_FORMAT) }
+                    )
+                }
             }
-        }
 
-        // Help Section
-        item {
-            PreferenceGroup(
-                title = stringResource(Res.string.cpp_help),
-                icon = Icons.Default.Info
-            ) {
-                PreferenceItem(
-                    icon = Icons.Default.FlashOn,
-                    title = stringResource(Res.string.cpp_introduction),
-                    position = PreferencePosition.TOP,
-                    onClick = onStartWizard
-                )
-                PreferenceItem(
-                    icon = Icons.Default.Info,
-                    title = stringResource(Res.string.cpp_report_problem),
-                    position = PreferencePosition.MIDDLE,
-                    onClick = onReportBug
-                )
-                PreferenceItem(
-                    icon = Icons.Default.Info,
-                    title = stringResource(Res.string.cpp_about),
-                    position = PreferencePosition.BOTTOM,
-                    onClick = onOpenAbout
-                )
+            // Appearance & Advanced Section
+            item {
+                PreferenceGroup(
+                    title = stringResource(Res.string.cpp_prefs_advanced),
+                    icon = Icons.Default.Tune
+                ) {
+                    PreferenceItem(
+                        icon = Icons.Default.Palette,
+                        title = stringResource(Res.string.cpp_appearance),
+                        summary = stringResource(Res.string.cpp_theme),
+                        position = PreferencePosition.TOP,
+                        onClick = { onNavigate(SettingsDestination.APPEARANCE) }
+                    )
+                    PreferenceItem(
+                        icon = Icons.Default.Widgets,
+                        title = stringResource(Res.string.cpp_widget),
+                        summary = stringResource(Res.string.cpp_theme),
+                        position = PreferencePosition.MIDDLE,
+                        onClick = { onNavigate(SettingsDestination.WIDGET) }
+                    )
+                    PreferenceItem(
+                        icon = Icons.Default.Settings,
+                        title = stringResource(Res.string.cpp_other),
+                        position = PreferencePosition.BOTTOM,
+                        onClick = { onNavigate(SettingsDestination.OTHER) }
+                    )
+                }
+            }
+
+            // Help Section
+            item {
+                PreferenceGroup(
+                    title = stringResource(Res.string.cpp_help),
+                    icon = Icons.Default.Info
+                ) {
+                    PreferenceItem(
+                        icon = Icons.Default.FlashOn,
+                        title = stringResource(Res.string.cpp_introduction),
+                        position = PreferencePosition.TOP,
+                        onClick = onStartWizard
+                    )
+                    PreferenceItem(
+                        icon = Icons.Default.Info,
+                        title = stringResource(Res.string.cpp_report_problem),
+                        position = PreferencePosition.MIDDLE,
+                        onClick = onReportBug
+                    )
+                    PreferenceItem(
+                        icon = Icons.Default.Info,
+                        title = stringResource(Res.string.cpp_about),
+                        position = PreferencePosition.BOTTOM,
+                        onClick = onOpenAbout
+                    )
+                }
             }
         }
     }
@@ -588,11 +751,12 @@ private fun MainSettingsScreen(
 
 @Composable
 private fun SettingsSearchBar(
+    query: String,
     placeholder: String,
+    onQueryChange: (String) -> Unit,
     onSearch: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var searchQuery by remember { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
@@ -634,7 +798,7 @@ private fun SettingsSearchBar(
         ) {
             Icon(
                 imageVector = Icons.Default.Search,
-                contentDescription = null,
+                contentDescription = stringResource(Res.string.cpp_search),
                 tint = if (isFocused) {
                     MaterialTheme.colorScheme.primary
                 } else {
@@ -644,10 +808,9 @@ private fun SettingsSearchBar(
             )
 
             BasicTextField(
-                value = searchQuery,
-                onValueChange = { 
-                    searchQuery = it
-                    onSearch(it)
+                value = query,
+                onValueChange = {
+                    onQueryChange(it)
                 },
                 modifier = Modifier
                     .weight(1f)
@@ -661,11 +824,11 @@ private fun SettingsSearchBar(
                     imeAction = ImeAction.Search
                 ),
                 keyboardActions = KeyboardActions(
-                    onSearch = { onSearch(searchQuery) }
+                    onSearch = { onSearch(query) }
                 ),
                 interactionSource = interactionSource,
                 decorationBox = { innerTextField ->
-                    if (searchQuery.isEmpty()) {
+                    if (query.isEmpty()) {
                         Text(
                             text = placeholder,
                             style = MaterialTheme.typography.bodyLarge,
@@ -677,20 +840,20 @@ private fun SettingsSearchBar(
             )
 
             AnimatedVisibility(
-                visible = searchQuery.isNotEmpty(),
+                visible = query.isNotEmpty(),
                 enter = scaleIn(),
                 exit = scaleOut()
             ) {
                 IconButton(
                     onClick = {
-                        searchQuery = ""
+                        onQueryChange("")
                         onSearch("")
                     },
                     modifier = Modifier.size(32.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Clear,
-                        contentDescription = "Clear search",
+                        contentDescription = stringResource(Res.string.cpp_a11y_clear_search),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(20.dp)
                     )
@@ -713,85 +876,175 @@ private fun NumberFormatScreen(
 ) {
     var listDialog by remember { mutableStateOf<ListDialogState?>(null) }
     var precisionDialog by remember { mutableStateOf(false) }
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+    val formatTitle = stringResource(Res.string.cpp_format)
+    val separatorTitle = stringResource(Res.string.cpp_thousands_separator)
 
-    val separatorNames = listOf("None", "Space", "Comma", "Apostrophe")
+    val separatorNames = listOf(
+        stringResource(Res.string.cpp_separator_none),
+        stringResource(Res.string.cpp_separator_space),
+        stringResource(Res.string.cpp_separator_comma),
+        stringResource(Res.string.cpp_separator_apostrophe)
+    )
     val separatorValues = listOf('\u0000', ' ', ',', '\'')
     val notationOptions = OutputNotation.entries
+    val searchItems = listOf(
+        SettingsSearchResultItem(
+            id = "number_format_notation",
+            icon = Icons.Default.Tune,
+            title = stringResource(Res.string.cpp_format),
+            summary = state.outputNotation.displayName,
+            onClick = {
+                listDialog = ListDialogState(
+                    title = formatTitle,
+                    options = notationOptions.map { it.displayName },
+                    selectedIndex = notationOptions.indexOf(state.outputNotation),
+                    onSelected = { index -> onNotationChange(notationOptions[index]) }
+                )
+            }
+        ),
+        SettingsSearchResultItem(
+            id = "number_format_precision",
+            icon = Icons.Default.Edit,
+            title = stringResource(Res.string.cpp_precision),
+            summary = state.outputPrecision.toString(),
+            onClick = { precisionDialog = true }
+        ),
+        SettingsSearchResultItem(
+            id = "number_format_separator",
+            icon = Icons.Default.TextFields,
+            title = stringResource(Res.string.cpp_thousands_separator),
+            summary = separatorSummary(state.outputSeparator.symbol),
+            onClick = {
+                val selectedIndex = separatorValues.indexOf(state.outputSeparator.symbol).coerceAtLeast(0)
+                listDialog = ListDialogState(
+                    title = separatorTitle,
+                    options = separatorNames,
+                    selectedIndex = selectedIndex,
+                    onSelected = { index -> onSeparatorChange(separatorValues[index]) }
+                )
+            }
+        )
+    )
+    val filteredSearchItems = searchItems.filter {
+        matchesSearch(searchQuery, it.title, it.summary)
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = SettingsContentPadding,
         verticalArrangement = Arrangement.spacedBy(SectionSpacing)
     ) {
-        item {
-            PreferenceGroup(
-                title = stringResource(Res.string.cpp_number_format),
-                icon = Icons.Default.Tune
-            ) {
-                PreferenceItem(
-                    icon = Icons.Default.Tune,
-                    title = stringResource(Res.string.cpp_format),
-                    summary = state.outputNotation.displayName,
-                    position = PreferencePosition.TOP,
-                    onClick = {
-                        listDialog = ListDialogState(
-                            title = "Format",
-                            options = notationOptions.map { it.displayName },
-                            selectedIndex = notationOptions.indexOf(state.outputNotation),
-                            onSelected = { index -> onNotationChange(notationOptions[index]) }
-                        )
-                    }
-                )
-                PreferenceItem(
-                    icon = Icons.Default.Edit,
-                    title = stringResource(Res.string.cpp_precision),
-                    summary = state.outputPrecision.toString(),
-                    position = PreferencePosition.MIDDLE,
-                    onClick = { precisionDialog = true }
-                )
-                PreferenceItem(
-                    icon = Icons.Default.TextFields,
-                    title = stringResource(Res.string.cpp_thousands_separator),
-                    summary = separatorSummary(state.outputSeparator.symbol),
-                    position = PreferencePosition.BOTTOM,
-                    onClick = {
-                        val separatorValueSymbols = listOf('\u0000', ' ', ',', '\'')
-                        val selectedIndex = separatorValueSymbols.indexOf(state.outputSeparator.symbol).coerceAtLeast(0)
-                        listDialog = ListDialogState(
-                            title = "Thousands Separator",
-                            options = separatorNames,
-                            selectedIndex = selectedIndex,
-                            onSelected = { index -> onSeparatorChange(separatorValueSymbols[index]) }
-                        )
-                    }
-                )
-            }
-        }
-
-        // Examples Card - Premium preview
-        item {
-            PreferenceGroup(
-                title = stringResource(Res.string.cpp_examples),
-                icon = Icons.Default.Calculate
-            ) {
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = preferenceItemShape(PreferencePosition.SINGLE),
-                    color = MaterialTheme.colorScheme.surfaceContainerLow,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        if (searchQuery.isNotBlank()) {
+            item {
+                PreferenceGroup(
+                    title = stringResource(Res.string.cpp_settings_search_results),
+                    icon = Icons.Default.Search
                 ) {
-                    Column(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        state.numberFormatExamples.lines().forEach { line ->
+                    if (filteredSearchItems.isEmpty()) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(preferenceItemShape(PreferencePosition.SINGLE)),
+                            shape = preferenceItemShape(PreferencePosition.SINGLE),
+                            color = MaterialTheme.colorScheme.surfaceContainerLow
+                        ) {
                             Text(
-                                text = line,
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontFamily = FontFamily.Monospace,
+                                text = stringResource(Res.string.cpp_settings_search_no_results, searchQuery),
+                                style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 18.dp)
                             )
+                        }
+                    } else {
+                        filteredSearchItems.forEachIndexed { index, item ->
+                            val position = when {
+                                filteredSearchItems.size == 1 -> PreferencePosition.SINGLE
+                                index == 0 -> PreferencePosition.TOP
+                                index == filteredSearchItems.lastIndex -> PreferencePosition.BOTTOM
+                                else -> PreferencePosition.MIDDLE
+                            }
+                            PreferenceItem(
+                                icon = item.icon,
+                                title = item.title,
+                                summary = item.summary,
+                                position = position,
+                                onClick = item.onClick
+                            )
+                        }
+                    }
+                }
+            }
+        } else {
+            item {
+                PreferenceGroup(
+                    title = stringResource(Res.string.cpp_number_format),
+                    icon = Icons.Default.Tune
+                ) {
+                    PreferenceItem(
+                        icon = Icons.Default.Tune,
+                        title = stringResource(Res.string.cpp_format),
+                        summary = state.outputNotation.displayName,
+                        position = PreferencePosition.TOP,
+                        onClick = {
+                            listDialog = ListDialogState(
+                                title = formatTitle,
+                                options = notationOptions.map { it.displayName },
+                                selectedIndex = notationOptions.indexOf(state.outputNotation),
+                                onSelected = { index -> onNotationChange(notationOptions[index]) }
+                            )
+                        }
+                    )
+                    PreferenceItem(
+                        icon = Icons.Default.Edit,
+                        title = stringResource(Res.string.cpp_precision),
+                        summary = state.outputPrecision.toString(),
+                        position = PreferencePosition.MIDDLE,
+                        onClick = { precisionDialog = true }
+                    )
+                    PreferenceItem(
+                        icon = Icons.Default.TextFields,
+                        title = stringResource(Res.string.cpp_thousands_separator),
+                        summary = separatorSummary(state.outputSeparator.symbol),
+                        position = PreferencePosition.BOTTOM,
+                        onClick = {
+                            val selectedIndex = separatorValues.indexOf(state.outputSeparator.symbol).coerceAtLeast(0)
+                            listDialog = ListDialogState(
+                                title = separatorTitle,
+                                options = separatorNames,
+                                selectedIndex = selectedIndex,
+                                onSelected = { index -> onSeparatorChange(separatorValues[index]) }
+                            )
+                        }
+                    )
+                }
+            }
+
+            // Examples Card - Premium preview
+            item {
+                PreferenceGroup(
+                    title = stringResource(Res.string.cpp_examples),
+                    icon = Icons.Default.Calculate
+                ) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = preferenceItemShape(PreferencePosition.SINGLE),
+                        color = MaterialTheme.colorScheme.surfaceContainerLow,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            state.numberFormatExamples.lines().forEach { line ->
+                                Text(
+                                    text = line,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontFamily = FontFamily.Monospace,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
                         }
                     }
                 }
@@ -846,143 +1099,307 @@ private fun AppearanceScreen(
     actions: SettingsActions
 ) {
     var listDialog by remember { mutableStateOf<ListDialogState?>(null) }
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+    val languageTitle = stringResource(Res.string.cpp_language)
+    val applyAppearanceMode: (AppearanceMode) -> Unit = { mode ->
+        onAppearanceModeChange(mode)
+        onThemeChange(
+            when (mode) {
+                AppearanceMode.SYSTEM -> AppTheme.MATERIAL_YOU
+                AppearanceMode.LIGHT -> AppTheme.MATERIAL_LIGHT
+                AppearanceMode.DARK -> AppTheme.MATERIAL_DARK
+            }
+        )
+    }
+    val languageSummary = languages.firstOrNull { it.code == state.languageCode }?.displayName
+        ?: stringResource(Res.string.cpp_theme_system)
+    val searchItems = buildList {
+        add(
+            SettingsSearchResultItem(
+                id = "appearance_mode",
+                icon = Icons.Default.Palette,
+                title = stringResource(Res.string.cpp_theme),
+                summary = state.appearanceMode.displayName,
+                onClick = {
+                    val currentIndex = AppearanceMode.entries.indexOf(state.appearanceMode).coerceAtLeast(0)
+                    val nextMode = AppearanceMode.entries[(currentIndex + 1) % AppearanceMode.entries.size]
+                    applyAppearanceMode(nextMode)
+                }
+            )
+        )
+        add(
+            SettingsSearchResultItem(
+                id = "appearance_dynamic_colors",
+                icon = Icons.Default.BrightnessAuto,
+                title = stringResource(Res.string.cpp_auto),
+                summary = if (state.dynamicColorEnabled) {
+                    stringResource(Res.string.cpp_enable)
+                } else {
+                    stringResource(Res.string.cpp_theme)
+                },
+                onClick = { onDynamicColorChange(!state.dynamicColorEnabled) }
+            )
+        )
+        if (languages.isNotEmpty()) {
+            add(
+                SettingsSearchResultItem(
+                    id = "appearance_language",
+                    icon = Icons.Default.Language,
+                    title = languageTitle,
+                    summary = languageSummary,
+                    onClick = {
+                        listDialog = ListDialogState(
+                            title = languageTitle,
+                            options = languages.map { it.displayName },
+                            selectedIndex = languages.indexOfFirst { it.code == state.languageCode }.coerceAtLeast(0),
+                            onSelected = { index -> onLanguageChange(languages[index].code) }
+                        )
+                    }
+                )
+            )
+        }
+        add(
+            SettingsSearchResultItem(
+                id = "appearance_vibrate",
+                icon = Icons.Default.Vibration,
+                title = stringResource(Res.string.cpp_prefs_vibrate_on_keypress),
+                onClick = { onVibrateChange(!state.vibrateOnKeypress) }
+            )
+        )
+        add(
+            SettingsSearchResultItem(
+                id = "appearance_haptic_release",
+                icon = Icons.Default.Vibration,
+                title = stringResource(Res.string.cpp_settings_haptic_release),
+                summary = stringResource(Res.string.cpp_settings_haptic_release_summary),
+                onClick = { actions.setHapticOnRelease(!state.hapticOnRelease) }
+            )
+        )
+        add(
+            SettingsSearchResultItem(
+                id = "appearance_slide_to_activate",
+                icon = Icons.Default.Speed,
+                title = stringResource(Res.string.cpp_settings_slide_to_activate),
+                summary = stringResource(Res.string.cpp_settings_slide_to_activate_summary),
+                onClick = { actions.setGestureAutoActivation(!state.gestureAutoActivation) }
+            )
+        )
+        add(
+            SettingsSearchResultItem(
+                id = "appearance_classic_equals",
+                icon = Icons.Default.Keyboard,
+                title = stringResource(Res.string.cpp_settings_classic_equals_key),
+                summary = stringResource(Res.string.cpp_settings_classic_equals_key_summary),
+                onClick = { onBottomRightEqualsKeyChange(!state.bottomRightEqualsKey) }
+            )
+        )
+        add(
+            SettingsSearchResultItem(
+                id = "appearance_high_contrast",
+                icon = Icons.Default.Contrast,
+                title = stringResource(Res.string.cpp_high_contrast_text),
+                onClick = { onHighContrastChange(!state.highContrast) }
+            )
+        )
+        add(
+            SettingsSearchResultItem(
+                id = "appearance_highlight",
+                icon = Icons.Default.Keyboard,
+                title = stringResource(Res.string.cpp_highlight_expressions),
+                summary = stringResource(Res.string.cpp_highlight_expressions_summary),
+                onClick = { onHighlightExpressionsChange(!state.highlightExpressions) }
+            )
+        )
+        add(
+            SettingsSearchResultItem(
+                id = "appearance_rotate",
+                icon = Icons.Default.ScreenRotation,
+                title = stringResource(Res.string.cpp_prefs_auto_rotate_screen),
+                onClick = { onRotateChange(!state.rotateScreen) }
+            )
+        )
+        add(
+            SettingsSearchResultItem(
+                id = "appearance_keep_screen_on",
+                icon = Icons.Default.Fullscreen,
+                title = stringResource(Res.string.cpp_prefs_keep_screen_on),
+                onClick = { onKeepScreenOnChange(!state.keepScreenOn) }
+            )
+        )
+    }
+    val filteredSearchItems = searchItems.filter {
+        matchesSearch(searchQuery, it.title, it.summary)
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = SettingsContentPadding,
         verticalArrangement = Arrangement.spacedBy(SectionSpacing)
     ) {
-        // Theme Preview - Hero section
-        item {
-            AnimatedContent(
-                targetState = state.theme to state.themeSeedColor,
-                transitionSpec = {
-                    fadeIn(animationSpec = tween(ANIMATION_DURATION_MEDIUM)) with
-                    fadeOut(animationSpec = tween(ANIMATION_DURATION_SHORT))
-                },
-                label = "theme_preview"
-            ) { (theme, seedColor) ->
-                PremiumThemePreview(
-                    theme = theme,
-                    seedColor = seedColor
-                )
-            }
-        }
-
-        // Theme Selection
-        item {
-            PreferenceGroup(
-                title = stringResource(Res.string.cpp_appearance),
-                icon = Icons.Default.Palette
-            ) {
-                ThemeSelector(
-                    currentSeedColor = state.themeSeedColor,
-                    dynamicColorEnabled = state.dynamicColorEnabled,
-                    onDynamicColorChange = onDynamicColorChange,
-                    onSeedColorChange = actions::setThemeSeedColor,
-                    position = PreferencePosition.TOP
-                )
-
-                AppearanceModeSegmentedPreference(
-                    selectedMode = state.appearanceMode,
-                    position = if (languages.isNotEmpty()) PreferencePosition.MIDDLE else PreferencePosition.BOTTOM,
-                    onModeSelected = { mode ->
-                        onAppearanceModeChange(mode)
-                        onThemeChange(
-                            when (mode) {
-                                AppearanceMode.SYSTEM -> AppTheme.MATERIAL_YOU
-                                AppearanceMode.LIGHT -> AppTheme.MATERIAL_LIGHT
-                                AppearanceMode.DARK -> AppTheme.MATERIAL_DARK
-                            }
-                        )
-                    }
-                )
-
-                if (languages.isNotEmpty()) {
-                    PreferenceItem(
-                        icon = Icons.Default.Language,
-                        title = stringResource(Res.string.cpp_language),
-                        summary = languages.firstOrNull { it.code == state.languageCode }?.displayName ?: "System",
-                        position = PreferencePosition.BOTTOM,
-                        onClick = {
-                            listDialog = ListDialogState(
-                                title = "Language",
-                                options = languages.map { it.displayName },
-                                selectedIndex = languages.indexOfFirst { it.code == state.languageCode }.coerceAtLeast(0),
-                                onSelected = { index -> onLanguageChange(languages[index].code) }
+        if (searchQuery.isNotBlank()) {
+            item {
+                PreferenceGroup(
+                    title = stringResource(Res.string.cpp_settings_search_results),
+                    icon = Icons.Default.Search
+                ) {
+                    if (filteredSearchItems.isEmpty()) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(preferenceItemShape(PreferencePosition.SINGLE)),
+                            shape = preferenceItemShape(PreferencePosition.SINGLE),
+                            color = MaterialTheme.colorScheme.surfaceContainerLow
+                        ) {
+                            Text(
+                                text = stringResource(Res.string.cpp_settings_search_no_results, searchQuery),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 18.dp)
                             )
                         }
+                    } else {
+                        filteredSearchItems.forEachIndexed { index, item ->
+                            val position = when {
+                                filteredSearchItems.size == 1 -> PreferencePosition.SINGLE
+                                index == 0 -> PreferencePosition.TOP
+                                index == filteredSearchItems.lastIndex -> PreferencePosition.BOTTOM
+                                else -> PreferencePosition.MIDDLE
+                            }
+                            PreferenceItem(
+                                icon = item.icon,
+                                title = item.title,
+                                summary = item.summary,
+                                position = position,
+                                onClick = item.onClick
+                            )
+                        }
+                    }
+                }
+            }
+        } else {
+            // Theme Preview - Hero section
+            item {
+                AnimatedContent(
+                    targetState = state.theme to state.themeSeedColor,
+                    transitionSpec = {
+                        fadeIn(animationSpec = tween(ANIMATION_DURATION_MEDIUM)) with
+                            fadeOut(animationSpec = tween(ANIMATION_DURATION_SHORT))
+                    },
+                    label = "theme_preview"
+                ) { (theme, seedColor) ->
+                    PremiumThemePreview(
+                        theme = theme,
+                        seedColor = seedColor
                     )
                 }
             }
-        }
 
-        // Display Settings
-        item {
-            PreferenceGroup(
-                title = stringResource(Res.string.cpp_prefs_advanced),
-                icon = Icons.Default.Settings
-            ) {
-                SwitchPreference(
-                    icon = Icons.Default.Vibration,
-                    title = stringResource(Res.string.cpp_prefs_vibrate_on_keypress),
-                    checked = state.vibrateOnKeypress,
-                    position = PreferencePosition.TOP,
-                    onCheckedChange = onVibrateChange
-                )
-                SwitchPreference(
-                    icon = Icons.Default.Vibration,
-                    title = "Haptic on gesture release",
-                    summary = "Vibrate when function is activated",
-                    checked = state.hapticOnRelease,
-                    position = PreferencePosition.MIDDLE,
-                    onCheckedChange = actions::setHapticOnRelease
-                )
-                SwitchPreference(
-                    icon = Icons.Default.Speed,
-                    title = "Slide to activate",
-                    summary = "Auto-activate gestures at 80% threshold without lifting finger",
-                    checked = state.gestureAutoActivation,
-                    position = PreferencePosition.MIDDLE,
-                    onCheckedChange = actions::setGestureAutoActivation
-                )
-                SwitchPreference(
-                    icon = Icons.Default.Keyboard,
-                    title = "Classic = key on keyboard",
-                    summary = "Show '=' at bottom-right. Off uses ƒ; long-press still triggers '='.",
-                    checked = state.bottomRightEqualsKey,
-                    position = PreferencePosition.MIDDLE,
-                    onCheckedChange = onBottomRightEqualsKeyChange
-                )
-                SwitchPreference(
-                    icon = Icons.Default.Contrast,
-                    title = stringResource(Res.string.cpp_high_contrast_text),
-                    checked = state.highContrast,
-                    position = PreferencePosition.MIDDLE,
-                    onCheckedChange = onHighContrastChange
-                )
-                SwitchPreference(
-                    icon = Icons.Default.Keyboard,
-                    title = stringResource(Res.string.cpp_highlight_expressions),
-                    summary = stringResource(Res.string.cpp_highlight_expressions_summary),
-                    checked = state.highlightExpressions,
-                    position = PreferencePosition.MIDDLE,
-                    onCheckedChange = onHighlightExpressionsChange
-                )
-                SwitchPreference(
-                    icon = Icons.Default.ScreenRotation,
-                    title = stringResource(Res.string.cpp_prefs_auto_rotate_screen),
-                    checked = state.rotateScreen,
-                    position = PreferencePosition.MIDDLE,
-                    onCheckedChange = onRotateChange
-                )
-                SwitchPreference(
-                    icon = Icons.Default.Fullscreen,
-                    title = stringResource(Res.string.cpp_prefs_keep_screen_on),
-                    checked = state.keepScreenOn,
-                    position = PreferencePosition.BOTTOM,
-                    onCheckedChange = onKeepScreenOnChange
-                )
+            // Theme Selection
+            item {
+                PreferenceGroup(
+                    title = stringResource(Res.string.cpp_appearance),
+                    icon = Icons.Default.Palette
+                ) {
+                    ThemeSelector(
+                        currentSeedColor = state.themeSeedColor,
+                        dynamicColorEnabled = state.dynamicColorEnabled,
+                        onDynamicColorChange = onDynamicColorChange,
+                        onSeedColorChange = actions::setThemeSeedColor,
+                        position = PreferencePosition.TOP
+                    )
+
+                    AppearanceModeSegmentedPreference(
+                        selectedMode = state.appearanceMode,
+                        position = if (languages.isNotEmpty()) PreferencePosition.MIDDLE else PreferencePosition.BOTTOM,
+                        onModeSelected = applyAppearanceMode
+                    )
+
+                    if (languages.isNotEmpty()) {
+                        PreferenceItem(
+                            icon = Icons.Default.Language,
+                            title = languageTitle,
+                            summary = languageSummary,
+                            position = PreferencePosition.BOTTOM,
+                            onClick = {
+                                listDialog = ListDialogState(
+                                    title = languageTitle,
+                                    options = languages.map { it.displayName },
+                                    selectedIndex = languages.indexOfFirst { it.code == state.languageCode }.coerceAtLeast(0),
+                                    onSelected = { index -> onLanguageChange(languages[index].code) }
+                                )
+                            }
+                        )
+                    }
+                }
+            }
+
+            // Display Settings
+            item {
+                PreferenceGroup(
+                    title = stringResource(Res.string.cpp_prefs_advanced),
+                    icon = Icons.Default.Settings
+                ) {
+                    SwitchPreference(
+                        icon = Icons.Default.Vibration,
+                        title = stringResource(Res.string.cpp_prefs_vibrate_on_keypress),
+                        checked = state.vibrateOnKeypress,
+                        position = PreferencePosition.TOP,
+                        onCheckedChange = onVibrateChange
+                    )
+                    SwitchPreference(
+                        icon = Icons.Default.Vibration,
+                        title = stringResource(Res.string.cpp_settings_haptic_release),
+                        summary = stringResource(Res.string.cpp_settings_haptic_release_summary),
+                        checked = state.hapticOnRelease,
+                        position = PreferencePosition.MIDDLE,
+                        onCheckedChange = actions::setHapticOnRelease
+                    )
+                    SwitchPreference(
+                        icon = Icons.Default.Speed,
+                        title = stringResource(Res.string.cpp_settings_slide_to_activate),
+                        summary = stringResource(Res.string.cpp_settings_slide_to_activate_summary),
+                        checked = state.gestureAutoActivation,
+                        position = PreferencePosition.MIDDLE,
+                        onCheckedChange = actions::setGestureAutoActivation
+                    )
+                    SwitchPreference(
+                        icon = Icons.Default.Keyboard,
+                        title = stringResource(Res.string.cpp_settings_classic_equals_key),
+                        summary = stringResource(Res.string.cpp_settings_classic_equals_key_summary),
+                        checked = state.bottomRightEqualsKey,
+                        position = PreferencePosition.MIDDLE,
+                        onCheckedChange = onBottomRightEqualsKeyChange
+                    )
+                    SwitchPreference(
+                        icon = Icons.Default.Contrast,
+                        title = stringResource(Res.string.cpp_high_contrast_text),
+                        checked = state.highContrast,
+                        position = PreferencePosition.MIDDLE,
+                        onCheckedChange = onHighContrastChange
+                    )
+                    SwitchPreference(
+                        icon = Icons.Default.Keyboard,
+                        title = stringResource(Res.string.cpp_highlight_expressions),
+                        summary = stringResource(Res.string.cpp_highlight_expressions_summary),
+                        checked = state.highlightExpressions,
+                        position = PreferencePosition.MIDDLE,
+                        onCheckedChange = onHighlightExpressionsChange
+                    )
+                    SwitchPreference(
+                        icon = Icons.Default.ScreenRotation,
+                        title = stringResource(Res.string.cpp_prefs_auto_rotate_screen),
+                        checked = state.rotateScreen,
+                        position = PreferencePosition.MIDDLE,
+                        onCheckedChange = onRotateChange
+                    )
+                    SwitchPreference(
+                        icon = Icons.Default.Fullscreen,
+                        title = stringResource(Res.string.cpp_prefs_keep_screen_on),
+                        checked = state.keepScreenOn,
+                        position = PreferencePosition.BOTTOM,
+                        onCheckedChange = onKeepScreenOnChange
+                    )
+                }
             }
         }
     }
@@ -1036,7 +1453,7 @@ private fun PremiumThemePreview(
         ) {
             // Expression preview
             Text(
-                text = "12 × 8 + 5",
+                text = "12 * 8 + 5",
                 style = MaterialTheme.typography.titleMedium,
                 color = secondaryTextColor,
                 modifier = Modifier.align(Alignment.End)
@@ -1091,8 +1508,8 @@ private fun PremiumThemePreview(
                         contentAlignment = Alignment.Center
                     ) {
                         val label = when (index) {
-                            0 -> "÷"
-                            1 -> "×"
+                            0 -> "/"
+                            1 -> "*"
                             else -> "-"
                         }
                         Text(
@@ -1135,73 +1552,178 @@ private fun AccessibilityScreen(
     onReduceMotionChange: (Boolean) -> Unit,
     onFontScaleChange: (Float) -> Unit
 ) {
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+    val fontScaleTitle = stringResource(Res.string.cpp_accessibility_font_scale)
+    var fontScaleDialog by remember { mutableStateOf<ListDialogState?>(null) }
+    val fontScaleOptions = listOf(0.8f, 0.9f, 1.0f, 1.1f, 1.2f, 1.3f, 1.4f)
+    val searchItems = listOf(
+        SettingsSearchResultItem(
+            id = "accessibility_high_contrast",
+            icon = Icons.Default.Contrast,
+            title = stringResource(Res.string.cpp_high_contrast_text),
+            summary = if (state.highContrast) {
+                stringResource(Res.string.cpp_enable)
+            } else {
+                stringResource(Res.string.cpp_disable)
+            },
+            onClick = { onHighContrastChange(!state.highContrast) }
+        ),
+        SettingsSearchResultItem(
+            id = "accessibility_reduce_motion",
+            icon = Icons.Default.Speed,
+            title = stringResource(Res.string.cpp_accessibility_reduce_motion),
+            summary = if (state.reduceMotion) {
+                stringResource(Res.string.cpp_enable)
+            } else {
+                stringResource(Res.string.cpp_disable)
+            },
+            onClick = { onReduceMotionChange(!state.reduceMotion) }
+        ),
+        SettingsSearchResultItem(
+            id = "accessibility_font_scale",
+            icon = Icons.Default.TextFields,
+            title = fontScaleTitle,
+            summary = "${(state.fontScale * 100).toInt()}%",
+            onClick = {
+                fontScaleDialog = ListDialogState(
+                    title = fontScaleTitle,
+                    options = fontScaleOptions.map { "${(it * 100).toInt()}%" },
+                    selectedIndex = fontScaleOptions.indexOfFirst { kotlin.math.abs(it - state.fontScale) < 0.01f }
+                        .coerceAtLeast(0),
+                    onSelected = { index -> onFontScaleChange(fontScaleOptions[index]) }
+                )
+            }
+        )
+    )
+    val filteredSearchItems = searchItems.filter {
+        matchesSearch(searchQuery, it.title, it.summary)
+    }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = SettingsContentPadding,
         verticalArrangement = Arrangement.spacedBy(SectionSpacing)
     ) {
-        item {
-            PreferenceGroup(
-                title = "Accessibility",
-                icon = Icons.Default.Contrast
-            ) {
-                SwitchPreference(
-                    icon = Icons.Default.Contrast,
-                    title = stringResource(Res.string.cpp_high_contrast_text),
-                    checked = state.highContrast,
-                    position = PreferencePosition.TOP,
-                    onCheckedChange = onHighContrastChange
-                )
-                SwitchPreference(
-                    icon = Icons.Default.Speed,
-                    title = "Reduce Motion",
-                    summary = "Minimize animations throughout the app",
-                    checked = state.reduceMotion,
-                    position = PreferencePosition.MIDDLE,
-                    onCheckedChange = onReduceMotionChange
-                )
-                FontScalePreference(
-                    currentScale = state.fontScale,
-                    position = PreferencePosition.BOTTOM,
-                    onScaleChange = onFontScaleChange
-                )
-            }
-        }
-
-        // Preview card
-        item {
-            PreferenceGroup(
-                title = "Preview",
-                icon = Icons.Default.TextFields
-            ) {
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = preferenceItemShape(PreferencePosition.SINGLE),
-                    color = MaterialTheme.colorScheme.surfaceContainerLow,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        if (searchQuery.isNotBlank()) {
+            item {
+                PreferenceGroup(
+                    title = stringResource(Res.string.cpp_settings_search_results),
+                    icon = Icons.Default.Search
                 ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    if (filteredSearchItems.isEmpty()) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(preferenceItemShape(PreferencePosition.SINGLE)),
+                            shape = preferenceItemShape(PreferencePosition.SINGLE),
+                            color = MaterialTheme.colorScheme.surfaceContainerLow
+                        ) {
+                            Text(
+                                text = stringResource(Res.string.cpp_settings_search_no_results, searchQuery),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 18.dp)
+                            )
+                        }
+                    } else {
+                        filteredSearchItems.forEachIndexed { index, item ->
+                            val position = when {
+                                filteredSearchItems.size == 1 -> PreferencePosition.SINGLE
+                                index == 0 -> PreferencePosition.TOP
+                                index == filteredSearchItems.lastIndex -> PreferencePosition.BOTTOM
+                                else -> PreferencePosition.MIDDLE
+                            }
+                            PreferenceItem(
+                                icon = item.icon,
+                                title = item.title,
+                                summary = item.summary,
+                                position = position,
+                                onClick = item.onClick
+                            )
+                        }
+                    }
+                }
+            }
+        } else {
+            item {
+                PreferenceGroup(
+                    title = stringResource(Res.string.cpp_accessibility),
+                    icon = Icons.Default.Contrast
+                ) {
+                    SwitchPreference(
+                        icon = Icons.Default.Contrast,
+                        title = stringResource(Res.string.cpp_high_contrast_text),
+                        checked = state.highContrast,
+                        position = PreferencePosition.TOP,
+                        onCheckedChange = onHighContrastChange
+                    )
+                    SwitchPreference(
+                        icon = Icons.Default.Speed,
+                        title = stringResource(Res.string.cpp_accessibility_reduce_motion),
+                        summary = stringResource(Res.string.cpp_accessibility_reduce_motion_summary),
+                        checked = state.reduceMotion,
+                        position = PreferencePosition.MIDDLE,
+                        onCheckedChange = onReduceMotionChange
+                    )
+                    FontScalePreference(
+                        currentScale = state.fontScale,
+                        position = PreferencePosition.BOTTOM,
+                        onScaleChange = onFontScaleChange
+                    )
+                }
+            }
+
+            // Preview card
+            item {
+                PreferenceGroup(
+                    title = stringResource(Res.string.cpp_settings_preview),
+                    icon = Icons.Default.TextFields
+                ) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = preferenceItemShape(PreferencePosition.SINGLE),
+                        color = MaterialTheme.colorScheme.surfaceContainerLow,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     ) {
-                        Text(
-                            text = "Sample Text at ${(state.fontScale * 100).toInt()}%",
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontSize = 16.sp * state.fontScale
-                            ),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "This is how text will appear throughout the app",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontSize = 14.sp * state.fontScale
-                            ),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = stringResource(
+                                    Res.string.cpp_settings_sample_text_at,
+                                    (state.fontScale * 100).toInt()
+                                ),
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    fontSize = 16.sp * state.fontScale
+                                ),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = stringResource(Res.string.cpp_settings_sample_text_subtitle),
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontSize = 14.sp * state.fontScale
+                                ),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }
         }
+    }
+
+    fontScaleDialog?.let { dialog ->
+        SelectionDialog(
+            title = dialog.title,
+            options = dialog.options,
+            selectedIndex = dialog.selectedIndex,
+            onDismiss = { fontScaleDialog = null },
+            onSelected = {
+                dialog.onSelected(it)
+                fontScaleDialog = null
+            }
+        )
     }
 }
 
@@ -1211,7 +1733,7 @@ private fun FontScalePreference(
     position: PreferencePosition,
     onScaleChange: (Float) -> Unit
 ) {
-    var sliderValue by remember { mutableFloatStateOf(currentScale) }
+    var sliderValue by remember(currentScale) { mutableFloatStateOf(currentScale) }
 
     Surface(
         modifier = Modifier
@@ -1250,7 +1772,7 @@ private fun FontScalePreference(
 
                     Column {
                         Text(
-                            text = "Font Scale",
+                            text = stringResource(Res.string.cpp_accessibility_font_scale),
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Medium
                         )
@@ -1281,12 +1803,12 @@ private fun FontScalePreference(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Small",
+                    text = stringResource(Res.string.cpp_settings_font_small),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = "Large",
+                    text = stringResource(Res.string.cpp_settings_font_large),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -1305,73 +1827,136 @@ private fun WidgetScreen(
     onThemeChange: (SimpleTheme) -> Unit
 ) {
     var listDialog by remember { mutableStateOf<ListDialogState?>(null) }
+    var searchQuery by rememberSaveable { mutableStateOf("") }
     val simpleThemes = SimpleTheme.entries
+    val themeTitle = stringResource(Res.string.cpp_theme)
+    val searchItems = listOf(
+        SettingsSearchResultItem(
+            id = "widget_theme",
+            icon = Icons.Default.Palette,
+            title = themeTitle,
+            summary = state.widgetTheme.displayName,
+            onClick = {
+                listDialog = ListDialogState(
+                    title = themeTitle,
+                    options = simpleThemes.map { it.displayName },
+                    selectedIndex = simpleThemes.indexOf(state.widgetTheme).coerceAtLeast(0),
+                    onSelected = { index -> onThemeChange(simpleThemes[index]) }
+                )
+            }
+        )
+    )
+    val filteredSearchItems = searchItems.filter {
+        matchesSearch(searchQuery, it.title, it.summary)
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = SettingsContentPadding,
         verticalArrangement = Arrangement.spacedBy(SectionSpacing)
     ) {
-        item {
-            PreferenceGroup(
-                title = stringResource(Res.string.cpp_widget),
-                icon = Icons.Default.Widgets
-            ) {
-                PreferenceItem(
-                    icon = Icons.Default.Palette,
-                    title = stringResource(Res.string.cpp_theme),
-                    summary = state.widgetTheme.displayName,
-                    position = PreferencePosition.SINGLE,
-                    onClick = {
-                        listDialog = ListDialogState(
-                            title = "Theme",
-                            options = simpleThemes.map { it.displayName },
-                            selectedIndex = simpleThemes.indexOf(state.widgetTheme).coerceAtLeast(0),
-                            onSelected = { index -> onThemeChange(simpleThemes[index]) }
-                        )
-                    }
-                )
-            }
-        }
-
-        // Widget preview
-        item {
-            PreferenceGroup(
-                title = "Preview",
-                icon = Icons.Default.Widgets
-            ) {
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    color = when (state.widgetTheme) {
-                        SimpleTheme.DEFAULT -> MaterialTheme.colorScheme.surface
-                        SimpleTheme.MATERIAL_DARK -> Color(0xFF1C1B1F)
-                        SimpleTheme.MATERIAL_LIGHT -> Color(0xFFFFFFFF)
-                        SimpleTheme.METRO_BLUE -> Color(0xFF111111)
-                    },
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                    shadowElevation = 4.dp
+        if (searchQuery.isNotBlank()) {
+            item {
+                PreferenceGroup(
+                    title = stringResource(Res.string.cpp_settings_search_results),
+                    icon = Icons.Default.Search
                 ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        horizontalAlignment = Alignment.End
+                    if (filteredSearchItems.isEmpty()) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(preferenceItemShape(PreferencePosition.SINGLE)),
+                            shape = preferenceItemShape(PreferencePosition.SINGLE),
+                            color = MaterialTheme.colorScheme.surfaceContainerLow
+                        ) {
+                            Text(
+                                text = stringResource(Res.string.cpp_settings_search_no_results, searchQuery),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 18.dp)
+                            )
+                        }
+                    } else {
+                        filteredSearchItems.forEachIndexed { index, item ->
+                            val position = when {
+                                filteredSearchItems.size == 1 -> PreferencePosition.SINGLE
+                                index == 0 -> PreferencePosition.TOP
+                                index == filteredSearchItems.lastIndex -> PreferencePosition.BOTTOM
+                                else -> PreferencePosition.MIDDLE
+                            }
+                            PreferenceItem(
+                                icon = item.icon,
+                                title = item.title,
+                                summary = item.summary,
+                                position = position,
+                                onClick = item.onClick
+                            )
+                        }
+                    }
+                }
+            }
+        } else {
+            item {
+                PreferenceGroup(
+                    title = stringResource(Res.string.cpp_widget),
+                    icon = Icons.Default.Widgets
+                ) {
+                    PreferenceItem(
+                        icon = Icons.Default.Palette,
+                        title = themeTitle,
+                        summary = state.widgetTheme.displayName,
+                        position = PreferencePosition.SINGLE,
+                        onClick = {
+                            listDialog = ListDialogState(
+                                title = themeTitle,
+                                options = simpleThemes.map { it.displayName },
+                                selectedIndex = simpleThemes.indexOf(state.widgetTheme).coerceAtLeast(0),
+                                onSelected = { index -> onThemeChange(simpleThemes[index]) }
+                            )
+                        }
+                    )
+                }
+            }
+
+            // Widget preview
+            item {
+                PreferenceGroup(
+                    title = stringResource(Res.string.cpp_settings_preview),
+                    icon = Icons.Default.Widgets
+                ) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(20.dp),
+                        color = when (state.widgetTheme) {
+                            SimpleTheme.DEFAULT -> MaterialTheme.colorScheme.surface
+                            SimpleTheme.MATERIAL_DARK -> Color(0xFF1C1B1F)
+                            SimpleTheme.MATERIAL_LIGHT -> Color(0xFFFFFFFF)
+                            SimpleTheme.METRO_BLUE -> Color(0xFF111111)
+                        },
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                        shadowElevation = 4.dp
                     ) {
-                        Text(
-                            text = "2 + 2",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = when (state.widgetTheme) {
-                                SimpleTheme.MATERIAL_LIGHT -> Color(0xFF6B6B7B)
-                                else -> Color(0xFFB0B0B5)
-                            }
-                        )
-                        Text(
-                            text = "4",
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = when (state.widgetTheme) {
-                                SimpleTheme.MATERIAL_LIGHT -> Color(0xFF1A1A1F)
-                                else -> Color(0xFFFFFFFF)
-                            }
-                        )
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalAlignment = Alignment.End
+                        ) {
+                            Text(
+                                text = "2 + 2",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = when (state.widgetTheme) {
+                                    SimpleTheme.MATERIAL_LIGHT -> Color(0xFF6B6B7B)
+                                    else -> Color(0xFFB0B0B5)
+                                }
+                            )
+                            Text(
+                                text = "4",
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = when (state.widgetTheme) {
+                                    SimpleTheme.MATERIAL_LIGHT -> Color(0xFF1A1A1F)
+                                    else -> Color(0xFFFFFFFF)
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -1408,77 +1993,179 @@ private fun OtherScreen(
     onPlotImagChange: (Boolean) -> Unit,
     onLatexModeChange: (Boolean) -> Unit
 ) {
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+    val searchItems = listOf(
+        SettingsSearchResultItem(
+            id = "other_calculate_on_fly",
+            icon = Icons.Default.Speed,
+            title = stringResource(Res.string.p_calculations_calculate_on_fly_title),
+            onClick = { onCalculateOnFlyChange(!state.calculateOnFly) }
+        ),
+        SettingsSearchResultItem(
+            id = "other_rpn_mode",
+            icon = Icons.Default.Calculate,
+            title = stringResource(Res.string.cpp_rpn_mode),
+            summary = stringResource(Res.string.cpp_rpn_mode_summary),
+            onClick = { onRpnModeChange(!state.rpnMode) }
+        ),
+        SettingsSearchResultItem(
+            id = "other_tape_mode",
+            icon = Icons.Default.History,
+            title = stringResource(Res.string.cpp_tape_mode),
+            summary = stringResource(Res.string.cpp_tape_mode_summary),
+            onClick = { onTapeModeChange(!state.tapeMode) }
+        ),
+        SettingsSearchResultItem(
+            id = "other_release_notes",
+            icon = Icons.Default.History,
+            title = stringResource(Res.string.c_calc_show_release_notes_title),
+            onClick = { onShowReleaseNotesChange(!state.showReleaseNotes) }
+        ),
+        SettingsSearchResultItem(
+            id = "other_latency",
+            icon = Icons.Default.Speed,
+            title = stringResource(Res.string.cpp_settings_show_calculation_latency),
+            summary = stringResource(Res.string.cpp_settings_show_calculation_latency_summary),
+            onClick = { onShowCalculationLatencyChange(!state.showCalculationLatency) }
+        ),
+        SettingsSearchResultItem(
+            id = "other_back_as_prev",
+            icon = Icons.Default.Keyboard,
+            title = stringResource(Res.string.c_calc_use_back_button_as_prev_title),
+            onClick = { onUseBackAsPreviousChange(!state.useBackAsPrevious) }
+        ),
+        SettingsSearchResultItem(
+            id = "other_plot_imag",
+            icon = Icons.Default.Calculate,
+            title = stringResource(Res.string.cpp_plot_imaginary_part),
+            summary = stringResource(Res.string.cpp_plot_imaginary_part_summary),
+            onClick = { onPlotImagChange(!state.plotImag) }
+        ),
+        SettingsSearchResultItem(
+            id = "other_latex_mode",
+            icon = Icons.Default.Code,
+            title = stringResource(Res.string.cpp_settings_latex_output_mode),
+            summary = stringResource(Res.string.cpp_settings_latex_output_mode_summary),
+            onClick = { onLatexModeChange(!state.latexMode) }
+        )
+    )
+    val filteredSearchItems = searchItems.filter {
+        matchesSearch(searchQuery, it.title, it.summary)
+    }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = SettingsContentPadding,
         verticalArrangement = Arrangement.spacedBy(SectionSpacing)
     ) {
-        item {
-            PreferenceGroup(
-                title = stringResource(Res.string.cpp_other),
-                icon = Icons.Default.Settings
-            ) {
-                SwitchPreference(
-                    icon = Icons.Default.Speed,
-                    title = stringResource(Res.string.p_calculations_calculate_on_fly_title),
-                    checked = state.calculateOnFly,
-                    position = PreferencePosition.TOP,
-                    onCheckedChange = onCalculateOnFlyChange
-                )
-                SwitchPreference(
-                    icon = Icons.Default.Calculate,
-                    title = stringResource(Res.string.cpp_rpn_mode),
-                    summary = stringResource(Res.string.cpp_rpn_mode_summary),
-                    checked = state.rpnMode,
-                    position = PreferencePosition.MIDDLE,
-                    onCheckedChange = onRpnModeChange
-                )
-                SwitchPreference(
-                    icon = Icons.Default.History,
-                    title = stringResource(Res.string.cpp_tape_mode),
-                    summary = stringResource(Res.string.cpp_tape_mode_summary),
-                    checked = state.tapeMode,
-                    position = PreferencePosition.MIDDLE,
-                    onCheckedChange = onTapeModeChange
-                )
-                SwitchPreference(
-                    icon = Icons.Default.History,
-                    title = stringResource(Res.string.c_calc_show_release_notes_title),
-                    checked = state.showReleaseNotes,
-                    position = PreferencePosition.MIDDLE,
-                    onCheckedChange = onShowReleaseNotesChange
-                )
-                SwitchPreference(
-                    icon = Icons.Default.Speed,
-                    title = "Show calculation latency",
-                    summary = "Display timing diagnostics for calculations",
-                    checked = state.showCalculationLatency,
-                    position = PreferencePosition.MIDDLE,
-                    onCheckedChange = onShowCalculationLatencyChange
-                )
-                SwitchPreference(
-                    icon = Icons.Default.Keyboard,
-                    title = stringResource(Res.string.c_calc_use_back_button_as_prev_title),
-                    checked = state.useBackAsPrevious,
-                    position = PreferencePosition.MIDDLE,
-                    onCheckedChange = onUseBackAsPreviousChange
-                )
-                SwitchPreference(
-                    icon = Icons.Default.Calculate,
-                    title = stringResource(Res.string.cpp_plot_imaginary_part),
-                    summary = stringResource(Res.string.cpp_plot_imaginary_part_summary),
-                    checked = state.plotImag,
-                    position = PreferencePosition.MIDDLE,
-                    onCheckedChange = onPlotImagChange
-                )
-                SwitchPreference(
-                    icon = Icons.Default.Code,
-                    title = "LaTeX Output Mode",
-                    summary = "Generate LaTeX syntax instead of calculations",
-                    checked = state.latexMode,
-                    position = PreferencePosition.BOTTOM,
-                    onCheckedChange = onLatexModeChange
-                )
+        if (searchQuery.isNotBlank()) {
+            item {
+                PreferenceGroup(
+                    title = stringResource(Res.string.cpp_settings_search_results),
+                    icon = Icons.Default.Search
+                ) {
+                    if (filteredSearchItems.isEmpty()) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(preferenceItemShape(PreferencePosition.SINGLE)),
+                            shape = preferenceItemShape(PreferencePosition.SINGLE),
+                            color = MaterialTheme.colorScheme.surfaceContainerLow
+                        ) {
+                            Text(
+                                text = stringResource(Res.string.cpp_settings_search_no_results, searchQuery),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 18.dp)
+                            )
+                        }
+                    } else {
+                        filteredSearchItems.forEachIndexed { index, item ->
+                            val position = when {
+                                filteredSearchItems.size == 1 -> PreferencePosition.SINGLE
+                                index == 0 -> PreferencePosition.TOP
+                                index == filteredSearchItems.lastIndex -> PreferencePosition.BOTTOM
+                                else -> PreferencePosition.MIDDLE
+                            }
+                            PreferenceItem(
+                                icon = item.icon,
+                                title = item.title,
+                                summary = item.summary,
+                                position = position,
+                                onClick = item.onClick
+                            )
+                        }
+                    }
+                }
+            }
+        } else {
+            item {
+                PreferenceGroup(
+                    title = stringResource(Res.string.cpp_other),
+                    icon = Icons.Default.Settings
+                ) {
+                    SwitchPreference(
+                        icon = Icons.Default.Speed,
+                        title = stringResource(Res.string.p_calculations_calculate_on_fly_title),
+                        checked = state.calculateOnFly,
+                        position = PreferencePosition.TOP,
+                        onCheckedChange = onCalculateOnFlyChange
+                    )
+                    SwitchPreference(
+                        icon = Icons.Default.Calculate,
+                        title = stringResource(Res.string.cpp_rpn_mode),
+                        summary = stringResource(Res.string.cpp_rpn_mode_summary),
+                        checked = state.rpnMode,
+                        position = PreferencePosition.MIDDLE,
+                        onCheckedChange = onRpnModeChange
+                    )
+                    SwitchPreference(
+                        icon = Icons.Default.History,
+                        title = stringResource(Res.string.cpp_tape_mode),
+                        summary = stringResource(Res.string.cpp_tape_mode_summary),
+                        checked = state.tapeMode,
+                        position = PreferencePosition.MIDDLE,
+                        onCheckedChange = onTapeModeChange
+                    )
+                    SwitchPreference(
+                        icon = Icons.Default.History,
+                        title = stringResource(Res.string.c_calc_show_release_notes_title),
+                        checked = state.showReleaseNotes,
+                        position = PreferencePosition.MIDDLE,
+                        onCheckedChange = onShowReleaseNotesChange
+                    )
+                    SwitchPreference(
+                        icon = Icons.Default.Speed,
+                        title = stringResource(Res.string.cpp_settings_show_calculation_latency),
+                        summary = stringResource(Res.string.cpp_settings_show_calculation_latency_summary),
+                        checked = state.showCalculationLatency,
+                        position = PreferencePosition.MIDDLE,
+                        onCheckedChange = onShowCalculationLatencyChange
+                    )
+                    SwitchPreference(
+                        icon = Icons.Default.Keyboard,
+                        title = stringResource(Res.string.c_calc_use_back_button_as_prev_title),
+                        checked = state.useBackAsPrevious,
+                        position = PreferencePosition.MIDDLE,
+                        onCheckedChange = onUseBackAsPreviousChange
+                    )
+                    SwitchPreference(
+                        icon = Icons.Default.Calculate,
+                        title = stringResource(Res.string.cpp_plot_imaginary_part),
+                        summary = stringResource(Res.string.cpp_plot_imaginary_part_summary),
+                        checked = state.plotImag,
+                        position = PreferencePosition.MIDDLE,
+                        onCheckedChange = onPlotImagChange
+                    )
+                    SwitchPreference(
+                        icon = Icons.Default.Code,
+                        title = stringResource(Res.string.cpp_settings_latex_output_mode),
+                        summary = stringResource(Res.string.cpp_settings_latex_output_mode_summary),
+                        checked = state.latexMode,
+                        position = PreferencePosition.BOTTOM,
+                        onCheckedChange = onLatexModeChange
+                    )
+                }
             }
         }
     }
@@ -1606,17 +2293,38 @@ private fun InlineChoicePreference(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Simple segmented button row - no custom borders or backgrounds
-            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+            // Connected expressive toggle group
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
+            ) {
                 options.forEachIndexed { index, label ->
-                    SegmentedButton(
-                        selected = resolvedSelectedIndex == index,
-                        onClick = { onOptionSelected(index) },
-                        shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size)
+                    val isSelected = resolvedSelectedIndex == index
+                    ToggleButton(
+                        checked = isSelected,
+                        onCheckedChange = { checked ->
+                            if (checked) onOptionSelected(index)
+                        },
+                        shapes = when (index) {
+                            0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                            options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                            else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                        },
+                        colors = ToggleButtonDefaults.toggleButtonColors(
+                            checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .semantics { role = Role.RadioButton }
                     ) {
                         Text(
                             text = label,
-                            style = MaterialTheme.typography.labelLarge
+                            style = MaterialTheme.typography.labelLarge,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -1667,11 +2375,13 @@ private fun PreferenceItem(
     title: String,
     summary: String? = null,
     enabled: Boolean = true,
+    highlighted: Boolean = false,
     position: PreferencePosition = PreferencePosition.SINGLE,
     onClick: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val shape = preferenceItemShape(position)
+    val visualState = rememberPreferenceVisualState(highlighted)
 
     Surface(
         modifier = Modifier
@@ -1689,7 +2399,7 @@ private fun PreferenceItem(
                 contentDescription = title
             },
         shape = shape,
-        color = MaterialTheme.colorScheme.surfaceContainerLow
+        color = visualState.containerColor
     ) {
         ListItem(
             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
@@ -1697,13 +2407,13 @@ private fun PreferenceItem(
                 Surface(
                     modifier = Modifier.size(40.dp),
                     shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                    color = visualState.iconContainerColor
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = icon,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = visualState.iconTint,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -1714,6 +2424,7 @@ private fun PreferenceItem(
                     text = title,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
+                    color = visualState.titleColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -1723,7 +2434,7 @@ private fun PreferenceItem(
                     Text(
                         text = summary,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = visualState.summaryColor,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -1742,17 +2453,20 @@ private fun SwitchPreference(
     position: PreferencePosition = PreferencePosition.SINGLE,
     onCheckedChange: (Boolean) -> Unit
 ) {
+    val shape = preferenceItemShape(position)
+    val visualState = rememberPreferenceVisualState(highlighted = checked)
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(preferenceItemShape(position))
+            .clip(shape)
             .clickable { onCheckedChange(!checked) }
             .semantics {
                 role = Role.Switch
                 contentDescription = title
             },
-        shape = preferenceItemShape(position),
-        color = MaterialTheme.colorScheme.surfaceContainerLow
+        shape = shape,
+        color = visualState.containerColor
     ) {
         ListItem(
             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
@@ -1760,13 +2474,13 @@ private fun SwitchPreference(
                 Surface(
                     modifier = Modifier.size(40.dp),
                     shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                    color = visualState.iconContainerColor
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = icon,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = visualState.iconTint,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -1777,6 +2491,7 @@ private fun SwitchPreference(
                     text = title,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
+                    color = visualState.titleColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -1786,7 +2501,7 @@ private fun SwitchPreference(
                     Text(
                         text = summary,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = visualState.summaryColor,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -1808,6 +2523,7 @@ private fun SwitchPreference(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun AppearanceModeSegmentedPreference(
     selectedMode: AppearanceMode,
@@ -1815,9 +2531,9 @@ private fun AppearanceModeSegmentedPreference(
     onModeSelected: (AppearanceMode) -> Unit
 ) {
     val options = listOf(
-        Triple(AppearanceMode.SYSTEM, "System", Icons.Default.BrightnessAuto),
-        Triple(AppearanceMode.LIGHT, "Light", Icons.Default.LightMode),
-        Triple(AppearanceMode.DARK, "Dark", Icons.Default.DarkMode)
+        Triple(AppearanceMode.SYSTEM, stringResource(Res.string.cpp_theme_system), Icons.Default.BrightnessAuto),
+        Triple(AppearanceMode.LIGHT, stringResource(Res.string.cpp_theme_light), Icons.Default.LightMode),
+        Triple(AppearanceMode.DARK, stringResource(Res.string.cpp_theme_dark), Icons.Default.DarkMode)
     )
 
     Surface(
@@ -1831,23 +2547,44 @@ private fun AppearanceModeSegmentedPreference(
                 vertical = ItemPaddingVertical
             )
         ) {
-            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
+            ) {
                 options.forEachIndexed { index, (mode, label, icon) ->
-                    SegmentedButton(
-                        selected = selectedMode == mode,
-                        onClick = { onModeSelected(mode) },
-                        shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
-                        icon = {
-                            SegmentedButtonDefaults.Icon(active = selectedMode == mode) {
-                                Icon(
-                                    imageVector = icon,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(SegmentedButtonDefaults.IconSize)
-                                )
-                            }
-                        }
+                    val isSelected = selectedMode == mode
+                    ToggleButton(
+                        checked = isSelected,
+                        onCheckedChange = { checked ->
+                            if (checked) onModeSelected(mode)
+                        },
+                        shapes = when (index) {
+                            0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                            options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                            else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                        },
+                        colors = ToggleButtonDefaults.toggleButtonColors(
+                            checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .semantics { role = Role.RadioButton }
                     ) {
-                        Text(label)
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = label,
+                            style = MaterialTheme.typography.labelLarge,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
                 }
             }
@@ -1929,7 +2666,7 @@ private fun ThemeSelector(
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Text(
-                                text = "Auto",
+                                text = stringResource(Res.string.cpp_auto),
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = if (dynamicSelected) FontWeight.SemiBold else FontWeight.Medium,
                                 color = if (dynamicColorAvailable) {
@@ -1996,7 +2733,7 @@ private fun ThemeSelector(
             if (!dynamicColorAvailable) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Dynamic colors require Android 12+",
+                    text = stringResource(Res.string.cpp_settings_dynamic_colors_unavailable),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -2123,7 +2860,7 @@ private fun SelectionDialog(
                             shape = RoundedCornerShape(10.dp)
                         ) {
                             Text(
-                                "Cancel",
+                                stringResource(Res.string.cpp_cancel),
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.Medium
                             )
@@ -2181,7 +2918,7 @@ private fun PrecisionDialog(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Precision",
+                        text = stringResource(Res.string.cpp_precision),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.align(Alignment.Start)
@@ -2250,7 +2987,7 @@ private fun PrecisionDialog(
                             shape = RoundedCornerShape(10.dp)
                         ) {
                             Text(
-                                "Cancel",
+                                stringResource(Res.string.cpp_cancel),
                                 style = MaterialTheme.typography.labelLarge
                             )
                         }
@@ -2260,7 +2997,7 @@ private fun PrecisionDialog(
                             shape = RoundedCornerShape(10.dp)
                         ) {
                             Text(
-                                "OK",
+                                stringResource(Res.string.cpp_ok),
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.Medium
                             )
@@ -2276,6 +3013,71 @@ private fun PrecisionDialog(
 // HELPERS
 // ============================================================================
 
+private data class PreferenceVisualState(
+    val containerColor: Color,
+    val iconContainerColor: Color,
+    val iconTint: Color,
+    val titleColor: Color,
+    val summaryColor: Color
+)
+
+@Composable
+private fun rememberPreferenceVisualState(highlighted: Boolean): PreferenceVisualState {
+    val containerColor by animateColorAsState(
+        targetValue = if (highlighted) {
+            MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.45f)
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerLow
+        },
+        animationSpec = tween(ANIMATION_DURATION_SHORT),
+        label = "preference_container"
+    )
+    val iconContainerColor by animateColorAsState(
+        targetValue = if (highlighted) {
+            MaterialTheme.colorScheme.primaryContainer
+        } else {
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+        },
+        animationSpec = tween(ANIMATION_DURATION_SHORT),
+        label = "preference_icon_container"
+    )
+    val iconTint by animateColorAsState(
+        targetValue = if (highlighted) {
+            MaterialTheme.colorScheme.onPrimaryContainer
+        } else {
+            MaterialTheme.colorScheme.primary
+        },
+        animationSpec = tween(ANIMATION_DURATION_SHORT),
+        label = "preference_icon_tint"
+    )
+    val titleColor by animateColorAsState(
+        targetValue = if (highlighted) {
+            MaterialTheme.colorScheme.onSecondaryContainer
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        },
+        animationSpec = tween(ANIMATION_DURATION_SHORT),
+        label = "preference_title"
+    )
+    val summaryColor by animateColorAsState(
+        targetValue = if (highlighted) {
+            MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        },
+        animationSpec = tween(ANIMATION_DURATION_SHORT),
+        label = "preference_summary"
+    )
+
+    return PreferenceVisualState(
+        containerColor = containerColor,
+        iconContainerColor = iconContainerColor,
+        iconTint = iconTint,
+        titleColor = titleColor,
+        summaryColor = summaryColor
+    )
+}
+
 private fun preferenceItemShape(position: PreferencePosition): RoundedCornerShape = when (position) {
     PreferencePosition.SINGLE -> RoundedCornerShape(16.dp)
     PreferencePosition.TOP -> RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 8.dp, bottomEnd = 8.dp)
@@ -2283,12 +3085,13 @@ private fun preferenceItemShape(position: PreferencePosition): RoundedCornerShap
     PreferencePosition.BOTTOM -> RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp, bottomStart = 16.dp, bottomEnd = 16.dp)
 }
 
+@Composable
 private fun separatorSummary(separator: Char): String {
     return when (separator) {
-        '\u0000' -> "None"
-        ' ' -> "Space"
-        ',' -> "Comma (,)"
-        '\'' -> "Apostrophe (')"
+        '\u0000' -> stringResource(Res.string.cpp_separator_none)
+        ' ' -> stringResource(Res.string.cpp_separator_space)
+        ',' -> stringResource(Res.string.cpp_separator_comma_with_symbol)
+        '\'' -> stringResource(Res.string.cpp_separator_apostrophe_with_symbol)
         else -> separator.toString()
     }
 }

@@ -9,7 +9,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,16 +22,24 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-// Material icons not available in commonMain - using text alternatives
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SecondaryTabRow
@@ -54,17 +61,25 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.time.Clock
 import org.jetbrains.compose.resources.stringResource
 import org.solovyev.android.calculator.ui.*
+import org.solovyev.android.calculator.ui.tokens.CalculatorCornerRadius
+import org.solovyev.android.calculator.ui.tokens.CalculatorElevation
+import org.solovyev.android.calculator.ui.tokens.CalculatorPadding
+import org.solovyev.android.calculator.ui.tokens.CalculatorSpacing
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.compose.koinInject
 
@@ -72,9 +87,18 @@ import org.koin.compose.koinInject
  * About screen data for customization
  */
 data class AboutScreenData(
-    val versionName: String = "2.3.5",
+    val versionName: String = "",
     val releaseNotesContent: String = "",
     val isLightTheme: Boolean = false
+)
+
+private data class AboutQuickAction(
+    val id: String,
+    val icon: ImageVector,
+    val title: String,
+    val containerColor: Color,
+    val contentColor: Color,
+    val onClick: () -> Unit
 )
 
 /**
@@ -159,6 +183,13 @@ private fun AboutTab(
     data: AboutScreenData,
     actions: AboutActions
 ) {
+    val reduceMotion = LocalCalculatorReduceMotion.current
+    val currentYear = remember {
+        Instant
+            .fromEpochMilliseconds(Clock.System.now().toEpochMilliseconds())
+            .toLocalDateTime(TimeZone.currentSystemDefault())
+            .year
+    }
     val translators = stringResource(Res.string.cpp_translators_list)
     val showTranslators = translators.isNotBlank()
 
@@ -166,9 +197,9 @@ private fun AboutTab(
     var cardsVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        delay(100)
+        if (!reduceMotion) delay(100)
         headerVisible = true
-        delay(150)
+        if (!reduceMotion) delay(150)
         cardsVisible = true
     }
 
@@ -180,24 +211,31 @@ private fun AboutTab(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+        contentPadding = PaddingValues(
+            horizontal = CalculatorPadding.Standard,
+            vertical = CalculatorPadding.Large
+        ),
+        verticalArrangement = Arrangement.spacedBy(CalculatorSpacing.Large + 4.dp)
     ) {
         // Hero Header Card with improved design
         item {
             AnimatedVisibility(
                 visible = headerVisible,
-                enter = fadeIn() + scaleIn(initialScale = 0.95f, animationSpec = spring(stiffness = Spring.StiffnessLow))
+                enter = if (reduceMotion) {
+                    fadeIn(tween(80))
+                } else {
+                    fadeIn() + scaleIn(initialScale = 0.95f, animationSpec = spring(stiffness = Spring.StiffnessLow))
+                }
             ) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .scale(headerScale),
-                    shape = RoundedCornerShape(28.dp),
+                    shape = RoundedCornerShape(CalculatorCornerRadius.Display),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.primaryContainer
                     ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = CalculatorElevation.Elevated)
                 ) {
                     Box(
                         modifier = Modifier
@@ -221,27 +259,26 @@ private fun AboutTab(
                         ) {
                             // App icon with animated shadow
                             Surface(
-                                modifier = Modifier.size(100.dp),
-                                shape = RoundedCornerShape(28.dp),
+                                modifier = Modifier.size(96.dp),
+                                shape = RoundedCornerShape(CalculatorCornerRadius.Display),
                                 color = MaterialTheme.colorScheme.surface,
-                                shadowElevation = 8.dp,
-                                tonalElevation = 2.dp
+                                shadowElevation = CalculatorElevation.Hero,
+                                tonalElevation = CalculatorElevation.Standard
                             ) {
                                 Box(
                                     contentAlignment = Alignment.Center,
                                     modifier = Modifier.fillMaxSize()
                                 ) {
-                                    Text(
-                                        text = "π",
-                                        style = MaterialTheme.typography.displayMedium.copy(
-                                            fontWeight = FontWeight.Light
-                                        ),
-                                        color = MaterialTheme.colorScheme.primary
+                                    Icon(
+                                        imageVector = Icons.Filled.Calculate,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(48.dp)
                                     )
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(20.dp))
+                            Spacer(modifier = Modifier.height(CalculatorSpacing.Large + 4.dp))
 
                             Text(
                                 text = stringResource(Res.string.cpp_app_name),
@@ -250,24 +287,24 @@ private fun AboutTab(
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
 
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(CalculatorSpacing.Small))
 
                             Surface(
                                 shape = RoundedCornerShape(50),
                                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                             ) {
                                 Text(
-                                    text = "Version ${data.versionName}",
+                                    text = stringResource(Res.string.cpp_version_format, data.versionName),
                                     style = MaterialTheme.typography.labelLarge,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                                     modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
                                 )
                             }
 
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(CalculatorSpacing.Medium))
 
                             Text(
-                                text = "Scientific calculator for Android & iOS",
+                                text = stringResource(Res.string.cpp_about_tagline),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
                                 textAlign = TextAlign.Center
@@ -282,37 +319,53 @@ private fun AboutTab(
         item {
             AnimatedVisibility(
                 visible = cardsVisible,
-                enter = fadeIn(animationSpec = tween(400, delayMillis = 100)) +
+                enter = if (reduceMotion) {
+                    fadeIn(tween(80))
+                } else {
+                    fadeIn(animationSpec = tween(400, delayMillis = 100)) +
                         slideInVertically(initialOffsetY = { it / 3 }, animationSpec = tween(400, delayMillis = 100))
+                }
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    QuickActionCard(
-                        modifier = Modifier.weight(1f),
-                        icon = "★",
-                        title = "Rate",
+                val quickActions = listOf(
+                    AboutQuickAction(
+                        id = "rate",
+                        icon = Icons.Filled.Star,
+                        title = stringResource(Res.string.cpp_about_rate),
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                         contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                         onClick = { actions.openPlayStore() }
-                    )
-                    QuickActionCard(
-                        modifier = Modifier.weight(1f),
-                        icon = "⚙",
-                        title = "Source",
+                    ),
+                    AboutQuickAction(
+                        id = "source",
+                        icon = Icons.Filled.Code,
+                        title = stringResource(Res.string.cpp_about_source),
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                         onClick = { actions.openSourceCode() }
-                    )
-                    QuickActionCard(
-                        modifier = Modifier.weight(1f),
-                        icon = "♥",
-                        title = "Support",
+                    ),
+                    AboutQuickAction(
+                        id = "support",
+                        icon = Icons.Filled.Info,
+                        title = stringResource(Res.string.cpp_about_support),
                         containerColor = MaterialTheme.colorScheme.errorContainer,
                         contentColor = MaterialTheme.colorScheme.onErrorContainer,
                         onClick = { actions.openFacebook() }
                     )
+                )
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(CalculatorSpacing.Medium)
+                ) {
+                    items(quickActions, key = { it.id }) { action ->
+                        QuickActionCard(
+                            modifier = Modifier.width(136.dp),
+                            icon = action.icon,
+                            title = action.title,
+                            containerColor = action.containerColor,
+                            contentColor = action.contentColor,
+                            onClick = action.onClick
+                        )
+                    }
                 }
             }
         }
@@ -321,26 +374,30 @@ private fun AboutTab(
         item {
             AnimatedVisibility(
                 visible = cardsVisible,
-                enter = fadeIn(animationSpec = tween(400, delayMillis = 200)) +
+                enter = if (reduceMotion) {
+                    fadeIn(tween(80))
+                } else {
+                    fadeIn(animationSpec = tween(400, delayMillis = 200)) +
                         slideInVertically(initialOffsetY = { it / 3 }, animationSpec = tween(400, delayMillis = 200))
+                }
             ) {
-                AboutSection(title = "Developer") {
+                AboutSection(title = stringResource(Res.string.cpp_about_developer)) {
                     AboutListItem(
-                        icon = "👤",
-                        title = "Created by",
-                        subtitle = "serso aka se.solovyev",
+                        icon = Icons.Filled.Info,
+                        title = stringResource(Res.string.cpp_about_created_by),
+                        subtitle = stringResource(Res.string.cpp_about_developer_identity),
                         onClick = { actions.openDeveloperWebsite() }
                     )
                     AboutListItem(
-                        icon = "✉",
-                        title = "Contact",
-                        subtitle = "se.solovyev@gmail.com",
+                        icon = Icons.Filled.Info,
+                        title = stringResource(Res.string.cpp_about_contact),
+                        subtitle = stringResource(Res.string.cpp_about_developer_email),
                         onClick = { actions.sendEmail() }
                     )
                     AboutListItem(
-                        icon = "🌐",
-                        title = "Website",
-                        subtitle = "se.solovyev.org",
+                        icon = Icons.Filled.Language,
+                        title = stringResource(Res.string.cpp_about_website),
+                        subtitle = stringResource(Res.string.cpp_about_developer_site),
                         onClick = { actions.openWebsite() }
                     )
                 }
@@ -351,19 +408,23 @@ private fun AboutTab(
         item {
             AnimatedVisibility(
                 visible = cardsVisible,
-                enter = fadeIn(animationSpec = tween(400, delayMillis = 300)) +
+                enter = if (reduceMotion) {
+                    fadeIn(tween(80))
+                } else {
+                    fadeIn(animationSpec = tween(400, delayMillis = 300)) +
                         slideInVertically(initialOffsetY = { it / 3 }, animationSpec = tween(400, delayMillis = 300))
+                }
             ) {
-                AboutSection(title = "Legal & Open Source") {
+                AboutSection(title = stringResource(Res.string.cpp_about_legal_open_source)) {
                     AboutListItem(
-                        icon = "🛡",
-                        title = "License",
-                        subtitle = "Apache License 2.0"
+                        icon = Icons.Filled.Info,
+                        title = stringResource(Res.string.cpp_about_license),
+                        subtitle = stringResource(Res.string.cpp_about_license_value)
                     )
                     AboutListItem(
-                        icon = "⚙",
-                        title = "Libraries",
-                        subtitle = "Simple XML, JSCL"
+                        icon = Icons.Filled.Settings,
+                        title = stringResource(Res.string.cpp_about_libraries),
+                        subtitle = stringResource(Res.string.cpp_about_libraries_value)
                     )
                 }
             }
@@ -374,13 +435,17 @@ private fun AboutTab(
             item {
                 AnimatedVisibility(
                     visible = cardsVisible,
-                    enter = fadeIn(animationSpec = tween(400, delayMillis = 400)) +
+                    enter = if (reduceMotion) {
+                        fadeIn(tween(80))
+                    } else {
+                        fadeIn(animationSpec = tween(400, delayMillis = 400)) +
                             slideInVertically(initialOffsetY = { it / 3 }, animationSpec = tween(400, delayMillis = 400))
+                    }
                 ) {
                     AboutSection(title = stringResource(Res.string.cpp_translators_text)) {
                         AboutListItem(
-                            icon = "🌐",
-                            title = "Contributors",
+                            icon = Icons.Filled.Language,
+                            title = stringResource(Res.string.cpp_about_contributors),
                             subtitle = translators
                         )
                     }
@@ -392,15 +457,15 @@ private fun AboutTab(
         item {
             AnimatedVisibility(
                 visible = cardsVisible,
-                enter = fadeIn(animationSpec = tween(400, delayMillis = 500))
+                enter = if (reduceMotion) fadeIn(tween(80)) else fadeIn(animationSpec = tween(400, delayMillis = 500))
             ) {
                 Text(
-                    text = "© 2009-2025 Calculator++",
+                    text = stringResource(Res.string.cpp_copyright_format, currentYear),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 20.dp),
+                        .padding(vertical = CalculatorPadding.Large),
                     textAlign = TextAlign.Center
                 )
             }
@@ -411,7 +476,7 @@ private fun AboutTab(
 @Composable
 private fun QuickActionCard(
     modifier: Modifier = Modifier,
-    icon: String,
+    icon: ImageVector,
     title: String,
     containerColor: Color,
     contentColor: Color,
@@ -421,9 +486,9 @@ private fun QuickActionCard(
 
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(CalculatorCornerRadius.ExtraLarge),
         colors = CardDefaults.cardColors(containerColor = containerColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = CalculatorElevation.Standard),
         onClick = {
             haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             onClick()
@@ -432,23 +497,23 @@ private fun QuickActionCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(CalculatorPadding.Standard),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Surface(
                 shape = CircleShape,
                 color = contentColor.copy(alpha = 0.12f),
-                modifier = Modifier.size(44.dp)
+                modifier = Modifier.size(46.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        text = icon,
-                        fontSize = 22.sp,
-                        color = contentColor
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = contentColor
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(CalculatorSpacing.Small + 2.dp))
             Text(
                 text = title,
                 style = MaterialTheme.typography.labelLarge,
@@ -469,15 +534,15 @@ private fun AboutSection(
             text = title,
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(start = 4.dp, bottom = 12.dp)
+            modifier = Modifier.padding(start = CalculatorPadding.XSmall, bottom = CalculatorPadding.Medium)
         )
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(CalculatorCornerRadius.ExtraLarge),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainerLow
             ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = CalculatorElevation.Subtle)
         ) {
             Column {
                 content()
@@ -488,7 +553,7 @@ private fun AboutSection(
 
 @Composable
 private fun AboutListItem(
-    icon: String,
+    icon: ImageVector,
     title: String,
     subtitle: String,
     onClick: (() -> Unit)? = null
@@ -509,23 +574,26 @@ private fun AboutListItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+                .padding(
+                    horizontal = CalculatorPadding.Standard,
+                    vertical = CalculatorPadding.Medium
+                ),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
-                modifier = Modifier.size(44.dp),
-                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.size(46.dp),
+                shape = RoundedCornerShape(CalculatorCornerRadius.Standard),
                 color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
             ) {
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                    Text(
-                        text = icon,
-                        fontSize = 22.sp,
-                        color = MaterialTheme.colorScheme.primary
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 }
             }
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(CalculatorSpacing.Large))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
@@ -533,7 +601,7 @@ private fun AboutListItem(
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(CalculatorSpacing.XSmall))
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodyMedium,
@@ -541,10 +609,11 @@ private fun AboutListItem(
                 )
             }
             if (onClick != null) {
-                Text(
-                    text = "›",
-                    fontSize = 24.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    modifier = Modifier.size(16.dp)
                 )
             }
         }
@@ -553,6 +622,7 @@ private fun AboutListItem(
 
 @Composable
 private fun ReleaseNotesTab(releaseNotesContent: String) {
+    val reduceMotion = LocalCalculatorReduceMotion.current
     var visible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -561,13 +631,13 @@ private fun ReleaseNotesTab(releaseNotesContent: String) {
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        contentPadding = PaddingValues(CalculatorPadding.Standard),
+        verticalArrangement = Arrangement.spacedBy(CalculatorSpacing.Medium)
     ) {
         item {
             AnimatedVisibility(
                 visible = visible,
-                enter = fadeIn() + slideInVertically { it / 3 }
+                enter = if (reduceMotion) fadeIn(tween(80)) else fadeIn() + slideInVertically { it / 3 }
             ) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -577,23 +647,23 @@ private fun ReleaseNotesTab(releaseNotesContent: String) {
                     )
                 ) {
                     Row(
-                        modifier = Modifier.padding(20.dp),
+                        modifier = Modifier.padding(CalculatorPadding.Large),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Surface(
-                            modifier = Modifier.size(48.dp),
+                            modifier = Modifier.size(46.dp),
                             shape = CircleShape,
                             color = MaterialTheme.colorScheme.secondary
                         ) {
                             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                                Text(
-                                    text = "🎉",
-                                    fontSize = 24.sp,
-                                    color = MaterialTheme.colorScheme.onSecondary
+                                Icon(
+                                    imageVector = Icons.Filled.Info,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSecondary
                                 )
                             }
                         }
-                        Spacer(modifier = Modifier.width(16.dp))
+                        Spacer(modifier = Modifier.width(CalculatorSpacing.Large))
                         Column {
                             Text(
                                 text = stringResource(Res.string.cpp_release_notes),
@@ -602,7 +672,7 @@ private fun ReleaseNotesTab(releaseNotesContent: String) {
                                 color = MaterialTheme.colorScheme.onSecondaryContainer
                             )
                             Text(
-                                text = "What's new in each version",
+                                text = stringResource(Res.string.cpp_about_whats_new),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
                             )
@@ -615,7 +685,7 @@ private fun ReleaseNotesTab(releaseNotesContent: String) {
         item {
             AnimatedVisibility(
                 visible = visible,
-                enter = fadeIn() + slideInVertically { it / 2 }
+                enter = if (reduceMotion) fadeIn(tween(80)) else fadeIn() + slideInVertically { it / 2 }
             ) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -625,10 +695,14 @@ private fun ReleaseNotesTab(releaseNotesContent: String) {
                     )
                 ) {
                     Text(
-                        text = if (releaseNotesContent.isNotEmpty()) org.solovyev.android.calculator.ui.rememberHtml(releaseNotesContent) else androidx.compose.ui.text.AnnotatedString("No release notes available."),
+                        text = if (releaseNotesContent.isNotEmpty()) {
+                            org.solovyev.android.calculator.ui.rememberHtml(releaseNotesContent)
+                        } else {
+                            androidx.compose.ui.text.AnnotatedString(stringResource(Res.string.cpp_about_no_release_notes))
+                        },
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(20.dp)
+                        modifier = Modifier.padding(CalculatorPadding.Large)
                     )
                 }
             }

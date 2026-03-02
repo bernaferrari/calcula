@@ -8,14 +8,23 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun ModernModeBottomBar(
@@ -36,8 +45,12 @@ fun ModernModeBottomBar(
         BottomToolbarActionButton(
             label = null,
             icon = {
-                Text(text = "←")
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = null
+                )
             },
+            actionDescription = stringResource(Res.string.cpp_cursor_previous),
             onClick = onPrevious,
             onLongClick = onPreviousStart,
             modifier = Modifier.weight(1f)
@@ -45,25 +58,37 @@ fun ModernModeBottomBar(
         BottomToolbarActionButton(
             label = null,
             icon = {
-                Text(text = "→")
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = null
+                )
             },
+            actionDescription = stringResource(Res.string.cpp_cursor_next),
             onClick = onNext,
             onLongClick = onNextEnd,
             modifier = Modifier.weight(1f)
         )
         BottomToolbarActionButton(
-            label = "Graph",
+            label = stringResource(Res.string.cpp_plotter),
             icon = {
-                Text(text = "📊")
+                Icon(
+                    imageVector = Icons.Filled.Calculate,
+                    contentDescription = null
+                )
             },
+            actionDescription = stringResource(Res.string.cpp_plotter),
             onClick = onOpenGraph,
             modifier = Modifier.weight(1f)
         )
         BottomToolbarActionButton(
-            label = "Convert",
+            label = stringResource(Res.string.c_conversion_tool),
             icon = {
-                Text(text = "⇄")
+                Icon(
+                    imageVector = Icons.Filled.Tune,
+                    contentDescription = null
+                )
             },
+            actionDescription = stringResource(Res.string.c_conversion_tool),
             onClick = onOpenConverter,
             modifier = Modifier.weight(1f)
         )
@@ -73,6 +98,7 @@ fun ModernModeBottomBar(
 @Composable
 private fun BottomToolbarActionButton(
     label: String?,
+    actionDescription: String,
     icon: @Composable () -> Unit,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -85,6 +111,9 @@ private fun BottomToolbarActionButton(
         tonalElevation = 1.dp,
         modifier = modifier
             .height(46.dp)
+            .semantics {
+                contentDescription = actionDescription
+            }
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick

@@ -1,31 +1,49 @@
 package org.solovyev.android.calculator.widgets
 
-import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
-import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import org.solovyev.android.calculator.Broadcaster
+import org.solovyev.android.calculator.widget.CalculatorGlanceWidget
 
-/**
- * Stub receiver for widgets - functionality disabled for build.
- * Widget implementations removed to fix build errors.
- */
-class CalculatorWidgetReceiver : GlanceAppWidgetReceiver() {
-    override val glanceAppWidget: GlanceAppWidget = StubWidget()
+private val updateActions = setOf(
+    Broadcaster.ACTION_INIT,
+    Broadcaster.ACTION_EDITOR_STATE_CHANGED,
+    Broadcaster.ACTION_DISPLAY_STATE_CHANGED,
+    Broadcaster.ACTION_THEME_CHANGED,
+    Broadcaster.ACTION_HISTORY_CHANGED,
+    Intent.ACTION_CONFIGURATION_CHANGED,
+    android.appwidget.AppWidgetManager.ACTION_APPWIDGET_UPDATE,
+    android.appwidget.AppWidgetManager.ACTION_APPWIDGET_OPTIONS_CHANGED
+)
+
+internal abstract class BaseCalculatorWidgetReceiver : GlanceAppWidgetReceiver() {
+    override val glanceAppWidget = CalculatorGlanceWidget()
+
+    override fun onReceive(context: Context, intent: Intent) {
+        super.onReceive(context, intent)
+        if (intent.action !in updateActions) return
+
+        val pendingResult = goAsync()
+        CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
+            runCatching {
+                WidgetUpdates.updateAll(context)
+            }
+            pendingResult.finish()
+        }
+    }
 }
 
-class QuickCalcWidgetReceiver : GlanceAppWidgetReceiver() {
-    override val glanceAppWidget: GlanceAppWidget = StubWidget()
-}
+internal class CalculatorWidgetReceiver : BaseCalculatorWidgetReceiver()
 
-class HistoryWidgetReceiver : GlanceAppWidgetReceiver() {
-    override val glanceAppWidget: GlanceAppWidget = StubWidget()
-}
+internal class QuickCalcWidgetReceiver : BaseCalculatorWidgetReceiver()
 
-class ConverterWidgetReceiver : GlanceAppWidgetReceiver() {
-    override val glanceAppWidget: GlanceAppWidget = StubWidget()
-}
+internal class HistoryWidgetReceiver : BaseCalculatorWidgetReceiver()
 
-class SmartStackWidgetReceiver : GlanceAppWidgetReceiver() {
-    override val glanceAppWidget: GlanceAppWidget = StubWidget()
-}
+internal class ConverterWidgetReceiver : BaseCalculatorWidgetReceiver()
+
+internal class SmartStackWidgetReceiver : BaseCalculatorWidgetReceiver()

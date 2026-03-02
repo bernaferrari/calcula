@@ -14,6 +14,8 @@ val LocalCalculatorHapticOnRelease = staticCompositionLocalOf { true }
 val LocalCalculatorReduceMotion = staticCompositionLocalOf { false }
 val LocalCalculatorExtendedHaptics = staticCompositionLocalOf { false }
 val LocalCalculatorFontScale = staticCompositionLocalOf { 1.0f }
+val LocalCalculatorLayerUpEnabled = staticCompositionLocalOf { true }
+val LocalCalculatorLayerDownEnabled = staticCompositionLocalOf { true }
 
 /**
  * Interface for all string labels used in the keyboard.

@@ -6,19 +6,22 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.material3.Icon
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
+import org.solovyev.android.calculator.ui.*
 
 /**
  * Minimal 2-page onboarding for Calculator++
@@ -30,8 +33,8 @@ fun OnboardingScreen(
     onComplete: () -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
-    val scope = rememberCoroutineScope()
     var currentPage by remember { mutableIntStateOf(0) }
+    val reduceMotion = LocalCalculatorReduceMotion.current
 
     Box(
         modifier = Modifier
@@ -41,6 +44,7 @@ fun OnboardingScreen(
     ) {
         when (currentPage) {
             0 -> WelcomePage(
+                reduceMotion = reduceMotion,
                 onStart = {
                     haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                     currentPage = 1
@@ -83,6 +87,7 @@ fun OnboardingScreen(
 
 @Composable
 private fun WelcomePage(
+    reduceMotion: Boolean,
     onStart: () -> Unit,
     onSkip: () -> Unit
 ) {
@@ -95,7 +100,7 @@ private fun WelcomePage(
 
         // Logo
         val scale by animateFloatAsState(
-            targetValue = 1f,
+            targetValue = if (reduceMotion) 1f else 1.05f,
             animationSpec = spring(dampingRatio = 0.6f),
             label = "logo_scale"
         )
@@ -110,17 +115,18 @@ private fun WelcomePage(
             ),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "🖩",
-                fontSize = 48.sp,
-                color = MaterialTheme.colorScheme.primary
+            Icon(
+                imageVector = Icons.Filled.Calculate,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(48.dp)
             )
         }
 
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            text = "Calculator++",
+            text = stringResource(Res.string.cpp_onboarding_title),
             style = MaterialTheme.typography.headlineLarge.copy(
                 fontWeight = FontWeight.Bold,
                 fontSize = 36.sp
@@ -131,7 +137,7 @@ private fun WelcomePage(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "Simple. Elegant. Powerful.",
+            text = stringResource(Res.string.cpp_onboarding_tagline_simple),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
             textAlign = TextAlign.Center
@@ -147,7 +153,7 @@ private fun WelcomePage(
             shape = RoundedCornerShape(16.dp)
         ) {
             Text(
-                text = "Start Calculating",
+                text = stringResource(Res.string.cpp_start_calculating),
                 style = MaterialTheme.typography.titleMedium
             )
         }
@@ -155,7 +161,7 @@ private fun WelcomePage(
         Spacer(modifier = Modifier.height(12.dp))
 
         TextButton(onClick = onSkip) {
-            Text("Skip")
+            Text(stringResource(Res.string.cpp_skip))
         }
 
         Spacer(modifier = Modifier.height(48.dp))
@@ -174,7 +180,7 @@ private fun GestureHintPage(
         Spacer(modifier = Modifier.height(48.dp))
 
         Text(
-            text = "Pro Tip",
+            text = stringResource(Res.string.cpp_onboarding_gesture_title),
             style = MaterialTheme.typography.headlineMedium.copy(
                 fontWeight = FontWeight.Bold
             )
@@ -188,7 +194,7 @@ private fun GestureHintPage(
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            text = "Swipe buttons for more functions",
+            text = stringResource(Res.string.cpp_onboarding_gesture_heading),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Medium,
             textAlign = TextAlign.Center
@@ -197,7 +203,7 @@ private fun GestureHintPage(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "Swipe up, down, left, or right on any button to access alternate functions. Long press for more options.",
+            text = stringResource(Res.string.cpp_onboarding_gesture_body),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
             textAlign = TextAlign.Center,
@@ -214,14 +220,14 @@ private fun GestureHintPage(
                 onClick = onBack,
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Back")
+                Text(stringResource(Res.string.cpp_back))
             }
 
             Button(
                 onClick = onComplete,
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Got it")
+                Text(stringResource(Res.string.cpp_got_it))
             }
         }
 
@@ -230,7 +236,8 @@ private fun GestureHintPage(
 }
 
 @Composable
-private fun GestureDemo() {
+private fun GestureDemo(
+) {
     Box(
         modifier = Modifier.size(200.dp),
         contentAlignment = Alignment.Center

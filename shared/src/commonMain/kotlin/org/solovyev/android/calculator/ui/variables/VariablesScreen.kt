@@ -12,14 +12,21 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -28,6 +35,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -38,6 +47,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -46,19 +58,7 @@ import jscl.math.function.IConstant
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
-import org.solovyev.android.calculator.ui.Res
-import org.solovyev.android.calculator.ui.StandardTopAppBar
-import org.solovyev.android.calculator.ui.c_var_create_var
-import org.solovyev.android.calculator.ui.c_var_removal_confirmation_question
-import org.solovyev.android.calculator.ui.c_var_value
-import org.solovyev.android.calculator.ui.cpp_back
-import org.solovyev.android.calculator.ui.cpp_description
-import org.solovyev.android.calculator.ui.cpp_done
-import org.solovyev.android.calculator.ui.cpp_entities_empty
-import org.solovyev.android.calculator.ui.cpp_name
-import org.solovyev.android.calculator.ui.cpp_search
-import org.solovyev.android.calculator.ui.cpp_variables
-import org.solovyev.android.calculator.ui.removal_confirmation
+import org.solovyev.android.calculator.ui.*
 import org.solovyev.android.calculator.variables.VariableCategory
 
 private enum class VariableCardPosition {
@@ -73,38 +73,45 @@ private sealed interface VariableListItem {
     data class Item(val variable: IConstant, val position: VariableCardPosition) : VariableListItem
 }
 
-@OptIn(KoinExperimentalAPI::class, ExperimentalMaterial3Api::class)
+@OptIn(
+    KoinExperimentalAPI::class,
+    ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3ExpressiveApi::class
+)
 @Composable
 fun VariablesScreen(
     onBack: () -> Unit,
     viewModel: VariablesViewModel = koinViewModel()
 ) {
-    val tick by viewModel.refreshTick.collectAsState()
+    val refreshVersion by viewModel.refreshTick.collectAsState()
     val categories = remember { viewModel.getCategories() }
     val categoryTitles = categories.map { stringResource(it.title) }
 
     var selectedCategoryIndex by rememberSaveable { mutableIntStateOf(0) }
-    var query by rememberSaveable { mutableStateOf("") }
+    var searchQuery by rememberSaveable { mutableStateOf("") }
     var showAddDialog by remember { mutableStateOf(false) }
+    var variableToEdit by remember { mutableStateOf<IConstant?>(null) }
     var variableToDelete by remember { mutableStateOf<IConstant?>(null) }
 
     val selectedCategory = categories.getOrElse(selectedCategoryIndex) { VariableCategory.my }
-    val categoryCounts = remember(tick, categories) {
+    val categoryCounts = remember(refreshVersion, categories) {
         categories.associateWith { category -> viewModel.getVariablesFor(category).size }
     }
-    val variables = remember(tick, selectedCategory) {
+    val variables = remember(refreshVersion, selectedCategory) {
         viewModel.getVariablesFor(selectedCategory)
     }
-    val filteredVariables = remember(variables, query, tick) {
-        val normalized = query.trim().lowercase()
-        if (normalized.isEmpty()) {
+    val filteredVariables = remember(variables, searchQuery, refreshVersion) {
+        val normalizedQuery = searchQuery.trim().lowercase()
+        if (normalizedQuery.isEmpty()) {
             variables
         } else {
             variables.filter { variable ->
                 val name = variable.name.lowercase()
                 val value = viewModel.getValue(variable)?.lowercase().orEmpty()
                 val description = viewModel.getDescription(variable)?.lowercase().orEmpty()
-                name.contains(normalized) || value.contains(normalized) || description.contains(normalized)
+                name.contains(normalizedQuery) ||
+                    value.contains(normalizedQuery) ||
+                    description.contains(normalizedQuery)
             }
         }
     }
@@ -116,8 +123,14 @@ fun VariablesScreen(
                 title = stringResource(Res.string.cpp_variables),
                 onBack = onBack,
                 actions = {
-                    IconButton(onClick = { showAddDialog = true }) {
-                        Text(text = "+")
+                    FilledTonalIconButton(onClick = {
+                        variableToEdit = null
+                        showAddDialog = true
+                    }) {
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = stringResource(Res.string.c_var_create_var)
+                        )
                     }
                 }
             )
@@ -128,52 +141,60 @@ fun VariablesScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            LazyRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
             ) {
                 categories.forEachIndexed { index, category ->
-                    item(key = category.name) {
-                        val title = categoryTitles[index]
-                        val count = categoryCounts[category] ?: 0
-                        val isSelected = selectedCategoryIndex == index
-                        FilterChip(
-                            selected = isSelected,
-                            onClick = { selectedCategoryIndex = index },
-                            label = {
-                                Text(
-                                    text = "$title ($count)",
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                            ),
-                            border = if (isSelected) null else FilterChipDefaults.filterChipBorder(
-                                enabled = true,
-                                selected = false,
-                                borderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
-                            )
+                    val count = categoryCounts[category] ?: 0
+                    ToggleButton(
+                        checked = selectedCategoryIndex == index,
+                        onCheckedChange = { checked ->
+                            if (checked) selectedCategoryIndex = index
+                        },
+                        shapes = when (index) {
+                            0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                            categories.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                            else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                        },
+                        colors = ToggleButtonDefaults.toggleButtonColors(
+                            checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .semantics { role = Role.RadioButton }
+                    ) {
+                        Text(
+                            text = "${categoryTitles[index]} ($count)",
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
             }
 
             OutlinedTextField(
-                value = query,
-                onValueChange = { query = it },
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
                 singleLine = true,
                 leadingIcon = {
-                    Text(text = "🔍")
+                    Icon(
+                        imageVector = Icons.Filled.Search,
+                        contentDescription = stringResource(Res.string.cpp_search)
+                    )
                 },
-                trailingIcon = if (query.isNotEmpty()) {
+                trailingIcon = if (searchQuery.isNotEmpty()) {
                     {
-                        IconButton(onClick = { query = "" }) {
-                            Text(text = "✕")
+                        IconButton(onClick = { searchQuery = "" }) {
+                            Icon(
+                                imageVector = Icons.Filled.Close,
+                                contentDescription = stringResource(Res.string.cpp_a11y_clear_search)
+                            )
                         }
                     }
                 } else {
@@ -192,7 +213,10 @@ fun VariablesScreen(
 
             if (groupedItems.isEmpty()) {
                 EmptyVariablesState(
-                    onCreate = { showAddDialog = true },
+                    onCreate = {
+                        variableToEdit = null
+                        showAddDialog = true
+                    },
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 24.dp)
@@ -220,6 +244,10 @@ fun VariablesScreen(
                                     viewModel.useName(item.variable.name)
                                     onBack()
                                 },
+                                onEdit = {
+                                    variableToEdit = item.variable
+                                    showAddDialog = false
+                                },
                                 onDelete = { variableToDelete = item.variable }
                             )
                         }
@@ -229,12 +257,28 @@ fun VariablesScreen(
         }
     }
 
-    if (showAddDialog) {
+    val pendingEdit = variableToEdit
+    if (showAddDialog || pendingEdit != null) {
         VariableEditDialog(
-            onDismiss = { showAddDialog = false },
-            onSave = { name, value, desc ->
-                viewModel.add(name, value, desc)
+            initialName = pendingEdit?.name.orEmpty(),
+            initialValue = pendingEdit?.getValue().orEmpty(),
+            initialDescription = pendingEdit?.getDescription().orEmpty(),
+            isEditing = pendingEdit != null,
+            onDismiss = {
                 showAddDialog = false
+                variableToEdit = null
+            },
+            onSave = { name, value, desc ->
+                val error = if (pendingEdit == null) {
+                    viewModel.save(null, name, value, desc)
+                } else {
+                    viewModel.update(pendingEdit, name, value, desc)
+                }
+                error ?: run {
+                    showAddDialog = false
+                    variableToEdit = null
+                    null
+                }
             }
         )
     }
@@ -294,7 +338,10 @@ private fun EmptyVariablesState(
         )
         Spacer(modifier = Modifier.height(18.dp))
         TextButton(onClick = onCreate) {
-            Text(text = "+")
+            Icon(
+                imageVector = Icons.Filled.Add,
+                contentDescription = null
+            )
             Spacer(modifier = Modifier.width(6.dp))
             Text(text = stringResource(Res.string.c_var_create_var))
         }
@@ -320,6 +367,7 @@ private fun VariableCard(
     value: String?,
     description: String?,
     onUse: () -> Unit,
+    onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
     val shape = when (position) {
@@ -356,7 +404,7 @@ private fun VariableCard(
 
                 if (!value.isNullOrBlank()) {
                     Text(
-                        text = "= $value",
+                        text = "= ${normalizeMathDisplay(value)}",
                         style = MaterialTheme.typography.bodyLarge.copy(
                             fontFamily = FontFamily.Monospace,
                             color = MaterialTheme.colorScheme.primary
@@ -378,8 +426,20 @@ private fun VariableCard(
             }
 
             if (!variable.isSystem()) {
-                IconButton(onClick = onDelete) {
-                    Text(text = "🗑")
+                Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                    FilledTonalIconButton(onClick = onEdit) {
+                        Icon(
+                            imageVector = Icons.Filled.Edit,
+                            contentDescription = stringResource(Res.string.c_var_edit_var)
+                        )
+                    }
+                    FilledTonalIconButton(onClick = onDelete) {
+                        Icon(
+                            imageVector = Icons.Filled.DeleteOutline,
+                            contentDescription = stringResource(Res.string.cpp_delete),
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
                 }
             }
         }
@@ -388,46 +448,79 @@ private fun VariableCard(
 
 @Composable
 fun VariableEditDialog(
+    initialName: String = "",
+    initialValue: String = "",
+    initialDescription: String = "",
+    isEditing: Boolean = false,
     onDismiss: () -> Unit,
-    onSave: (String, String, String) -> Unit
+    onSave: (String, String, String) -> String?
 ) {
-    var name by remember { mutableStateOf("") }
-    var value by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    val canSave = name.isNotBlank() && value.isNotBlank()
+    var name by remember(initialName) { mutableStateOf(initialName) }
+    var value by remember(initialValue) { mutableStateOf(initialValue) }
+    var description by remember(initialDescription) { mutableStateOf(initialDescription) }
+    var errorText by remember { mutableStateOf<String?>(null) }
+    val canSave = name.isNotBlank()
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(Res.string.c_var_create_var)) },
+        title = {
+            Text(
+                stringResource(
+                    if (isEditing) Res.string.c_var_edit_var
+                    else Res.string.c_var_create_var
+                )
+            )
+        },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(
                     value = name,
-                    onValueChange = { name = it },
+                    onValueChange = {
+                        name = it
+                        errorText = null
+                    },
                     label = { Text(stringResource(Res.string.cpp_name)) },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp)
                 )
                 OutlinedTextField(
                     value = value,
-                    onValueChange = { value = it },
+                    onValueChange = {
+                        value = it
+                        errorText = null
+                    },
                     label = { Text(stringResource(Res.string.c_var_value)) },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp)
                 )
                 OutlinedTextField(
                     value = description,
-                    onValueChange = { description = it },
+                    onValueChange = {
+                        description = it
+                        errorText = null
+                    },
                     label = { Text(stringResource(Res.string.cpp_description)) },
                     shape = RoundedCornerShape(12.dp),
                     minLines = 2,
                     maxLines = 3
                 )
+                if (!errorText.isNullOrBlank()) {
+                    Text(
+                        text = errorText.orEmpty(),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
             }
         },
         confirmButton = {
             TextButton(
-                onClick = { onSave(name.trim(), value.trim(), description.trim()) },
+                onClick = {
+                    errorText = onSave(name.trim(), value.trim(), description.trim())
+                    if (errorText == null) {
+                        onDismiss()
+                    }
+                },
                 enabled = canSave,
                 colors = ButtonDefaults.textButtonColors(
                     contentColor = MaterialTheme.colorScheme.primary
@@ -467,4 +560,14 @@ private fun toVariableListItems(variables: List<IConstant>): List<VariableListIt
             }
         }
     }
+}
+
+private fun normalizeMathDisplay(value: String): String {
+    return value
+        .replace('−', '-')
+        .replace('×', '*')
+        .replace('÷', '/')
+        .replace('·', '*')
+        .replace('∙', '*')
+        .replace('⋅', '*')
 }

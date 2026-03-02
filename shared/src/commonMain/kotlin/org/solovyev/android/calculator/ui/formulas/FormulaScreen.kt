@@ -13,14 +13,29 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.FlashOn
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.TextFields
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontFamily
@@ -34,8 +49,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.solovyev.android.calculator.formulas.*
-import org.solovyev.android.calculator.ui.Res
-import org.solovyev.android.calculator.ui.StandardTopAppBar
+import org.solovyev.android.calculator.ui.*
+import org.solovyev.android.calculator.ui.tokens.CalculatorCornerRadius
+import org.solovyev.android.calculator.ui.tokens.CalculatorElevation
+import org.solovyev.android.calculator.ui.tokens.CalculatorPadding
+import org.solovyev.android.calculator.ui.tokens.CalculatorSpacing
 
 // =============================================================================
 // REFINED FORMULA SCREEN - Beautiful formula cards with enhanced interactions
@@ -48,7 +66,8 @@ fun FormulaScreen(
     onUseResult: (String) -> Unit, 
     onBack: () -> Unit
 ) {
-    var searchQuery by remember { mutableStateOf("") }
+    val reduceMotion = LocalCalculatorReduceMotion.current
+    var searchQuery by rememberSaveable { mutableStateOf("") }
     var selectedFormula by remember { mutableStateOf<Formula?>(null) }
     var isSearchFocused by remember { mutableStateOf(false) }
     val formulas by viewModel.formulas.collectAsState()
@@ -73,14 +92,14 @@ fun FormulaScreen(
     Scaffold(
         topBar = {
             StandardTopAppBar(
-                title = "Formulas",
+                title = stringResource(Res.string.cpp_formula_library),
                 onBack = onBack,
                 actions = {
                     if (searchQuery.isNotEmpty()) {
                         IconButton(onClick = { searchQuery = "" }) {
-                            Text(
-                                "✕",
-                                style = MaterialTheme.typography.titleMedium
+                            Icon(
+                                imageVector = Icons.Filled.Clear,
+                                contentDescription = stringResource(Res.string.cpp_a11y_clear_search)
                             )
                         }
                     }
@@ -98,33 +117,40 @@ fun FormulaScreen(
                 // Beautiful search field
                 Surface(
                     color = MaterialTheme.colorScheme.surface,
-                    shadowElevation = if (isSearchFocused) 4.dp else 0.dp
+                    shadowElevation = if (isSearchFocused) CalculatorElevation.Elevated else CalculatorElevation.Pressed
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp)
+                        modifier = Modifier.padding(CalculatorPadding.Standard)
                     ) {
                         OutlinedTextField(
                             value = searchQuery,
                             onValueChange = { searchQuery = it },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Filled.Search,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            },
                             placeholder = { 
                                 Text(
-                                    "🔍 Search formulas...",
+                                    stringResource(Res.string.cpp_formula_search),
                                     style = MaterialTheme.typography.bodyLarge
                                 )
                             },
                             trailingIcon = {
                                 AnimatedVisibility(
                                     visible = searchQuery.isNotEmpty(),
-                                    enter = fadeIn() + scaleIn(),
-                                    exit = fadeOut() + scaleOut()
+                                    enter = if (reduceMotion) fadeIn(tween(80)) else fadeIn() + scaleIn(),
+                                    exit = if (reduceMotion) fadeOut(tween(80)) else fadeOut() + scaleOut()
                                 ) {
                                     IconButton(
                                         onClick = { searchQuery = "" },
                                         modifier = Modifier.size(32.dp)
                                     ) {
-                                        Text(
-                                            "✕",
-                                            style = MaterialTheme.typography.bodyMedium
+                                        Icon(
+                                            imageVector = Icons.Filled.Clear,
+                                            contentDescription = stringResource(Res.string.cpp_a11y_clear_search)
                                         )
                                     }
                                 }
@@ -133,7 +159,7 @@ fun FormulaScreen(
                                 .fillMaxWidth()
                                 .onFocusChanged { isSearchFocused = it.isFocused },
                             singleLine = true,
-                            shape = RoundedCornerShape(16.dp),
+                            shape = RoundedCornerShape(CalculatorCornerRadius.Large),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
                                 unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -149,22 +175,25 @@ fun FormulaScreen(
                         // Results count chip
                         AnimatedVisibility(
                             visible = searchQuery.isNotEmpty(),
-                            enter = fadeIn() + slideInVertically { it / 2 },
-                            exit = fadeOut() + slideOutVertically { it / 2 }
+                            enter = if (reduceMotion) fadeIn(tween(80)) else fadeIn() + slideInVertically { it / 2 },
+                            exit = if (reduceMotion) fadeOut(tween(80)) else fadeOut() + slideOutVertically { it / 2 }
                         ) {
                             Row(
-                                modifier = Modifier.padding(top = 12.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                modifier = Modifier.padding(top = CalculatorPadding.Medium),
+                                horizontalArrangement = Arrangement.spacedBy(CalculatorSpacing.Small)
                             ) {
                                 Surface(
-                                    shape = RoundedCornerShape(8.dp),
+                                    shape = RoundedCornerShape(CalculatorCornerRadius.Medium),
                                     color = MaterialTheme.colorScheme.primaryContainer
                                 ) {
                                     Text(
-                                        text = "${filtered.size} result${if (filtered.size != 1) "s" else ""}",
+                                        text = stringResource(Res.string.cpp_formula_results_count, filtered.size),
                                         style = MaterialTheme.typography.labelMedium,
                                         color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                        modifier = Modifier.padding(
+                                            horizontal = CalculatorPadding.Medium,
+                                            vertical = CalculatorPadding.Small
+                                        )
                                     )
                                 }
                             }
@@ -196,14 +225,18 @@ fun FormulaScreen(
             // Copy feedback
             AnimatedVisibility(
                 visible = copyFeedbackVisible,
-                enter = fadeIn() + scaleIn(
-                    initialScale = 0.8f,
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessMedium
+                enter = if (reduceMotion) {
+                    fadeIn(tween(80))
+                } else {
+                    fadeIn() + scaleIn(
+                        initialScale = 0.8f,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessMedium
+                        )
                     )
-                ),
-                exit = fadeOut() + scaleOut(targetScale = 0.9f),
+                },
+                exit = if (reduceMotion) fadeOut(tween(80)) else fadeOut() + scaleOut(targetScale = 0.9f),
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 24.dp)
@@ -218,13 +251,13 @@ fun FormulaScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "✓",
-                            color = MaterialTheme.colorScheme.inverseOnSurface,
-                            style = MaterialTheme.typography.bodyMedium
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.inverseOnSurface
                         )
                         Text(
-                            text = "Formula ready",
+                            text = stringResource(Res.string.cpp_formula_ready),
                             color = MaterialTheme.colorScheme.inverseOnSurface,
                             style = MaterialTheme.typography.bodyMedium
                         )
@@ -243,7 +276,7 @@ fun FormulaScreen(
             onUseResult = { result ->
                 copyFeedbackVisible = true
                 scope.launch {
-                    delay(1500)
+                    delay(if (reduceMotion) 900 else 1500)
                     copyFeedbackVisible = false
                 }
                 onUseResult(result)
@@ -264,7 +297,7 @@ private fun FormulaList(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(vertical = 12.dp)
+        contentPadding = PaddingValues(vertical = CalculatorPadding.Medium)
     ) {
         grouped.entries.forEachIndexed { groupIndex, (category, items) ->
             // Category header
@@ -298,13 +331,16 @@ private fun CategoryHeader(
     category: FormulaCategory,
     modifier: Modifier = Modifier
 ) {
-    val categoryEmoji = getCategoryEmoji(category)
+    val categoryIcon = getCategoryIcon(category)
     val categoryColor = getCategoryColor(category)
 
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 12.dp),
+            .padding(
+                horizontal = CalculatorPadding.Large,
+                vertical = CalculatorPadding.Medium
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Category icon
@@ -314,14 +350,15 @@ private fun CategoryHeader(
             color = categoryColor.copy(alpha = 0.15f)
         ) {
             Box(contentAlignment = Alignment.Center) {
-                Text(
-                    text = categoryEmoji,
-                    style = MaterialTheme.typography.titleMedium
+                Icon(
+                    imageVector = categoryIcon,
+                    contentDescription = null,
+                    tint = categoryColor
                 )
             }
         }
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(CalculatorSpacing.Medium))
 
         Column {
             Text(
@@ -352,13 +389,14 @@ private fun FormulaCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val reduceMotion = LocalCalculatorReduceMotion.current
     val categoryColor = getCategoryColor(formula.category)
     var isPressed by remember { mutableStateOf(false) }
     var isVisible by remember { mutableStateOf(false) }
 
     // Entrance animation
     LaunchedEffect(Unit) {
-        delay(index * 40L)
+        if (!reduceMotion) delay(index * 40L)
         isVisible = true
     }
 
@@ -378,7 +416,7 @@ private fun FormulaCard(
     )
 
     val pressScale by animateFloatAsState(
-        targetValue = if (isPressed) 0.97f else 1f,
+        targetValue = if (reduceMotion) 1f else if (isPressed) 0.97f else 1f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioLowBouncy,
             stiffness = Spring.StiffnessHigh
@@ -389,15 +427,18 @@ private fun FormulaCard(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .padding(
+                horizontal = CalculatorPadding.Standard,
+                vertical = CalculatorPadding.Small
+            )
             .graphicsLayer {
                 this.scaleX = scale * pressScale
                 this.scaleY = scale * pressScale
                 this.alpha = alpha
             }
             .shadow(
-                elevation = if (isPressed) 2.dp else 6.dp,
-                shape = RoundedCornerShape(20.dp),
+                elevation = if (isPressed) CalculatorElevation.Standard else CalculatorElevation.Display,
+                shape = RoundedCornerShape(CalculatorCornerRadius.ExtraLarge),
                 ambientColor = categoryColor.copy(alpha = 0.1f),
                 spotColor = categoryColor.copy(alpha = 0.15f)
             )
@@ -406,10 +447,10 @@ private fun FormulaCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { 
-                    isPressed = true
+                    if (!reduceMotion) isPressed = true
                     onClick()
                 },
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(CalculatorCornerRadius.ExtraLarge),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
             ),
@@ -418,13 +459,13 @@ private fun FormulaCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(CalculatorPadding.Standard),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Category icon with gradient background
                 Surface(
                     modifier = Modifier.size(52.dp),
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(CalculatorCornerRadius.Large),
                     color = categoryColor.copy(alpha = 0.12f)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
@@ -438,7 +479,7 @@ private fun FormulaCard(
                     }
                 }
 
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(CalculatorSpacing.Large))
 
                 Column(
                     modifier = Modifier.weight(1f)
@@ -452,7 +493,7 @@ private fun FormulaCard(
                         color = MaterialTheme.colorScheme.onSurface
                     )
 
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(CalculatorSpacing.XSmall))
 
                     // Description
                     Text(
@@ -463,11 +504,11 @@ private fun FormulaCard(
                         overflow = TextOverflow.Ellipsis
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(CalculatorSpacing.Small))
 
                     // Formula expression chip
                     Surface(
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(CalculatorCornerRadius.Medium),
                         color = MaterialTheme.colorScheme.surfaceContainerHighest
                     ) {
                         Text(
@@ -477,12 +518,15 @@ private fun FormulaCard(
                                 fontWeight = FontWeight.Medium
                             ),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                            modifier = Modifier.padding(
+                                horizontal = CalculatorPadding.Small + 2.dp,
+                                vertical = CalculatorPadding.XSmall + 1.dp
+                            )
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(CalculatorSpacing.Medium))
 
                 // Arrow indicator
                 Box(
@@ -492,10 +536,10 @@ private fun FormulaCard(
                         .background(MaterialTheme.colorScheme.surfaceContainerHigh),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "›",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -504,7 +548,7 @@ private fun FormulaCard(
 
     // Reset press state
     LaunchedEffect(isPressed) {
-        if (isPressed) {
+        if (isPressed && !reduceMotion) {
             delay(150)
             isPressed = false
         }
@@ -517,6 +561,7 @@ private fun FormulaCard(
 
 @Composable
 private fun EmptyFormulaState(searchQuery: String) {
+    val reduceMotion = LocalCalculatorReduceMotion.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -524,16 +569,20 @@ private fun EmptyFormulaState(searchQuery: String) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-        val pulseScale by infiniteTransition.animateFloat(
-            initialValue = 1f,
-            targetValue = 1.08f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(2000, easing = FastOutSlowInEasing),
-                repeatMode = RepeatMode.Reverse
-            ),
-            label = "pulse"
-        )
+        val pulseScale = if (reduceMotion) {
+            1f
+        } else {
+            val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+            infiniteTransition.animateFloat(
+                initialValue = 1f,
+                targetValue = 1.08f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(2000, easing = FastOutSlowInEasing),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "pulse"
+            ).value
+        }
 
         Surface(
             modifier = Modifier
@@ -544,10 +593,15 @@ private fun EmptyFormulaState(searchQuery: String) {
             shadowElevation = 8.dp
         ) {
             Box(contentAlignment = Alignment.Center) {
-                Text(
-                    text = if (searchQuery.isEmpty()) "📐" else "🔍",
-                    style = MaterialTheme.typography.displayLarge,
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                Icon(
+                    imageVector = if (searchQuery.isEmpty()) {
+                        Icons.Filled.Calculate
+                    } else {
+                        Icons.Filled.Search
+                    },
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                    modifier = Modifier.size(56.dp)
                 )
             }
         }
@@ -555,7 +609,11 @@ private fun EmptyFormulaState(searchQuery: String) {
         Spacer(modifier = Modifier.height(28.dp))
 
         Text(
-            text = if (searchQuery.isEmpty()) "No formulas available" else "No formulas found",
+            text = if (searchQuery.isEmpty()) {
+                stringResource(Res.string.cpp_formula_empty_title)
+            } else {
+                stringResource(Res.string.cpp_formula_no_results)
+            },
             style = MaterialTheme.typography.headlineSmall.copy(
                 fontWeight = FontWeight.SemiBold
             ),
@@ -567,9 +625,9 @@ private fun EmptyFormulaState(searchQuery: String) {
 
         Text(
             text = if (searchQuery.isEmpty()) {
-                "Formulas will appear here when available"
+                stringResource(Res.string.cpp_formula_empty_subtitle)
             } else {
-                "Try adjusting your search terms"
+                stringResource(Res.string.cpp_formula_try_adjusting_search)
             },
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -593,6 +651,7 @@ private fun FormulaInputSheet(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var values by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     var result by remember { mutableStateOf<String?>(null) }
+    val reduceMotion = LocalCalculatorReduceMotion.current
     val haptics = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
 
@@ -622,9 +681,10 @@ private fun FormulaInputSheet(
                     color = getCategoryColor(formula.category).copy(alpha = 0.15f)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            text = getCategoryEmoji(formula.category),
-                            style = MaterialTheme.typography.titleLarge
+                        Icon(
+                            imageVector = getCategoryIcon(formula.category),
+                            contentDescription = null,
+                            tint = getCategoryColor(formula.category)
                         )
                     }
                 }
@@ -656,7 +716,7 @@ private fun FormulaInputSheet(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        "Formula",
+                        stringResource(Res.string.cpp_formula_expression_label),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                     )
@@ -678,13 +738,14 @@ private fun FormulaInputSheet(
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "✏️",
-                    style = MaterialTheme.typography.bodyLarge
+                Icon(
+                    imageVector = Icons.Filled.Edit,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    "Input Values",
+                    stringResource(Res.string.cpp_formula_input_values),
                     style = MaterialTheme.typography.titleSmall.copy(
                         fontWeight = FontWeight.SemiBold
                     ),
@@ -732,13 +793,13 @@ private fun FormulaInputSheet(
                     containerColor = MaterialTheme.colorScheme.primary
                 )
             ) {
-                Text(
-                    text = "🔢",
-                    style = MaterialTheme.typography.titleMedium
+                Icon(
+                    imageVector = Icons.Filled.Calculate,
+                    contentDescription = null
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    "Calculate",
+                    stringResource(Res.string.cpp_formula_calculate),
                     style = MaterialTheme.typography.labelLarge.copy(
                         fontWeight = FontWeight.SemiBold
                     )
@@ -748,13 +809,17 @@ private fun FormulaInputSheet(
             // Result section
             AnimatedVisibility(
                 visible = result != null,
-                enter = fadeIn() + expandVertically(
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessMediumLow
+                enter = if (reduceMotion) {
+                    fadeIn(tween(80))
+                } else {
+                    fadeIn() + expandVertically(
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessMediumLow
+                        )
                     )
-                ),
-                exit = fadeOut() + shrinkVertically()
+                },
+                exit = if (reduceMotion) fadeOut(tween(80)) else fadeOut() + shrinkVertically()
             ) {
                 result?.let { res ->
                     Column {
@@ -770,14 +835,14 @@ private fun FormulaInputSheet(
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(
-                                        text = "✓",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                    Icon(
+                                        imageVector = Icons.Filled.Check,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        "Result",
+                                        stringResource(Res.string.cpp_formula_result),
                                         style = MaterialTheme.typography.labelLarge,
                                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                                     )
@@ -808,7 +873,7 @@ private fun FormulaInputSheet(
                                 modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(14.dp)
                             ) {
-                                Text("Close")
+                                Text(stringResource(Res.string.cpp_a11y_close))
                             }
                             Button(
                                 onClick = {
@@ -822,9 +887,12 @@ private fun FormulaInputSheet(
                                 modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(14.dp)
                             ) {
-                                Text("📋")
+                                Icon(
+                                    imageVector = Icons.Filled.TextFields,
+                                    contentDescription = null
+                                )
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text("Use Result")
+                                Text(stringResource(Res.string.c_use))
                             }
                         }
                     }
@@ -853,19 +921,19 @@ private fun VariableInputField(
         value = value,
         onValueChange = onValueChange,
         label = {
-            Text("${variable.symbol} — ${variable.name}")
+            Text("${variable.symbol} - ${variable.name}")
         },
         supportingText = if (isError) {
             { 
                 Text(
-                    "Please enter a valid number", 
+                    stringResource(Res.string.c_value_is_not_a_number),
                     color = MaterialTheme.colorScheme.error
                 ) 
             }
         } else {
             {
                 Text(
-                    "Default: ${variable.defaultValue}",
+                    stringResource(Res.string.cpp_default_value_format, variable.defaultValue),
                     style = MaterialTheme.typography.labelSmall
                 )
             }
@@ -905,18 +973,18 @@ private fun VariableInputField(
 }
 
 // =============================================================================
-// CATEGORY HELPERS - Emojis and colors for formula categories
+// CATEGORY HELPERS - Icons and colors for formula categories
 // =============================================================================
 
-private fun getCategoryEmoji(category: FormulaCategory): String {
+private fun getCategoryIcon(category: FormulaCategory): ImageVector {
     return when (category) {
-        FormulaCategory.PHYSICS -> "⚛️"
-        FormulaCategory.MATHEMATICS -> "📐"
-        FormulaCategory.FINANCE -> "💰"
-        FormulaCategory.ENGINEERING -> "🔧"
-        FormulaCategory.HEALTH -> "❤️"
-        FormulaCategory.EVERYDAY -> "💡"
-        FormulaCategory.CUSTOM -> "✏️"
+        FormulaCategory.PHYSICS -> Icons.Filled.Speed
+        FormulaCategory.MATHEMATICS -> Icons.Filled.Calculate
+        FormulaCategory.FINANCE -> Icons.Filled.Star
+        FormulaCategory.ENGINEERING -> Icons.Filled.Tune
+        FormulaCategory.HEALTH -> Icons.Filled.Info
+        FormulaCategory.EVERYDAY -> Icons.Filled.FlashOn
+        FormulaCategory.CUSTOM -> Icons.Filled.Edit
     }
 }
 
@@ -932,15 +1000,16 @@ private fun getCategoryColor(category: FormulaCategory): Color {
     }
 }
 
+@Composable
 private fun getCategoryDescription(category: FormulaCategory): String {
     return when (category) {
-        FormulaCategory.PHYSICS -> "Physical laws and equations"
-        FormulaCategory.MATHEMATICS -> "Algebra, geometry, and calculus"
-        FormulaCategory.FINANCE -> "Loans, interest, and investments"
-        FormulaCategory.ENGINEERING -> "Circuit analysis and structural"
-        FormulaCategory.HEALTH -> "BMI, BMR, and fitness"
-        FormulaCategory.EVERYDAY -> "Conversions and daily utilities"
-        FormulaCategory.CUSTOM -> "Your saved custom formulas"
+        FormulaCategory.PHYSICS -> stringResource(Res.string.cpp_formula_category_physics_desc)
+        FormulaCategory.MATHEMATICS -> stringResource(Res.string.cpp_formula_category_math_desc)
+        FormulaCategory.FINANCE -> stringResource(Res.string.cpp_formula_category_finance_desc)
+        FormulaCategory.ENGINEERING -> stringResource(Res.string.cpp_formula_category_engineering_desc)
+        FormulaCategory.HEALTH -> stringResource(Res.string.cpp_formula_category_health_desc)
+        FormulaCategory.EVERYDAY -> stringResource(Res.string.cpp_formula_category_everyday_desc)
+        FormulaCategory.CUSTOM -> stringResource(Res.string.cpp_formula_category_custom_desc)
     }
 }
 
@@ -955,5 +1024,5 @@ private fun calculate(
     }
     viewModel.evaluate(expr)
 } catch (e: Exception) { 
-    "Error" 
+    null
 }

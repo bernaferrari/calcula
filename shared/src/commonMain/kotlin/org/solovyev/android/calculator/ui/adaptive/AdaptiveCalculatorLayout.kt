@@ -9,7 +9,13 @@ import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-// Material icons not available in commonMain - using text alternatives
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.TextFields
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -272,6 +278,16 @@ fun AdaptiveCalculatorLayout(
                             onOpenVars = onOpenVars,
                             onOpenConverter = onOpenConverter,
                             onOpenGraph = onOpenGraph,
+                            onInsertConstant = { constant ->
+                                val currentText = editorState.text.toString()
+                                val selection = editorState.selection.coerceIn(0, currentText.length)
+                                val updatedText = buildString {
+                                    append(currentText.substring(0, selection))
+                                    append(constant)
+                                    append(currentText.substring(selection))
+                                }
+                                onEditorTextChange(updatedText, selection + constant.length)
+                            },
                             modifier = Modifier.fillMaxSize()
                         )
                     },
@@ -368,24 +384,21 @@ private fun CompactCalculatorLayout(
                 title = stringResource(Res.string.cpp_app_name),
                 actions = {
                     FilledTonalIconButton(onClick = onOpenHistory) {
-                        Text(
-                            text = "H",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        Icon(
+                            imageVector = Icons.Filled.History,
+                            contentDescription = stringResource(Res.string.c_history)
                         )
                     }
                     FilledTonalIconButton(onClick = onOpenFunctions) {
-                        Text(
-                            text = "f(x)",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        Icon(
+                            imageVector = Icons.Filled.Code,
+                            contentDescription = stringResource(Res.string.c_functions)
                         )
                     }
                     FilledTonalIconButton(onClick = onOpenSettings) {
-                        Text(
-                            text = "S",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        Icon(
+                            imageVector = Icons.Filled.Settings,
+                            contentDescription = stringResource(Res.string.cpp_settings)
                         )
                     }
                 }
@@ -479,6 +492,11 @@ private fun FoldableHalfOpenLayout(
     foldableState: FoldableState,
     modifier: Modifier = Modifier
 ) {
+    val resultResolution = rememberResolvedDisplayResult(
+        state = displayState,
+        editorText = editorState.text
+    )
+
     Column(
         modifier = modifier.fillMaxSize()
     ) {
@@ -503,9 +521,14 @@ private fun FoldableHalfOpenLayout(
                     contentAlignment = Alignment.BottomEnd
                 ) {
                     Text(
-                        text = displayState.text.takeIf { it.isNotEmpty() } ?: "0",
+                        text = resultResolution.text.takeIf { it.isNotEmpty() } ?: "0",
                         style = MaterialTheme.typography.displayMedium,
                         fontWeight = FontWeight.Bold,
+                        color = if (resultResolution.isCachedValue) {
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.72f)
+                        } else {
+                            MaterialTheme.colorScheme.primary
+                        },
                         textAlign = TextAlign.End,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -589,6 +612,7 @@ private fun ScientificFunctionsPanel(
     onOpenVars: () -> Unit,
     onOpenConverter: () -> Unit,
     onOpenGraph: () -> Unit,
+    onInsertConstant: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -603,17 +627,17 @@ private fun ScientificFunctionsPanel(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Tools",
+                text = stringResource(Res.string.cpp_tools),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
             val tools = listOf(
-                Triple("Functions", "f(x)", onOpenFunctions),
-                Triple("Variables", "V", onOpenVars),
-                Triple("Converter", "⇄", onOpenConverter),
-                Triple("Graph", "📈", onOpenGraph)
+                Triple(stringResource(Res.string.c_functions), Icons.Filled.Code, onOpenFunctions),
+                Triple(stringResource(Res.string.cpp_variables), Icons.Filled.TextFields, onOpenVars),
+                Triple(stringResource(Res.string.c_conversion_tool), Icons.Filled.Tune, onOpenConverter),
+                Triple(stringResource(Res.string.cpp_plotter), Icons.Filled.Calculate, onOpenGraph)
             )
 
             tools.forEach { (label, icon, onClick) ->
@@ -622,9 +646,9 @@ private fun ScientificFunctionsPanel(
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
                 ) {
-                    Text(
-                        text = icon,
-                        style = MaterialTheme.typography.bodyMedium
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = label
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(text = label, modifier = Modifier.weight(1f))
@@ -635,18 +659,18 @@ private fun ScientificFunctionsPanel(
 
             // Quick constants
             Text(
-                text = "Constants",
+                text = stringResource(Res.string.cpp_constants),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary
             )
 
-            val constants = listOf("π" to "pi", "e" to "e", "φ" to "phi", "∞" to "infinity")
-            constants.forEach { (symbol, name) ->
+            val constants = listOf("pi", "e", "phi", "infinity")
+            constants.forEach { constant ->
                 OutlinedButton(
-                    onClick = { /* Insert constant */ },
+                    onClick = { onInsertConstant(constant) },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("$symbol = $name")
+                    Text(constant)
                 }
             }
         }
@@ -679,15 +703,10 @@ private fun HistorySidePanelAdaptive(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "H",
+                    text = stringResource(Res.string.c_history),
                     style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "History",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
                 )
             }
 
@@ -699,7 +718,7 @@ private fun HistorySidePanelAdaptive(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "No calculations yet",
+                        text = stringResource(Res.string.cpp_history_empty),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -767,7 +786,7 @@ private fun EmptySidePanel(modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "Panel not available",
+            text = stringResource(Res.string.cpp_panel_not_available),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -801,6 +820,19 @@ private fun EnhancedDisplayCardCompact(
     onCopy: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val resultResolution = rememberResolvedDisplayResult(
+        state = state,
+        editorText = editorState.text
+    )
+    val hasResolvedResult = resultResolution.text.isNotEmpty()
+    val resultText = if (hasResolvedResult) resultResolution.text else previewResult ?: "0"
+    val resultColor = when {
+        hasResolvedResult && resultResolution.isCachedValue -> MaterialTheme.colorScheme.primary.copy(alpha = 0.72f)
+        hasResolvedResult -> MaterialTheme.colorScheme.primary
+        state.valid -> MaterialTheme.colorScheme.onSurfaceVariant
+        else -> MaterialTheme.colorScheme.error
+    }
+
     // Reuse existing display card with adaptive sizing
     Card(
         modifier = modifier,
@@ -841,10 +873,10 @@ private fun EnhancedDisplayCardCompact(
 
                 // Result
                 Text(
-                    text = state.text.takeIf { it.isNotEmpty() && state.valid } ?: previewResult ?: "0",
+                    text = resultText,
                     style = MaterialTheme.typography.displayMedium,
                     fontWeight = FontWeight.Bold,
-                    color = if (state.valid) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                    color = resultColor,
                     textAlign = TextAlign.End,
                     maxLines = 1,
                     modifier = Modifier.fillMaxWidth()

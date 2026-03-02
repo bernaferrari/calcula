@@ -10,8 +10,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -50,10 +53,11 @@ fun RateUsDialog(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "★",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.primary
+                Icon(
+                    imageVector = Icons.Filled.Star,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(30.dp)
                 )
             }
         },
@@ -85,10 +89,10 @@ fun RateUsDialog(
                     modifier = Modifier.padding(top = 8.dp)
                 ) {
                     repeat(5) { index ->
-                        Text(
-                            text = if (index < 4) "★" else "☆",
-                            style = MaterialTheme.typography.headlineSmall,
-                            color = if (index < 4) {
+                        Icon(
+                            imageVector = Icons.Filled.Star,
+                            contentDescription = null,
+                            tint = if (index < 4) {
                                 MaterialTheme.colorScheme.primary
                             } else {
                                 MaterialTheme.colorScheme.outlineVariant
@@ -101,11 +105,14 @@ fun RateUsDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    onRateClick()
+                onRateClick()
                     onDismissRequest()
                 }
             ) {
-                Text(text = "★")
+                Icon(
+                    imageVector = Icons.Filled.Star,
+                    contentDescription = null
+                )
                 Spacer(modifier = Modifier.size(8.dp))
                 Text(stringResource(Res.string.cpp_rateus_ok))
             }

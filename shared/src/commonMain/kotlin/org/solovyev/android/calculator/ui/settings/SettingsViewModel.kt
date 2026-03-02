@@ -2,7 +2,6 @@ package org.solovyev.android.calculator.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -13,9 +12,6 @@ import org.solovyev.android.calculator.AppPreferences
 class SettingsViewModel(
     private val preferences: AppPreferences
 ) : ViewModel(), SettingsActions {
-    private val reduceMotionState = MutableStateFlow(false)
-    private val fontScaleState = MutableStateFlow(1.0f)
-
     val state: StateFlow<SettingsUiState> = combine(
         preferences.gui.mode,
         preferences.settings.angleUnit,
@@ -45,8 +41,8 @@ class SettingsViewModel(
         preferences.gui.latexMode,
         preferences.settings.bitwiseWordSize,
         preferences.settings.bitwiseSigned,
-        reduceMotionState,
-        fontScaleState,
+        preferences.gui.reduceMotion,
+        preferences.gui.fontScale,
         preferences.haptics.hapticOnReleaseEnabled,
         preferences.gestures.gestureAutoActivationEnabled,
         preferences.gestures.bottomRightEqualsEnabled
@@ -360,11 +356,11 @@ class SettingsViewModel(
     }
 
     override fun setReduceMotion(enabled: Boolean) {
-        reduceMotionState.value = enabled
+        viewModelScope.launch { preferences.gui.setReduceMotion(enabled) }
     }
 
     override fun setFontScale(scale: Float) {
-        fontScaleState.value = scale.coerceIn(0.8f, 1.6f)
+        viewModelScope.launch { preferences.gui.setFontScale(scale.coerceIn(0.8f, 1.6f)) }
     }
 
     override fun setBitwiseWordSize(size: Int) {

@@ -12,6 +12,15 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,6 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -27,6 +37,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -36,12 +47,16 @@ import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 import org.solovyev.android.calculator.history.HistoryState
 import org.solovyev.android.calculator.ui.*
+import org.solovyev.android.calculator.ui.tokens.CalculatorCornerRadius
+import org.solovyev.android.calculator.ui.tokens.CalculatorElevation
+import org.solovyev.android.calculator.ui.tokens.CalculatorPadding
+import org.solovyev.android.calculator.ui.tokens.CalculatorSpacing
 
 // =============================================================================
 // REFINED HISTORY SCREEN - Beautiful list UI with delightful interactions
 // =============================================================================
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun HistoryScreen(
     recent: List<HistoryState>,
@@ -56,6 +71,7 @@ fun HistoryScreen(
     onClearSaved: () -> Unit,
     onBack: () -> Unit
 ) {
+    val reduceMotion = LocalCalculatorReduceMotion.current
     val pagerState = rememberPagerState(pageCount = { 2 })
     val scope = rememberCoroutineScope()
     val selectedTab = pagerState.currentPage
@@ -71,13 +87,16 @@ fun HistoryScreen(
     // Copy feedback state
     var copyFeedbackVisible by remember { mutableStateOf(false) }
     var copyFeedbackMessage by remember { mutableStateOf("") }
+    var editingState by remember { mutableStateOf<HistoryState?>(null) }
+    val expressionCopiedMessage = stringResource(Res.string.cpp_expression_copied)
+    val resultCopiedMessage = stringResource(Res.string.cpp_result_copied)
 
     // Show copy feedback
     fun showCopyFeedback(message: String) {
         copyFeedbackMessage = message
         copyFeedbackVisible = true
         scope.launch {
-            delay(2000)
+            delay(if (reduceMotion) 900 else 2000)
             copyFeedbackVisible = false
         }
     }
@@ -94,9 +113,9 @@ fun HistoryScreen(
                                 if (selectedTab == 0) onClearRecent() else onClearSaved() 
                             }
                         ) {
-                            Text(
-                                "🗑",
-                                style = MaterialTheme.typography.titleMedium
+                            Icon(
+                                imageVector = Icons.Filled.DeleteOutline,
+                                contentDescription = stringResource(Res.string.cpp_clear_history)
                             )
                         }
                     }
@@ -116,12 +135,15 @@ fun HistoryScreen(
                 // Elegant segmented control
                 Surface(
                     color = MaterialTheme.colorScheme.surface,
-                    shadowElevation = 2.dp
+                    shadowElevation = CalculatorElevation.Standard
                 ) {
                     SingleChoiceSegmentedButtonRow(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                            .padding(
+                                horizontal = CalculatorPadding.Standard,
+                                vertical = CalculatorPadding.Medium
+                            )
                     ) {
                         tabs.forEachIndexed { index, title ->
                             SegmentedButton(
@@ -137,9 +159,13 @@ fun HistoryScreen(
                                 ),
                                 icon = {
                                     SegmentedButtonDefaults.Icon(active = selectedTab == index) {
-                                        Text(
-                                            if (index == 0) "⏱" else "🔖",
-                                            style = MaterialTheme.typography.bodySmall
+                                        Icon(
+                                            imageVector = if (index == 0) {
+                                                Icons.Filled.History
+                                            } else {
+                                                Icons.Filled.Star
+                                            },
+                                            contentDescription = null
                                         )
                                     }
                                 }
@@ -164,6 +190,7 @@ fun HistoryScreen(
                     if (pageList.isEmpty()) {
                         EmptyHistoryState(
                             isRecent = isRecent, 
+                            reduceMotion = reduceMotion,
                             onStartCalculating = onBack
                         )
                     } else {
@@ -175,14 +202,14 @@ fun HistoryScreen(
                             },
                             onCopyExpression = { 
                                 onCopyExpression(it)
-                                showCopyFeedback("Expression copied")
+                                showCopyFeedback(expressionCopiedMessage)
                             },
                             onCopyResult = { 
                                 onCopyResult(it)
-                                showCopyFeedback("Result copied")
+                                showCopyFeedback(resultCopiedMessage)
                             },
                             onSave = onSave,
-                            onEdit = onEdit,
+                            onEdit = { editingState = it },
                             onDelete = { item ->
                                 deletingItems = deletingItems + item.id
                                 scope.launch {
@@ -206,25 +233,28 @@ fun HistoryScreen(
                         stiffness = Spring.StiffnessMedium
                     )
                 ),
-                exit = fadeOut() + scaleOut(targetScale = 0.9f),
+                exit = if (reduceMotion) fadeOut(tween(80)) else fadeOut() + scaleOut(targetScale = 0.9f),
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 24.dp)
             ) {
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(CalculatorCornerRadius.Standard),
                     color = MaterialTheme.colorScheme.inverseSurface,
-                    tonalElevation = 4.dp
+                    tonalElevation = CalculatorElevation.Elevated
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.padding(
+                            horizontal = CalculatorPadding.Standard,
+                            vertical = CalculatorPadding.Medium
+                        ),
+                        horizontalArrangement = Arrangement.spacedBy(CalculatorSpacing.Small),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "✓",
-                            color = MaterialTheme.colorScheme.inverseOnSurface,
-                            style = MaterialTheme.typography.bodyMedium
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.inverseOnSurface
                         )
                         Text(
                             text = copyFeedbackMessage,
@@ -236,13 +266,25 @@ fun HistoryScreen(
             }
         }
     }
+
+    val stateToEdit = editingState
+    if (stateToEdit != null) {
+        HistoryEditDialog(
+            initialState = stateToEdit,
+            onDismiss = { editingState = null },
+            onSave = { updated ->
+                onEdit(updated)
+                editingState = null
+            }
+        )
+    }
 }
 
 // =============================================================================
 // HISTORY LIST - Animated list with staggered entrance
 // =============================================================================
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun HistoryList(
     items: List<HistoryState>,
@@ -254,10 +296,11 @@ private fun HistoryList(
     onEdit: (HistoryState) -> Unit,
     onDelete: (HistoryState) -> Unit
 ) {
+    val itemCount = items.size
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap)
     ) {
         itemsIndexed(
             items = items,
@@ -267,6 +310,7 @@ private fun HistoryList(
                 state = state,
                 isRecent = isRecent,
                 index = index,
+                totalCount = itemCount,
                 onUse = onUse,
                 onCopyExpression = onCopyExpression,
                 onCopyResult = onCopyResult,
@@ -282,12 +326,13 @@ private fun HistoryList(
 // HISTORY ITEM CARD - Beautiful card with interactions
 // =============================================================================
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun HistoryItemCard(
     state: HistoryState,
     isRecent: Boolean,
     index: Int,
+    totalCount: Int,
     onUse: (HistoryState) -> Unit,
     onCopyExpression: (HistoryState) -> Unit,
     onCopyResult: (HistoryState) -> Unit,
@@ -296,137 +341,159 @@ private fun HistoryItemCard(
     onDelete: (HistoryState) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val reduceMotion = LocalCalculatorReduceMotion.current
     val haptics = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
-    
+
     var showMenu by remember { mutableStateOf(false) }
-    var isPressed by remember { mutableStateOf(false) }
     var isDeleting by remember { mutableStateOf(false) }
-    
+
     val expression = state.editor.getTextString()
     val result = state.display.text
     val timestamp = remember(state.time) { formatHistoryTimestamp(state.time) }
 
-    // Entrance animation
-    var isVisible by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        delay(index * 50L)
-        isVisible = true
-    }
-
-    val scale by animateFloatAsState(
-        targetValue = if (isVisible && !isDeleting) 1f else 0.95f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMediumLow
-        ),
-        label = "scale"
-    )
-    
-    val alpha by animateFloatAsState(
-        targetValue = if (isVisible && !isDeleting) 1f else 0f,
-        animationSpec = tween(300),
-        label = "alpha"
-    )
-
-    // Press animation
-    val pressScale by animateFloatAsState(
-        targetValue = if (isPressed) 0.98f else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioLowBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
-        label = "pressScale"
-    )
-
     AnimatedVisibility(
         visible = !isDeleting,
-        exit = shrinkVertically(
-            animationSpec = tween(300, easing = FastOutSlowInEasing)
-        ) + fadeOut(tween(200)),
+        exit = if (reduceMotion) {
+            fadeOut(tween(80))
+        } else {
+            shrinkVertically(
+                animationSpec = tween(300, easing = FastOutSlowInEasing)
+            ) + fadeOut(tween(200))
+        },
         modifier = modifier
     ) {
-        Box(
+        SegmentedListItem(
             modifier = Modifier
-                .graphicsLayer {
-                    this.scaleX = scale * pressScale
-                    this.scaleY = scale * pressScale
-                    this.alpha = alpha
-                }
-                .shadow(
-                    elevation = if (isPressed) 2.dp else 4.dp,
-                    shape = RoundedCornerShape(20.dp),
-                    ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                    spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                )
-        ) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(
-                        onClick = { onUse(state) },
-                        onClickLabel = stringResource(Res.string.c_use)
-                    ),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
-                ),
-                elevation = CardDefaults.cardElevation(
-                    defaultElevation = 0.dp,
-                    pressedElevation = 0.dp
-                )
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
+                .fillMaxWidth(),
+            onClick = { onUse(state) },
+            shapes = ListItemDefaults.segmentedShapes(index = index, count = totalCount),
+            colors = ListItemDefaults.segmentedColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+            ),
+            trailingContent = {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    // Expression with monospace font
-                    Text(
-                        text = expression,
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontFamily = FontFamily.Monospace,
-                            fontWeight = FontWeight.Medium
-                        ),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
+                    SmallTextButton(
+                        imageVector = Icons.Filled.TextFields,
+                        contentDescription = stringResource(Res.string.c_copy_expression),
+                        onClick = {
+                            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            onCopyExpression(state)
+                        }
                     )
 
-                    // Result with emphasis
                     if (result.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "=",
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.Light
-                                ),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = result,
-                                style = MaterialTheme.typography.headlineSmall.copy(
-                                    fontFamily = FontFamily.Monospace,
-                                    fontWeight = FontWeight.Bold
-                                ),
-                                color = MaterialTheme.colorScheme.primary,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
+                        SmallTextButton(
+                            imageVector = Icons.Filled.Calculate,
+                            contentDescription = stringResource(Res.string.c_copy_result),
+                            onClick = {
+                                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                onCopyResult(state)
+                            }
+                        )
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Bottom row: timestamp + actions
+                    Box {
+                        SmallTextButton(
+                            imageVector = Icons.Filled.MoreVert,
+                            contentDescription = stringResource(Res.string.cpp_a11y_more_options),
+                            onClick = {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                showMenu = true
+                            }
+                        )
+                        val menuEntries = buildList<CalculatorMenuEntry> {
+                            add(
+                                CalculatorMenuEntry.Action(
+                                    label = stringResource(Res.string.c_use),
+                                    icon = Icons.Filled.Check,
+                                    onClick = {
+                                        showMenu = false
+                                        onUse(state)
+                                    }
+                                )
+                            )
+                            add(
+                                CalculatorMenuEntry.Action(
+                                    label = stringResource(Res.string.c_copy_expression),
+                                    icon = Icons.Filled.TextFields,
+                                    onClick = {
+                                        showMenu = false
+                                        onCopyExpression(state)
+                                    }
+                                )
+                            )
+                            if (result.isNotEmpty()) {
+                                add(
+                                    CalculatorMenuEntry.Action(
+                                        label = stringResource(Res.string.c_copy_result),
+                                        icon = Icons.Filled.Calculate,
+                                        onClick = {
+                                            showMenu = false
+                                            onCopyResult(state)
+                                        }
+                                    )
+                                )
+                            }
+                            add(CalculatorMenuEntry.Divider)
+                            if (isRecent) {
+                                add(
+                                    CalculatorMenuEntry.Action(
+                                        label = stringResource(Res.string.c_save),
+                                        icon = Icons.Filled.Star,
+                                        onClick = {
+                                            showMenu = false
+                                            onSave(state)
+                                        }
+                                    )
+                                )
+                            } else {
+                                add(
+                                    CalculatorMenuEntry.Action(
+                                        label = stringResource(Res.string.cpp_edit),
+                                        icon = Icons.Filled.Edit,
+                                        onClick = {
+                                            showMenu = false
+                                            onEdit(state)
+                                        }
+                                    )
+                                )
+                                add(
+                                    CalculatorMenuEntry.Action(
+                                        label = stringResource(Res.string.cpp_delete),
+                                        icon = Icons.Filled.DeleteOutline,
+                                        destructive = true,
+                                        showTrailingArrow = false,
+                                        onClick = {
+                                            showMenu = false
+                                            isDeleting = true
+                                            scope.launch {
+                                                delay(300)
+                                                onDelete(state)
+                                            }
+                                        }
+                                    )
+                                )
+                            }
+                        }
+                        CalculatorOverflowDropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false },
+                            entries = menuEntries
+                        )
+                    }
+                }
+            },
+            supportingContent = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Timestamp chip
                         Surface(
                             shape = RoundedCornerShape(8.dp),
                             color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f)
@@ -435,9 +502,10 @@ private fun HistoryItemCard(
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    text = "⏱",
-                                    style = MaterialTheme.typography.labelSmall
+                                Icon(
+                                    imageVector = Icons.Filled.History,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
@@ -447,116 +515,9 @@ private fun HistoryItemCard(
                                 )
                             }
                         }
-
-                        // Quick action buttons
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            // Copy expression
-                            SmallTextButton(
-                                text = "📋",
-                                contentDescription = stringResource(Res.string.c_copy_expression),
-                                onClick = { 
-                                    haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                    onCopyExpression(state)
-                                }
-                            )
-
-                            // Copy result (if available)
-                            if (result.isNotEmpty()) {
-                                SmallTextButton(
-                                    text = "🔢",
-                                    contentDescription = stringResource(Res.string.c_copy_result),
-                                    onClick = { 
-                                        haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                        onCopyResult(state)
-                                    }
-                                )
-                            }
-
-                            // More options
-                            Box {
-                                SmallTextButton(
-                                    text = "⋮",
-                                    contentDescription = "More options",
-                                    onClick = { 
-                                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        showMenu = true 
-                                    }
-                                )
-
-                                // Dropdown menu
-                                DropdownMenu(
-                                    expanded = showMenu,
-                                    onDismissRequest = { showMenu = false },
-                                    shape = RoundedCornerShape(16.dp),
-                                    containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
-                                ) {
-                                    DropdownMenuItem(
-                                        text = { Text("▶ Use in calculator") },
-                                        onClick = {
-                                            showMenu = false
-                                            onUse(state)
-                                        }
-                                    )
-                                    DropdownMenuItem(
-                                        text = { Text("📋 Copy expression") },
-                                        onClick = {
-                                            showMenu = false
-                                            onCopyExpression(state)
-                                        }
-                                    )
-                                    if (result.isNotEmpty()) {
-                                        DropdownMenuItem(
-                                            text = { Text("🔢 Copy result") },
-                                            onClick = {
-                                                showMenu = false
-                                                onCopyResult(state)
-                                            }
-                                        )
-                                    }
-                                    Divider()
-                                    if (isRecent) {
-                                        DropdownMenuItem(
-                                            text = { Text("🔖 Save calculation") },
-                                            onClick = {
-                                                showMenu = false
-                                                onSave(state)
-                                            }
-                                        )
-                                    } else {
-                                        DropdownMenuItem(
-                                            text = { Text("✏️ Edit") },
-                                            onClick = {
-                                                showMenu = false
-                                                onEdit(state)
-                                            }
-                                        )
-                                        DropdownMenuItem(
-                                            text = { 
-                                                Text(
-                                                    "🗑 Delete",
-                                                    color = MaterialTheme.colorScheme.error
-                                                ) 
-                                            },
-                                            onClick = {
-                                                showMenu = false
-                                                isDeleting = true
-                                                scope.launch {
-                                                    delay(300)
-                                                    onDelete(state)
-                                                }
-                                            }
-                                        )
-                                    }
-                                }
-                            }
-                        }
                     }
 
-                    // Comment for saved items
                     if (!isRecent && state.comment.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(12.dp))
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(10.dp),
@@ -566,9 +527,10 @@ private fun HistoryItemCard(
                                 modifier = Modifier.padding(12.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    text = "📝",
-                                    style = MaterialTheme.typography.bodyMedium
+                                Icon(
+                                    imageVector = Icons.Filled.Edit,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
@@ -582,8 +544,35 @@ private fun HistoryItemCard(
                         }
                     }
                 }
+            },
+            content = {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(
+                        text = expression,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Medium
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    if (result.isNotEmpty()) {
+                        Text(
+                            text = "= $result",
+                            style = MaterialTheme.typography.headlineSmall.copy(
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = MaterialTheme.colorScheme.primary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
             }
-        }
+        )
     }
 }
 
@@ -593,13 +582,14 @@ private fun HistoryItemCard(
 
 @Composable
 private fun SmallTextButton(
-    text: String,
+    imageVector: ImageVector,
     contentDescription: String,
     onClick: () -> Unit
 ) {
+    val reduceMotion = LocalCalculatorReduceMotion.current
     var isPressed by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.85f else 1f,
+        targetValue = if (reduceMotion) 1f else if (isPressed) 0.85f else 1f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessHigh
@@ -609,27 +599,84 @@ private fun SmallTextButton(
 
     Box(
         modifier = Modifier
-            .size(36.dp)
+            .size(44.dp)
             .graphicsLayer { scaleX = scale; scaleY = scale }
             .clip(CircleShape)
             .clickable { 
-                isPressed = true
+                if (!reduceMotion) isPressed = true
                 onClick()
             },
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyMedium
+        Icon(
+            imageVector = imageVector,
+            contentDescription = contentDescription,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 
     LaunchedEffect(isPressed) {
-        if (isPressed) {
+        if (isPressed && !reduceMotion) {
             delay(150)
             isPressed = false
         }
     }
+}
+
+@Composable
+private fun HistoryEditDialog(
+    initialState: HistoryState,
+    onDismiss: () -> Unit,
+    onSave: (HistoryState) -> Unit
+) {
+    var comment by remember(initialState.id) { mutableStateOf(initialState.comment) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(Res.string.cpp_history_edit_saved_entry)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    text = initialState.editor.getTextString(),
+                    style = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (initialState.display.text.isNotBlank()) {
+                    Text(
+                        text = "= ${initialState.display.text}",
+                        style = MaterialTheme.typography.bodyLarge.copy(fontFamily = FontFamily.Monospace),
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                OutlinedTextField(
+                    value = comment,
+                    onValueChange = { comment = it },
+                    label = { Text(stringResource(Res.string.cpp_comment)) },
+                    minLines = 2,
+                    maxLines = 4,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onSave@{
+                    onSave(initialState.copy(comment = comment.trim()))
+                }
+            ) {
+                Text(stringResource(Res.string.cpp_done))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(Res.string.cpp_back))
+            }
+        }
+    )
 }
 
 // =============================================================================
@@ -639,6 +686,7 @@ private fun SmallTextButton(
 @Composable
 private fun EmptyHistoryState(
     isRecent: Boolean, 
+    reduceMotion: Boolean,
     onStartCalculating: () -> Unit = {}
 ) {
     Column(
@@ -649,16 +697,20 @@ private fun EmptyHistoryState(
         verticalArrangement = Arrangement.Center
     ) {
         // Animated icon container
-        val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-        val pulseScale by infiniteTransition.animateFloat(
-            initialValue = 1f,
-            targetValue = 1.05f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(2000, easing = FastOutSlowInEasing),
-                repeatMode = RepeatMode.Reverse
-            ),
-            label = "pulse"
-        )
+        val pulseScale = if (reduceMotion) {
+            1f
+        } else {
+            val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+            infiniteTransition.animateFloat(
+                initialValue = 1f,
+                targetValue = 1.05f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(2000, easing = FastOutSlowInEasing),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "pulse"
+            ).value
+        }
 
         Surface(
             modifier = Modifier
@@ -669,10 +721,11 @@ private fun EmptyHistoryState(
             shadowElevation = 8.dp
         ) {
             Box(contentAlignment = Alignment.Center) {
-                Text(
-                    text = if (isRecent) "⏱" else "🔖",
-                    style = MaterialTheme.typography.displayLarge,
-                    color = MaterialTheme.colorScheme.primary
+                Icon(
+                    imageVector = if (isRecent) Icons.Filled.History else Icons.Filled.Star,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(56.dp)
                 )
             }
         }
@@ -715,7 +768,10 @@ private fun EmptyHistoryState(
                     containerColor = MaterialTheme.colorScheme.primary
                 )
             ) {
-                Text("🔢")
+                Icon(
+                    imageVector = Icons.Filled.Calculate,
+                    contentDescription = null
+                )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     stringResource(Res.string.cpp_start_calculating),

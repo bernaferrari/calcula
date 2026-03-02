@@ -26,20 +26,24 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.compose.koinInject
 import org.solovyev.android.calculator.AppPreferences
@@ -54,10 +58,10 @@ import org.solovyev.android.calculator.ui.onboarding.OnboardingScreen
 import org.solovyev.android.calculator.ui.history.HistoryScreen
 import org.solovyev.android.calculator.ui.history.HistoryViewModel
 import org.solovyev.android.calculator.ui.about.AboutScreen
+import org.solovyev.android.calculator.ui.about.AboutActions
 import org.solovyev.android.calculator.GuiMode
 import org.solovyev.android.calculator.GuiTheme
-import org.solovyev.android.calculator.ui.nb.CalculatorScreenWithStyle
-import org.solovyev.android.calculator.ui.nb.UiStyle
+import org.solovyev.android.calculator.ui.settings.Language
 import org.solovyev.android.calculator.ui.settings.SettingsDestination
 import org.solovyev.android.calculator.ui.settings.SettingsScreen
 import org.solovyev.android.calculator.ui.settings.SettingsViewModel
@@ -117,8 +121,18 @@ private val navConfig = SavedStateConfiguration {
 @Composable
 fun CalculatorApp(
     initialExpression: String? = null,
+    openConverter: Boolean = false,
     openHistory: Boolean = false,
+    openSettings: Boolean = false,
+    openVariables: Boolean = false,
+    openFunctions: Boolean = false,
     onInitialExpressionConsumed: () -> Unit = {},
+    onOpenConverterConsumed: () -> Unit = {},
+    onOpenHistoryConsumed: () -> Unit = {},
+    onOpenSettingsConsumed: () -> Unit = {},
+    onOpenVariablesConsumed: () -> Unit = {},
+    onOpenFunctionsConsumed: () -> Unit = {},
+    availableLanguages: List<Language> = emptyList(),
     viewModel: CalculatorViewModel = koinViewModel(),
     historyViewModel: HistoryViewModel = koinViewModel(),
     settingsViewModel: SettingsViewModel = koinViewModel(),
@@ -137,18 +151,50 @@ fun CalculatorApp(
         navConfig,
         if (!onboardingFinished) OnboardingKey else CalculatorKey
     )
+    var settingsDestination by rememberSaveable { mutableStateOf(SettingsDestination.MAIN) }
+
+    LaunchedEffect(openConverter, onboardingFinished) {
+        if (onboardingFinished && openConverter) {
+            backStack.pushUnique(ConverterKey)
+            onOpenConverterConsumed()
+        }
+    }
 
     LaunchedEffect(openHistory, onboardingFinished) {
         if (onboardingFinished && openHistory) {
             backStack.pushUnique(HistoryKey)
+            onOpenHistoryConsumed()
         }
     }
 
-    var settingsDestination by rememberSaveable { mutableStateOf(SettingsDestination.MAIN) }
+    LaunchedEffect(openSettings, onboardingFinished) {
+        if (onboardingFinished && openSettings) {
+            settingsDestination = SettingsDestination.MAIN
+            backStack.pushUnique(SettingsKey)
+            onOpenSettingsConsumed()
+        }
+    }
+
+    LaunchedEffect(openVariables, onboardingFinished) {
+        if (onboardingFinished && openVariables) {
+            backStack.pushUnique(VariablesKey)
+            onOpenVariablesConsumed()
+        }
+    }
+
+    LaunchedEffect(openFunctions, onboardingFinished) {
+        if (onboardingFinished && openFunctions) {
+            backStack.pushUnique(FunctionsKey)
+            onOpenFunctionsConsumed()
+        }
+    }
+    val scope = rememberCoroutineScope()
 
     val themePreference by appPreferences.gui.theme.collectAsState(initial = GuiTheme.material_theme.id)
     val modeState by appPreferences.gui.mode.collectAsState(initial = GuiMode.modern.id)
     val highContrast by appPreferences.gui.highContrast.collectAsState(initial = false)
+    val reduceMotion by appPreferences.gui.reduceMotion.collectAsState(initial = false)
+    val fontScale by appPreferences.gui.fontScale.collectAsState(initial = 1.0f)
     val vibrateOnKeypress by appPreferences.gui.vibrateOnKeypress.collectAsState(initial = true)
     val themeSeed by appPreferences.gui.themeSeed.collectAsState(initial = 0xFF13ABF1.toInt())
     val dynamicColor by appPreferences.gui.dynamicColor.collectAsState(initial = true)
@@ -156,6 +202,12 @@ fun CalculatorApp(
     val soundIntensity by appPreferences.sound.intensity.collectAsState(initial = 70)
     val gestureAutoActivation by appPreferences.gestures.gestureAutoActivationEnabled.collectAsState(initial = false)
     val showBottomRightEqualsKey by appPreferences.gestures.bottomRightEqualsEnabled.collectAsState(initial = false)
+    val layerUpEnabled by appPreferences.gestures.layerUpEnabled.collectAsState(initial = true)
+    val layerDownEnabled by appPreferences.gestures.layerDownEnabled.collectAsState(initial = true)
+    val layerEngineerEnabled by appPreferences.gestures.layerEngineerEnabled.collectAsState(initial = true)
+    val bitwiseWordSize by appPreferences.settings.bitwiseWordSize.collectAsState(initial = 64)
+    val bitwiseSigned by appPreferences.settings.bitwiseSigned.collectAsState(initial = true)
+    val aboutActions = koinInject<AboutActions>()
 
     // Initialize and cleanup sound manager
     val soundManager = koinInject<CalculatorSoundManager>()
@@ -194,19 +246,46 @@ fun CalculatorApp(
         seedColor = Color(themeSeed),
         useDynamicColor = dynamicColor
     ) {
-        NavDisplay(
-            backStack = backStack,
-            modifier = Modifier.fillMaxSize(),
-            transitionSpec = {
-                fadeIn(animationSpec = tween(200)) togetherWith
-                fadeOut(animationSpec = tween(150))
-            },
-            popTransitionSpec = {
-                fadeIn(animationSpec = tween(200)) togetherWith
-                fadeOut(animationSpec = tween(150))
-            },
-            onBack = { backStack.popOrCalculator() },
-            entryProvider = entryProvider {
+        CompositionLocalProvider(
+            LocalCalculatorHighContrast provides highContrast,
+            LocalCalculatorReduceMotion provides reduceMotion,
+            LocalCalculatorFontScale provides fontScale
+        ) {
+            NavDisplay(
+                backStack = backStack,
+                modifier = Modifier.fillMaxSize(),
+                transitionSpec = {
+                    val settingsContentKey = SettingsKey.toString()
+                    val targetIsSettings = targetState.entries.any { it.contentKey == settingsContentKey }
+                    val initialIsSettings = initialState.entries.any { it.contentKey == settingsContentKey }
+                    if (targetIsSettings && !initialIsSettings) {
+                        slideInHorizontally(
+                            initialOffsetX = { it },
+                            animationSpec = tween(280)
+                        ) + fadeIn(animationSpec = tween(180)) togetherWith
+                            fadeOut(animationSpec = tween(140))
+                    } else {
+                        fadeIn(animationSpec = tween(200)) togetherWith
+                            fadeOut(animationSpec = tween(150))
+                    }
+                },
+                popTransitionSpec = {
+                    val settingsContentKey = SettingsKey.toString()
+                    val targetIsSettings = targetState.entries.any { it.contentKey == settingsContentKey }
+                    val initialIsSettings = initialState.entries.any { it.contentKey == settingsContentKey }
+                    if (initialIsSettings && !targetIsSettings) {
+                        fadeIn(animationSpec = tween(180)) togetherWith
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(260)
+                            ) + fadeOut(animationSpec = tween(120))
+                    } else {
+                        fadeIn(animationSpec = tween(200)) togetherWith
+                            fadeOut(animationSpec = tween(150))
+                    }
+                },
+                onBack = { backStack.popOrFallback(CalculatorKey) },
+                entryProvider = entryProvider {
                 entry<OnboardingKey> {
                     OnboardingScreen(
                         onComplete = {
@@ -216,22 +295,42 @@ fun CalculatorApp(
                     )
                 }
                 entry<CalculatorKey> {
-                    val keyboardMode = when (GuiMode.fromId(modeState)) {
+                    val guiMode = GuiMode.fromId(modeState)
+                    val keyboardMode = when (guiMode) {
                         GuiMode.simple -> KeyboardMode.MODERN
-                        GuiMode.engineer -> KeyboardMode.ENGINEER
+                        GuiMode.engineer -> if (layerEngineerEnabled) KeyboardMode.ENGINEER else KeyboardMode.MODERN
                         GuiMode.modern -> KeyboardMode.MODERN
                     }
-
-                    val recentHistory by viewModel.recentHistory.collectAsState()
 
                     // Provide sound manager and enabled state via CompositionLocal
                     CompositionLocalProvider(
                         LocalCalculatorSoundManager provides soundManager,
                         LocalCalculatorSoundsEnabled provides soundEnabled
                     ) {
-                        CalculatorScreenWithStyle(
-                            uiStyle = UiStyle.CLASSIC,
-                            keyboardMode = keyboardMode,
+                        val keyboardActions = rememberKeyboardActions(
+                            viewModel = viewModel,
+                            onOpenSettings = {
+                                settingsDestination = SettingsDestination.MAIN
+                                backStack.pushUnique(SettingsKey)
+                            },
+                            onOpenHistory = { backStack.pushUnique(HistoryKey) },
+                            onOpenFunctions = { backStack.pushUnique(FunctionsKey) },
+                            onOpenVars = { backStack.pushUnique(VariablesKey) },
+                            onOpenGraph = { backStack.pushUnique(GraphKey) },
+                            onCopy = {
+                                if (displayState.valid && displayState.text.isNotBlank()) {
+                                    clipboardManager.setText(AnnotatedString(displayState.text))
+                                }
+                            },
+                            onPaste = {
+                                val pasted = clipboardManager.getText()?.text.orEmpty()
+                                if (pasted.isNotBlank()) {
+                                    viewModel.insert(pasted)
+                                }
+                            }
+                        )
+
+                        CalculatorScreen(
                             displayState = displayState,
                             editorState = editorState,
                             previewResult = previewResult,
@@ -241,12 +340,8 @@ fun CalculatorApp(
                             tapeMode = tapeMode,
                             tapeEntries = tapeEntries,
                             liveTapeEntry = liveTapeEntry,
-                            recentHistory = recentHistory,
-                            memoryActiveRegister = null,
-                            numeralBase = numeralBase,
-                            bitwiseWordSize = 64,
-                            bitwiseSigned = true,
-                            bitwiseOverflow = false,
+                            onCopy = keyboardActions::onCopy,
+                            onEquals = keyboardActions::onEquals,
                             onEditorTextChange = { text, selection -> viewModel.onEditorTextChange(text, selection) },
                             onEditorSelectionChange = { viewModel.onEditorSelectionChange(it) },
                             onOpenHistory = { backStack.pushUnique(HistoryKey) },
@@ -260,32 +355,40 @@ fun CalculatorApp(
                             onOpenGraph = { backStack.pushUnique(GraphKey) },
                             onOpenFormulas = { backStack.pushUnique(FormulasKey) },
                             onOpenAbout = { backStack.pushUnique(AboutKey) },
-                            showBottomToolbar = true,
-                            onClearTape = viewModel::clearTape,
-                            onHistoryItemClick = { state ->
-                                viewModel.onEditorTextChange(
-                                    text = state.editor.getTextString(),
-                                    selection = state.editor.selection
-                                )
+                            layerUpEnabled = layerUpEnabled,
+                            layerDownEnabled = layerDownEnabled,
+                            layerEngineerEnabled = layerEngineerEnabled,
+                            onSetLayerUpEnabled = { enabled ->
+                                scope.launch { appPreferences.gestures.setLayerUpEnabled(enabled) }
                             },
-                            onHistoryItemDelete = null, // Optional - can be implemented
+                            onSetLayerDownEnabled = { enabled ->
+                                scope.launch { appPreferences.gestures.setLayerDownEnabled(enabled) }
+                            },
+                            onSetLayerEngineerEnabled = { enabled ->
+                                scope.launch { appPreferences.gestures.setLayerEngineerEnabled(enabled) }
+                            },
+                            onCursorLeft = keyboardActions::onCursorLeft,
+                            onCursorRight = keyboardActions::onCursorRight,
+                            onCursorToStart = keyboardActions::onCursorToStart,
+                            onCursorToEnd = keyboardActions::onCursorToEnd,
+                            onDelete = keyboardActions::onDelete,
+                            onClearTape = viewModel::clearTape,
                             hapticsEnabled = vibrateOnKeypress,
-                            soundsEnabled = soundEnabled,
-                            gestureAutoActivation = gestureAutoActivation,
-                            showBottomRightEqualsKey = showBottomRightEqualsKey,
-                            reduceMotion = false,
-                            fontScale = 1.0f,
-                            keyboardActions = rememberKeyboardActions(
-                                viewModel = viewModel,
-                                onOpenSettings = {
-                                    settingsDestination = SettingsDestination.MAIN
-                                    backStack.pushUnique(SettingsKey)
-                                },
-                                onOpenHistory = { backStack.pushUnique(HistoryKey) },
-                                onOpenFunctions = { backStack.pushUnique(FunctionsKey) },
-                                onOpenVars = { backStack.pushUnique(VariablesKey) },
-                                onOpenGraph = { backStack.pushUnique(GraphKey) }
-                            )
+                            keyboard = { keyboardModifier ->
+                                CalculatorKeyboard(
+                                    mode = keyboardMode,
+                                    actions = keyboardActions,
+                                    numeralBase = numeralBase,
+                                    bitwiseWordSize = bitwiseWordSize,
+                                    bitwiseSigned = bitwiseSigned,
+                                    isSimpleMode = guiMode == GuiMode.simple,
+                                    gestureAutoActivation = gestureAutoActivation,
+                                    showBottomRightEqualsKey = showBottomRightEqualsKey,
+                                    layerUpEnabled = layerUpEnabled,
+                                    layerDownEnabled = layerDownEnabled,
+                                    modifier = keyboardModifier
+                                )
+                            }
                         )
                     }
                 }
@@ -301,7 +404,7 @@ fun CalculatorApp(
                                 text = state.editor.getTextString(),
                                 selection = state.editor.selection
                             )
-                            backStack.popOrCalculator()
+                            backStack.popOrFallback(CalculatorKey)
                         },
                         onCopyExpression = { state ->
                             clipboardManager.setText(AnnotatedString(state.editor.getTextString()))
@@ -314,7 +417,7 @@ fun CalculatorApp(
                         onDelete = historyViewModel::onDelete,
                         onClearRecent = historyViewModel::onClearRecent,
                         onClearSaved = historyViewModel::onClearSaved,
-                        onBack = { backStack.popOrCalculator() }
+                        onBack = { backStack.popOrFallback(CalculatorKey) }
                     )
                 }
                 entry<FormulasKey> {
@@ -324,49 +427,55 @@ fun CalculatorApp(
                         viewModel = formulaViewModel,
                         onUseResult = { result ->
                             viewModel.insert(result)
-                            backStack.popOrCalculator()
+                            backStack.popOrFallback(CalculatorKey)
                         },
-                        onBack = { backStack.popOrCalculator() }
+                        onBack = { backStack.popOrFallback(CalculatorKey) }
                     )
                 }
                 entry<VariablesKey> {
                     VariablesScreen(
-                        onBack = { backStack.popOrCalculator() }
+                        onBack = { backStack.popOrFallback(CalculatorKey) }
                     )
                 }
                 entry<FunctionsKey> {
                     FunctionsScreen(
-                        onBack = { backStack.popOrCalculator() }
+                        onBack = { backStack.popOrFallback(CalculatorKey) }
                     )
                 }
                 entry<AboutKey> {
                     AboutScreen(
-                        onBack = { backStack.popOrCalculator() }
+                        onBack = { backStack.popOrFallback(CalculatorKey) }
                     )
                 }
                 entry<ConverterKey> {
                     ConverterDialog(
-                        onDismissRequest = { backStack.popOrCalculator() }
+                        onDismissRequest = { backStack.popOrFallback(CalculatorKey) }
                     )
                 }
                 entry<GraphKey> {
                     GraphingScreen(
                         initialExpression = editorState.text.toString(),
-                        onBack = { backStack.popOrCalculator() }
+                        onBack = { backStack.popOrFallback(CalculatorKey) }
                     )
                 }
                 entry<SettingsKey> {
                     val settingsState by settingsViewModel.state.collectAsState()
+                    val focusManager = LocalFocusManager.current
 
-                    BackHandler(enabled = settingsDestination != SettingsDestination.MAIN) {
-                        settingsDestination = SettingsDestination.MAIN
+                    BackHandler(enabled = true) {
+                        focusManager.clearFocus(force = true)
+                        if (settingsDestination == SettingsDestination.MAIN) {
+                            backStack.popOrFallback(CalculatorKey)
+                        } else {
+                            settingsDestination = SettingsDestination.MAIN
+                        }
                     }
 
                     SettingsScaffold(
                         title = settingsTitle(settingsDestination),
                         onBack = {
                             if (settingsDestination == SettingsDestination.MAIN) {
-                                backStack.popOrCalculator()
+                                backStack.popOrFallback(CalculatorKey)
                             } else {
                                 settingsDestination = SettingsDestination.MAIN
                             }
@@ -385,17 +494,25 @@ fun CalculatorApp(
                                 state = settingsState,
                                 actions = settingsViewModel,
                                 onNavigate = { nextDestination -> settingsDestination = nextDestination },
-                                onStartWizard = { settingsDestination = SettingsDestination.MAIN },
+                                onStartWizard = {
+                                    settingsDestination = SettingsDestination.MAIN
+                                    scope.launch {
+                                        appPreferences.wizard.setFinished(false)
+                                    }
+                                    backStack.clear()
+                                    backStack.add(OnboardingKey)
+                                },
                                 onOpenAbout = { backStack.pushUnique(AboutKey) },
-                                onReportBug = {},
-                                languages = emptyList(),
+                                onReportBug = { aboutActions.sendEmail() },
+                                languages = availableLanguages,
                                 adFreePurchased = true
                             )
                         }
                     }
                 }
-            }
-        )
+                }
+            )
+        }
     }
 }
 
@@ -406,6 +523,8 @@ private fun SettingsScaffold(
     onBack: () -> Unit,
     content: @Composable () -> Unit
 ) {
+    val focusManager = LocalFocusManager.current
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.surface,
@@ -415,7 +534,10 @@ private fun SettingsScaffold(
         topBar = {
             StandardTopAppBar(
                 title = title,
-                onBack = onBack,
+                onBack = {
+                    focusManager.clearFocus(force = true)
+                    onBack()
+                },
                 containerColor = MaterialTheme.colorScheme.surface
             )
         }
@@ -433,28 +555,12 @@ private fun SettingsScaffold(
 
 @Composable
 private fun settingsTitle(destination: SettingsDestination): String = when (destination) {
-    SettingsDestination.MAIN -> "Settings"
-    SettingsDestination.NUMBER_FORMAT -> "Number Format"
-    SettingsDestination.APPEARANCE -> "Appearance"
-    SettingsDestination.ACCESSIBILITY -> "Accessibility"
-    SettingsDestination.WIDGET -> "Widget"
-    SettingsDestination.OTHER -> "Advanced"
-}
-
-private fun MutableList<NavKey>.popOrCalculator() {
-    if (size > 1) {
-        removeLastOrNull()
-        return
-    }
-    if (firstOrNull() != CalculatorKey) {
-        clear()
-        add(CalculatorKey)
-    }
-}
-
-private fun MutableList<NavKey>.pushUnique(key: NavKey) {
-    if (lastOrNull() == key) return
-    add(key)
+    SettingsDestination.MAIN -> stringResource(Res.string.cpp_settings)
+    SettingsDestination.NUMBER_FORMAT -> stringResource(Res.string.cpp_number_format)
+    SettingsDestination.APPEARANCE -> stringResource(Res.string.cpp_appearance)
+    SettingsDestination.ACCESSIBILITY -> stringResource(Res.string.cpp_accessibility)
+    SettingsDestination.WIDGET -> stringResource(Res.string.cpp_widget)
+    SettingsDestination.OTHER -> stringResource(Res.string.cpp_prefs_advanced)
 }
 
 @Composable
@@ -464,7 +570,9 @@ private fun rememberKeyboardActions(
     onOpenHistory: () -> Unit,
     onOpenFunctions: () -> Unit,
     onOpenVars: () -> Unit,
-    onOpenGraph: () -> Unit
+    onOpenGraph: () -> Unit,
+    onCopy: () -> Unit,
+    onPaste: () -> Unit
 ): KeyboardActions {
     return object : KeyboardActions {
         override fun onNumberClick(number: String) = viewModel.onDigitPressed(number)
@@ -490,12 +598,8 @@ private fun rememberKeyboardActions(
         override fun onCursorRight() = viewModel.moveCursorRight()
         override fun onCursorToStart() = viewModel.moveCursorToStart()
         override fun onCursorToEnd() = viewModel.moveCursorToEnd()
-        override fun onCopy() {
-            // Handled at screen level
-        }
-        override fun onPaste() {
-            // Handled at screen level
-        }
+        override fun onCopy() = onCopy()
+        override fun onPaste() = onPaste()
         override fun onOpenVars() = onOpenVars()
         override fun onOpenFunctions() = onOpenFunctions()
         override fun onOpenHistory() = onOpenHistory()

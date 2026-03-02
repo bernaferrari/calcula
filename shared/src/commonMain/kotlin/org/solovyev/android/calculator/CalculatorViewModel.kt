@@ -317,18 +317,13 @@ class CalculatorViewModel(
                             }
                         }
                         is LiveInputClassifier.Result.Incomplete -> {
-                            if (lastLiveKind != LiveKind.Incomplete) {
-                                display.setState(DisplayState.empty())
-                            }
+                            showGhostResultForIncomplete(event.newState.sequence)
                             _previewResult.value = null
                             lastLiveKind = LiveKind.Incomplete
                             lastLiveExpression = ""
                         }
                         is LiveInputClassifier.Result.Expression -> {
                             if (forcedRecalculation || classification.normalized != lastLiveExpression) {
-                                if (lastLiveKind != LiveKind.Expression) {
-                                    display.setState(DisplayState.empty())
-                                }
                                 lastLiveKind = LiveKind.Expression
                                 lastLiveExpression = classification.normalized
                                 liveEvalJob = viewModelScope.launch {
@@ -386,6 +381,21 @@ class CalculatorViewModel(
                 _previewResult.value = null
             }
             refreshLiveTape()
+        }
+    }
+
+    private fun showGhostResultForIncomplete(sequence: Long) {
+        val previous = display.getState()
+        if (previous.text.isNotEmpty()) {
+            display.setState(
+                DisplayState(
+                    text = previous.text,
+                    valid = false,
+                    sequence = sequence,
+                    operation = previous.operation,
+                    result = previous.result
+                )
+            )
         }
     }
 
@@ -744,7 +754,7 @@ class CalculatorViewModel(
     fun onSpecialClick(action: String) {
         if (_rpnMode.value) {
             when (action) {
-                "()" -> viewModelScope.launch { rpnEnter() }
+                "()", "(...)", "(…)" -> viewModelScope.launch { rpnEnter() }
                 "^" -> viewModelScope.launch { rpnApplyBinaryOperator("^") }
                 "^2" -> viewModelScope.launch { rpnApplyUnaryExpression("(%s)^2") }
                 "^3" -> viewModelScope.launch { rpnApplyUnaryExpression("(%s)^3") }
@@ -755,10 +765,14 @@ class CalculatorViewModel(
             return
         }
         val selectionOffset = when (action) {
-            "()" -> -1
+            "()", "(...)", "(…)" -> -1
             else -> 0
         }
-        insert(action, selectionOffset)
+        val normalizedAction = when (action) {
+            "(...)", "(…)" -> "()"
+            else -> action
+        }
+        insert(normalizedAction, selectionOffset)
     }
 
     private fun clearRpnState(resetEditorAndDisplay: Boolean) {

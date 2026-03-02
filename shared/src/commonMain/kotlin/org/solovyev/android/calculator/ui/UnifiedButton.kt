@@ -4,6 +4,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
@@ -12,7 +13,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,6 +36,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.solovyev.android.calculator.ui.tokens.CalculatorButtonBorderTokens
+import org.solovyev.android.calculator.ui.tokens.CalculatorGestureTokens
 
 /**
  * Unified calculator button with clean, minimal styling.
@@ -62,12 +64,19 @@ fun UnifiedButton(
     var isPressed by remember { mutableStateOf(false) }
     val haptics = LocalHapticFeedback.current
     val hapticsEnabled = LocalCalculatorHapticsEnabled.current
+    val layerUpEnabled = LocalCalculatorLayerUpEnabled.current
+    val layerDownEnabled = LocalCalculatorLayerDownEnabled.current
     val density = LocalDensity.current
+    val effectiveOnSwipeUp = if (layerUpEnabled) onSwipeUp else null
+    val effectiveOnSwipeDown = if (layerDownEnabled) onSwipeDown else null
     
     val longPressTimeout = 400L
     val touchSlop = with(density) { 8.dp.toPx() }
     val minDragDistancePx = with(density) { 30.dp.toPx() }
-    val autoActivationThresholdPx = with(density) { (minDragDistancePx * 0.8f).coerceAtLeast(16.dp.toPx()) }
+    val autoActivationThresholdPx = with(density) {
+        (minDragDistancePx * CalculatorGestureTokens.AutoActivationThresholdRatio)
+            .coerceAtLeast(CalculatorGestureTokens.AutoActivationMinDistance.toPx())
+    }
 
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.92f else 1f,
@@ -105,20 +114,32 @@ fun UnifiedButton(
     val shape = RoundedCornerShape(cornerRadius)
     val effectiveTextColor = if (enabled) textColor else textColor.copy(alpha = 0.45f)
     val effectiveBackgroundColor = if (enabled) backgroundColor else backgroundColor.copy(alpha = 0.55f)
+    val borderColor = rememberButtonBorderColor(
+        enabled = enabled,
+        pressed = isPressed,
+        emphasis = if (buttonType == ButtonType.DIGIT) {
+            ButtonBorderEmphasis.DIGIT
+        } else {
+            ButtonBorderEmphasis.ACCENT
+        }
+    )
 
     Box(
         modifier = modifier
             .clip(shape)
             .background(effectiveBackgroundColor)
+            .border(CalculatorButtonBorderTokens.Width, borderColor, shape)
             .pointerInput(
                 enabled,
                 onClick,
                 onLongClick,
-                onSwipeUp,
-                onSwipeDown,
+                effectiveOnSwipeUp,
+                effectiveOnSwipeDown,
                 onSwipeLeft,
                 onSwipeRight,
-                gestureAutoActivation
+                gestureAutoActivation,
+                layerUpEnabled,
+                layerDownEnabled
             ) {
                 awaitEachGesture {
                     val down = awaitFirstDown()
@@ -147,8 +168,8 @@ fun UnifiedButton(
                                 if (distance >= minDragDistancePx) {
                                     val swipeHandled = handleSwipe(
                                         delta = delta,
-                                        onSwipeUp = onSwipeUp,
-                                        onSwipeDown = onSwipeDown,
+                                        onSwipeUp = effectiveOnSwipeUp,
+                                        onSwipeDown = effectiveOnSwipeDown,
                                         onSwipeLeft = onSwipeLeft,
                                         onSwipeRight = onSwipeRight,
                                         haptics = haptics,
@@ -183,8 +204,8 @@ fun UnifiedButton(
                                 if (delta.getDistance() >= autoActivationThresholdPx) {
                                     val swipeHandled = handleSwipe(
                                         delta = delta,
-                                        onSwipeUp = onSwipeUp,
-                                        onSwipeDown = onSwipeDown,
+                                        onSwipeUp = effectiveOnSwipeUp,
+                                        onSwipeDown = effectiveOnSwipeDown,
                                         onSwipeLeft = onSwipeLeft,
                                         onSwipeRight = onSwipeRight,
                                         haptics = haptics,

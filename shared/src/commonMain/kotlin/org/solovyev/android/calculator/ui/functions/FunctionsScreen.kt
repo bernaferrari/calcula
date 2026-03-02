@@ -1,6 +1,5 @@
 package org.solovyev.android.calculator.ui.functions
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -9,30 +8,38 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Surface
+import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -43,6 +50,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -79,8 +89,10 @@ private data class FunctionUiModel(
     val function: Function,
     val title: String,
     val signature: String,
+    val parameters: List<String>,
     val body: String?,
     val description: String?,
+    val canEdit: Boolean,
     val canDelete: Boolean
 )
 
@@ -91,42 +103,47 @@ private data class OperatorUiModel(
     val description: String?
 )
 
-@OptIn(KoinExperimentalAPI::class, ExperimentalMaterial3Api::class)
+@OptIn(
+    KoinExperimentalAPI::class,
+    ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3ExpressiveApi::class
+)
 @Composable
 fun FunctionsScreen(
     onBack: () -> Unit,
     viewModel: FunctionsViewModel = koinViewModel()
 ) {
-    val tick by viewModel.refreshTick.collectAsState()
+    val refreshVersion by viewModel.refreshTick.collectAsState()
     val functionCategories = remember { viewModel.getFunctionCategories() }
     val operatorCategories = remember { viewModel.getOperatorCategories() }
     val functionCategoryTitles = functionCategories.map { stringResource(it.title) }
     val operatorCategoryTitles = operatorCategories.map { stringResource(it.title) }
 
-    var selectedTypeIndex by rememberSaveable { mutableIntStateOf(0) }
+    var selectedEntityTypeIndex by rememberSaveable { mutableIntStateOf(0) }
     var selectedFunctionCategoryIndex by rememberSaveable { mutableIntStateOf(0) }
     var selectedOperatorCategoryIndex by rememberSaveable { mutableIntStateOf(0) }
-    var query by rememberSaveable { mutableStateOf("") }
+    var searchQuery by rememberSaveable { mutableStateOf("") }
     var showAddDialog by remember { mutableStateOf(false) }
+    var functionToEdit by remember { mutableStateOf<FunctionUiModel?>(null) }
     var functionToDelete by remember { mutableStateOf<Function?>(null) }
 
-    val selectedType = if (selectedTypeIndex == 0) FunctionEntityType.Functions else FunctionEntityType.Operators
+    val selectedEntityType = if (selectedEntityTypeIndex == 0) FunctionEntityType.Functions else FunctionEntityType.Operators
     val selectedFunctionCategory = functionCategories.getOrElse(selectedFunctionCategoryIndex) { FunctionCategory.common }
     val selectedOperatorCategory = operatorCategories.getOrElse(selectedOperatorCategoryIndex) { OperatorCategory.Common }
-    val functionAlreadyExists = stringResource(Res.string.function_already_exists)
 
-    val functionCategoryCounts = remember(tick, functionCategories) {
+    val functionCategoryCounts = remember(refreshVersion, functionCategories) {
         functionCategories.associateWith { category -> viewModel.getFunctionsFor(category).size }
     }
-    val operatorCategoryCounts = remember(tick, operatorCategories) {
+    val operatorCategoryCounts = remember(refreshVersion, operatorCategories) {
         operatorCategories.associateWith { category -> viewModel.getOperatorsFor(category).size }
     }
 
-    val functionModels = remember(tick, selectedFunctionCategory, query) {
-        val normalized = query.trim().lowercase()
+    val functionModels = remember(refreshVersion, selectedFunctionCategory, searchQuery) {
+        val normalizedQuery = searchQuery.trim().lowercase()
         viewModel.getFunctionsFor(selectedFunctionCategory)
             .map { function ->
                 val signature = buildFunctionSignature(function)
+                val parameters = (function as? IFunction)?.getParameterNames().orEmpty()
                 val body = (function as? IFunction)?.getContent()
                 val description = viewModel.getFunctionDescription(function)
                     ?: (function as? IFunction)?.getDescription()
@@ -134,25 +151,27 @@ fun FunctionsScreen(
                     function = function,
                     title = function.name,
                     signature = signature,
+                    parameters = parameters,
                     body = body,
                     description = description,
+                    canEdit = !function.isSystem(),
                     canDelete = !function.isSystem()
                 )
             }
             .filter { model ->
-                if (normalized.isEmpty()) {
+                if (normalizedQuery.isEmpty()) {
                     true
                 } else {
-                    model.title.lowercase().contains(normalized) ||
-                        model.signature.lowercase().contains(normalized) ||
-                        model.body.orEmpty().lowercase().contains(normalized) ||
-                        model.description.orEmpty().lowercase().contains(normalized)
+                    model.title.lowercase().contains(normalizedQuery) ||
+                        model.signature.lowercase().contains(normalizedQuery) ||
+                        model.body.orEmpty().lowercase().contains(normalizedQuery) ||
+                        model.description.orEmpty().lowercase().contains(normalizedQuery)
                 }
             }
     }
 
-    val operatorModels = remember(tick, selectedOperatorCategory, query) {
-        val normalized = query.trim().lowercase()
+    val operatorModels = remember(refreshVersion, selectedOperatorCategory, searchQuery) {
+        val normalizedQuery = searchQuery.trim().lowercase()
         viewModel.getOperatorsFor(selectedOperatorCategory)
             .map { operator ->
                 val signature = runCatching { operator.toString() }.getOrNull()
@@ -164,18 +183,18 @@ fun FunctionsScreen(
                 )
             }
             .filter { model ->
-                if (normalized.isEmpty()) {
+                if (normalizedQuery.isEmpty()) {
                     true
                 } else {
-                    model.title.lowercase().contains(normalized) ||
-                        model.signature.orEmpty().lowercase().contains(normalized) ||
-                        model.description.orEmpty().lowercase().contains(normalized)
+                    model.title.lowercase().contains(normalizedQuery) ||
+                        model.signature.orEmpty().lowercase().contains(normalizedQuery) ||
+                        model.description.orEmpty().lowercase().contains(normalizedQuery)
                 }
             }
     }
 
-    val listItems = remember(functionModels, operatorModels, selectedType) {
-        when (selectedType) {
+    val visibleItems = remember(functionModels, operatorModels, selectedEntityType) {
+        when (selectedEntityType) {
             FunctionEntityType.Functions -> toFunctionListItems(functionModels)
             FunctionEntityType.Operators -> toOperatorListItems(operatorModels)
         }
@@ -187,9 +206,15 @@ fun FunctionsScreen(
                 title = stringResource(Res.string.c_functions),
                 onBack = onBack,
                 actions = {
-                    if (selectedType == FunctionEntityType.Functions) {
-                        IconButton(onClick = { showAddDialog = true }) {
-                            Text(text = "+")
+                    if (selectedEntityType == FunctionEntityType.Functions) {
+                        FilledTonalIconButton(onClick = {
+                            functionToEdit = null
+                            showAddDialog = true
+                        }) {
+                            Icon(
+                                imageVector = Icons.Filled.Add,
+                                contentDescription = stringResource(Res.string.function_create_function)
+                            )
                         }
                     }
                 }
@@ -201,20 +226,36 @@ fun FunctionsScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            SingleChoiceSegmentedButtonRow(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 10.dp)
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
             ) {
                 val labels = listOf(
                     stringResource(Res.string.cpp_functions),
                     stringResource(Res.string.cpp_operators)
                 )
                 labels.forEachIndexed { index, label ->
-                    SegmentedButton(
-                        selected = selectedTypeIndex == index,
-                        onClick = { selectedTypeIndex = index },
-                        shape = SegmentedButtonDefaults.itemShape(index = index, count = labels.size)
+                    ToggleButton(
+                        checked = selectedEntityTypeIndex == index,
+                        onCheckedChange = { checked ->
+                            if (checked) selectedEntityTypeIndex = index
+                        },
+                        shapes = when (index) {
+                            0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                            labels.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                            else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                        },
+                        colors = ToggleButtonDefaults.toggleButtonColors(
+                            checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .semantics { role = Role.RadioButton }
                     ) {
                         Text(
                             text = label,
@@ -225,7 +266,7 @@ fun FunctionsScreen(
                 }
             }
 
-            val categoryTitles = if (selectedType == FunctionEntityType.Functions) {
+            val activeCategoryTitles = if (selectedEntityType == FunctionEntityType.Functions) {
                 functionCategoryTitles
             } else {
                 operatorCategoryTitles
@@ -236,13 +277,13 @@ fun FunctionsScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp)
             ) {
-                items(categoryTitles.size, key = { it }) { index ->
-                    val isSelected = if (selectedType == FunctionEntityType.Functions) {
+                items(activeCategoryTitles.size, key = { it }) { index ->
+                    val isSelected = if (selectedEntityType == FunctionEntityType.Functions) {
                         selectedFunctionCategoryIndex == index
                     } else {
                         selectedOperatorCategoryIndex == index
                     }
-                    val count = if (selectedType == FunctionEntityType.Functions) {
+                    val count = if (selectedEntityType == FunctionEntityType.Functions) {
                         functionCategoryCounts[functionCategories[index]] ?: 0
                     } else {
                         operatorCategoryCounts[operatorCategories[index]] ?: 0
@@ -250,7 +291,7 @@ fun FunctionsScreen(
                     FilterChip(
                         selected = isSelected,
                         onClick = {
-                            if (selectedType == FunctionEntityType.Functions) {
+                            if (selectedEntityType == FunctionEntityType.Functions) {
                                 selectedFunctionCategoryIndex = index
                             } else {
                                 selectedOperatorCategoryIndex = index
@@ -258,7 +299,7 @@ fun FunctionsScreen(
                         },
                         label = {
                             Text(
-                                text = "${categoryTitles[index]} ($count)",
+                                text = "${activeCategoryTitles[index]} ($count)",
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -278,16 +319,22 @@ fun FunctionsScreen(
             }
 
             OutlinedTextField(
-                value = query,
-                onValueChange = { query = it },
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
                 singleLine = true,
                 leadingIcon = {
-                    Text(text = "🔍")
+                    Icon(
+                        imageVector = Icons.Filled.Search,
+                        contentDescription = stringResource(Res.string.cpp_search)
+                    )
                 },
-                trailingIcon = if (query.isNotEmpty()) {
+                trailingIcon = if (searchQuery.isNotEmpty()) {
                     {
-                        IconButton(onClick = { query = "" }) {
-                            Text(text = "✕")
+                        IconButton(onClick = { searchQuery = "" }) {
+                            Icon(
+                                imageVector = Icons.Filled.Close,
+                                contentDescription = stringResource(Res.string.cpp_a11y_clear_search)
+                            )
                         }
                     }
                 } else {
@@ -304,10 +351,13 @@ fun FunctionsScreen(
                     .padding(horizontal = 16.dp)
             )
 
-            if (listItems.isEmpty()) {
+            if (visibleItems.isEmpty()) {
                 EmptyFunctionsState(
-                    selectedType = selectedType,
-                    onCreate = { showAddDialog = true },
+                    selectedType = selectedEntityType,
+                    onCreate = {
+                        functionToEdit = null
+                        showAddDialog = true
+                    },
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 24.dp)
@@ -316,9 +366,9 @@ fun FunctionsScreen(
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                    verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap)
                 ) {
-                    items(listItems, key = { item ->
+                    items(visibleItems, key = { item ->
                         when (item) {
                             is FunctionListItem.Header -> item.id
                             is FunctionListItem.FunctionEntry -> "f_${item.model.function.name}"
@@ -333,6 +383,10 @@ fun FunctionsScreen(
                                 onUse = {
                                     viewModel.useName(item.model.function.name)
                                     onBack()
+                                },
+                                onEdit = {
+                                    functionToEdit = item.model
+                                    showAddDialog = false
                                 },
                                 onDelete = {
                                     functionToDelete = item.model.function
@@ -353,14 +407,28 @@ fun FunctionsScreen(
         }
     }
 
-    if (showAddDialog) {
+    val editingFunction = functionToEdit
+    if (showAddDialog || editingFunction != null) {
         FunctionEditDialog(
-            onDismiss = { showAddDialog = false },
+            initialName = editingFunction?.title.orEmpty(),
+            initialBody = editingFunction?.body.orEmpty(),
+            initialParameters = editingFunction?.parameters.orEmpty(),
+            initialDescription = editingFunction?.description.orEmpty(),
+            isEditing = editingFunction != null,
+            onDismiss = {
+                showAddDialog = false
+                functionToEdit = null
+            },
             onSave = { name, body, parameters, description ->
-                runCatching {
-                    viewModel.add(name, body, parameters, description)
-                }.exceptionOrNull()?.let { throwable ->
-                    throwable.message ?: functionAlreadyExists
+                val error = if (editingFunction == null) {
+                    viewModel.save(null, name, body, parameters, description)
+                } else {
+                    viewModel.update(editingFunction.function, name, body, parameters, description)
+                }
+                error ?: run {
+                    showAddDialog = false
+                    functionToEdit = null
+                    null
                 }
             }
         )
@@ -427,7 +495,10 @@ private fun EmptyFunctionsState(
         if (selectedType == FunctionEntityType.Functions) {
             Spacer(modifier = Modifier.height(18.dp))
             TextButton(onClick = onCreate) {
-                Text(text = "+")
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = null
+                )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(text = stringResource(Res.string.function_create_function))
             }
@@ -447,31 +518,62 @@ private fun FunctionSectionHeader(text: String) {
     )
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun FunctionCard(
     model: FunctionUiModel,
     position: FunctionCardPosition,
     onUse: () -> Unit,
+    onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
-    val shape = cardShapeFor(position)
-
-    Surface(
+    SegmentedListItem(
         modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onUse),
-        shape = shape,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        tonalElevation = 1.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+            .fillMaxWidth(),
+        onClick = onUse,
+        shapes = segmentedShapesFor(position),
+        colors = ListItemDefaults.segmentedColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        ),
+        trailingContent = if (model.canEdit || model.canDelete) {
+            {
+                Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                    if (model.canEdit) {
+                        FilledTonalIconButton(onClick = onEdit) {
+                            Icon(
+                                imageVector = Icons.Filled.Edit,
+                                contentDescription = stringResource(Res.string.function_edit_function)
+                            )
+                        }
+                    }
+                    if (model.canDelete) {
+                        FilledTonalIconButton(onClick = onDelete) {
+                            Icon(
+                                imageVector = Icons.Filled.DeleteOutline,
+                                contentDescription = stringResource(Res.string.cpp_delete),
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                }
+            }
+        } else {
+            null
+        },
+        supportingContent = if (!model.description.isNullOrBlank()) {
+            {
+                Text(
+                    text = model.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        } else null,
+        content = {
             Column(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
@@ -482,7 +584,7 @@ private fun FunctionCard(
                 )
 
                 Text(
-                    text = model.signature,
+                    text = normalizeMathDisplay(model.signature),
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontFamily = FontFamily.Monospace,
                         color = MaterialTheme.colorScheme.primary
@@ -493,58 +595,47 @@ private fun FunctionCard(
 
                 if (!model.body.isNullOrBlank()) {
                     Text(
-                        text = "= ${model.body}",
+                        text = "= ${normalizeMathDisplay(model.body)}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-
-                if (!model.description.isNullOrBlank()) {
-                    Text(
-                        text = model.description,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-
-            if (model.canDelete) {
-                IconButton(onClick = onDelete) {
-                    Text(text = "🗑")
-                }
             }
         }
-    }
+    )
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun OperatorCard(
     model: OperatorUiModel,
     position: FunctionCardPosition,
     onUse: () -> Unit
 ) {
-    val shape = cardShapeFor(position)
-
-    Surface(
+    SegmentedListItem(
         modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onUse),
-        shape = shape,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        tonalElevation = 1.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+            .fillMaxWidth(),
+        onClick = onUse,
+        shapes = segmentedShapesFor(position),
+        colors = ListItemDefaults.segmentedColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        ),
+        supportingContent = if (!model.description.isNullOrBlank()) {
+            {
+                Text(
+                    text = model.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        } else null,
+        content = {
             Column(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
@@ -556,7 +647,7 @@ private fun OperatorCard(
 
                 if (!model.signature.isNullOrBlank()) {
                     Text(
-                        text = model.signature,
+                        text = normalizeMathDisplay(model.signature),
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontFamily = FontFamily.Monospace,
                             color = MaterialTheme.colorScheme.primary
@@ -565,31 +656,25 @@ private fun OperatorCard(
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-
-                if (!model.description.isNullOrBlank()) {
-                    Text(
-                        text = model.description,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
             }
-
         }
-    }
+    )
 }
 
 @Composable
 fun FunctionEditDialog(
+    initialName: String = "",
+    initialBody: String = "",
+    initialParameters: List<String> = emptyList(),
+    initialDescription: String = "",
+    isEditing: Boolean = false,
     onDismiss: () -> Unit,
     onSave: (String, String, List<String>, String) -> String?
 ) {
-    var name by remember { mutableStateOf("") }
-    var body by remember { mutableStateOf("") }
-    var parametersText by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
+    var name by remember(initialName) { mutableStateOf(initialName) }
+    var body by remember(initialBody) { mutableStateOf(initialBody) }
+    var parametersText by remember(initialParameters) { mutableStateOf(initialParameters.joinToString(", ")) }
+    var description by remember(initialDescription) { mutableStateOf(initialDescription) }
     var errorText by remember { mutableStateOf<String?>(null) }
     val emptyFieldMessage = stringResource(Res.string.cpp_field_cannot_be_empty)
     val duplicateParameterTemplate = stringResource(Res.string.cpp_duplicate_parameter, "{param}")
@@ -612,7 +697,14 @@ fun FunctionEditDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(Res.string.function_create_function)) },
+        title = {
+            Text(
+                stringResource(
+                    if (isEditing) Res.string.function_edit_function
+                    else Res.string.function_create_function
+                )
+            )
+        },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(
@@ -644,7 +736,7 @@ fun FunctionEditDialog(
                     label = { Text(stringResource(Res.string.cpp_parameters)) },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
-                    placeholder = { Text("x, y") }
+                    placeholder = { Text(stringResource(Res.string.cpp_parameters_example)) }
                 )
                 OutlinedTextField(
                     value = description,
@@ -706,23 +798,13 @@ fun FunctionEditDialog(
     )
 }
 
-private fun cardShapeFor(position: FunctionCardPosition): RoundedCornerShape {
-    return when (position) {
-        FunctionCardPosition.Single -> RoundedCornerShape(18.dp)
-        FunctionCardPosition.First -> RoundedCornerShape(
-            topStart = 18.dp,
-            topEnd = 18.dp,
-            bottomStart = 6.dp,
-            bottomEnd = 6.dp
-        )
-        FunctionCardPosition.Middle -> RoundedCornerShape(6.dp)
-        FunctionCardPosition.Last -> RoundedCornerShape(
-            topStart = 6.dp,
-            topEnd = 6.dp,
-            bottomStart = 18.dp,
-            bottomEnd = 18.dp
-        )
-    }
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun segmentedShapesFor(position: FunctionCardPosition) = when (position) {
+    FunctionCardPosition.Single -> ListItemDefaults.segmentedShapes(index = 0, count = 1)
+    FunctionCardPosition.First -> ListItemDefaults.segmentedShapes(index = 0, count = 2)
+    FunctionCardPosition.Middle -> ListItemDefaults.segmentedShapes(index = 1, count = 3)
+    FunctionCardPosition.Last -> ListItemDefaults.segmentedShapes(index = 1, count = 2)
 }
 
 private fun buildFunctionSignature(function: Function): String {
@@ -789,4 +871,15 @@ private fun cardPositionFor(index: Int, totalCount: Int): FunctionCardPosition {
         index == totalCount - 1 -> FunctionCardPosition.Last
         else -> FunctionCardPosition.Middle
     }
+}
+
+private fun normalizeMathDisplay(value: String?): String {
+    if (value.isNullOrBlank()) return ""
+    return value
+        .replace('−', '-')
+        .replace('×', '*')
+        .replace('÷', '/')
+        .replace('·', '*')
+        .replace('∙', '*')
+        .replace('⋅', '*')
 }

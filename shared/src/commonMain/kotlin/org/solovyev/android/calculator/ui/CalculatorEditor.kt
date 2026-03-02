@@ -3,10 +3,8 @@ package org.solovyev.android.calculator.ui
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
@@ -20,9 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,11 +27,9 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.InterceptPlatformTextInput
 import androidx.compose.ui.platform.PlatformTextInputInterceptor
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -55,8 +49,6 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.awaitCancellation
-import kotlinx.coroutines.delay
-import kotlin.math.roundToInt
 import org.solovyev.android.calculator.EditorState
 
 /**
@@ -96,73 +88,34 @@ fun CalculatorEditor(
     highlightExpressions: Boolean = true,
     minTextSize: TextUnit = 38.sp,
     maxTextSize: TextUnit = 38.sp,
-    enableSmartCorrection: Boolean = true
+    enableSmartCorrection: Boolean = false
 ) {
-    val scrollState = rememberScrollState()
     var textFieldValue by remember { mutableStateOf(TextFieldValue()) }
-    var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
-    var fieldWidthPx by remember { mutableIntStateOf(0) }
     val interactionSource = remember { MutableInteractionSource() }
-    var editorFocused by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
-    
-    // FIX: Use rememberSaveable for cursor state to survive recompositions
-    var savedCursorPosition by rememberSaveable { mutableIntStateOf(0) }
+    var editorFocused by remember { mutableStateOf(false) }
     var cursorPosition by remember { mutableIntStateOf(0) }
-    
+
+    var adaptiveFontSize by remember(state.text.toString()) { mutableStateOf(maxTextSize) }
+    var adaptiveMaxLines by remember(state.text.toString()) { mutableIntStateOf(1) }
+
     val disableSoftKeyboardInterceptor = remember {
         PlatformTextInputInterceptor { _, _ -> awaitCancellation() }
     }
 
-    // Track last synced values to detect meaningful external changes
-    var lastExternalText by remember { mutableStateOf("") }
-    var lastExternalSelection by remember { mutableIntStateOf(-1) }
-    var hasUserInteracted by remember { mutableStateOf(false) }
-    // Track previous text length to detect if user is typing (text getting longer)
-    var lastTextLength by remember { mutableIntStateOf(0) }
-    
-    // Debounced cursor position for smooth updates
-    var debouncedSelection by remember { mutableStateOf(TextRange(0)) }
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
 
     // Only sync from external state when text/selection changed (ignore sequence-only updates).
     // Preserve active local range selection while focused so users can select/copy reliably.
-    // FIX: Removed forced cursor reset - only update when text actually changes from external source
-    LaunchedEffect(state.sequence, state.text, state.selection) {
+    LaunchedEffect(state.text, state.selection) {
         val newText = state.text.toString()
         val newSelection = state.selection.coerceIn(0, newText.length)
 
-        val textChanged = newText != lastExternalText
-        val selectionChanged = newSelection != lastExternalSelection
-        
-        // Only process if there's an actual change
+        val textChanged = newText != textFieldValue.text
+        val selectionChanged = textFieldValue.selection != TextRange(newSelection)
         if (!textChanged && !selectionChanged) {
-            return@LaunchedEffect
-        }
-
-        lastExternalText = newText
-        lastExternalSelection = newSelection
-
-        // If text changed, determine if it's from user typing or external update
-        if (textChanged) {
-            // Check if text got longer (user is typing) vs replaced (external change)
-            val isUserTyping = newText.length > lastTextLength && newText.startsWith(lastExternalText)
-            lastTextLength = newText.length
-
-            // When text grows (user typing), cursor goes to end
-            // When text shrinks or external change, use appropriate position
-            val targetCursor = when {
-                newText.length > lastExternalText.length -> newText.length // User added text, go to end
-                savedCursorPosition <= newText.length -> savedCursorPosition
-                else -> newText.length
-            }
-
-            textFieldValue = TextFieldValue(
-                text = newText,
-                selection = TextRange(targetCursor)
-            )
-            cursorPosition = targetCursor
-            savedCursorPosition = targetCursor
-            debouncedSelection = TextRange(targetCursor)
             return@LaunchedEffect
         }
 
@@ -173,79 +126,11 @@ fun CalculatorEditor(
             return@LaunchedEffect
         }
 
-        // Only update selection if different and not during active text input
         val targetSelection = TextRange(newSelection)
-        if (textFieldValue.selection != targetSelection || textFieldValue.text != newText) {
-            textFieldValue = textFieldValue.copy(
-                text = newText,
-                selection = targetSelection
-            )
-            cursorPosition = newSelection
-            savedCursorPosition = newSelection
-            debouncedSelection = targetSelection
-        }
-    }
-
-    // Reset scroll to start on initial load only
-    LaunchedEffect(Unit) {
-        scrollState.scrollTo(0)
-    }
-
-    // Request focus only after the first frame. This avoids requesting focus
-    // while the node is in a transient detached state during navigation.
-    LaunchedEffect(Unit) {
-        withFrameNanos { }
-        runCatching { focusRequester.requestFocus() }
-    }
-
-    // Debounced cursor update to prevent flashing
-    LaunchedEffect(textFieldValue.selection) {
-        if (textFieldValue.selection != debouncedSelection) {
-            delay(16) // ~1 frame at 60fps
-            debouncedSelection = textFieldValue.selection
-            cursorPosition = textFieldValue.selection.end
-            savedCursorPosition = textFieldValue.selection.end
-        }
-    }
-
-    // Smooth auto-scroll with spring physics (only after user interaction)
-    LaunchedEffect(debouncedSelection, textLayoutResult, fieldWidthPx) {
-        if (!hasUserInteracted) {
-            return@LaunchedEffect
-        }
-        delay(30)
-        val layout = textLayoutResult ?: return@LaunchedEffect
-        val textLength = textFieldValue.text.length
-        val layoutTextLength = layout.layoutInput.text.length
-
-        if (fieldWidthPx == 0 || textLength == 0 || layoutTextLength != textLength) {
-            return@LaunchedEffect
-        }
-
-        val cursorPos = debouncedSelection.end.coerceIn(0, textLength)
-        if (cursorPos < 0 || cursorPos > layoutTextLength) {
-            return@LaunchedEffect
-        }
-
-        val cursorRect = layout.getCursorRect(cursorPos)
-        val current = scrollState.value.toFloat()
-        val minVisible = current + (fieldWidthPx * 0.15f) // 15% padding on left
-        val maxVisible = current + (fieldWidthPx * 0.85f) // 15% padding on right
-        
-        val target = when {
-            cursorRect.left < minVisible -> cursorRect.left - (fieldWidthPx * 0.15f)
-            cursorRect.right > maxVisible -> cursorRect.right - (fieldWidthPx * 0.85f)
-            else -> current
-        }.coerceIn(0f, scrollState.maxValue.toFloat())
-        
-        // Use spring animation for smooth scrolling
-        scrollState.animateScrollTo(
-            value = target.roundToInt(),
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessMediumLow
-            )
-        )
+        textFieldValue = TextFieldValue(text = newText, selection = targetSelection)
+        cursorPosition = newSelection
+        adaptiveFontSize = maxTextSize
+        adaptiveMaxLines = 1
     }
 
     // Dynamic font size and kerning based on content length
@@ -279,9 +164,9 @@ fun CalculatorEditor(
         modifier = modifier
             .fillMaxWidth()
             .background(Color.Transparent)
-            .padding(horizontal = 10.dp, vertical = 6.dp)
-            .height(80.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(start = 10.dp, end = 10.dp, top = 2.dp, bottom = 4.dp)
+            .heightIn(min = 60.dp, max = 110.dp),
+        verticalAlignment = Alignment.Bottom
     ) {
         CompositionLocalProvider(LocalTextSelectionColors provides customTextSelectionColors) {
             InterceptPlatformTextInput(
@@ -298,42 +183,35 @@ fun CalculatorEditor(
                         } else {
                             newValue
                         }
-                        
+
                         textFieldValue = processedValue
                         cursorPosition = processedValue.selection.end
-                        savedCursorPosition = processedValue.selection.end
 
                         if (processedValue.text != oldValue.text) {
-                            // Text changed - notify parent and mark interaction
-                            hasUserInteracted = true
-                            onTextChange(processedValue.text, processedValue.selection.start)
-                        } else if (processedValue.selection != oldValue.selection && processedValue.selection.collapsed) {
-                            // Only selection changed (user clicked/tapped) - notify parent
-                            hasUserInteracted = true
-                            onSelectionChange(processedValue.selection.start)
+                            // Reset autosizing on every actual input change.
+                            adaptiveFontSize = maxTextSize
+                            adaptiveMaxLines = 1
+                            onTextChange(processedValue.text, processedValue.selection.end)
+                        } else if (processedValue.selection != oldValue.selection) {
+                            onSelectionChange(processedValue.selection.end)
                         }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .horizontalScroll(scrollState)
                         .focusRequester(focusRequester)
-                        .onFocusChanged { focusState ->
-                            editorFocused = focusState.isFocused
-                        }
-                        .onSizeChanged { fieldWidthPx = it.width },
+                        .onFocusChanged { focusState -> editorFocused = focusState.isFocused },
                     enabled = true,
                     readOnly = false,
                     textStyle = TextStyle(
                         color = MaterialTheme.colorScheme.onBackground,
-                        fontSize = fontSize,
-                        lineHeight = ((fontSize.value) * 1.2f).sp, // Optimal line height
+                        fontSize = adaptiveFontSize,
+                        lineHeight = (adaptiveFontSize.value * 1.15f).sp,
                         fontWeight = FontWeight.Normal,
                         textAlign = TextAlign.End,
                         fontFamily = CalculatorFontFamily,
-                        fontFeatureSettings = "tnum,ss01,lnum", // Tabular figures + lining numbers
+                        fontFeatureSettings = "tnum,ss01,lnum",
                         letterSpacing = letterSpacing
                     ),
-                    // Elegant cursor with refined color and animation
                     cursorBrush = SolidColor(
                         MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)
                     ),
@@ -343,13 +221,25 @@ fun CalculatorEditor(
                         autoCorrectEnabled = false,
                         showKeyboardOnFocus = false
                     ),
-                    singleLine = true,
+                    singleLine = false,
+                    maxLines = adaptiveMaxLines,
                     interactionSource = interactionSource,
-                    onTextLayout = { textLayoutResult = it },
+                    onTextLayout = { layout ->
+                        val overflowed = layout.didOverflowWidth || layout.didOverflowHeight
+                        if (!overflowed) return@BasicTextField
+
+                        if (adaptiveFontSize.value > minTextSize.value + 0.1f) {
+                            adaptiveFontSize = (adaptiveFontSize.value - 1f)
+                                .coerceAtLeast(minTextSize.value)
+                                .sp
+                        } else if (adaptiveMaxLines < 2) {
+                            adaptiveMaxLines = 2
+                        }
+                    },
                     decorationBox = { innerTextField ->
                         Box(
                             modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.TopEnd
+                            contentAlignment = Alignment.BottomEnd
                         ) { innerTextField() }
                     },
                     visualTransformation = if (highlightExpressions) {

@@ -25,42 +25,67 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import kotlinx.coroutines.flow.first
+import org.koin.core.context.GlobalContext
+import org.solovyev.android.calculator.AppPreferences
+import org.solovyev.android.calculator.Display
 import org.solovyev.android.calculator.DisplayState
+import org.solovyev.android.calculator.Editor
 import org.solovyev.android.calculator.EditorState
+import org.solovyev.android.calculator.Engine
 import org.solovyev.android.calculator.WidgetReceiver
 import org.solovyev.android.calculator.buttons.CppButton
 
 class CalculatorGlanceWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: android.content.Context, id: androidx.glance.GlanceId) {
+        val snapshot = readSnapshot()
         provideContent {
-            WidgetContent()
+            WidgetContent(snapshot)
         }
     }
 
+    private suspend fun readSnapshot(): WidgetSnapshot {
+        val koin = GlobalContext.getOrNull()
+        val displayState = runCatching { koin?.get<Display>()?.getState() }
+            .getOrNull()
+            ?: DisplayState.empty()
+        val editorState = runCatching { koin?.get<Editor>()?.state }
+            .getOrNull()
+            ?: EditorState.empty()
+        val multiplicationSign = runCatching { koin?.get<Engine>()?.multiplicationSign?.value }
+            .getOrNull()
+            ?: "×"
+        val widgetTheme = runCatching { koin?.get<AppPreferences>()?.widget?.theme?.first() }
+            .getOrNull()
+            .orEmpty()
+        val isLightTheme = widgetTheme == "material_light"
+        return WidgetSnapshot(
+            displayState = displayState,
+            editorState = editorState,
+            multiplicationSign = multiplicationSign,
+            isLightTheme = isLightTheme
+        )
+    }
+
     @Composable
-    private fun WidgetContent() {
+    private fun WidgetContent(snapshot: WidgetSnapshot) {
         val context = LocalContext.current
-        // TODO: Migrate to Koin dependency injection
-        val displayState = DisplayState.empty()
-        val editorState = EditorState.empty()
-        val multiplicationSign = "×"
-        val isLightTheme = false
 
         GlanceTheme {
             Column(
                 modifier = GlanceModifier
                     .fillMaxWidth()
-                    .background(widgetBackground(isLightTheme))
+                    .background(widgetBackground(snapshot.isLightTheme))
                     .padding(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                WidgetDisplay(displayState, isLightTheme)
+                WidgetDisplay(snapshot.displayState, snapshot.isLightTheme)
                 Spacer(modifier = GlanceModifier.height(6.dp))
-                WidgetEditor(editorState, isLightTheme)
+                WidgetEditor(snapshot.editorState, snapshot.isLightTheme)
                 Spacer(modifier = GlanceModifier.height(10.dp))
                 WidgetKeyboard(
-                    multiplicationSign = multiplicationSign,
+                    multiplicationSign = snapshot.multiplicationSign,
                     onButtonAction = { button ->
                         actionSendBroadcast(WidgetReceiver.newButtonClickedIntent(context, button))
                     }
@@ -218,5 +243,12 @@ class CalculatorGlanceWidget : GlanceAppWidget() {
     private data class WidgetButtonSpec(
         val button: CppButton,
         val label: String
+    )
+
+    private data class WidgetSnapshot(
+        val displayState: DisplayState,
+        val editorState: EditorState,
+        val multiplicationSign: String,
+        val isLightTheme: Boolean
     )
 }

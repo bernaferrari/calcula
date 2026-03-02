@@ -97,6 +97,14 @@ kotlin {
             implementation(libs.ktor.client.darwin)
         }
 
+        androidInstrumentedTest.dependencies {
+            implementation(kotlin("test"))
+            implementation(libs.androidx.ui.test.junit4)
+            implementation(libs.androidx.junit)
+            implementation(libs.androidx.espresso.core)
+            implementation(libs.androidx.ui.test.manifest)
+        }
+
         commonTest.dependencies {
             implementation(kotlin("test"))
         }

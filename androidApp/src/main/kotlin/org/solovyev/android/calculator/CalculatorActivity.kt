@@ -1,15 +1,20 @@
 package org.solovyev.android.calculator
 
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
+import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
+import org.solovyev.android.calculator.language.Languages
 import org.solovyev.android.calculator.ui.CalculatorApp
+import org.solovyev.android.calculator.ui.settings.Language
 
 /**
  * Main calculator activity with deep link support and intent handling.
@@ -23,26 +28,65 @@ import org.solovyev.android.calculator.ui.CalculatorApp
 class CalculatorActivity : BaseActivity(R.string.cpp_app_name) {
 
     private val editor: Editor by inject()
+    private val languages: Languages by inject()
 
     private var useBackAsPrevious = false
     private var pendingExpression: String? = null
     private var openConverter = false
     private var openHistory = false
+    private var openSettings = false
+    private var openVariables = false
+    private var openFunctions = false
 
     @Composable
     override fun Content() {
+        val languageOptions = languages.getList().map { language ->
+            Language(
+                code = if (language.code == Languages.SYSTEM_LANGUAGE_CODE) "system" else language.code,
+                displayName = language.name
+            )
+        }
         CalculatorApp(
             initialExpression = pendingExpression,
+            openConverter = openConverter,
             openHistory = openHistory,
+            openSettings = openSettings,
+            openVariables = openVariables,
+            openFunctions = openFunctions,
             onInitialExpressionConsumed = {
                 pendingExpression = null
-            }
+            },
+            onOpenConverterConsumed = {
+                openConverter = false
+            },
+            onOpenHistoryConsumed = {
+                openHistory = false
+            },
+            onOpenSettingsConsumed = {
+                openSettings = false
+            },
+            onOpenVariablesConsumed = {
+                openVariables = false
+            },
+            onOpenFunctionsConsumed = {
+                openFunctions = false
+            },
+            availableLanguages = languageOptions
         )
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdge(
+            navigationBarStyle = SystemBarStyle.auto(
+                lightScrim = Color.TRANSPARENT,
+                darkScrim = Color.TRANSPARENT
+            )
+        )
+        window.navigationBarColor = Color.TRANSPARENT
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            window.isNavigationBarContrastEnforced = false
+        }
         
         // Handle intent extras
         handleIntent(intent)
@@ -63,6 +107,13 @@ class CalculatorActivity : BaseActivity(R.string.cpp_app_name) {
      * Handle incoming intents including deep links and extras
      */
     private fun handleIntent(intent: Intent) {
+        pendingExpression = null
+        openConverter = false
+        openHistory = false
+        openSettings = false
+        openVariables = false
+        openFunctions = false
+
         // Handle deep link
         if (intent.action == Intent.ACTION_VIEW) {
             val data: Uri? = intent.data
@@ -75,9 +126,24 @@ class CalculatorActivity : BaseActivity(R.string.cpp_app_name) {
         }
 
         // Handle extras
-        pendingExpression = intent.getStringExtra(EXTRA_EXPRESSION)
-        openConverter = intent.getBooleanExtra(EXTRA_OPEN_CONVERTER, false)
-        openHistory = intent.getBooleanExtra(EXTRA_OPEN_HISTORY, false)
+        if (intent.hasExtra(EXTRA_EXPRESSION)) {
+            pendingExpression = intent.getStringExtra(EXTRA_EXPRESSION)
+        }
+        if (intent.hasExtra(EXTRA_OPEN_CONVERTER)) {
+            openConverter = intent.getBooleanExtra(EXTRA_OPEN_CONVERTER, false)
+        }
+        if (intent.hasExtra(EXTRA_OPEN_HISTORY)) {
+            openHistory = intent.getBooleanExtra(EXTRA_OPEN_HISTORY, false)
+        }
+        if (intent.hasExtra(EXTRA_OPEN_SETTINGS)) {
+            openSettings = intent.getBooleanExtra(EXTRA_OPEN_SETTINGS, false)
+        }
+        if (intent.hasExtra(EXTRA_OPEN_VARIABLES)) {
+            openVariables = intent.getBooleanExtra(EXTRA_OPEN_VARIABLES, false)
+        }
+        if (intent.hasExtra(EXTRA_OPEN_FUNCTIONS)) {
+            openFunctions = intent.getBooleanExtra(EXTRA_OPEN_FUNCTIONS, false)
+        }
     }
 
     /**
@@ -93,6 +159,15 @@ class CalculatorActivity : BaseActivity(R.string.cpp_app_name) {
             }
             "history" -> {
                 openHistory = true
+            }
+            "settings" -> {
+                openSettings = true
+            }
+            "variables" -> {
+                openVariables = true
+            }
+            "functions" -> {
+                openFunctions = true
             }
         }
     }
@@ -128,6 +203,9 @@ class CalculatorActivity : BaseActivity(R.string.cpp_app_name) {
         const val EXTRA_EXPRESSION = "expression"
         const val EXTRA_OPEN_CONVERTER = "open_converter"
         const val EXTRA_OPEN_HISTORY = "open_history"
+        const val EXTRA_OPEN_SETTINGS = "open_settings"
+        const val EXTRA_OPEN_VARIABLES = "open_variables"
+        const val EXTRA_OPEN_FUNCTIONS = "open_functions"
 
         /**
          * Create a basic intent to open the calculator
@@ -162,6 +240,24 @@ class CalculatorActivity : BaseActivity(R.string.cpp_app_name) {
         fun newIntentForHistory(context: android.content.Context): Intent {
             return newIntent(context).apply {
                 putExtra(EXTRA_OPEN_HISTORY, true)
+            }
+        }
+
+        fun newIntentForSettings(context: android.content.Context): Intent {
+            return newIntent(context).apply {
+                putExtra(EXTRA_OPEN_SETTINGS, true)
+            }
+        }
+
+        fun newIntentForVariables(context: android.content.Context): Intent {
+            return newIntent(context).apply {
+                putExtra(EXTRA_OPEN_VARIABLES, true)
+            }
+        }
+
+        fun newIntentForFunctions(context: android.content.Context): Intent {
+            return newIntent(context).apply {
+                putExtra(EXTRA_OPEN_FUNCTIONS, true)
             }
         }
 

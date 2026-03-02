@@ -8,8 +8,9 @@ import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.runBlocking
 import org.solovyev.android.calculator.AppPreferences
 import org.solovyev.android.calculator.ConverterPreferences
 import org.solovyev.android.calculator.GuiPreferences
@@ -53,8 +54,9 @@ class DataStoreUiPreferences(private val dataStore: DataStore<Preferences>) : Ui
     }
 
     override fun getShowFixableErrorDialogBlocking(): Boolean {
-        // TODO: Refactor consumers to use Flow. Returning default true for now.
-        return true
+        return runBlocking {
+            showFixableErrorDialog.firstOrNull() ?: true
+        }
     }
     
     suspend fun setShowFixableErrorDialog(value: Boolean) {
@@ -90,7 +92,9 @@ class DataStoreSettingsPreferences(private val dataStore: DataStore<Preferences>
     override val multiplicationSign: Flow<String> = dataStore.data.map { it[keyMultiplicationSign] ?: "×" }
 
     override fun getCalculateOnFlyBlocking(): Boolean {
-        return true
+        return runBlocking {
+            calculateOnFly.firstOrNull() ?: true
+        }
     }
 
     override suspend fun setCalculateOnFly(value: Boolean) {
@@ -138,6 +142,8 @@ class DataStoreGuiPreferences(private val dataStore: DataStore<Preferences>) : G
     private val keyRotateScreen = booleanPreferencesKey("gui.rotateScreen")
     private val keyKeepScreenOn = booleanPreferencesKey("gui.keepScreenOn")
     private val keyHighContrast = booleanPreferencesKey("gui.highContrast")
+    private val keyReduceMotion = booleanPreferencesKey("gui.reduceMotion")
+    private val keyFontScale = floatPreferencesKey("gui.fontScale")
     private val keyVibrateOnKeypress = booleanPreferencesKey("gui.vibrateOnKeypress")
     private val keyShowCalculationLatency = booleanPreferencesKey("gui.showCalculationLatency")
     private val keyLatexMode = booleanPreferencesKey("gui.latexMode")
@@ -156,6 +162,8 @@ class DataStoreGuiPreferences(private val dataStore: DataStore<Preferences>) : G
     override val rotateScreen: Flow<Boolean> = dataStore.data.map { it[keyRotateScreen] ?: true }
     override val keepScreenOn: Flow<Boolean> = dataStore.data.map { it[keyKeepScreenOn] ?: true }
     override val highContrast: Flow<Boolean> = dataStore.data.map { it[keyHighContrast] ?: false }
+    override val reduceMotion: Flow<Boolean> = dataStore.data.map { it[keyReduceMotion] ?: false }
+    override val fontScale: Flow<Float> = dataStore.data.map { (it[keyFontScale] ?: 1.0f).coerceIn(0.8f, 1.6f) }
     override val vibrateOnKeypress: Flow<Boolean> = dataStore.data.map { it[keyVibrateOnKeypress] ?: true }
     override val showCalculationLatency: Flow<Boolean> = dataStore.data.map { it[keyShowCalculationLatency] ?: false }
     override val latexMode: Flow<Boolean> = dataStore.data.map { it[keyLatexMode] ?: false }
@@ -173,6 +181,8 @@ class DataStoreGuiPreferences(private val dataStore: DataStore<Preferences>) : G
     override suspend fun setRotateScreen(value: Boolean) { dataStore.edit { it[keyRotateScreen] = value } }
     override suspend fun setKeepScreenOn(value: Boolean) { dataStore.edit { it[keyKeepScreenOn] = value } }
     override suspend fun setHighContrast(value: Boolean) { dataStore.edit { it[keyHighContrast] = value } }
+    override suspend fun setReduceMotion(value: Boolean) { dataStore.edit { it[keyReduceMotion] = value } }
+    override suspend fun setFontScale(value: Float) { dataStore.edit { it[keyFontScale] = value.coerceIn(0.8f, 1.6f) } }
     override suspend fun setVibrateOnKeypress(value: Boolean) { dataStore.edit { it[keyVibrateOnKeypress] = value } }
     override suspend fun setShowCalculationLatency(value: Boolean) { dataStore.edit { it[keyShowCalculationLatency] = value } }
     override suspend fun setLatexMode(value: Boolean) { dataStore.edit { it[keyLatexMode] = value } }
@@ -385,9 +395,15 @@ class DataStoreSoundPreferences(private val dataStore: DataStore<Preferences>) :
 class DataStoreGesturePreferences(private val dataStore: DataStore<Preferences>) : GesturePreferences {
     private val keyGestureAutoActivation = booleanPreferencesKey("gestures.autoActivation")
     private val keyBottomRightEquals = booleanPreferencesKey("gestures.bottomRightEquals")
+    private val keyLayerUpEnabled = booleanPreferencesKey("gestures.layer.upEnabled")
+    private val keyLayerDownEnabled = booleanPreferencesKey("gestures.layer.downEnabled")
+    private val keyLayerEngineerEnabled = booleanPreferencesKey("gestures.layer.engineerEnabled")
 
     override val gestureAutoActivationEnabled: Flow<Boolean> = dataStore.data.map { it[keyGestureAutoActivation] ?: false }
     override val bottomRightEqualsEnabled: Flow<Boolean> = dataStore.data.map { it[keyBottomRightEquals] ?: false }
+    override val layerUpEnabled: Flow<Boolean> = dataStore.data.map { it[keyLayerUpEnabled] ?: true }
+    override val layerDownEnabled: Flow<Boolean> = dataStore.data.map { it[keyLayerDownEnabled] ?: true }
+    override val layerEngineerEnabled: Flow<Boolean> = dataStore.data.map { it[keyLayerEngineerEnabled] ?: true }
 
     override suspend fun isGestureAutoActivationEnabled(): Boolean =
         dataStore.data.map { it[keyGestureAutoActivation] }.firstOrNull() ?: false
@@ -401,5 +417,26 @@ class DataStoreGesturePreferences(private val dataStore: DataStore<Preferences>)
 
     override suspend fun setBottomRightEqualsEnabled(enabled: Boolean) {
         dataStore.edit { it[keyBottomRightEquals] = enabled }
+    }
+
+    override suspend fun isLayerUpEnabled(): Boolean =
+        dataStore.data.map { it[keyLayerUpEnabled] }.firstOrNull() ?: true
+
+    override suspend fun setLayerUpEnabled(enabled: Boolean) {
+        dataStore.edit { it[keyLayerUpEnabled] = enabled }
+    }
+
+    override suspend fun isLayerDownEnabled(): Boolean =
+        dataStore.data.map { it[keyLayerDownEnabled] }.firstOrNull() ?: true
+
+    override suspend fun setLayerDownEnabled(enabled: Boolean) {
+        dataStore.edit { it[keyLayerDownEnabled] = enabled }
+    }
+
+    override suspend fun isLayerEngineerEnabled(): Boolean =
+        dataStore.data.map { it[keyLayerEngineerEnabled] }.firstOrNull() ?: true
+
+    override suspend fun setLayerEngineerEnabled(enabled: Boolean) {
+        dataStore.edit { it[keyLayerEngineerEnabled] = enabled }
     }
 }

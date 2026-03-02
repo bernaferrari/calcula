@@ -1,13 +1,18 @@
 package org.solovyev.android.calculator.ui.formulas
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-// Material icons not available in commonMain - using text alternatives
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material3.Icon
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,7 +22,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.stringResource
 import org.solovyev.android.calculator.formulas.*
+import org.solovyev.android.calculator.ui.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,6 +36,7 @@ fun FormulaDetailSheet(
     modifier: Modifier = Modifier
 ) {
     var showInfo by remember { mutableStateOf(false) }
+    val reduceMotion = LocalCalculatorReduceMotion.current
     var variableValues by remember(formula.id) {
         mutableStateOf(formula.variables.associate { it.id to it.defaultValue })
     }
@@ -81,12 +89,16 @@ fun FormulaDetailSheet(
                 }
 
                 TextButton(onClick = { showInfo = !showInfo }) {
-                    Text("Info")
+                    Text(stringResource(Res.string.cpp_formula_description))
                 }
             }
 
             // Description
-            AnimatedVisibility(visible = showInfo) {
+            AnimatedVisibility(
+                visible = showInfo,
+                enter = if (reduceMotion) fadeIn(tween(durationMillis = 70)) else fadeIn() + expandVertically(),
+                exit = if (reduceMotion) fadeOut(tween(durationMillis = 50)) else fadeOut() + shrinkVertically()
+            ) {
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -122,7 +134,7 @@ fun FormulaDetailSheet(
 
             // Variables section
             Text(
-                text = "Variables",
+                text = stringResource(Res.string.cpp_formula_variables),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.padding(bottom = 12.dp)
@@ -141,9 +153,9 @@ fun FormulaDetailSheet(
 
             // Result display
             AnimatedVisibility(
-                visible = result.isNotEmpty() && result != "Error",
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically()
+                visible = result.isNotEmpty(),
+                enter = if (reduceMotion) fadeIn(tween(durationMillis = 70)) else fadeIn() + expandVertically(),
+                exit = if (reduceMotion) fadeOut(tween(durationMillis = 50)) else fadeOut() + shrinkVertically()
             ) {
                 ResultCard(
                     result = result,
@@ -162,7 +174,7 @@ fun FormulaDetailSheet(
                     onClick = onDismiss,
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Close")
+                    Text(stringResource(Res.string.cpp_a11y_close))
                 }
 
                 Button(
@@ -171,23 +183,29 @@ fun FormulaDetailSheet(
                     },
                     modifier = Modifier.weight(2f)
                 ) {
-                    Text("f(x)")
+                    Icon(
+                        imageVector = Icons.Filled.Calculate,
+                        contentDescription = null
+                    )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Use in Calculator")
+                    Text(stringResource(Res.string.cpp_formula_use))
                 }
             }
 
-            // Copy result button (if result exists)
-            if (result.isNotEmpty() && result != "Error") {
+            // Secondary action for existing result
+            if (result.isNotEmpty()) {
                 TextButton(
                     onClick = {
-                        // Copy to clipboard
+                        onUseInCalculator(result)
                     },
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 ) {
-                    Text("⎘")
+                    Icon(
+                        imageVector = Icons.Filled.ContentCopy,
+                        contentDescription = null
+                    )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Copy Result")
+                    Text(stringResource(Res.string.c_use))
                 }
             }
         }
@@ -225,7 +243,7 @@ private fun VariableInputField(
         isError = hasError,
         supportingText = {
             if (hasError) {
-                Text("Please enter a valid number")
+                Text(stringResource(Res.string.c_value_is_not_a_number))
             }
         },
         keyboardOptions = KeyboardOptions(
@@ -254,7 +272,7 @@ private fun ResultCard(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Result",
+                text = stringResource(Res.string.cpp_formula_result),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
             )
@@ -288,7 +306,7 @@ fun QuickFormulaSelector(
                 .padding(bottom = 32.dp)
         ) {
             Text(
-                text = "Quick Formulas",
+                text = stringResource(Res.string.cpp_formula_quick_title),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 16.dp)
@@ -317,12 +335,13 @@ fun QuickFormulaSelector(
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("→")
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = null
+                )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Browse All Formulas")
+                Text(stringResource(Res.string.cpp_formula_library))
             }
         }
     }
 }
-
-

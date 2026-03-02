@@ -482,13 +482,13 @@ fun ContextualHintOverlay(
             direction = GestureDirection.UP,
             actionLabel = "Swipe Up",
             actionDescription = "Swipe up on buttons to access secondary functions",
-            exampleValue = "Try swiping up on sin → asin"
+            exampleValue = "Try swiping up on sin to access asin"
         )
         ContextualHint.SwipeDown -> GestureHintData(
             direction = GestureDirection.DOWN,
             actionLabel = "Swipe Down",
             actionDescription = "Swipe down for alternate functions and constants",
-            exampleValue = "Try swiping down on π → e"
+            exampleValue = "Try swiping down on pi to access e"
         )
         ContextualHint.SwipeLeft -> GestureHintData(
             direction = GestureDirection.LEFT,
@@ -553,7 +553,7 @@ fun ButtonHintIndicator(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "👆",
+                text = "Tap",
                 style = MaterialTheme.typography.bodyMedium
             )
         }

@@ -17,8 +17,14 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.ScreenRotation
+import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -41,6 +47,10 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import org.solovyev.android.calculator.converter.*
 import org.solovyev.android.calculator.ui.*
+import org.solovyev.android.calculator.ui.tokens.CalculatorCornerRadius
+import org.solovyev.android.calculator.ui.tokens.CalculatorElevation
+import org.solovyev.android.calculator.ui.tokens.CalculatorPadding
+import org.solovyev.android.calculator.ui.tokens.CalculatorSpacing
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -124,21 +134,24 @@ private fun ConverterSheetContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp)
-            .padding(bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(horizontal = CalculatorPadding.Large)
+            .padding(bottom = CalculatorPadding.XLarge),
+        verticalArrangement = Arrangement.spacedBy(CalculatorSpacing.Medium)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onCancel) {
-                Text(text = "←")
+                Icon(
+                    imageVector = Icons.Filled.Clear,
+                    contentDescription = stringResource(Res.string.cpp_back)
+                )
             }
             Spacer(modifier = Modifier.size(4.dp))
             Box(
                 modifier = Modifier
-                    .size(4.dp, 24.dp)
+                    .size(4.dp, CalculatorPadding.XLarge)
                     .clip(CircleShape)
                     .background(
                         Brush.verticalGradient(
@@ -149,7 +162,7 @@ private fun ConverterSheetContent(
                         )
                     )
             )
-            Spacer(modifier = Modifier.size(12.dp))
+            Spacer(modifier = Modifier.size(CalculatorSpacing.Medium))
             Text(
                 text = stringResource(Res.string.c_conversion_tool),
                 style = MaterialTheme.typography.titleLarge,
@@ -203,11 +216,11 @@ private fun ConverterSheetContent(
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.extraLarge,
             color = MaterialTheme.colorScheme.surfaceContainerLow,
-            tonalElevation = 1.dp
+            tonalElevation = CalculatorElevation.Subtle
         ) {
             Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(0.dp)
+                modifier = Modifier.padding(CalculatorPadding.Standard),
+                verticalArrangement = Arrangement.spacedBy(CalculatorSpacing.XSmall)
             ) {
                 ConversionRow(
                     label = stringResource(Res.string.cpp_from),
@@ -252,7 +265,7 @@ private fun ConverterSheetContent(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp),
+                        .padding(vertical = CalculatorPadding.Small),
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Surface(
@@ -262,16 +275,16 @@ private fun ConverterSheetContent(
                         },
                         shape = CircleShape,
                         color = MaterialTheme.colorScheme.secondaryContainer,
-                        modifier = Modifier.size(44.dp)
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Box(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier.rotate(animatedRotation)
                         ) {
-                            Text(
-                                text = "⇅",
-                                fontSize = 22.sp,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            Icon(
+                                imageVector = Icons.Filled.ScreenRotation,
+                                contentDescription = stringResource(Res.string.cpp_swap),
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer
                             )
                         }
                     }
@@ -281,7 +294,7 @@ private fun ConverterSheetContent(
                     label = stringResource(Res.string.cpp_to),
                     inputContent = {
                         AnimatedContent(
-                            targetState = state.output.ifEmpty { "—" },
+                            targetState = state.output.ifEmpty { "-" },
                             transitionSpec = {
                                 (fadeIn(tween(200)) + scaleIn(initialScale = 0.92f, animationSpec = tween(200)))
                                     .togetherWith(fadeOut(tween(150)) + scaleOut(targetScale = 0.92f, animationSpec = tween(150)))
@@ -317,11 +330,11 @@ private fun ConverterSheetContent(
             }
         }
 
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(CalculatorSpacing.XSmall))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(CalculatorSpacing.Medium),
             verticalAlignment = Alignment.CenterVertically
         ) {
             TextButton(
@@ -339,7 +352,10 @@ private fun ConverterSheetContent(
                 onClick = onCopy,
                 enabled = state.output.isNotBlank()
             ) {
-                Text(text = "📋")
+                Icon(
+                    imageVector = Icons.Filled.TextFields,
+                    contentDescription = stringResource(Res.string.c_copy_result)
+                )
                 Spacer(modifier = Modifier.size(6.dp))
                 Text(text = stringResource(Res.string.c_copy_result))
             }
@@ -348,7 +364,10 @@ private fun ConverterSheetContent(
                 onClick = onUse,
                 enabled = state.output.isNotBlank()
             ) {
-                Text(text = "✓")
+                Icon(
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = stringResource(Res.string.c_use)
+                )
                 Spacer(modifier = Modifier.size(6.dp))
                 Text(text = stringResource(Res.string.c_use))
             }
@@ -398,7 +417,7 @@ private fun ConversionRow(
         
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(CalculatorSpacing.Medium),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(modifier = Modifier.weight(1.2f)) {
@@ -427,7 +446,7 @@ private fun CompactUnitDropdown(
     ) {
         Surface(
             onClick = { expanded = true },
-            shape = MaterialTheme.shapes.medium,
+            shape = RoundedCornerShape(CalculatorCornerRadius.Large),
             color = MaterialTheme.colorScheme.surfaceContainerHighest,
             modifier = Modifier
                 .fillMaxWidth()
@@ -438,7 +457,10 @@ private fun CompactUnitDropdown(
         ) {
             Row(
                 modifier = Modifier
-                    .padding(horizontal = 12.dp, vertical = 14.dp),
+                    .padding(
+                        horizontal = CalculatorPadding.Medium,
+                        vertical = CalculatorPadding.Medium
+                    ),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -456,11 +478,15 @@ private fun CompactUnitDropdown(
         
         ExposedDropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
+            shape = RoundedCornerShape(CalculatorCornerRadius.ExtraLarge),
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            tonalElevation = CalculatorElevation.Hero
         ) {
             options.forEachIndexed { index, option ->
                 val isSelected = index == selectedIndex
                 DropdownMenuItem(
+                    modifier = Modifier.heightIn(min = 50.dp),
                     text = { 
                         Text(
                             text = option,
@@ -468,6 +494,17 @@ private fun CompactUnitDropdown(
                             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                             color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                         ) 
+                    },
+                    leadingIcon = if (isSelected) {
+                        {
+                            Icon(
+                                imageVector = Icons.Filled.Check,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    } else {
+                        null
                     },
                     onClick = {
                         expanded = false

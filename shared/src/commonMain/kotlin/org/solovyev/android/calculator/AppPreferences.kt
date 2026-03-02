@@ -64,6 +64,8 @@ interface GuiPreferences {
     val rotateScreen: Flow<Boolean>
     val keepScreenOn: Flow<Boolean>
     val highContrast: Flow<Boolean>
+    val reduceMotion: Flow<Boolean>
+    val fontScale: Flow<Float>
     val vibrateOnKeypress: Flow<Boolean>
     val showCalculationLatency: Flow<Boolean>
 
@@ -86,6 +88,8 @@ interface GuiPreferences {
     suspend fun setRotateScreen(value: Boolean)
     suspend fun setKeepScreenOn(value: Boolean)
     suspend fun setHighContrast(value: Boolean)
+    suspend fun setReduceMotion(value: Boolean)
+    suspend fun setFontScale(value: Float)
     suspend fun setVibrateOnKeypress(value: Boolean)
     suspend fun setShowCalculationLatency(value: Boolean)
 
@@ -190,11 +194,29 @@ interface GesturePreferences {
      * When disabled (default), the key is replaced by "ƒ" and "=" is available via display and long-press.
      */
     val bottomRightEqualsEnabled: Flow<Boolean>
+    /**
+     * Enables swipe-up gesture layer across the keyboard.
+     */
+    val layerUpEnabled: Flow<Boolean>
+    /**
+     * Enables swipe-down gesture layer across the keyboard.
+     */
+    val layerDownEnabled: Flow<Boolean>
+    /**
+     * Enables engineer keyboard layer when GUI mode is Engineer.
+     */
+    val layerEngineerEnabled: Flow<Boolean>
 
     suspend fun isGestureAutoActivationEnabled(): Boolean
     suspend fun setGestureAutoActivationEnabled(enabled: Boolean)
     suspend fun isBottomRightEqualsEnabled(): Boolean
     suspend fun setBottomRightEqualsEnabled(enabled: Boolean)
+    suspend fun isLayerUpEnabled(): Boolean
+    suspend fun setLayerUpEnabled(enabled: Boolean)
+    suspend fun isLayerDownEnabled(): Boolean
+    suspend fun setLayerDownEnabled(enabled: Boolean)
+    suspend fun isLayerEngineerEnabled(): Boolean
+    suspend fun setLayerEngineerEnabled(enabled: Boolean)
 }
 
 /**

@@ -17,7 +17,6 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.roundToInt
-import kotlin.math.sin
 
 /**
  * Data class representing a flying animation event.
@@ -117,7 +116,7 @@ fun FlyingAnimationHost(
 /**
  * The actual flying text animation composable.
  * Redesigned to be subtle, stable, and readable:
- * slight lift + fade with minimal horizontal drift.
+ * slight vertical lift + fade.
  */
 @Composable
 private fun FlyingTextAnimation(
@@ -130,12 +129,12 @@ private fun FlyingTextAnimation(
     var progress by remember { mutableFloatStateOf(0f) }
     val density = LocalDensity.current
 
-    val (durationMs, flyDistanceDp, driftDp, peakScale) = when (type) {
-        FlyingAnimationType.FUNCTION -> Quadruple(280, 64f, 5f, 1.06f)
-        FlyingAnimationType.RESULT -> Quadruple(320, 72f, 6f, 1.08f)
-        FlyingAnimationType.CLEAR -> Quadruple(250, 56f, 4f, 1.04f)
-        FlyingAnimationType.MEMORY -> Quadruple(280, 60f, 5f, 1.05f)
-        FlyingAnimationType.NUMBER -> Quadruple(220, 44f, 3f, 1.03f)
+    val (durationMs, flyDistanceDp, peakScale) = when (type) {
+        FlyingAnimationType.FUNCTION -> Triple(280, 64f, 1.06f)
+        FlyingAnimationType.RESULT -> Triple(320, 72f, 1.08f)
+        FlyingAnimationType.CLEAR -> Triple(250, 56f, 1.04f)
+        FlyingAnimationType.MEMORY -> Triple(280, 60f, 1.05f)
+        FlyingAnimationType.NUMBER -> Triple(220, 44f, 1.03f)
     }
 
     LaunchedEffect(Unit) {
@@ -154,13 +153,12 @@ private fun FlyingTextAnimation(
 
     val eased = FastOutSlowInEasing.transform(progress.coerceIn(0f, 1f))
     val flyDistancePx = with(density) { flyDistanceDp.dp.toPx() }
-    val driftPx = with(density) { driftDp.dp.toPx() }
     val translationY = if (reduceMotion) {
         -(flyDistancePx * 0.35f * progress)
     } else {
         -(flyDistancePx * eased)
     }
-    val translationX = if (reduceMotion) 0f else sin(progress * 1.2f) * driftPx
+    val translationX = 0f
     val scale = if (reduceMotion) 1f else (0.96f + (peakScale - 0.96f) * eased)
     val alpha = (1f - (progress * progress)).coerceIn(0f, 1f)
 
@@ -215,13 +213,6 @@ private fun FlyingTextAnimation(
         color = textColor
     )
 }
-
-private data class Quadruple<A, B, C, D>(
-    val first: A,
-    val second: B,
-    val third: C,
-    val fourth: D
-)
 
 /**
  * Helper function to trigger a flying animation from within composables.

@@ -5,15 +5,17 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-// Material icons not available in commonMain - using text alternatives
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -23,11 +25,13 @@ import org.jetbrains.compose.resources.stringResource
 fun ScientificBottomSheet(
     onFunctionClick: (String) -> Unit,
     onConstantClick: (String) -> Unit,
+    showInverseTrigonometric: Boolean = true,
     onDismissRequest: () -> Unit
 ) {
     val pagerState = rememberPagerState(pageCount = { 3 })
     val scope = rememberCoroutineScope()
     val haptics = LocalHapticFeedback.current
+    val reduceMotion = LocalCalculatorReduceMotion.current
 
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
@@ -76,7 +80,11 @@ fun ScientificBottomSheet(
             ) {
                 SegmentedButton(
                     selected = pagerState.currentPage == 0,
-                    onClick = { scope.launch { pagerState.animateScrollToPage(0) } },
+                    onClick = {
+                        scope.launch {
+                            if (reduceMotion) pagerState.scrollToPage(0) else pagerState.animateScrollToPage(0)
+                        }
+                    },
                     shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3),
                     icon = {
                         SegmentedButtonDefaults.Icon(active = pagerState.currentPage == 0) {
@@ -84,31 +92,43 @@ fun ScientificBottomSheet(
                         }
                     }
                 ) {
-                    Text("Trig")
+                    Text(stringResource(Res.string.cpp_scientific_tab_trig))
                 }
                 SegmentedButton(
                     selected = pagerState.currentPage == 1,
-                    onClick = { scope.launch { pagerState.animateScrollToPage(1) } },
+                    onClick = {
+                        scope.launch {
+                            if (reduceMotion) pagerState.scrollToPage(1) else pagerState.animateScrollToPage(1)
+                        }
+                    },
                     shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3),
                     icon = {
                         SegmentedButtonDefaults.Icon(active = pagerState.currentPage == 1) {
-                            Text("x²", modifier = Modifier.size(18.dp), style = MaterialTheme.typography.labelSmall)
+                            Text("x2", modifier = Modifier.size(18.dp), style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 ) {
-                    Text("Power")
+                    Text(stringResource(Res.string.cpp_scientific_tab_power))
                 }
                 SegmentedButton(
                     selected = pagerState.currentPage == 2,
-                    onClick = { scope.launch { pagerState.animateScrollToPage(2) } },
+                    onClick = {
+                        scope.launch {
+                            if (reduceMotion) pagerState.scrollToPage(2) else pagerState.animateScrollToPage(2)
+                        }
+                    },
                     shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3),
                     icon = {
                         SegmentedButtonDefaults.Icon(active = pagerState.currentPage == 2) {
-                            Text("•••", modifier = Modifier.size(18.dp), style = MaterialTheme.typography.labelSmall)
+                            Icon(
+                                imageVector = Icons.Filled.MoreHoriz,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
                         }
                     }
                 ) {
-                    Text("More")
+                    Text(stringResource(Res.string.cpp_scientific_tab_more))
                 }
             }
 
@@ -121,6 +141,7 @@ fun ScientificBottomSheet(
             ) { page ->
                 when (page) {
                     0 -> TrigonometryPage(
+                        showInverseTrigonometric = showInverseTrigonometric,
                         onFunctionClick = {
                             haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             onFunctionClick(it)
@@ -145,9 +166,12 @@ fun ScientificBottomSheet(
 }
 
 @Composable
-private fun TrigonometryPage(onFunctionClick: (String) -> Unit) {
+private fun TrigonometryPage(
+    onFunctionClick: (String) -> Unit,
+    showInverseTrigonometric: Boolean = true
+) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        ScientificGroup(title = "Trigonometric Functions") {
+        ScientificGroup(title = stringResource(Res.string.cpp_scientific_group_trigonometric)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ScientificButton(
                     text = "sin",
@@ -165,25 +189,27 @@ private fun TrigonometryPage(onFunctionClick: (String) -> Unit) {
                     onClick = { onFunctionClick("tan") }
                 )
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ScientificButton(
-                    text = "asin",
-                    description = "arcsin",
-                    style = ScientificButtonStyle.Secondary,
-                    onClick = { onFunctionClick("asin") }
-                )
-                ScientificButton(
-                    text = "acos",
-                    description = "arccos",
-                    style = ScientificButtonStyle.Secondary,
-                    onClick = { onFunctionClick("acos") }
-                )
-                ScientificButton(
-                    text = "atan",
-                    description = "arctan",
-                    style = ScientificButtonStyle.Secondary,
-                    onClick = { onFunctionClick("atan") }
-                )
+            if (showInverseTrigonometric) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ScientificButton(
+                        text = "asin",
+                        description = "arcsin",
+                        style = ScientificButtonStyle.Secondary,
+                        onClick = { onFunctionClick("asin") }
+                    )
+                    ScientificButton(
+                        text = "acos",
+                        description = "arccos",
+                        style = ScientificButtonStyle.Secondary,
+                        onClick = { onFunctionClick("acos") }
+                    )
+                    ScientificButton(
+                        text = "atan",
+                        description = "arctan",
+                        style = ScientificButtonStyle.Secondary,
+                        onClick = { onFunctionClick("atan") }
+                    )
+                }
             }
         }
     }
@@ -192,7 +218,7 @@ private fun TrigonometryPage(onFunctionClick: (String) -> Unit) {
 @Composable
 private fun PowerPage(onFunctionClick: (String) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        ScientificGroup(title = "Power & Logarithms") {
+        ScientificGroup(title = stringResource(Res.string.cpp_scientific_group_power)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ScientificButton(
                     text = "ln",
@@ -244,10 +270,10 @@ private fun PowerPage(onFunctionClick: (String) -> Unit) {
 @Composable
 private fun ConstantsPage(onConstantClick: (String) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        ScientificGroup(title = "Mathematical Constants") {
+        ScientificGroup(title = stringResource(Res.string.cpp_scientific_group_constants)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ScientificButton(
-                    text = "π",
+                    text = "pi",
                     description = "pi",
                     style = ScientificButtonStyle.Primary,
                     onClick = { onConstantClick("π") }
@@ -267,7 +293,7 @@ private fun ConstantsPage(onConstantClick: (String) -> Unit) {
             }
         }
 
-        ScientificGroup(title = "Variables") {
+        ScientificGroup(title = stringResource(Res.string.cpp_variables)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ScientificButton(
                     text = "x",
@@ -356,18 +382,24 @@ private fun RowScope.ScientificButton(
 
     FilledTonalButton(
         onClick = onClick,
-        modifier = Modifier.weight(1f),
+        modifier = Modifier
+            .weight(1f)
+            .semantics { contentDescription = description ?: text },
         colors = colors,
         shape = RoundedCornerShape(12.dp),
         contentPadding = PaddingValues(vertical = 14.dp)
     ) {
         if (icon != null) {
-            Text(text = icon)
+            Text(
+                text = icon,
+                style = MaterialTheme.typography.labelLarge.copy(fontFamily = CalculatorFontFamily)
+            )
             Spacer(modifier = Modifier.width(6.dp))
         }
         Text(
             text = text,
             style = MaterialTheme.typography.labelLarge.copy(
+                fontFamily = CalculatorFontFamily,
                 fontWeight = FontWeight.SemiBold
             )
         )

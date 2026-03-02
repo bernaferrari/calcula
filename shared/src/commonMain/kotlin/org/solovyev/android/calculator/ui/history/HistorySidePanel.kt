@@ -7,8 +7,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,6 +28,7 @@ import org.solovyev.android.calculator.history.HistoryState
  * Compact history side panel for adaptive layout on tablets.
  * Shows recent history entries that can be tapped to use.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun HistorySidePanel(
     recent: List<HistoryState>,
@@ -46,9 +53,10 @@ fun HistorySidePanel(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "🕐",
-                    style = MaterialTheme.typography.titleMedium
+                Icon(
+                    imageVector = Icons.Filled.History,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
                 )
                 Text(
                     text = "History",
@@ -73,11 +81,13 @@ fun HistorySidePanel(
                 }
             } else {
                 LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap)
                 ) {
-                    items(recent) { entry ->
+                    itemsIndexed(recent, key = { _, state -> state.id }) { index, entry ->
                         HistorySidePanelItem(
                             state = entry,
+                            index = index,
+                            totalCount = recent.size,
                             onClick = { onUse(entry) }
                         )
                     }
@@ -87,29 +97,29 @@ fun HistorySidePanel(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun HistorySidePanelItem(
     state: HistoryState,
+    index: Int,
+    totalCount: Int,
     onClick: () -> Unit
 ) {
-    Surface(
+    SegmentedListItem(
         onClick = onClick,
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp)
-        ) {
-            // Expression
+        shapes = ListItemDefaults.segmentedShapes(index = index, count = totalCount),
+        colors = ListItemDefaults.segmentedColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+        ),
+        content = {
             Text(
                 text = state.editor.getTextString(),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1
             )
-            // Result
+        },
+        supportingContent = {
             Text(
                 text = "= ${state.display.text}",
                 style = MaterialTheme.typography.titleMedium,
@@ -118,5 +128,5 @@ private fun HistorySidePanelItem(
                 maxLines = 1
             )
         }
-    }
+    )
 }

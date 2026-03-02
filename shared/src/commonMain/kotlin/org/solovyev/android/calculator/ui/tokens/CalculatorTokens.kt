@@ -1,5 +1,6 @@
 package org.solovyev.android.calculator.ui.tokens
 
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
@@ -94,4 +95,58 @@ object CalculatorPadding {
 
     /** 24dp */
     val XLarge = 24.dp
+}
+
+/**
+ * Shared gesture constants so keyboard stacks behave consistently.
+ */
+object CalculatorGestureTokens {
+    /** Auto-activation threshold ratio (80%). */
+    const val AutoActivationThresholdRatio: Float = 0.8f
+
+    /** Lower clamp for auto-activation trigger distance. */
+    val AutoActivationMinDistance: Dp = 16.dp
+
+    /** Swipe reveal distance used by Not Boring keyboard. */
+    val VerticalRevealDistance: Dp = 40.dp
+}
+
+/**
+ * Shared button border tokens for subtle edge definition.
+ */
+object CalculatorButtonBorderTokens {
+    /** Border stroke width for calculator keys. */
+    val Width: Dp = 1.dp
+
+    /** Default alpha for number/digit keys. */
+    const val DigitAlpha: Float = 0.24f
+
+    /** Default alpha for operation/control/special keys. */
+    const val AccentAlpha: Float = 0.18f
+
+    /** Pressed-state alpha to improve tactile feedback. */
+    const val PressedAlpha: Float = 0.36f
+}
+
+/**
+ * Shared overflow-menu geometry and sizing.
+ */
+object CalculatorMenuTokens {
+    /** Menu corner radius. */
+    val ContainerCorner: Dp = 18.dp
+
+    /** Icon container corner radius. */
+    val LeadingIconCorner: Dp = 10.dp
+
+    /** Minimum menu width. */
+    val MinWidth: Dp = 236.dp
+
+    /** Maximum menu width to avoid oversized popovers on tablets. */
+    val MaxWidth: Dp = 320.dp
+
+    /** Minimum touch target for each menu row. */
+    val ItemMinHeight: Dp = 50.dp
+
+    /** Leading icon container size. */
+    val LeadingIconSize: Dp = 30.dp
 }

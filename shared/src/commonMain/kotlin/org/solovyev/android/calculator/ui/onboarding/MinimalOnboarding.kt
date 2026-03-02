@@ -10,6 +10,10 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Icon
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -245,14 +249,15 @@ private fun WelcomePage(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "π",
-                    fontSize = 90.sp,
-                    fontWeight = FontWeight.Light,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.graphicsLayer {
-                        rotationZ = -rotation // Counter-rotate text
-                    }
+                Icon(
+                    imageVector = Icons.Filled.Calculate,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier
+                        .size(90.dp)
+                        .graphicsLayer {
+                            rotationZ = -rotation // Counter-rotate icon
+                        }
                 )
             }
         }
@@ -570,7 +575,7 @@ private fun GestureDemo() {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "👆",
+                    text = "Tap",
                     fontSize = 18.sp
                 )
             }
@@ -890,11 +895,10 @@ private fun ThemePreviewCard(
                     modifier = Modifier.size(28.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            text = "✓",
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 }
@@ -965,11 +969,11 @@ private fun CompletePage(
                     shadowElevation = 12.dp
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            text = "✓",
-                            fontSize = 64.sp,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Light
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(64.dp)
                         )
                     }
                 }
