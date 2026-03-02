@@ -26,6 +26,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -69,6 +70,7 @@ import org.solovyev.android.calculator.ui.formulas.FormulaScreen
 import org.solovyev.android.calculator.formulas.FormulaViewModel
 import org.solovyev.android.calculator.ui.converter.ConverterDialog
 import org.solovyev.android.calculator.ui.graphing.GraphingScreen
+import org.solovyev.android.calculator.preferences.DataStoreGuiPreferences
 
 // Navigation keys
 @Serializable
@@ -152,10 +154,14 @@ fun CalculatorApp(
         if (!onboardingFinished) OnboardingKey else CalculatorKey
     )
     var settingsDestination by rememberSaveable { mutableStateOf(SettingsDestination.MAIN) }
+    var isConverterSheetVisible by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(openConverter, onboardingFinished) {
         if (onboardingFinished && openConverter) {
-            backStack.pushUnique(ConverterKey)
+            if (backStack.lastOrNull() != CalculatorKey) {
+                backStack.pushUnique(CalculatorKey)
+            }
+            isConverterSheetVisible = true
             onOpenConverterConsumed()
         }
     }
@@ -296,6 +302,11 @@ fun CalculatorApp(
                 }
                 entry<CalculatorKey> {
                     val guiMode = GuiMode.fromId(modeState)
+                    val dataStoreGuiPreferences = appPreferences.gui as? DataStoreGuiPreferences
+                    val persistedTabsState by dataStoreGuiPreferences
+                        ?.calculatorTabsState
+                        ?.collectAsState(initial = null)
+                        ?: remember { mutableStateOf<String?>(null) }
                     val keyboardMode = when (guiMode) {
                         GuiMode.simple -> KeyboardMode.MODERN
                         GuiMode.engineer -> if (layerEngineerEnabled) KeyboardMode.ENGINEER else KeyboardMode.MODERN
@@ -340,6 +351,14 @@ fun CalculatorApp(
                             tapeMode = tapeMode,
                             tapeEntries = tapeEntries,
                             liveTapeEntry = liveTapeEntry,
+                            persistedTabsState = persistedTabsState,
+                            onPersistTabsState = { serializedState ->
+                                dataStoreGuiPreferences?.let { preferences ->
+                                    scope.launch {
+                                        preferences.setCalculatorTabsState(serializedState)
+                                    }
+                                }
+                            },
                             onCopy = keyboardActions::onCopy,
                             onEquals = keyboardActions::onEquals,
                             onEditorTextChange = { text, selection -> viewModel.onEditorTextChange(text, selection) },
@@ -351,7 +370,7 @@ fun CalculatorApp(
                             },
                             onOpenVariables = { backStack.pushUnique(VariablesKey) },
                             onOpenFunctions = { backStack.pushUnique(FunctionsKey) },
-                            onOpenConverter = { backStack.pushUnique(ConverterKey) },
+                            onOpenConverter = { isConverterSheetVisible = true },
                             onOpenGraph = { backStack.pushUnique(GraphKey) },
                             onOpenFormulas = { backStack.pushUnique(FormulasKey) },
                             onOpenAbout = { backStack.pushUnique(AboutKey) },
@@ -390,6 +409,12 @@ fun CalculatorApp(
                                 )
                             }
                         )
+
+                        if (isConverterSheetVisible) {
+                            ConverterDialog(
+                                onDismissRequest = { isConverterSheetVisible = false }
+                            )
+                        }
                     }
                 }
                 entry<HistoryKey> {
@@ -448,9 +473,10 @@ fun CalculatorApp(
                     )
                 }
                 entry<ConverterKey> {
-                    ConverterDialog(
-                        onDismissRequest = { backStack.popOrFallback(CalculatorKey) }
-                    )
+                    LaunchedEffect(Unit) {
+                        isConverterSheetVisible = true
+                        backStack.popOrFallback(CalculatorKey)
+                    }
                 }
                 entry<GraphKey> {
                     GraphingScreen(

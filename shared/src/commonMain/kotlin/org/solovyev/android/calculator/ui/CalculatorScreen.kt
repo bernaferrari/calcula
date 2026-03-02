@@ -43,6 +43,14 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import org.jetbrains.compose.resources.stringResource
 import org.solovyev.android.calculator.DisplayState
 import org.solovyev.android.calculator.EditorState
@@ -64,6 +72,8 @@ fun CalculatorScreen(
     tapeMode: Boolean = false,
     tapeEntries: List<TapeEntry> = emptyList(),
     liveTapeEntry: TapeEntry? = null,
+    persistedTabsState: String? = null,
+    onPersistTabsState: (String) -> Unit = {},
     onEditorTextChange: (String, Int) -> Unit,
     onEditorSelectionChange: (Int) -> Unit,
     onOpenHistory: () -> Unit,
@@ -94,6 +104,98 @@ fun CalculatorScreen(
 ) {
     val flyingAnimationState = rememberFlyingAnimationState()
     var showLayersDialog by remember { mutableStateOf(false) }
+    var hasRestoredTabs by remember { mutableStateOf(false) }
+    var nextTabId by remember { mutableIntStateOf(2) }
+    var activeTabId by remember { mutableStateOf("1") }
+    var tabs by remember {
+        mutableStateOf(
+            listOf(
+                CalculatorWorkspaceTab(
+                    id = "1",
+                    expression = editorState.text.toString(),
+                    selection = editorState.selection.coerceAtLeast(0),
+                    result = displayState.text.takeIf { displayState.valid } ?: ""
+                )
+            )
+        )
+    }
+
+    LaunchedEffect(persistedTabsState) {
+        if (hasRestoredTabs || persistedTabsState == null) return@LaunchedEffect
+
+        val restored = persistedTabsState
+            .takeIf { it.isNotBlank() }
+            ?.let(::decodeCalculatorTabsState)
+        if (restored != null) {
+            val restoredTabs = restored.tabs
+                .filter { it.id.isNotBlank() }
+                .distinctBy { it.id }
+                .take(MAX_CALCULATOR_TABS)
+                .map { tab ->
+                    tab.copy(selection = tab.selection.coerceIn(0, tab.expression.length))
+                }
+            if (restoredTabs.isNotEmpty()) {
+                tabs = restoredTabs
+                val restoredActiveTabId = restoredTabs
+                    .firstOrNull { it.id == restored.activeTabId }
+                    ?.id
+                    ?: restoredTabs.first().id
+                activeTabId = restoredActiveTabId
+                nextTabId = restored.nextTabId.coerceAtLeast(
+                    (restoredTabs.maxOfOrNull { it.id.toIntOrNull() ?: 0 } ?: 1) + 1
+                )
+                val activeTab = restoredTabs.firstOrNull { it.id == restoredActiveTabId } ?: restoredTabs.first()
+                onEditorTextChange(activeTab.expression, activeTab.selection)
+            }
+        }
+
+        hasRestoredTabs = true
+    }
+
+    fun snapshotFor(id: String): CalculatorWorkspaceTab {
+        val expression = editorState.text.toString()
+        return CalculatorWorkspaceTab(
+            id = id,
+            expression = expression,
+            selection = editorState.selection.coerceIn(0, expression.length),
+            result = displayState.text.takeIf { displayState.valid } ?: ""
+        )
+    }
+
+    fun persistActiveTab(list: List<CalculatorWorkspaceTab>): List<CalculatorWorkspaceTab> {
+        if (list.isEmpty()) return list
+        val index = list.indexOfFirst { it.id == activeTabId }
+        if (index < 0) return list
+        val updated = snapshotFor(activeTabId)
+        if (list[index] == updated) return list
+        return list.toMutableList().also { it[index] = updated }
+    }
+
+    LaunchedEffect(
+        activeTabId,
+        editorState.text,
+        editorState.selection,
+        displayState.text,
+        displayState.valid
+    ) {
+        tabs = persistActiveTab(tabs)
+    }
+
+    LaunchedEffect(hasRestoredTabs) {
+        if (!hasRestoredTabs) return@LaunchedEffect
+        snapshotFlow {
+            PersistedCalculatorTabsState(
+                activeTabId = activeTabId,
+                nextTabId = nextTabId,
+                tabs = tabs
+            )
+        }
+            .map(::encodeCalculatorTabsState)
+            .filter { it.isNotEmpty() }
+            .distinctUntilChanged()
+            .debounce(200)
+            .collect(onPersistTabsState)
+    }
 
     CompositionLocalProvider(
         LocalCalculatorHapticsEnabled provides hapticsEnabled,
@@ -106,38 +208,61 @@ fun CalculatorScreen(
                 modifier = Modifier.fillMaxSize(),
                 containerColor = MaterialTheme.colorScheme.surface,
                 topBar = {
-                    StandardTopAppBar(
-                        title = stringResource(Res.string.cpp_app_name),
-                        actions = {
-                            FilledTonalIconButton(onClick = onOpenHistory) {
-                                Icon(
-                                    imageVector = Icons.Default.History,
-                                    contentDescription = stringResource(Res.string.c_history)
-                                )
-                            }
-                            FilledTonalIconButton(onClick = onOpenFunctions) {
-                                Icon(
-                                    imageVector = Icons.Default.Calculate,
-                                    contentDescription = stringResource(Res.string.c_functions)
-                                )
-                            }
-                            FilledTonalIconButton(onClick = onOpenSettings) {
-                                Icon(
-                                    imageVector = Icons.Default.Settings,
-                                    contentDescription = stringResource(Res.string.cpp_settings)
-                                )
-                            }
-                            CalculatorTopOverflowMenu(
-                                onOpenVariables = onOpenVariables,
-                                onOpenFunctions = onOpenFunctions,
-                                onOpenFormulas = onOpenFormulas,
-                                onOpenGraph = onOpenGraph,
-                                onOpenConverter = onOpenConverter,
-                                onOpenSettings = onOpenSettings,
-                                onOpenAbout = onOpenAbout,
-                                onOpenLayers = { showLayersDialog = true }
+                    CalculatorTabBar(
+                        tabs = tabs.map { tab ->
+                            CalculatorTabData(
+                                id = tab.id,
+                                expression = tab.expression,
+                                result = tab.result
                             )
-                        }
+                        },
+                        activeTabId = activeTabId,
+                        onTabSelect = { tabId ->
+                            val persisted = persistActiveTab(tabs)
+                            val target = persisted.firstOrNull { it.id == tabId } ?: return@CalculatorTabBar
+                            tabs = persisted
+                            activeTabId = target.id
+                            onEditorTextChange(target.expression, target.selection)
+                        },
+                        onTabClose = { tabId ->
+                            if (tabs.size <= 1) return@CalculatorTabBar
+                            val persisted = persistActiveTab(tabs)
+                            val closeIndex = persisted.indexOfFirst { it.id == tabId }
+                            if (closeIndex < 0) return@CalculatorTabBar
+
+                            val remaining = persisted.toMutableList().apply { removeAt(closeIndex) }
+                            tabs = remaining
+                            if (activeTabId == tabId) {
+                                val fallbackIndex = (closeIndex - 1).coerceAtLeast(0)
+                                val nextActive = remaining.getOrNull(fallbackIndex) ?: remaining.first()
+                                activeTabId = nextActive.id
+                                onEditorTextChange(nextActive.expression, nextActive.selection)
+                            }
+                        },
+                        onAddTab = {
+                            if (tabs.size >= MAX_CALCULATOR_TABS) return@CalculatorTabBar
+                            val persisted = persistActiveTab(tabs)
+                            val newId = nextTabId.toString()
+                            nextTabId += 1
+                            tabs = persisted + CalculatorWorkspaceTab(id = newId)
+                            activeTabId = newId
+                            onEditorTextChange("", 0)
+                        },
+                        onTabMove = { fromIndex, toIndex ->
+                            if (
+                                fromIndex !in tabs.indices ||
+                                toIndex !in tabs.indices ||
+                                fromIndex == toIndex
+                            ) {
+                                return@CalculatorTabBar
+                            }
+                            val mutableTabs = tabs.toMutableList()
+                            val moved = mutableTabs.removeAt(fromIndex)
+                            mutableTabs.add(toIndex, moved)
+                            tabs = mutableTabs
+                        },
+                        canAddMore = tabs.size < MAX_CALCULATOR_TABS,
+                        modifier = Modifier.statusBarsPadding()
                     )
                 },
                 bottomBar = {
@@ -168,6 +293,7 @@ fun CalculatorScreen(
                         )
                     )
                     val bottomOverflowEntries = calculatorOverflowEntries(
+                        onOpenHistory = onOpenHistory,
                         onOpenVariables = onOpenVariables,
                         onOpenFunctions = onOpenFunctions,
                         onOpenFormulas = onOpenFormulas,
@@ -306,41 +432,8 @@ fun CalculatorScreen(
 }
 
 @Composable
-private fun CalculatorTopOverflowMenu(
-    onOpenVariables: () -> Unit,
-    onOpenFunctions: () -> Unit,
-    onOpenFormulas: () -> Unit,
-    onOpenGraph: () -> Unit,
-    onOpenConverter: () -> Unit,
-    onOpenSettings: () -> Unit,
-    onOpenAbout: () -> Unit,
-    onOpenLayers: () -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-    val entries = calculatorOverflowEntries(
-        onOpenVariables = onOpenVariables,
-        onOpenFunctions = onOpenFunctions,
-        onOpenFormulas = onOpenFormulas,
-        onOpenGraph = onOpenGraph,
-        onOpenConverter = onOpenConverter,
-        onOpenSettings = onOpenSettings,
-        onOpenAbout = onOpenAbout,
-        onOpenLayers = onOpenLayers,
-        onBeforeNavigate = { expanded = false }
-    )
-
-    Box {
-        CalculatorOverflowIconButton(onClick = { expanded = true })
-        CalculatorOverflowDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            entries = entries
-        )
-    }
-}
-
-@Composable
 private fun calculatorOverflowEntries(
+    onOpenHistory: () -> Unit,
     onOpenVariables: () -> Unit,
     onOpenFunctions: () -> Unit,
     onOpenFormulas: () -> Unit,
@@ -351,6 +444,15 @@ private fun calculatorOverflowEntries(
     onOpenLayers: () -> Unit,
     onBeforeNavigate: () -> Unit
 ): List<CalculatorMenuEntry> = listOf(
+    CalculatorMenuEntry.Action(
+        label = stringResource(Res.string.c_history),
+        icon = Icons.Default.History,
+        onClick = {
+            onBeforeNavigate()
+            onOpenHistory()
+        }
+    ),
+    CalculatorMenuEntry.Divider,
     CalculatorMenuEntry.Action(
         label = stringResource(Res.string.cpp_variables),
         icon = Icons.Default.TextFields,
@@ -420,6 +522,32 @@ private fun calculatorOverflowEntries(
         }
     )
 )
+
+@Serializable
+private data class CalculatorWorkspaceTab(
+    val id: String,
+    val expression: String = "",
+    val selection: Int = 0,
+    val result: String = ""
+)
+
+@Serializable
+private data class PersistedCalculatorTabsState(
+    val activeTabId: String,
+    val nextTabId: Int,
+    val tabs: List<CalculatorWorkspaceTab>
+)
+
+private const val MAX_CALCULATOR_TABS = 24
+private val calculatorTabsStateJson = Json { ignoreUnknownKeys = true }
+
+private fun encodeCalculatorTabsState(state: PersistedCalculatorTabsState): String {
+    return runCatching { calculatorTabsStateJson.encodeToString(state) }.getOrDefault("")
+}
+
+private fun decodeCalculatorTabsState(state: String): PersistedCalculatorTabsState? {
+    return runCatching { calculatorTabsStateJson.decodeFromString<PersistedCalculatorTabsState>(state) }.getOrNull()
+}
 
 @Composable
 private fun LayersDialog(

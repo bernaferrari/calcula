@@ -152,6 +152,7 @@ class DataStoreGuiPreferences(private val dataStore: DataStore<Preferences>) : G
 
     private val keyHighlightExpressions = booleanPreferencesKey("gui.highlightExpressions")
     private val keyPlotImag = booleanPreferencesKey("gui.plotImag")
+    private val keyCalculatorTabsState = stringPreferencesKey("gui.calculatorTabsState")
 
     override val theme: Flow<String> = dataStore.data.map { it[keyTheme] ?: "material_theme" }
     override val dynamicColor: Flow<Boolean> = dataStore.data.map { it[keyDynamicColor] ?: true }
@@ -171,6 +172,7 @@ class DataStoreGuiPreferences(private val dataStore: DataStore<Preferences>) : G
     override val isAmoled: Flow<Boolean> = dataStore.data.map { it[keyIsAmoled] ?: false }
     override val highlightExpressions: Flow<Boolean> = dataStore.data.map { it[keyHighlightExpressions] ?: true }
     override val plotImag: Flow<Boolean> = dataStore.data.map { it[keyPlotImag] ?: false }
+    val calculatorTabsState: Flow<String?> = dataStore.data.map { it[keyCalculatorTabsState] }
 
     override suspend fun setTheme(value: String) { dataStore.edit { it[keyTheme] = value } }
     override suspend fun setDynamicColor(value: Boolean) { dataStore.edit { it[keyDynamicColor] = value } }
@@ -190,6 +192,7 @@ class DataStoreGuiPreferences(private val dataStore: DataStore<Preferences>) : G
     override suspend fun setIsAmoled(value: Boolean) { dataStore.edit { it[keyIsAmoled] = value } }
     override suspend fun setHighlightExpressions(value: Boolean) { dataStore.edit { it[keyHighlightExpressions] = value } }
     override suspend fun setPlotImag(value: Boolean) { dataStore.edit { it[keyPlotImag] = value } }
+    suspend fun setCalculatorTabsState(value: String) { dataStore.edit { it[keyCalculatorTabsState] = value } }
 }
 
 class DataStoreOnscreenPreferences(private val dataStore: DataStore<Preferences>) : OnscreenPreferences {

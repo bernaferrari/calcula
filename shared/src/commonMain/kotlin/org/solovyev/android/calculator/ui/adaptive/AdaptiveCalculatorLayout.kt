@@ -664,7 +664,7 @@ private fun ScientificFunctionsPanel(
                 color = MaterialTheme.colorScheme.primary
             )
 
-            val constants = listOf("pi", "e", "phi", "infinity")
+            val constants = listOf("π", "e", "phi", "infinity")
             constants.forEach { constant ->
                 OutlinedButton(
                     onClick = { onInsertConstant(constant) },

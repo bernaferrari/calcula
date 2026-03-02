@@ -189,9 +189,13 @@ fun ModernCalculatorKeyboard(
             ModernButton(
                 text = "*",
                 buttonType = ButtonType.OPERATION,
+                directionTexts = DirectionTexts(up = "ˆ", down = "x²"),
                 contentDescription = stringResource(Res.string.cpp_button_multiply),
                 onClick = { actions.onOperatorClick("*") },
-                modifier = Modifier.weight(1f)
+                onSwipeUp = { actions.onSpecialClick("^") },
+                onSwipeDown = { actions.onSpecialClick("^2") },
+                modifier = Modifier.weight(1f),
+                gestureAutoActivation = gestureAutoActivation
             )
         }
 
@@ -259,13 +263,13 @@ fun ModernCalculatorKeyboard(
                 buttonType = ButtonType.DIGIT,
                 directionTexts = DirectionTexts(
                     up = "cos",
-                    down = if (isSimpleMode) null else "acos"
+                    down = "e"
                 ),
                 contentDescription = stringResource(Res.string.cpp_button_two),
                 onClick = { actions.onNumberClick("2") },
                 enabled = isDigitAllowedForBase("2", numeralBase),
                 onSwipeUp = { actions.onFunctionClick("cos") },
-                onSwipeDown = if (isSimpleMode) null else ({ actions.onFunctionClick("acos") }),
+                onSwipeDown = { actions.onSpecialClick("e") },
                 modifier = Modifier.weight(1f),
                 gestureAutoActivation = gestureAutoActivation
             )
@@ -280,7 +284,7 @@ fun ModernCalculatorKeyboard(
                 onClick = { actions.onNumberClick("3") },
                 enabled = isDigitAllowedForBase("3", numeralBase),
                 onSwipeUp = { actions.onFunctionClick("tan") },
-                onSwipeDown = { actions.onSpecialClick("pi") },
+                onSwipeDown = { actions.onSpecialClick("π") },
                 modifier = Modifier.weight(1f)
             )
             ModernButton(
@@ -411,7 +415,8 @@ internal fun ModernButton(
     val longPressTimeout = (viewConfig.longPressTimeoutMillis * 0.6f).roundToLong()
     val touchSlop = viewConfig.touchSlop
     val density = LocalDensity.current
-    val minDragDistancePx = with(density) { 20.dp.toPx() }
+    // Match legacy feel: shorter swipe distance makes drag gestures more responsive.
+    val minDragDistancePx = with(density) { 15.dp.toPx() }
     val optionWidthPx = with(density) { 48.dp.toPx() }
     val autoActivationThresholdPx = with(density) {
         (minDragDistancePx * CalculatorGestureTokens.AutoActivationThresholdRatio)
@@ -711,6 +716,7 @@ internal fun ModernButton(
                     var swipeHandled = false
                     var longPressSelectionCanceled = false
                     var wasAtOrAboveAutoThreshold = false
+                    val dragDetectionSlop = touchSlop * 0.55f
                     dragProgress = 0f
                     dragDirection = null
                     lastEligibleDragDirection = null
@@ -746,7 +752,7 @@ internal fun ModernButton(
                             }
                             if (!longPressFired && !swipeHandled) {
                                 val delta = lastPos - start
-                                val releaseDirection = detectDragDirection(delta, touchSlop)
+                                val releaseDirection = detectDragDirection(delta, dragDetectionSlop)
                                 if (releaseDirection != null &&
                                     supportsSwipe(releaseDirection) &&
                                     releaseDirection.axisDistance(delta) > minDragDistancePx
@@ -792,16 +798,16 @@ internal fun ModernButton(
                             val delta = lastPos - start
                             val effectiveThresholdPx = kotlin.math.max(
                                 autoActivationThresholdPx,
-                                kotlin.math.min(buttonSizePx.width, buttonSizePx.height) * 0.34f
+                                kotlin.math.min(buttonSizePx.width, buttonSizePx.height) * 0.24f
                             )
 
-                            val detectedDirection = detectDragDirection(delta, touchSlop)
+                            val detectedDirection = detectDragDirection(delta, dragDetectionSlop)
                             val activeDirection = detectedDirection?.takeIf { supportsSwipe(it) }
                             if (activeDirection != null) {
                                 val computedProgress = normalizedDragProgress(
                                     axisDistancePx = activeDirection.axisDistance(delta),
                                     thresholdPx = effectiveThresholdPx,
-                                    touchSlopPx = touchSlop
+                                    touchSlopPx = dragDetectionSlop
                                 )
                                 dragDirection = activeDirection
                                 dragProgress = computedProgress

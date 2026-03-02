@@ -7,7 +7,6 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.foundation.text.selection.TextSelectionColors
@@ -27,14 +26,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.platform.InterceptPlatformTextInput
-import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.platform.PlatformTextInputInterceptor
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextRange
@@ -58,7 +55,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.awaitCancellation
 import org.solovyev.android.calculator.EditorState
-import kotlin.math.abs
 
 /**
  * Calculator editor component with award-winning typography:
@@ -102,7 +98,6 @@ fun CalculatorEditor(
     var textFieldValue by remember { mutableStateOf(TextFieldValue()) }
     val interactionSource = remember { MutableInteractionSource() }
     val focusRequester = remember { FocusRequester() }
-    val viewConfig = LocalViewConfiguration.current
     var editorFocused by remember { mutableStateOf(false) }
     var cursorPosition by remember { mutableIntStateOf(0) }
     var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
@@ -170,6 +165,24 @@ fun CalculatorEditor(
         handleColor = MaterialTheme.colorScheme.primary,
         backgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
     )
+    val scrubTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
+
+    fun updateSelectionFromScrubX(x: Float) {
+        val layout = textLayoutResult ?: return
+        val maxX = layout.size.width.toFloat().coerceAtLeast(1f)
+        val clampedX = x.coerceIn(0f, maxX)
+        val currentSelection = textFieldValue.selection.end.coerceIn(0, textFieldValue.text.length)
+        val line = layout.getLineForOffset(currentSelection)
+        val lineY = (layout.getLineTop(line) + layout.getLineBottom(line)) / 2f
+        val target = layout
+            .getOffsetForPosition(Offset(clampedX, lineY))
+            .coerceIn(0, textFieldValue.text.length)
+        if (target != textFieldValue.selection.end || !textFieldValue.selection.collapsed) {
+            textFieldValue = textFieldValue.copy(selection = TextRange(target))
+            cursorPosition = target
+            onSelectionChange(target)
+        }
+    }
 
     Row(
         modifier = modifier
@@ -183,126 +196,121 @@ fun CalculatorEditor(
             InterceptPlatformTextInput(
                 interceptor = disableSoftKeyboardInterceptor
             ) {
-                BasicTextField(
-                    value = textFieldValue,
-                    onValueChange = { newValue ->
-                        val oldValue = textFieldValue
-                        
-                        // Apply smart corrections if enabled
-                        val processedValue = if (enableSmartCorrection && newValue.text != oldValue.text) {
-                            applySmartCorrections(newValue, oldValue)
-                        } else {
-                            newValue
-                        }
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    PlatformEditorField(
+                        value = textFieldValue,
+                        onValueChange = { newValue ->
+                            val oldValue = textFieldValue
 
-                        textFieldValue = processedValue
-                        cursorPosition = processedValue.selection.end
+                            // Apply smart corrections if enabled
+                            val processedValue = if (enableSmartCorrection && newValue.text != oldValue.text) {
+                                applySmartCorrections(newValue, oldValue)
+                            } else {
+                                newValue
+                            }
 
-                        if (processedValue.text != oldValue.text) {
-                            // Reset autosizing on every actual input change.
-                            adaptiveFontSize = maxTextSize
-                            adaptiveMaxLines = 1
-                            onTextChange(processedValue.text, processedValue.selection.end)
-                        } else if (processedValue.selection != oldValue.selection) {
-                            onSelectionChange(processedValue.selection.end)
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .focusRequester(focusRequester)
-                        .onFocusChanged { focusState -> editorFocused = focusState.isFocused }
-                        .pointerInput(textFieldValue.text, textLayoutResult, viewConfig.touchSlop) {
-                            awaitEachGesture {
-                                val down = awaitFirstDown(requireUnconsumed = false)
-                                val initialLayout = textLayoutResult ?: return@awaitEachGesture
-                                val anchorLine = initialLayout.getLineForVerticalPosition(down.position.y)
-                                val anchorY = (initialLayout.getLineTop(anchorLine) + initialLayout.getLineBottom(anchorLine)) / 2f
-                                val startX = down.position.x
-                                var scrubActive = false
+                            textFieldValue = processedValue
+                            cursorPosition = processedValue.selection.end
 
-                                while (true) {
-                                    val event = awaitPointerEvent()
-                                    val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                                    if (change.changedToUpIgnoreConsumed()) break
-                                    if (change.positionChanged()) {
-                                        if (!scrubActive && abs(change.position.x - startX) <= viewConfig.touchSlop) {
-                                            continue
-                                        }
-                                        scrubActive = true
-
-                                        val layout = textLayoutResult ?: continue
-                                        val target = layout
-                                            .getOffsetForPosition(Offset(change.position.x, anchorY))
-                                            .coerceIn(0, textFieldValue.text.length)
-                                        if (target != textFieldValue.selection.end || !textFieldValue.selection.collapsed) {
-                                            textFieldValue = textFieldValue.copy(selection = TextRange(target))
-                                            cursorPosition = target
-                                            onSelectionChange(target)
-                                        }
-                                        change.consume()
-                                    }
-                                }
+                            if (processedValue.text != oldValue.text) {
+                                // Reset autosizing on every actual input change.
+                                adaptiveFontSize = maxTextSize
+                                adaptiveMaxLines = 1
+                                onTextChange(processedValue.text, processedValue.selection.end)
+                            } else if (processedValue.selection != oldValue.selection) {
+                                onSelectionChange(processedValue.selection.end)
                             }
                         },
-                    enabled = true,
-                    readOnly = false,
-                    textStyle = TextStyle(
-                        color = MaterialTheme.colorScheme.onBackground,
-                        fontSize = adaptiveFontSize,
-                        lineHeight = (adaptiveFontSize.value * 1.15f).sp,
-                        fontWeight = FontWeight.Normal,
-                        textAlign = TextAlign.End,
-                        fontFamily = CalculatorFontFamily,
-                        fontFeatureSettings = "tnum,ss01,lnum",
-                        letterSpacing = letterSpacing
-                    ),
-                    cursorBrush = SolidColor(
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)
-                    ),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Ascii,
-                        imeAction = ImeAction.None,
-                        autoCorrectEnabled = false,
-                        showKeyboardOnFocus = false
-                    ),
-                    singleLine = false,
-                    maxLines = adaptiveMaxLines,
-                    interactionSource = interactionSource,
-                    onTextLayout = { layout ->
-                        textLayoutResult = layout
-                        val overflowed = layout.didOverflowWidth || layout.didOverflowHeight
-                        if (!overflowed) return@BasicTextField
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusRequester(focusRequester)
+                            .onFocusChanged { focusState -> editorFocused = focusState.isFocused },
+                        enabled = true,
+                        readOnly = false,
+                        textStyle = TextStyle(
+                            color = MaterialTheme.colorScheme.onBackground,
+                            fontSize = adaptiveFontSize,
+                            lineHeight = (adaptiveFontSize.value * 1.15f).sp,
+                            fontWeight = FontWeight.Normal,
+                            textAlign = TextAlign.End,
+                            fontFamily = CalculatorFontFamily,
+                            fontFeatureSettings = "tnum,ss01,lnum",
+                            letterSpacing = letterSpacing
+                        ),
+                        cursorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Ascii,
+                            imeAction = ImeAction.None,
+                            autoCorrectEnabled = false,
+                            showKeyboardOnFocus = false
+                        ),
+                        singleLine = false,
+                        maxLines = adaptiveMaxLines,
+                        interactionSource = interactionSource,
+                        onTextLayout = { layout ->
+                            textLayoutResult = layout
+                            val overflowed = layout.didOverflowWidth || layout.didOverflowHeight
+                            if (!overflowed) return@PlatformEditorField
 
-                        if (adaptiveFontSize.value > minTextSize.value + 0.1f) {
-                            adaptiveFontSize = (adaptiveFontSize.value - 1f)
-                                .coerceAtLeast(minTextSize.value)
-                                .sp
-                        } else if (adaptiveMaxLines < 2) {
-                            adaptiveMaxLines = 2
+                            if (adaptiveFontSize.value > minTextSize.value + 0.1f) {
+                                adaptiveFontSize = (adaptiveFontSize.value - 1f)
+                                    .coerceAtLeast(minTextSize.value)
+                                    .sp
+                            } else if (adaptiveMaxLines < 2) {
+                                adaptiveMaxLines = 2
+                            }
+                        },
+                        decorationBox = { innerTextField ->
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.BottomEnd
+                            ) { innerTextField() }
+                        },
+                        visualTransformation = if (highlightExpressions) {
+                            RefinedVisualTransformation(
+                                text = textFieldValue.text,
+                                cursorPosition = cursorPosition,
+                                primaryColor = MaterialTheme.colorScheme.primary,
+                                secondaryColor = MaterialTheme.colorScheme.secondary,
+                                tertiaryColor = MaterialTheme.colorScheme.tertiary,
+                                baseColor = MaterialTheme.colorScheme.onBackground,
+                                surfaceVariantColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                errorColor = MaterialTheme.colorScheme.error,
+                                enableFormatting = true
+                            )
+                        } else {
+                            VisualTransformation.None
                         }
-                    },
-                    decorationBox = { innerTextField ->
+                    )
+
+                    if (!PlatformUsesNativeEditorView) {
+                        // Dedicated scrub zone for fast horizontal caret movement.
                         Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.BottomEnd
-                        ) { innerTextField() }
-                    },
-                    visualTransformation = if (highlightExpressions) {
-                        RefinedVisualTransformation(
-                            text = textFieldValue.text,
-                            cursorPosition = cursorPosition,
-                            primaryColor = MaterialTheme.colorScheme.primary,
-                            secondaryColor = MaterialTheme.colorScheme.secondary,
-                            tertiaryColor = MaterialTheme.colorScheme.tertiary,
-                            baseColor = MaterialTheme.colorScheme.onBackground,
-                            surfaceVariantColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            errorColor = MaterialTheme.colorScheme.error,
-                            enableFormatting = true
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 4.dp)
+                                .height(10.dp)
+                                .background(scrubTrackColor)
+                                .pointerInput(textFieldValue.text, textFieldValue.selection, textLayoutResult) {
+                                    awaitEachGesture {
+                                        val down = awaitFirstDown(requireUnconsumed = false)
+                                        focusRequester.requestFocus()
+                                        updateSelectionFromScrubX(down.position.x)
+
+                                        while (true) {
+                                            val event = awaitPointerEvent()
+                                            val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                                            if (change.changedToUpIgnoreConsumed()) break
+                                            if (change.positionChanged()) {
+                                                updateSelectionFromScrubX(change.position.x)
+                                                change.consume()
+                                            }
+                                        }
+                                    }
+                                }
                         )
-                    } else {
-                        VisualTransformation.None
                     }
-                )
+                }
             }
         }
     }

@@ -1,6 +1,7 @@
 package org.solovyev.android.calculator.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -8,11 +9,14 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import jscl.NumeralBase
@@ -27,7 +31,7 @@ import jscl.NumeralBase
  * - Row 4: 1, 2, 3, +
  * - Row 5: backspace, 0, ., =
  * 
- * Advanced features available via gestures (no visible hints):
+ * Advanced features available via gestures:
  * - Long press: secondary actions
  * - Swipe: alternative functions
  */
@@ -72,8 +76,7 @@ fun UnifiedCalculatorKeyboard(
                 gestureAutoActivation = gestureAutoActivation,
                 text = "C",
                 buttonType = ButtonType.CONTROL,
-                onClick = { actions.onClear() },
-                fontWeight = androidx.compose.ui.text.font.FontWeight.Medium
+                onClick = { actions.onClear() }
             )
             UnifiedButton(
                 gestureAutoActivation = gestureAutoActivation,
@@ -104,6 +107,7 @@ fun UnifiedCalculatorKeyboard(
                 gestureAutoActivation = gestureAutoActivation,
                 text = "7",
                 buttonType = ButtonType.DIGIT,
+                directionTexts = DirectionTexts(up = "i", down = "!"),
                 onClick = { actions.onNumberClick("7") },
                 enabled = isDigitAllowedForBase("7", numeralBase),
                 onSwipeUp = { actions.onSpecialClick("i") },
@@ -114,6 +118,7 @@ fun UnifiedCalculatorKeyboard(
                 gestureAutoActivation = gestureAutoActivation,
                 text = "8",
                 buttonType = ButtonType.DIGIT,
+                directionTexts = DirectionTexts(up = "ln", down = "lg"),
                 onClick = { actions.onNumberClick("8") },
                 enabled = isDigitAllowedForBase("8", numeralBase),
                 onSwipeUp = { actions.onFunctionClick("ln") },
@@ -132,7 +137,10 @@ fun UnifiedCalculatorKeyboard(
                 gestureAutoActivation = gestureAutoActivation,
                 text = "*",
                 buttonType = ButtonType.OPERATION,
-                onClick = { actions.onOperatorClick("*") }
+                directionTexts = DirectionTexts(up = "ˆ", down = "x²"),
+                onClick = { actions.onOperatorClick("*") },
+                onSwipeUp = { actions.onSpecialClick("^") },
+                onSwipeDown = { actions.onSpecialClick("^2") }
             )
         }
 
@@ -142,6 +150,7 @@ fun UnifiedCalculatorKeyboard(
                 gestureAutoActivation = gestureAutoActivation,
                 text = "4",
                 buttonType = ButtonType.DIGIT,
+                directionTexts = DirectionTexts(up = "|x|"),
                 onClick = { actions.onNumberClick("4") },
                 enabled = isDigitAllowedForBase("4", numeralBase),
                 onSwipeUp = { actions.onFunctionClick("abs") },
@@ -151,6 +160,7 @@ fun UnifiedCalculatorKeyboard(
                 gestureAutoActivation = gestureAutoActivation,
                 text = "5",
                 buttonType = ButtonType.DIGIT,
+                directionTexts = DirectionTexts(up = "1/x"),
                 onClick = { actions.onNumberClick("5") },
                 enabled = isDigitAllowedForBase("5", numeralBase),
                 onSwipeUp = { actions.onSpecialClick("1/") },
@@ -160,8 +170,10 @@ fun UnifiedCalculatorKeyboard(
                 gestureAutoActivation = gestureAutoActivation,
                 text = "6",
                 buttonType = ButtonType.DIGIT,
+                directionTexts = DirectionTexts(down = "τ"),
                 onClick = { actions.onNumberClick("6") },
                 enabled = isDigitAllowedForBase("6", numeralBase),
+                onSwipeDown = { actions.onSpecialClick("2π") },
                 onSwipeLeft = { if (numeralBase == NumeralBase.hex) actions.onNumberClick("F") }
             )
             UnifiedButton(
@@ -178,30 +190,33 @@ fun UnifiedCalculatorKeyboard(
                 gestureAutoActivation = gestureAutoActivation,
                 text = "1",
                 buttonType = ButtonType.DIGIT,
+                directionTexts = DirectionTexts(up = "sin", down = "φ"),
                 onClick = { actions.onNumberClick("1") },
                 enabled = isDigitAllowedForBase("1", numeralBase),
                 onSwipeUp = { actions.onFunctionClick("sin") },
-                onSwipeDown = { actions.onFunctionClick("asin") },
+                onSwipeDown = { actions.onSpecialClick("phi") },
                 onSwipeLeft = { if (numeralBase == NumeralBase.hex) actions.onNumberClick("A") }
             )
             UnifiedButton(
                 gestureAutoActivation = gestureAutoActivation,
                 text = "2",
                 buttonType = ButtonType.DIGIT,
+                directionTexts = DirectionTexts(up = "cos", down = "e"),
                 onClick = { actions.onNumberClick("2") },
                 enabled = isDigitAllowedForBase("2", numeralBase),
                 onSwipeUp = { actions.onFunctionClick("cos") },
-                onSwipeDown = { actions.onFunctionClick("acos") },
+                onSwipeDown = { actions.onSpecialClick("e") },
                 onSwipeLeft = { if (numeralBase == NumeralBase.hex) actions.onNumberClick("B") }
             )
             UnifiedButton(
                 gestureAutoActivation = gestureAutoActivation,
                 text = "3",
                 buttonType = ButtonType.DIGIT,
+                directionTexts = DirectionTexts(up = "tan", down = "π"),
                 onClick = { actions.onNumberClick("3") },
                 enabled = isDigitAllowedForBase("3", numeralBase),
                 onSwipeUp = { actions.onFunctionClick("tan") },
-                onSwipeDown = { actions.onSpecialClick("pi") },
+                onSwipeDown = { actions.onSpecialClick("π") },
                 onSwipeLeft = { if (numeralBase == NumeralBase.hex) actions.onNumberClick("C") }
             )
             UnifiedButton(
@@ -214,14 +229,27 @@ fun UnifiedCalculatorKeyboard(
 
         // Row 5: backspace, 0, ., =
         KeyboardRow(modifier = Modifier.weight(1f)) {
-            UnifiedButton(
-                gestureAutoActivation = gestureAutoActivation,
-                text = "",
-                buttonType = ButtonType.CONTROL,
-                icon = icons.backspace,
-                onClick = { actions.onDelete() },
-                onLongClick = { actions.onClear() }
-            )
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                contentAlignment = Alignment.Center
+            ) {
+                ModernButton(
+                    text = "",
+                    buttonType = ButtonType.CONTROL,
+                    onClick = { actions.onDelete() },
+                    onLongClick = { actions.onClear() },
+                    modifier = Modifier.fillMaxSize(),
+                    gestureAutoActivation = gestureAutoActivation
+                )
+                Icon(
+                    painter = icons.backspace,
+                    contentDescription = null,
+                    tint = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
             UnifiedButton(
                 gestureAutoActivation = gestureAutoActivation,
                 text = "0",
@@ -270,16 +298,15 @@ private fun RowScope.UnifiedButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    icon: androidx.compose.ui.graphics.painter.Painter? = null,
+    directionTexts: DirectionTexts = DirectionTexts(),
     onLongClick: (() -> Unit)? = null,
     onSwipeUp: (() -> Unit)? = null,
     onSwipeDown: (() -> Unit)? = null,
     onSwipeLeft: (() -> Unit)? = null,
     onSwipeRight: (() -> Unit)? = null,
-    gestureAutoActivation: Boolean = false,
-    fontWeight: androidx.compose.ui.text.font.FontWeight = androidx.compose.ui.text.font.FontWeight.Normal
+    gestureAutoActivation: Boolean = false
 ) {
-    org.solovyev.android.calculator.ui.UnifiedButton(
+    ModernButton(
         text = text,
         buttonType = buttonType,
         onClick = onClick,
@@ -287,13 +314,12 @@ private fun RowScope.UnifiedButton(
             .weight(1f)
             .fillMaxHeight(),
         enabled = enabled,
-        icon = icon,
+        directionTexts = directionTexts,
         onLongClick = onLongClick,
         onSwipeUp = onSwipeUp,
         onSwipeDown = onSwipeDown,
         onSwipeLeft = onSwipeLeft,
         onSwipeRight = onSwipeRight,
-        gestureAutoActivation = gestureAutoActivation,
-        fontWeight = fontWeight
+        gestureAutoActivation = gestureAutoActivation
     )
 }
