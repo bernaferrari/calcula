@@ -144,8 +144,7 @@ fun UnifiedCalculatorKeyboard(
                 buttonType = ButtonType.DIGIT,
                 onClick = { actions.onNumberClick("4") },
                 enabled = isDigitAllowedForBase("4", numeralBase),
-                onSwipeUp = { actions.onSpecialClick("x") },
-                onSwipeDown = { actions.onSpecialClick("y") },
+                onSwipeUp = { actions.onFunctionClick("abs") },
                 onSwipeLeft = { if (numeralBase == NumeralBase.hex) actions.onNumberClick("D") }
             )
             UnifiedButton(
@@ -154,8 +153,7 @@ fun UnifiedCalculatorKeyboard(
                 buttonType = ButtonType.DIGIT,
                 onClick = { actions.onNumberClick("5") },
                 enabled = isDigitAllowedForBase("5", numeralBase),
-                onSwipeUp = { actions.onSpecialClick("t") },
-                onSwipeDown = { actions.onSpecialClick("j") },
+                onSwipeUp = { actions.onSpecialClick("1/") },
                 onSwipeLeft = { if (numeralBase == NumeralBase.hex) actions.onNumberClick("E") }
             )
             UnifiedButton(
@@ -164,7 +162,6 @@ fun UnifiedCalculatorKeyboard(
                 buttonType = ButtonType.DIGIT,
                 onClick = { actions.onNumberClick("6") },
                 enabled = isDigitAllowedForBase("6", numeralBase),
-                onSwipeUp = { actions.onSpecialClick("E") },
                 onSwipeLeft = { if (numeralBase == NumeralBase.hex) actions.onNumberClick("F") }
             )
             UnifiedButton(
@@ -204,7 +201,7 @@ fun UnifiedCalculatorKeyboard(
                 onClick = { actions.onNumberClick("3") },
                 enabled = isDigitAllowedForBase("3", numeralBase),
                 onSwipeUp = { actions.onFunctionClick("tan") },
-                onSwipeDown = { actions.onFunctionClick("atan") },
+                onSwipeDown = { actions.onSpecialClick("pi") },
                 onSwipeLeft = { if (numeralBase == NumeralBase.hex) actions.onNumberClick("C") }
             )
             UnifiedButton(
@@ -239,7 +236,7 @@ fun UnifiedCalculatorKeyboard(
                 buttonType = ButtonType.DIGIT,
                 onClick = { actions.onNumberClick(".") },
                 enabled = true,
-                onSwipeUp = { actions.onNumberClick(".") }
+                onSwipeUp = { actions.onSpecialClick(",") }
             )
             UnifiedButton(
                 gestureAutoActivation = gestureAutoActivation,

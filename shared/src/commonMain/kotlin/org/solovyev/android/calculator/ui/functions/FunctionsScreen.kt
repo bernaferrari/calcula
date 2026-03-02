@@ -1,6 +1,7 @@
 package org.solovyev.android.calculator.ui.functions
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -9,11 +10,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
@@ -21,7 +24,6 @@ import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -36,10 +38,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedListItem
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.ToggleButton
-import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -50,9 +51,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -64,12 +62,11 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
 import org.solovyev.android.calculator.functions.FunctionCategory
-import org.solovyev.android.calculator.operators.OperatorCategory
 import org.solovyev.android.calculator.ui.*
 
-private enum class FunctionEntityType {
-    Functions,
-    Operators
+private sealed interface ChipCategory {
+    data class FunctionCat(val category: FunctionCategory) : ChipCategory
+    data object Operators : ChipCategory
 }
 
 private enum class FunctionCardPosition {
@@ -117,86 +114,87 @@ fun FunctionsScreen(
     val functionCategories = remember { viewModel.getFunctionCategories() }
     val operatorCategories = remember { viewModel.getOperatorCategories() }
     val functionCategoryTitles = functionCategories.map { stringResource(it.title) }
-    val operatorCategoryTitles = operatorCategories.map { stringResource(it.title) }
+    val operatorsLabel = stringResource(Res.string.cpp_operators)
 
-    var selectedEntityTypeIndex by rememberSaveable { mutableIntStateOf(0) }
-    var selectedFunctionCategoryIndex by rememberSaveable { mutableIntStateOf(0) }
-    var selectedOperatorCategoryIndex by rememberSaveable { mutableIntStateOf(0) }
+    // Unified chip list: move "My" (index 0) to end so "Common" (index 1) becomes the default
+    val chipCategories: List<ChipCategory> = remember(functionCategories) {
+        val myCategory = functionCategories.firstOrNull()
+        val others = functionCategories.drop(1)
+        buildList {
+            others.forEach { add(ChipCategory.FunctionCat(it)) }
+            add(ChipCategory.Operators)
+            myCategory?.let { add(ChipCategory.FunctionCat(it)) }
+        }
+    }
+
+    var selectedChipIndex by rememberSaveable { mutableIntStateOf(0) }
+    val selectedChip = chipCategories.getOrNull(selectedChipIndex)
+
     var searchQuery by rememberSaveable { mutableStateOf("") }
     var showAddDialog by remember { mutableStateOf(false) }
     var functionToEdit by remember { mutableStateOf<FunctionUiModel?>(null) }
     var functionToDelete by remember { mutableStateOf<Function?>(null) }
 
-    val selectedEntityType = if (selectedEntityTypeIndex == 0) FunctionEntityType.Functions else FunctionEntityType.Operators
-    val selectedFunctionCategory = functionCategories.getOrElse(selectedFunctionCategoryIndex) { FunctionCategory.common }
-    val selectedOperatorCategory = operatorCategories.getOrElse(selectedOperatorCategoryIndex) { OperatorCategory.Common }
+    // "My functions" is the last chip (moved from front to end)
+    val myCategory = remember(functionCategories) { functionCategories.firstOrNull() }
+    val isMyFunctionsSelected = selectedChip is ChipCategory.FunctionCat &&
+        selectedChip.category == myCategory
 
     val functionCategoryCounts = remember(refreshVersion, functionCategories) {
-        functionCategories.associateWith { category -> viewModel.getFunctionsFor(category).size }
+        functionCategories.associateWith { viewModel.getFunctionsFor(it).size }
     }
-    val operatorCategoryCounts = remember(refreshVersion, operatorCategories) {
-        operatorCategories.associateWith { category -> viewModel.getOperatorsFor(category).size }
-    }
-
-    val functionModels = remember(refreshVersion, selectedFunctionCategory, searchQuery) {
-        val normalizedQuery = searchQuery.trim().lowercase()
-        viewModel.getFunctionsFor(selectedFunctionCategory)
-            .map { function ->
-                val signature = buildFunctionSignature(function)
-                val parameters = (function as? IFunction)?.getParameterNames().orEmpty()
-                val body = (function as? IFunction)?.getContent()
-                val description = viewModel.getFunctionDescription(function)
-                    ?: (function as? IFunction)?.getDescription()
-                FunctionUiModel(
-                    function = function,
-                    title = function.name,
-                    signature = signature,
-                    parameters = parameters,
-                    body = body,
-                    description = description,
-                    canEdit = !function.isSystem(),
-                    canDelete = !function.isSystem()
-                )
-            }
-            .filter { model ->
-                if (normalizedQuery.isEmpty()) {
-                    true
-                } else {
-                    model.title.lowercase().contains(normalizedQuery) ||
-                        model.signature.lowercase().contains(normalizedQuery) ||
-                        model.body.orEmpty().lowercase().contains(normalizedQuery) ||
-                        model.description.orEmpty().lowercase().contains(normalizedQuery)
-                }
-            }
+    val totalOperatorCount = remember(refreshVersion) {
+        operatorCategories.sumOf { viewModel.getOperatorsFor(it).size }
     }
 
-    val operatorModels = remember(refreshVersion, selectedOperatorCategory, searchQuery) {
-        val normalizedQuery = searchQuery.trim().lowercase()
-        viewModel.getOperatorsFor(selectedOperatorCategory)
-            .map { operator ->
-                val signature = runCatching { operator.toString() }.getOrNull()
-                OperatorUiModel(
-                    operator = operator,
-                    title = operator.name,
-                    signature = signature,
-                    description = viewModel.getOperatorDescription(operator)
-                )
+    val normalizedQuery = remember(searchQuery) { searchQuery.trim().lowercase() }
+    val visibleItems: List<FunctionListItem> = remember(refreshVersion, selectedChip, normalizedQuery) {
+        when (val chip = selectedChip) {
+            is ChipCategory.Operators -> {
+                val allOps = operatorCategories
+                    .flatMap { viewModel.getOperatorsFor(it) }
+                    .distinctBy { it.name }
+                    .map { op ->
+                        OperatorUiModel(
+                            operator = op,
+                            title = op.name,
+                            signature = runCatching { op.toString() }.getOrNull(),
+                            description = viewModel.getOperatorDescription(op)
+                        )
+                    }
+                    .filter { model ->
+                        normalizedQuery.isEmpty() ||
+                            model.title.lowercase().contains(normalizedQuery) ||
+                            model.signature.orEmpty().lowercase().contains(normalizedQuery) ||
+                            model.description.orEmpty().lowercase().contains(normalizedQuery)
+                    }
+                toOperatorListItems(allOps)
             }
-            .filter { model ->
-                if (normalizedQuery.isEmpty()) {
-                    true
-                } else {
-                    model.title.lowercase().contains(normalizedQuery) ||
-                        model.signature.orEmpty().lowercase().contains(normalizedQuery) ||
-                        model.description.orEmpty().lowercase().contains(normalizedQuery)
-                }
+            is ChipCategory.FunctionCat -> {
+                viewModel.getFunctionsFor(chip.category)
+                    .map { function ->
+                        FunctionUiModel(
+                            function = function,
+                            title = function.name,
+                            signature = buildFunctionSignature(function),
+                            parameters = (function as? IFunction)?.getParameterNames().orEmpty(),
+                            body = (function as? IFunction)?.getContent(),
+                            description = viewModel.getFunctionDescription(function)
+                                ?: (function as? IFunction)?.getDescription(),
+                            canEdit = !function.isSystem(),
+                            canDelete = !function.isSystem()
+                        )
+                    }
+                    .filter { model ->
+                        normalizedQuery.isEmpty() ||
+                            model.title.lowercase().contains(normalizedQuery) ||
+                            model.signature.lowercase().contains(normalizedQuery) ||
+                            model.body.orEmpty().lowercase().contains(normalizedQuery) ||
+                            model.description.orEmpty().lowercase().contains(normalizedQuery)
+                    }
+                    .let { toFunctionListItems(it) }
             }
-    }
-
-    val visibleItems = remember(functionModels, operatorModels, selectedEntityType) {
-        when (selectedEntityType) {
-            FunctionEntityType.Functions -> toFunctionListItems(functionModels)
-            FunctionEntityType.Operators -> toOperatorListItems(operatorModels)
+            null -> emptyList()
         }
     }
 
@@ -206,7 +204,7 @@ fun FunctionsScreen(
                 title = stringResource(Res.string.c_functions),
                 onBack = onBack,
                 actions = {
-                    if (selectedEntityType == FunctionEntityType.Functions) {
+                    if (isMyFunctionsSelected) {
                         FilledTonalIconButton(onClick = {
                             functionToEdit = null
                             showAddDialog = true
@@ -226,98 +224,6 @@ fun FunctionsScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 10.dp),
-                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
-            ) {
-                val labels = listOf(
-                    stringResource(Res.string.cpp_functions),
-                    stringResource(Res.string.cpp_operators)
-                )
-                labels.forEachIndexed { index, label ->
-                    ToggleButton(
-                        checked = selectedEntityTypeIndex == index,
-                        onCheckedChange = { checked ->
-                            if (checked) selectedEntityTypeIndex = index
-                        },
-                        shapes = when (index) {
-                            0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                            labels.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                            else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                        },
-                        colors = ToggleButtonDefaults.toggleButtonColors(
-                            checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                            checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        ),
-                        modifier = Modifier
-                            .weight(1f)
-                            .semantics { role = Role.RadioButton }
-                    ) {
-                        Text(
-                            text = label,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-            }
-
-            val activeCategoryTitles = if (selectedEntityType == FunctionEntityType.Functions) {
-                functionCategoryTitles
-            } else {
-                operatorCategoryTitles
-            }
-
-            LazyRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp)
-            ) {
-                items(activeCategoryTitles.size, key = { it }) { index ->
-                    val isSelected = if (selectedEntityType == FunctionEntityType.Functions) {
-                        selectedFunctionCategoryIndex == index
-                    } else {
-                        selectedOperatorCategoryIndex == index
-                    }
-                    val count = if (selectedEntityType == FunctionEntityType.Functions) {
-                        functionCategoryCounts[functionCategories[index]] ?: 0
-                    } else {
-                        operatorCategoryCounts[operatorCategories[index]] ?: 0
-                    }
-                    FilterChip(
-                        selected = isSelected,
-                        onClick = {
-                            if (selectedEntityType == FunctionEntityType.Functions) {
-                                selectedFunctionCategoryIndex = index
-                            } else {
-                                selectedOperatorCategoryIndex = index
-                            }
-                        },
-                        label = {
-                            Text(
-                                text = "${activeCategoryTitles[index]} ($count)",
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                        ),
-                        border = if (isSelected) null else FilterChipDefaults.filterChipBorder(
-                            enabled = true,
-                            selected = false,
-                            borderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
-                        )
-                    )
-                }
-            }
-
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
@@ -351,9 +257,50 @@ fun FunctionsScreen(
                     .padding(horizontal = 16.dp)
             )
 
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                items(chipCategories.size, key = { it }) { index ->
+                    val chip = chipCategories[index]
+                    val isSelected = selectedChipIndex == index
+                    val label = when (chip) {
+                        is ChipCategory.Operators -> "$operatorsLabel ($totalOperatorCount)"
+                        is ChipCategory.FunctionCat -> {
+                            val catIndex = functionCategories.indexOf(chip.category)
+                            val title = functionCategoryTitles.getOrElse(catIndex) { "" }
+                            val count = functionCategoryCounts[chip.category] ?: 0
+                            "$title ($count)"
+                        }
+                    }
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = { selectedChipIndex = index },
+                        label = {
+                            Text(
+                                text = label,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                        ),
+                        border = if (isSelected) null else FilterChipDefaults.filterChipBorder(
+                            enabled = true,
+                            selected = false,
+                            borderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                        )
+                    )
+                }
+            }
+
             if (visibleItems.isEmpty()) {
                 EmptyFunctionsState(
-                    selectedType = selectedEntityType,
+                    isMyFunctions = isMyFunctionsSelected,
                     onCreate = {
                         functionToEdit = null
                         showAddDialog = true
@@ -468,7 +415,7 @@ fun FunctionsScreen(
 
 @Composable
 private fun EmptyFunctionsState(
-    selectedType: FunctionEntityType,
+    isMyFunctions: Boolean,
     onCreate: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -477,12 +424,25 @@ private fun EmptyFunctionsState(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
+            modifier = Modifier.size(80.dp)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Text(
+                    text = "λ",
+                    style = MaterialTheme.typography.displaySmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace
+                    ),
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(20.dp))
         Text(
-            text = if (selectedType == FunctionEntityType.Functions) {
-                stringResource(Res.string.cpp_functions)
-            } else {
-                stringResource(Res.string.cpp_operators)
-            },
+            text = stringResource(Res.string.cpp_functions),
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurface
         )
@@ -492,13 +452,10 @@ private fun EmptyFunctionsState(
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        if (selectedType == FunctionEntityType.Functions) {
-            Spacer(modifier = Modifier.height(18.dp))
-            TextButton(onClick = onCreate) {
-                Icon(
-                    imageVector = Icons.Filled.Add,
-                    contentDescription = null
-                )
+        if (isMyFunctions) {
+            Spacer(modifier = Modifier.height(20.dp))
+            FilledTonalButton(onClick = onCreate) {
+                Icon(imageVector = Icons.Filled.Add, contentDescription = null)
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(text = stringResource(Res.string.function_create_function))
             }
@@ -508,14 +465,23 @@ private fun EmptyFunctionsState(
 
 @Composable
 private fun FunctionSectionHeader(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-        color = MaterialTheme.colorScheme.primary,
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 12.dp, bottom = 6.dp, start = 8.dp)
-    )
+            .padding(top = 16.dp, bottom = 4.dp, start = 4.dp)
+    ) {
+        Surface(
+            shape = RoundedCornerShape(50),
+            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+        ) {
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+            )
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -535,6 +501,30 @@ private fun FunctionCard(
         colors = ListItemDefaults.segmentedColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ),
+        leadingContent = {
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = if (model.canEdit)
+                    MaterialTheme.colorScheme.secondaryContainer
+                else
+                    MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.7f),
+                modifier = Modifier.size(40.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = model.title.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace
+                        ),
+                        color = if (model.canEdit)
+                            MaterialTheme.colorScheme.onSecondaryContainer
+                        else
+                            MaterialTheme.colorScheme.onTertiaryContainer
+                    )
+                }
+            }
+        },
         trailingContent = if (model.canEdit || model.canDelete) {
             {
                 Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -622,6 +612,24 @@ private fun OperatorCard(
         colors = ListItemDefaults.segmentedColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ),
+        leadingContent = {
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.7f),
+                modifier = Modifier.size(40.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = model.title.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace
+                        ),
+                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                    )
+                }
+            }
+        },
         supportingContent = if (!model.description.isNullOrBlank()) {
             {
                 Text(

@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package org.solovyev.android.calculator.ui
 
 import androidx.compose.animation.*
@@ -16,8 +18,17 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material3.*
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -384,6 +395,7 @@ private fun calculatorOverflowEntries(
     CalculatorMenuEntry.Divider,
     CalculatorMenuEntry.Action(
         label = stringResource(Res.string.cpp_layers),
+        icon = Icons.Default.Layers,
         onClick = {
             onBeforeNavigate()
             onOpenLayers()
@@ -419,75 +431,195 @@ private fun LayersDialog(
     onSetLayerEngineerEnabled: (Boolean) -> Unit,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(stringResource(Res.string.cpp_layers_title))
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                LayerToggleRow(
-                    title = stringResource(Res.string.cpp_layer_up),
-                    summary = stringResource(Res.string.cpp_layer_up_summary),
-                    checked = layerUpEnabled,
-                    onCheckedChange = onSetLayerUpEnabled
-                )
-                LayerToggleRow(
-                    title = stringResource(Res.string.cpp_layer_down),
-                    summary = stringResource(Res.string.cpp_layer_down_summary),
-                    checked = layerDownEnabled,
-                    onCheckedChange = onSetLayerDownEnabled
-                )
-                LayerToggleRow(
-                    title = stringResource(Res.string.cpp_layer_engineer),
-                    summary = stringResource(Res.string.cpp_layer_engineer_summary),
-                    checked = layerEngineerEnabled,
-                    onCheckedChange = onSetLayerEngineerEnabled
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(Res.string.cpp_done))
+    BasicAlertDialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(28.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        modifier = Modifier.size(56.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.Tune,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                    }
+                    Text(
+                        text = stringResource(Res.string.cpp_layers_title),
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    LayerToggleCard(
+                        title = stringResource(Res.string.cpp_layer_up),
+                        summary = stringResource(Res.string.cpp_layer_up_summary),
+                        icon = Icons.Default.KeyboardArrowUp,
+                        checked = layerUpEnabled,
+                        onCheckedChange = onSetLayerUpEnabled
+                    )
+                    LayerToggleCard(
+                        title = stringResource(Res.string.cpp_layer_down),
+                        summary = stringResource(Res.string.cpp_layer_down_summary),
+                        icon = Icons.Default.KeyboardArrowDown,
+                        checked = layerDownEnabled,
+                        onCheckedChange = onSetLayerDownEnabled
+                    )
+                    LayerToggleCard(
+                        title = stringResource(Res.string.cpp_layer_engineer),
+                        summary = stringResource(Res.string.cpp_layer_engineer_summary),
+                        icon = Icons.Default.Code,
+                        checked = layerEngineerEnabled,
+                        onCheckedChange = onSetLayerEngineerEnabled
+                    )
+                }
+
+                FilledTonalButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(Res.string.cpp_done))
+                }
             }
         }
-    )
+    }
 }
 
 @Composable
-private fun LayerToggleRow(
+private fun LayerToggleCard(
     title: String,
     summary: String,
+    icon: ImageVector,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
+    val cardColor by animateColorAsState(
+        targetValue = if (checked) MaterialTheme.colorScheme.primaryContainer
+        else MaterialTheme.colorScheme.surfaceContainerLow,
+        animationSpec = tween(durationMillis = 280),
+        label = "cardColor"
+    )
+    val titleColor by animateColorAsState(
+        targetValue = if (checked) MaterialTheme.colorScheme.onPrimaryContainer
+        else MaterialTheme.colorScheme.onSurface,
+        animationSpec = tween(durationMillis = 280),
+        label = "titleColor"
+    )
+    val summaryColor by animateColorAsState(
+        targetValue = if (checked) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.72f)
+        else MaterialTheme.colorScheme.onSurfaceVariant,
+        animationSpec = tween(durationMillis = 280),
+        label = "summaryColor"
+    )
+    val iconContainerColor by animateColorAsState(
+        targetValue = if (checked) MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
+        else MaterialTheme.colorScheme.surfaceContainerHighest,
+        animationSpec = tween(durationMillis = 280),
+        label = "iconContainerColor"
+    )
+    val iconTint by animateColorAsState(
+        targetValue = if (checked) MaterialTheme.colorScheme.primary
+        else MaterialTheme.colorScheme.onSurfaceVariant,
+        animationSpec = tween(durationMillis = 280),
+        label = "iconTint"
+    )
+    val indicatorBg by animateColorAsState(
+        targetValue = if (checked) MaterialTheme.colorScheme.primary else Color.Transparent,
+        animationSpec = tween(durationMillis = 280),
+        label = "indicatorBg"
+    )
+    val indicatorBorder by animateColorAsState(
+        targetValue = if (checked) MaterialTheme.colorScheme.primary
+        else MaterialTheme.colorScheme.outline,
+        animationSpec = tween(durationMillis = 280),
+        label = "indicatorBorder"
+    )
+
     Surface(
         onClick = { onCheckedChange(!checked) },
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.8f)
+        shape = RoundedCornerShape(20.dp),
+        color = cardColor,
+        modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
+            Surface(
+                shape = CircleShape,
+                color = iconContainerColor,
+                modifier = Modifier.size(44.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = iconTint,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+            }
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface
+                    style = MaterialTheme.typography.titleMedium,
+                    color = titleColor
                 )
                 Text(
                     text = summary,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = summaryColor,
+                    maxLines = 2
                 )
             }
-            Switch(
-                checked = checked,
-                onCheckedChange = onCheckedChange
-            )
+
+            Surface(
+                shape = CircleShape,
+                color = indicatorBg,
+                border = BorderStroke(width = 2.dp, color = indicatorBorder),
+                modifier = Modifier.size(26.dp)
+            ) {
+                AnimatedVisibility(
+                    visible = checked,
+                    enter = scaleIn(animationSpec = tween(200)) + fadeIn(animationSpec = tween(200)),
+                    exit = scaleOut(animationSpec = tween(200)) + fadeOut(animationSpec = tween(200))
+                ) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -521,7 +653,7 @@ private fun DisplayCard(
 ) {
     val inputFontSize = 30.sp
     val resultFontSize = 54.sp
-    val editorText = remember(editorState.text) { editorState.text.toString() }
+    val editorText = remember(editorState.text) { editorState.text }
     val resultResolution = rememberResolvedDisplayResult(
         state = state,
         editorText = editorText

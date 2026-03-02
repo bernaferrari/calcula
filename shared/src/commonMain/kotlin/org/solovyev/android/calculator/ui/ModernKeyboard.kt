@@ -104,11 +104,8 @@ fun ModernCalculatorKeyboard(
             ModernButton(
                 text = "C",
                 buttonType = ButtonType.CONTROL,
-                directionTexts = DirectionTexts(up = "MC", down = "MR"),
                 contentDescription = stringResource(Res.string.cpp_button_clear),
                 onClick = { actions.onClear() },
-                onSwipeUp = { actions.onMemoryClear() },
-                onSwipeDown = { actions.onMemoryRecall() },
                 longPressOptions = listOf("MS", "MR", "M+", "M-", "MC") + MemoryRegisters.QUICK_REGISTERS,
                 onLongPressOptionSelected = { option ->
                     when (option) {
@@ -138,10 +135,8 @@ fun ModernCalculatorKeyboard(
             ModernButton(
                 text = "%",
                 buttonType = ButtonType.CONTROL,
-                directionTexts = DirectionTexts(up = "f"),
                 contentDescription = stringResource(Res.string.cpp_button_percent),
                 onClick = { actions.onOperatorClick("%") },
-                onSwipeUp = { showScienceSheet = true },
                 modifier = Modifier.weight(1f)
             )
             ModernButton(
@@ -194,11 +189,8 @@ fun ModernCalculatorKeyboard(
             ModernButton(
                 text = "*",
                 buttonType = ButtonType.OPERATION,
-                directionTexts = DirectionTexts(up = "^", down = "^2"),
                 contentDescription = stringResource(Res.string.cpp_button_multiply),
                 onClick = { actions.onOperatorClick("*") },
-                onSwipeUp = { actions.onSpecialClick("^") },
-                onSwipeDown = { actions.onSpecialClick("^2") },
                 modifier = Modifier.weight(1f)
             )
         }
@@ -208,35 +200,31 @@ fun ModernCalculatorKeyboard(
             ModernButton(
                 text = "4",
                 buttonType = ButtonType.DIGIT,
-                directionTexts = DirectionTexts(up = "x", down = "y"),
+                directionTexts = DirectionTexts(up = "|x|"),
                 contentDescription = stringResource(Res.string.cpp_button_four),
                 onClick = { actions.onNumberClick("4") },
                 enabled = isDigitAllowedForBase("4", numeralBase),
-                onSwipeUp = { actions.onSpecialClick("x") },
-                onSwipeDown = { actions.onSpecialClick("y") },
+                onSwipeUp = { actions.onFunctionClick("abs") },
                 modifier = Modifier.weight(1f),
                 gestureAutoActivation = gestureAutoActivation
             )
             ModernButton(
                 text = "5",
                 buttonType = ButtonType.DIGIT,
-                directionTexts = DirectionTexts(up = "t", down = "j"),
+                directionTexts = DirectionTexts(up = "1/x"),
                 contentDescription = stringResource(Res.string.cpp_button_five),
                 onClick = { actions.onNumberClick("5") },
                 enabled = isDigitAllowedForBase("5", numeralBase),
-                onSwipeUp = { actions.onSpecialClick("t") },
-                onSwipeDown = { actions.onSpecialClick("j") },
+                onSwipeUp = { actions.onSpecialClick("1/") },
                 modifier = Modifier.weight(1f),
                 gestureAutoActivation = gestureAutoActivation
             )
             ModernButton(
                 text = "6",
                 buttonType = ButtonType.DIGIT,
-                directionTexts = DirectionTexts(up = "E"),
                 contentDescription = stringResource(Res.string.cpp_button_six),
                 onClick = { actions.onNumberClick("6") },
                 enabled = isDigitAllowedForBase("6", numeralBase),
-                onSwipeUp = { actions.onSpecialClick("E") },
                 modifier = Modifier.weight(1f),
                 gestureAutoActivation = gestureAutoActivation
             )
@@ -286,22 +274,20 @@ fun ModernCalculatorKeyboard(
                 buttonType = ButtonType.DIGIT,
                 directionTexts = DirectionTexts(
                     up = "tan",
-                    down = if (isSimpleMode) null else "atan"
+                    down = "π"
                 ),
                 contentDescription = stringResource(Res.string.cpp_button_three),
                 onClick = { actions.onNumberClick("3") },
                 enabled = isDigitAllowedForBase("3", numeralBase),
                 onSwipeUp = { actions.onFunctionClick("tan") },
-                onSwipeDown = if (isSimpleMode) null else ({ actions.onFunctionClick("atan") }),
+                onSwipeDown = { actions.onSpecialClick("pi") },
                 modifier = Modifier.weight(1f)
             )
             ModernButton(
                 text = "+",
                 buttonType = ButtonType.OPERATION,
-                directionTexts = DirectionTexts(up = "°"),
                 contentDescription = stringResource(Res.string.cpp_button_plus),
                 onClick = { actions.onOperatorClick("+") },
-                onSwipeUp = { actions.onSpecialClick("°") },
                 modifier = Modifier.weight(1f),
                 gestureAutoActivation = gestureAutoActivation
             )
@@ -347,7 +333,7 @@ fun ModernCalculatorKeyboard(
                 directionTexts = DirectionTexts(up = ","),
                 contentDescription = stringResource(Res.string.cpp_button_decimal),
                 onClick = { actions.onNumberClick(".") },
-                onSwipeUp = { actions.onNumberClick(",") },
+                onSwipeUp = { actions.onSpecialClick(",") },
                 modifier = Modifier.weight(1f)
             )
             ModernButton(
@@ -1012,7 +998,7 @@ internal fun ModernButton(
                     },
                 style = TextStyle(
                     fontSize = 12.sp,
-                    color = textColor.copy(alpha = 0.95f),
+                    color = textColor.copy(alpha = 0.72f),
                     fontFamily = CalculatorFontFamily,
                     fontWeight = if (active) FontWeight.Bold else FontWeight.SemiBold
                 )
@@ -1056,7 +1042,7 @@ internal fun ModernButton(
                     },
                 style = TextStyle(
                     fontSize = 12.sp,
-                    color = textColor.copy(alpha = 0.95f),
+                    color = textColor.copy(alpha = 0.72f),
                     fontFamily = CalculatorFontFamily,
                     fontWeight = if (active) FontWeight.Bold else FontWeight.SemiBold
                 )
@@ -1100,7 +1086,7 @@ internal fun ModernButton(
                     },
                 style = TextStyle(
                     fontSize = 11.sp,
-                    color = textColor.copy(alpha = 0.95f),
+                    color = textColor.copy(alpha = 0.72f),
                     fontFamily = CalculatorFontFamily,
                     fontWeight = if (active) FontWeight.Bold else FontWeight.SemiBold
                 )
@@ -1144,7 +1130,7 @@ internal fun ModernButton(
                     },
                 style = TextStyle(
                     fontSize = 11.sp,
-                    color = textColor.copy(alpha = 0.95f),
+                    color = textColor.copy(alpha = 0.72f),
                     fontFamily = CalculatorFontFamily,
                     fontWeight = if (active) FontWeight.Bold else FontWeight.SemiBold
                 )

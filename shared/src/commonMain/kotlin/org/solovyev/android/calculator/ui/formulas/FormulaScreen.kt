@@ -8,7 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -308,13 +308,12 @@ private fun FormulaList(
             }
 
             // Formula cards
-            itemsIndexed(
+            items(
                 items = items,
-                key = { _, formula -> formula.id }
-            ) { index, formula ->
+                key = { formula -> formula.id }
+            ) { formula ->
                 FormulaCard(
                     formula = formula,
-                    index = index,
                     onClick = { onFormulaClick(formula) }
                 )
             }
@@ -385,35 +384,12 @@ private fun CategoryHeader(
 @Composable
 private fun FormulaCard(
     formula: Formula,
-    index: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val reduceMotion = LocalCalculatorReduceMotion.current
     val categoryColor = getCategoryColor(formula.category)
     var isPressed by remember { mutableStateOf(false) }
-    var isVisible by remember { mutableStateOf(false) }
-
-    // Entrance animation
-    LaunchedEffect(Unit) {
-        if (!reduceMotion) delay(index * 40L)
-        isVisible = true
-    }
-
-    val scale by animateFloatAsState(
-        targetValue = if (isVisible) 1f else 0.95f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMediumLow
-        ),
-        label = "scale"
-    )
-    
-    val alpha by animateFloatAsState(
-        targetValue = if (isVisible) 1f else 0f,
-        animationSpec = tween(300),
-        label = "alpha"
-    )
 
     val pressScale by animateFloatAsState(
         targetValue = if (reduceMotion) 1f else if (isPressed) 0.97f else 1f,
@@ -432,9 +408,8 @@ private fun FormulaCard(
                 vertical = CalculatorPadding.Small
             )
             .graphicsLayer {
-                this.scaleX = scale * pressScale
-                this.scaleY = scale * pressScale
-                this.alpha = alpha
+                this.scaleX = pressScale
+                this.scaleY = pressScale
             }
             .shadow(
                 elevation = if (isPressed) CalculatorElevation.Standard else CalculatorElevation.Display,

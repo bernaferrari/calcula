@@ -1,7 +1,7 @@
 package org.solovyev.android.calculator.ui.variables
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -25,13 +26,17 @@ import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -121,19 +126,23 @@ fun VariablesScreen(
         topBar = {
             StandardTopAppBar(
                 title = stringResource(Res.string.cpp_variables),
-                onBack = onBack,
-                actions = {
-                    FilledTonalIconButton(onClick = {
-                        variableToEdit = null
-                        showAddDialog = true
-                    }) {
-                        Icon(
-                            imageVector = Icons.Filled.Add,
-                            contentDescription = stringResource(Res.string.c_var_create_var)
-                        )
-                    }
-                }
+                onBack = onBack
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    variableToEdit = null
+                    showAddDialog = true
+                },
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = stringResource(Res.string.c_var_create_var)
+                )
+            }
         }
     ) { padding ->
         Column(
@@ -225,7 +234,7 @@ fun VariablesScreen(
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                    verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap)
                 ) {
                     items(groupedItems, key = {
                         when (it) {
@@ -325,6 +334,23 @@ private fun EmptyVariablesState(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
+            modifier = Modifier.size(80.dp)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Text(
+                    text = "x",
+                    style = MaterialTheme.typography.displaySmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace
+                    ),
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(20.dp))
         Text(
             text = stringResource(Res.string.cpp_variables),
             style = MaterialTheme.typography.headlineSmall,
@@ -336,12 +362,9 @@ private fun EmptyVariablesState(
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        Spacer(modifier = Modifier.height(18.dp))
-        TextButton(onClick = onCreate) {
-            Icon(
-                imageVector = Icons.Filled.Add,
-                contentDescription = null
-            )
+        Spacer(modifier = Modifier.height(20.dp))
+        FilledTonalButton(onClick = onCreate) {
+            Icon(imageVector = Icons.Filled.Add, contentDescription = null)
             Spacer(modifier = Modifier.width(6.dp))
             Text(text = stringResource(Res.string.c_var_create_var))
         }
@@ -350,16 +373,26 @@ private fun EmptyVariablesState(
 
 @Composable
 private fun VariableSectionHeader(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-        color = MaterialTheme.colorScheme.primary,
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 12.dp, bottom = 6.dp, start = 8.dp)
-    )
+            .padding(top = 16.dp, bottom = 4.dp, start = 4.dp)
+    ) {
+        Surface(
+            shape = RoundedCornerShape(50),
+            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+        ) {
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+            )
+        }
+    }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun VariableCard(
     variable: IConstant,
@@ -370,62 +403,40 @@ private fun VariableCard(
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
-    val shape = when (position) {
-        VariableCardPosition.Single -> RoundedCornerShape(18.dp)
-        VariableCardPosition.First -> RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 6.dp, bottomEnd = 6.dp)
-        VariableCardPosition.Middle -> RoundedCornerShape(6.dp)
-        VariableCardPosition.Last -> RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp, bottomStart = 18.dp, bottomEnd = 18.dp)
-    }
-
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onUse),
-        shape = shape,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        tonalElevation = 1.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+    val isSystem = variable.isSystem()
+    SegmentedListItem(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onUse,
+        shapes = segmentedShapesFor(position),
+        colors = ListItemDefaults.segmentedColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        ),
+        leadingContent = {
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = if (isSystem)
+                    MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.7f)
+                else
+                    MaterialTheme.colorScheme.secondaryContainer,
+                modifier = Modifier.size(40.dp)
             ) {
-                Text(
-                    text = variable.name,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                if (!value.isNullOrBlank()) {
+                Box(contentAlignment = Alignment.Center) {
                     Text(
-                        text = "= ${normalizeMathDisplay(value)}",
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontFamily = FontFamily.Monospace,
-                            color = MaterialTheme.colorScheme.primary
+                        text = variable.name.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace
                         ),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-
-                if (!description.isNullOrBlank()) {
-                    Text(
-                        text = description,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
+                        color = if (isSystem)
+                            MaterialTheme.colorScheme.onTertiaryContainer
+                        else
+                            MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 }
             }
-
-            if (!variable.isSystem()) {
+        },
+        trailingContent = if (!isSystem) {
+            {
                 Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                     FilledTonalIconButton(onClick = onEdit) {
                         Icon(
@@ -442,8 +453,54 @@ private fun VariableCard(
                     }
                 }
             }
+        } else {
+            null
+        },
+        supportingContent = if (!description.isNullOrBlank()) {
+            {
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        } else null,
+        content = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = variable.name,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (!value.isNullOrBlank()) {
+                    Text(
+                        text = "= ${normalizeMathDisplay(value)}",
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontFamily = FontFamily.Monospace,
+                            color = MaterialTheme.colorScheme.primary
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
         }
-    }
+    )
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun segmentedShapesFor(position: VariableCardPosition) = when (position) {
+    VariableCardPosition.Single -> ListItemDefaults.segmentedShapes(index = 0, count = 1)
+    VariableCardPosition.First -> ListItemDefaults.segmentedShapes(index = 0, count = 2)
+    VariableCardPosition.Middle -> ListItemDefaults.segmentedShapes(index = 1, count = 3)
+    VariableCardPosition.Last -> ListItemDefaults.segmentedShapes(index = 1, count = 2)
 }
 
 @Composable

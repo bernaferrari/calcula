@@ -2,21 +2,20 @@ package org.solovyev.android.calculator.ui.graphing
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Functions
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ScreenRotation
 import androidx.compose.material.icons.filled.Tune
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -104,16 +103,16 @@ fun GraphingScreen(
                 title = stringResource(Res.string.cpp_plotter),
                 onBack = onBack,
                 actions = {
-                    FilledTonalIconButton(onClick = { showRangeDialog = true }) {
-                        Icon(
-                            imageVector = Icons.Filled.Tune,
-                            contentDescription = stringResource(Res.string.cpp_graph_set_range)
-                        )
-                    }
                     FilledTonalIconButton(onClick = { viewModel.resetView() }) {
                         Icon(
                             imageVector = Icons.Filled.ScreenRotation,
                             contentDescription = stringResource(Res.string.cpp_graph_reset_view)
+                        )
+                    }
+                    FilledTonalIconButton(onClick = { showRangeDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Filled.Tune,
+                            contentDescription = stringResource(Res.string.cpp_graph_set_range)
                         )
                     }
                 }
@@ -125,270 +124,12 @@ fun GraphingScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Expression input
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(CalculatorPadding.Standard),
-                shape = RoundedCornerShape(CalculatorCornerRadius.ExtraLarge),
-                color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                tonalElevation = CalculatorElevation.Standard
-            ) {
-                Column(
-                    modifier = Modifier.padding(CalculatorPadding.Medium),
-                    verticalArrangement = Arrangement.spacedBy(CalculatorSpacing.Medium)
-                ) {
-                    OutlinedTextField(
-                        value = inputExpression,
-                        onValueChange = { inputExpression = it },
-                        placeholder = { Text(stringResource(Res.string.cpp_graph_input_placeholder)) },
-                        prefix = {
-                            Text(
-                                text = stringResource(Res.string.cpp_graph_expression_prefix),
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                        keyboardActions = KeyboardActions(onDone = { onPlot(null) }),
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(CalculatorCornerRadius.Large)
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(CalculatorSpacing.Medium)
-                    ) {
-                        FilledTonalButton(
-                            onClick = { onPlot(null) },
-                            enabled = inputExpression.isNotBlank(),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(
-                                stringResource(
-                                    if (editingCurveId == null) {
-                                        Res.string.cpp_graph_add_function
-                                    } else {
-                                        Res.string.cpp_graph_update_function
-                                    }
-                                )
-                            )
-                        }
-                        OutlinedButton(
-                            onClick = { viewModel.resetView() },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(stringResource(Res.string.cpp_graph_reset_view))
-                        }
-                    }
-
-                    Text(
-                        text = stringResource(Res.string.cpp_graph_quick_examples),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(quickExpressions) { example ->
-                            AssistChip(
-                                onClick = {
-                                    onPlot(example)
-                                },
-                                label = { Text(example) }
-                            )
-                        }
-                    }
-
-                    Text(
-                        text = stringResource(Res.string.cpp_graph_functions),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    if (curves.isEmpty()) {
-                        Surface(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(CalculatorCornerRadius.Standard),
-                            color = MaterialTheme.colorScheme.surfaceContainerLowest
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(
-                                    horizontal = CalculatorPadding.Medium,
-                                    vertical = CalculatorPadding.Small
-                                ),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(CalculatorSpacing.Small)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Functions,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Text(
-                                    text = stringResource(Res.string.cpp_graph_no_functions),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    } else {
-                        Column(verticalArrangement = Arrangement.spacedBy(CalculatorSpacing.Small)) {
-                            curves.forEach { curve ->
-                                Surface(
-                                    shape = RoundedCornerShape(CalculatorCornerRadius.Standard),
-                                    color = MaterialTheme.colorScheme.surfaceContainer
-                                ) {
-                                    Column(modifier = Modifier.padding(CalculatorPadding.Medium)) {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(CalculatorSpacing.Small),
-                                            modifier = Modifier.fillMaxWidth()
-                                        ) {
-                                            Surface(
-                                                shape = RoundedCornerShape(999.dp),
-                                                color = Color(curve.color),
-                                                modifier = Modifier.size(10.dp)
-                                            ) {}
-                                            Text(
-                                                text = curve.expression,
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                modifier = Modifier.weight(1f),
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis,
-                                                color = if (curve.enabled) {
-                                                    MaterialTheme.colorScheme.onSurface
-                                                } else {
-                                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                                }
-                                            )
-                                            IconButton(
-                                                onClick = {
-                                                    editingCurveId = curve.id
-                                                    inputExpression = curve.expression
-                                                }
-                                            ) {
-                                                Icon(
-                                                    imageVector = Icons.Filled.Edit,
-                                                    contentDescription = stringResource(
-                                                        Res.string.cpp_graph_edit_function_a11y,
-                                                        curve.expression
-                                                    )
-                                                )
-                                            }
-                                            IconButton(
-                                                onClick = {
-                                                    viewModel.toggleFunction(curve.id, !curve.enabled)
-                                                }
-                                            ) {
-                                                Icon(
-                                                    imageVector = if (curve.enabled) {
-                                                        Icons.Filled.Visibility
-                                                    } else {
-                                                        Icons.Filled.VisibilityOff
-                                                    },
-                                                    contentDescription = stringResource(
-                                                        if (curve.enabled) {
-                                                            Res.string.cpp_graph_hide_function_a11y
-                                                        } else {
-                                                            Res.string.cpp_graph_show_function_a11y
-                                                        },
-                                                        curve.expression
-                                                    )
-                                                )
-                                            }
-                                            IconButton(
-                                                onClick = {
-                                                    viewModel.removeFunction(curve.id)
-                                                    if (editingCurveId == curve.id) {
-                                                        editingCurveId = null
-                                                        inputExpression = ""
-                                                    }
-                                                }
-                                            ) {
-                                                Icon(
-                                                    imageVector = Icons.Filled.DeleteOutline,
-                                                    contentDescription = stringResource(
-                                                        Res.string.cpp_graph_delete_function_a11y,
-                                                        curve.expression
-                                                    )
-                                                )
-                                            }
-                                        }
-                                        curve.error?.let { curveError ->
-                                            Text(
-                                                text = curveError,
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.error
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        OutlinedButton(
-                            onClick = {
-                                viewModel.clearFunctions()
-                                editingCurveId = null
-                                inputExpression = ""
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(stringResource(Res.string.cpp_graph_clear_all))
-                        }
-                    }
-                }
-            }
-
-            // Error message
-            error?.let { errorMsg ->
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = CalculatorPadding.Standard),
-                    shape = RoundedCornerShape(CalculatorCornerRadius.Standard),
-                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f)
-                ) {
-                    Text(
-                        text = errorMsg,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(
-                            horizontal = CalculatorPadding.Medium,
-                            vertical = CalculatorPadding.Small
-                        )
-                    )
-                }
-            }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = CalculatorPadding.Standard,
-                        vertical = CalculatorPadding.Medium
-                    ),
-                horizontalArrangement = Arrangement.spacedBy(CalculatorSpacing.Small)
-            ) {
-                GraphMetricChip(
-                    label = stringResource(Res.string.cpp_graph_x_range),
-                    value = formatRange(graphState.xMin, graphState.xMax),
-                    modifier = Modifier.weight(1f)
-                )
-                GraphMetricChip(
-                    label = stringResource(Res.string.cpp_graph_y_range),
-                    value = formatRange(graphState.yMin, graphState.yMax),
-                    modifier = Modifier.weight(1f)
-                )
-            }
-            
-            // Graph canvas
+            // Canvas fills all available space
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
+                    .weight(1f)
                     .padding(horizontal = CalculatorPadding.Standard)
-                    .padding(bottom = CalculatorPadding.Standard)
                     .clip(RoundedCornerShape(CalculatorCornerRadius.Large))
                     .background(MaterialTheme.colorScheme.surfaceContainerLow)
             ) {
@@ -399,6 +140,152 @@ fun GraphingScreen(
                     onZoom = { scale, fx, fy -> viewModel.zoom(scale, fx, fy) },
                     modifier = Modifier.fillMaxSize()
                 )
+
+                // Range overlays in top corners
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.TopCenter)
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    GraphMetricChip(
+                        label = stringResource(Res.string.cpp_graph_x_range),
+                        value = formatRange(graphState.xMin, graphState.xMax)
+                    )
+                    GraphMetricChip(
+                        label = stringResource(Res.string.cpp_graph_y_range),
+                        value = formatRange(graphState.yMin, graphState.yMax)
+                    )
+                }
+
+                // Error overlay at bottom of canvas
+                error?.let { errorMsg ->
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.BottomCenter),
+                        shape = RoundedCornerShape(
+                            topStart = CalculatorCornerRadius.Large,
+                            topEnd = CalculatorCornerRadius.Large
+                        ),
+                        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.9f)
+                    ) {
+                        Text(
+                            text = errorMsg,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(
+                                horizontal = CalculatorPadding.Medium,
+                                vertical = CalculatorPadding.Small
+                            )
+                        )
+                    }
+                }
+            }
+
+            // Compact bottom control panel
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                tonalElevation = CalculatorElevation.Standard,
+                shape = RoundedCornerShape(
+                    topStart = CalculatorCornerRadius.ExtraLarge,
+                    topEnd = CalculatorCornerRadius.ExtraLarge
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(
+                        horizontal = CalculatorPadding.Standard,
+                        vertical = CalculatorPadding.Medium
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(CalculatorSpacing.Small)
+                ) {
+                    // Curve chips row
+                    if (curves.isNotEmpty()) {
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            contentPadding = PaddingValues(vertical = 2.dp)
+                        ) {
+                            items(curves, key = { it.id }) { curve ->
+                                CurveChip(
+                                    curve = curve,
+                                    onEdit = {
+                                        editingCurveId = curve.id
+                                        inputExpression = curve.expression
+                                    },
+                                    onToggle = {
+                                        viewModel.toggleFunction(curve.id, !curve.enabled)
+                                    },
+                                    onDelete = {
+                                        viewModel.removeFunction(curve.id)
+                                        if (editingCurveId == curve.id) {
+                                            editingCurveId = null
+                                            inputExpression = ""
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    // Expression input + plot button
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(CalculatorSpacing.Small),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedTextField(
+                            value = inputExpression,
+                            onValueChange = { inputExpression = it },
+                            placeholder = {
+                                Text(
+                                    if (curves.isEmpty()) stringResource(Res.string.cpp_graph_input_placeholder)
+                                    else stringResource(Res.string.cpp_graph_add_function)
+                                )
+                            },
+                            prefix = {
+                                Text(
+                                    text = stringResource(Res.string.cpp_graph_expression_prefix),
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                            keyboardActions = KeyboardActions(onDone = { onPlot(null) }),
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(CalculatorCornerRadius.Large)
+                        )
+                        FilledTonalIconButton(
+                            onClick = { onPlot(null) },
+                            enabled = inputExpression.isNotBlank()
+                        ) {
+                            Icon(
+                                imageVector = if (editingCurveId == null) Icons.Filled.Add
+                                else Icons.Filled.ScreenRotation,
+                                contentDescription = stringResource(
+                                    if (editingCurveId == null) Res.string.cpp_graph_add_function
+                                    else Res.string.cpp_graph_update_function
+                                )
+                            )
+                        }
+                    }
+
+                    // Quick examples, shown only when input is empty
+                    if (inputExpression.isEmpty()) {
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            contentPadding = PaddingValues(vertical = 2.dp)
+                        ) {
+                            items(quickExpressions) { example ->
+                                AssistChip(
+                                    onClick = { onPlot(example) },
+                                    label = { Text(example) }
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -562,6 +449,62 @@ private fun calculateGridStep(range: Double): Double {
 }
 
 @Composable
+private fun CurveChip(
+    curve: GraphCurve,
+    onEdit: () -> Unit,
+    onToggle: () -> Unit,
+    onDelete: () -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(50),
+        color = if (curve.enabled)
+            MaterialTheme.colorScheme.surfaceContainerHighest
+        else
+            MaterialTheme.colorScheme.surfaceContainer,
+        modifier = Modifier.combinedClickable(onClick = onEdit, onLongClick = onToggle)
+    ) {
+        Row(
+            modifier = Modifier.padding(start = 10.dp, end = 4.dp, top = 6.dp, bottom = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .background(
+                        color = Color(curve.color).let {
+                            if (curve.enabled) it else it.copy(alpha = 0.4f)
+                        },
+                        shape = CircleShape
+                    )
+            )
+            Text(
+                text = curve.expression,
+                style = MaterialTheme.typography.bodySmall,
+                color = if (curve.enabled)
+                    MaterialTheme.colorScheme.onSurface
+                else
+                    MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.widthIn(max = 120.dp)
+            )
+            IconButton(
+                onClick = onDelete,
+                modifier = Modifier.size(24.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Close,
+                    contentDescription = null,
+                    modifier = Modifier.size(14.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun GraphMetricChip(
     label: String,
     value: String,
@@ -570,7 +513,8 @@ private fun GraphMetricChip(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(CalculatorCornerRadius.Standard),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh
+        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.85f),
+        tonalElevation = 2.dp
     ) {
         Column(
             modifier = Modifier.padding(

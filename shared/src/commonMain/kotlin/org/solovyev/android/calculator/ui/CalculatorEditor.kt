@@ -3,6 +3,8 @@ package org.solovyev.android.calculator.ui
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
@@ -27,10 +29,16 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.platform.InterceptPlatformTextInput
+import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.platform.PlatformTextInputInterceptor
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -50,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.awaitCancellation
 import org.solovyev.android.calculator.EditorState
+import kotlin.math.abs
 
 /**
  * Calculator editor component with award-winning typography:
@@ -93,8 +102,10 @@ fun CalculatorEditor(
     var textFieldValue by remember { mutableStateOf(TextFieldValue()) }
     val interactionSource = remember { MutableInteractionSource() }
     val focusRequester = remember { FocusRequester() }
+    val viewConfig = LocalViewConfiguration.current
     var editorFocused by remember { mutableStateOf(false) }
     var cursorPosition by remember { mutableIntStateOf(0) }
+    var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
 
     var adaptiveFontSize by remember(state.text.toString()) { mutableStateOf(maxTextSize) }
     var adaptiveMaxLines by remember(state.text.toString()) { mutableIntStateOf(1) }
@@ -199,7 +210,40 @@ fun CalculatorEditor(
                     modifier = Modifier
                         .fillMaxWidth()
                         .focusRequester(focusRequester)
-                        .onFocusChanged { focusState -> editorFocused = focusState.isFocused },
+                        .onFocusChanged { focusState -> editorFocused = focusState.isFocused }
+                        .pointerInput(textFieldValue.text, textLayoutResult, viewConfig.touchSlop) {
+                            awaitEachGesture {
+                                val down = awaitFirstDown(requireUnconsumed = false)
+                                val initialLayout = textLayoutResult ?: return@awaitEachGesture
+                                val anchorLine = initialLayout.getLineForVerticalPosition(down.position.y)
+                                val anchorY = (initialLayout.getLineTop(anchorLine) + initialLayout.getLineBottom(anchorLine)) / 2f
+                                val startX = down.position.x
+                                var scrubActive = false
+
+                                while (true) {
+                                    val event = awaitPointerEvent()
+                                    val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                                    if (change.changedToUpIgnoreConsumed()) break
+                                    if (change.positionChanged()) {
+                                        if (!scrubActive && abs(change.position.x - startX) <= viewConfig.touchSlop) {
+                                            continue
+                                        }
+                                        scrubActive = true
+
+                                        val layout = textLayoutResult ?: continue
+                                        val target = layout
+                                            .getOffsetForPosition(Offset(change.position.x, anchorY))
+                                            .coerceIn(0, textFieldValue.text.length)
+                                        if (target != textFieldValue.selection.end || !textFieldValue.selection.collapsed) {
+                                            textFieldValue = textFieldValue.copy(selection = TextRange(target))
+                                            cursorPosition = target
+                                            onSelectionChange(target)
+                                        }
+                                        change.consume()
+                                    }
+                                }
+                            }
+                        },
                     enabled = true,
                     readOnly = false,
                     textStyle = TextStyle(
@@ -225,6 +269,7 @@ fun CalculatorEditor(
                     maxLines = adaptiveMaxLines,
                     interactionSource = interactionSource,
                     onTextLayout = { layout ->
+                        textLayoutResult = layout
                         val overflowed = layout.didOverflowWidth || layout.didOverflowHeight
                         if (!overflowed) return@BasicTextField
 
