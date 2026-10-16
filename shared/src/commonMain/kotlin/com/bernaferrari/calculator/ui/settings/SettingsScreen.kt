@@ -45,6 +45,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -52,12 +53,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.produceState
 import com.bernaferrari.calculator.AppGraph
 import com.bernaferrari.calculator.APP_VERSION
-import com.bernaferrari.calculator.platform.supportsDynamicColor
+import com.bernaferrari.calculator.domain.model.AppPalette
+import com.bernaferrari.calculator.ui.theme.orDefault
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.bernaferrari.calculator.resources.*
 import com.bernaferrari.calculator.ui.containerTransform
+import com.bernaferrari.calculator.ui.fadeBottomEdge
 import com.bernaferrari.calculator.domain.model.AUTO_DECIMALS
 import com.bernaferrari.calculator.domain.model.AngleUnit
 import com.bernaferrari.calculator.domain.model.DecimalSeparator
@@ -79,7 +82,7 @@ class SettingsViewModel(
     private fun save(block: suspend PreferencesRepository.() -> Unit) = viewModelScope.launch { preferences.block() }
 
     fun setTheme(mode: ThemeMode) = save { updateThemeMode(mode) }
-    fun setDynamicColor(enabled: Boolean) = save { updateDynamicColor(enabled) }
+    fun setPalette(palette: AppPalette) = save { updatePalette(palette) }
     fun setHighContrast(enabled: Boolean) = save { updateHighContrast(enabled) }
     fun setAngleUnit(unit: AngleUnit) = save { updateAngleUnit(unit) }
     fun setDecimalPlaces(places: Int) = save { updateDecimalPlaces(places) }
@@ -98,10 +101,10 @@ private val DecimalChoices = listOf(AUTO_DECIMALS, 2, 4, 6, 10)
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
     onOpenConverter: () -> Unit,
+    onOpenAbout: () -> Unit,
     viewModel: SettingsViewModel = viewModel { SettingsViewModel() },
 ) {
     val prefs by viewModel.prefs.collectAsStateWithLifecycle()
-    var showLicense by remember { mutableStateOf(false) }
     var confirmClear by remember { mutableStateOf(false) }
     val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
@@ -112,10 +115,10 @@ fun SettingsScreen(
             IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null) }
             Text(stringResource(Res.string.settings_title), style = MaterialTheme.typography.titleLarge)
         }
-        LazyColumn(Modifier.weight(1f).clipToBounds(), contentPadding = PaddingValues(bottom = bottomInset + 32.dp)) {
+        LazyColumn(Modifier.weight(1f).clipToBounds().fadeBottomEdge(bottomInset + 12.dp), contentPadding = PaddingValues(bottom = bottomInset + 32.dp)) {
 
             item {
-                val dynamicAvailable = supportsDynamicColor
+                val palette = prefs.palette.orDefault()
                 SettingsSection(
                     stringResource(Res.string.settings_appearance),
                     listOfNotNull(
@@ -127,6 +130,7 @@ fun SettingsScreen(
                                     ThemeMode.DARK -> PreviewKind.Dark
                                     else -> PreviewKind.System
                                 },
+                                palette = palette,
                                 label = {
                                     stringResource(
                                         when (it) {
@@ -147,13 +151,7 @@ fun SettingsScreen(
                                 },
                             )
                         },
-                        if (dynamicAvailable) {
-                            { p ->
-                                SwitchRow(p, Icons.Outlined.Palette, stringResource(Res.string.settings_dynamic_color), stringResource(Res.string.settings_dynamic_color_description), prefs.dynamicColor, viewModel::setDynamicColor)
-                            }
-                        } else {
-                            null
-                        },
+                        { p -> PaletteRow(p, palette, label = { stringResource(it.title()) }, onSelect = viewModel::setPalette) },
                         { p ->
                             SwitchRow(p, Icons.Outlined.Contrast, stringResource(Res.string.settings_high_contrast), stringResource(Res.string.settings_high_contrast_description), prefs.highContrast, viewModel::setHighContrast)
                         },
@@ -230,8 +228,14 @@ fun SettingsScreen(
                 SettingsSection(
                     stringResource(Res.string.settings_about),
                     listOf(
-                        { p -> ActionRow(p, Icons.Outlined.Info, stringResource(Res.string.app_name), subtitle = stringResource(Res.string.settings_version, APP_VERSION), onClick = null) },
-                        { p -> ActionRow(p, Icons.Outlined.Description, stringResource(Res.string.settings_licenses), subtitle = "Google Sans Flex · SIL OFL 1.1", onClick = { showLicense = true }) },
+                        { p ->
+                            ActionRow(
+                                p, Icons.Outlined.Info, stringResource(Res.string.about_row),
+                                subtitle = stringResource(Res.string.settings_version, APP_VERSION),
+                                onClick = onOpenAbout,
+                                modifier = Modifier.containerTransform("about"),
+                            )
+                        },
                     ),
                 )
             }
@@ -239,7 +243,6 @@ fun SettingsScreen(
       }
     }
 
-    if (showLicense) LicenseDialog(onDismiss = { showLicense = false })
     if (confirmClear) {
         AlertDialog(
             onDismissRequest = { confirmClear = false },
@@ -255,15 +258,17 @@ fun SettingsScreen(
     }
 }
 
-@Composable
-private fun LicenseDialog(onDismiss: () -> Unit) {
-    val text by produceState("") {
-        value = runCatching { Res.readBytes("files/GoogleSansFlex-OFL.txt").decodeToString() }.getOrDefault("")
-    }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.dismiss)) } },
-        title = { Text("Google Sans Flex") },
-        text = { Box(Modifier.verticalScroll(rememberScrollState())) { Text(text, style = MaterialTheme.typography.bodySmall) } },
-    )
+/** A palette's name in the person's language. */
+internal fun AppPalette.title(): StringResource = when (this) {
+    AppPalette.WALLPAPER -> Res.string.palette_wallpaper
+    AppPalette.INDIGO -> Res.string.palette_indigo
+    AppPalette.BLUE -> Res.string.palette_blue
+    AppPalette.TEAL -> Res.string.palette_teal
+    AppPalette.GREEN -> Res.string.palette_green
+    AppPalette.AMBER -> Res.string.palette_amber
+    AppPalette.ORANGE -> Res.string.palette_orange
+    AppPalette.RED -> Res.string.palette_red
+    AppPalette.PINK -> Res.string.palette_pink
+    AppPalette.PURPLE -> Res.string.palette_purple
+    AppPalette.GRAPHITE -> Res.string.palette_graphite
 }

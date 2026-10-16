@@ -33,7 +33,7 @@ actual fun keyValueStore(): KeyValueStore = KeyValueStore()
 actual fun rememberKeySounds(): (KeySound) -> Unit = { }
 
 @Composable
-actual fun dynamicColorScheme(dark: Boolean): ColorScheme? = null
+actual fun wallpaperColorScheme(dark: Boolean): ColorScheme? = null
 
 actual val supportsDynamicColor: Boolean = false
 

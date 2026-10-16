@@ -1,7 +1,7 @@
 package com.bernaferrari.calculator.ui.theme
 
 import com.bernaferrari.calculator.AppGraph
-import com.bernaferrari.calculator.platform.supportsDynamicColor
+import com.bernaferrari.calculator.domain.model.AppPalette
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -21,7 +21,7 @@ class ThemeViewModel(
     ) : ViewModel() {
         private val _themeMode = MutableStateFlow(ThemeMode.SYSTEM)
         val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
-        private val dynamicColor = MutableStateFlow(true)
+        private val palette = MutableStateFlow<AppPalette?>(null)
         private val highContrast = MutableStateFlow(false)
 
         init {
@@ -35,7 +35,7 @@ class ThemeViewModel(
                     .catch { /* Handle error silently, use default */ }
                     .collect { preferences ->
                         _themeMode.value = preferences.themeMode
-                        dynamicColor.value = preferences.dynamicColor
+                        palette.value = preferences.palette
                         highContrast.value = preferences.highContrast
                     }
             }
@@ -55,9 +55,9 @@ class ThemeViewModel(
         }
 
         @Composable
-        fun shouldUseDynamicColor(): Boolean {
-            val enabled by dynamicColor.collectAsState()
-            return enabled && supportsDynamicColor
+        fun palette(): AppPalette {
+            val chosen by palette.collectAsState()
+            return chosen.orDefault()
         }
 
         @Composable

@@ -1,6 +1,7 @@
 package com.bernaferrari.calculator.domain.repository
 
 import com.bernaferrari.calculator.domain.model.AngleUnit
+import com.bernaferrari.calculator.domain.model.AppPalette
 import com.bernaferrari.calculator.domain.model.DecimalSeparator
 import com.bernaferrari.calculator.domain.model.ThemeMode
 import com.bernaferrari.calculator.domain.model.UserPreferences
@@ -11,7 +12,7 @@ interface PreferencesRepository {
 
     suspend fun updateThemeMode(themeMode: ThemeMode)
 
-    suspend fun updateDynamicColor(enabled: Boolean)
+    suspend fun updatePalette(palette: AppPalette)
 
     suspend fun updateAngleUnit(angleUnit: AngleUnit)
 

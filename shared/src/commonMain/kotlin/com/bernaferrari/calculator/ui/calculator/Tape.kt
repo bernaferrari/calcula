@@ -39,6 +39,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.BlendMode
@@ -148,6 +155,8 @@ private fun TapeList(
         state = state,
         reverseLayout = true,
         contentPadding = PaddingValues(top = if (expanded) 8.dp else 24.dp),
+        // History mode reads top-down from under its title; the tape stays anchored to the display.
+        verticalArrangement = if (expanded) Arrangement.Top else Arrangement.Bottom,
         modifier = modifier
             // Fade the oldest entries out at the top instead of cutting them off.
             .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
@@ -169,7 +178,6 @@ private fun TapeList(
                     row.label.text(),
                     style = MaterialTheme.typography.labelLarge,
                     color = colors.primary,
-                    textAlign = TextAlign.End,
                     modifier = Modifier.animateItem().fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 20.dp, bottom = 4.dp),
                 )
                 is TapeRow.Entry -> TapeEntry(
@@ -220,8 +228,11 @@ private fun TapeEntry(
         modifier = modifier,
     ) {
         Box(Modifier.background(colors.surface)) {
-            Column(
-                horizontalAlignment = Alignment.End,
+            // One line per calculation, "12+7×3 = 33": the question quiet, the answer full strength.
+            // A long one wraps, keeping "= 33" together on the last line.
+            FlowRow(
+                horizontalArrangement = Arrangement.End,
+                itemVerticalAlignment = Alignment.Bottom,
                 modifier = Modifier
                     .fillMaxWidth()
                     .combinedClickable(onClick = { onUseResult(entry) }, onLongClick = { menu = true })
@@ -229,18 +240,23 @@ private fun TapeEntry(
             ) {
                 Text(
                     formatter.format(entry.expression, 0, formatColors).text,
-                    style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 17.sp, textAlign = TextAlign.End),
+                    style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 22.sp, textAlign = TextAlign.End),
                     color = colors.onSurfaceVariant,
                 )
+                // Right after "=", the answer is still the big number below, so it joins the line later.
                 AnimatedVisibility(
                     visible = showResult,
-                    enter = expandVertically(spring(stiffness = Spring.StiffnessMediumLow)) + fadeIn(),
-                    exit = shrinkVertically(spring(stiffness = Spring.StiffnessMediumLow)) + fadeOut(tween(100)),
+                    enter = expandHorizontally(spring(stiffness = Spring.StiffnessMediumLow), expandFrom = Alignment.Start) + fadeIn(tween(220, delayMillis = 60)),
+                    exit = shrinkHorizontally(tween(120)) + fadeOut(tween(80)),
                 ) {
                     Text(
-                        formatter.number(entry.result),
-                        style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 28.sp, textAlign = TextAlign.End),
+                        buildAnnotatedString {
+                            withStyle(SpanStyle(color = colors.outline)) { append("  =  ") }
+                            append(formatter.number(entry.result))
+                        },
+                        style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 22.sp, fontWeight = FontWeight.Medium),
                         color = colors.onSurface,
+                        maxLines = 1,
                     )
                 }
             }

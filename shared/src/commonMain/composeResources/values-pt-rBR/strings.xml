@@ -32,9 +32,7 @@
     <string name="history_deleted">Cálculo excluído</string>
     <string name="history_cleared">Histórico limpo</string>
     <string name="undo">Desfazer</string>
-    <string name="settings_dynamic_color">Cores do papel de parede</string>
     <string name="settings_about">Sobre</string>
-    <string name="settings_licenses">Licenças de código aberto</string>
     <string name="converter_swap">Inverter unidades</string>
     <string name="converter_backspace">Apagar, segure para limpar</string>
     <string name="unit_length">Comprimento</string>
@@ -47,7 +45,6 @@
     <string name="unit_data">Dados</string>
     <string name="unit_energy">Energia</string>
     <string name="unit_pressure">Pressão</string>
-    <string name="settings_dynamic_color_description">Combinar com o papel de parede</string>
     <string name="settings_high_contrast">Alto contraste</string>
     <string name="settings_high_contrast_description">Fundos puros e texto mais forte</string>
     <string name="settings_calculator">Calculadora</string>
@@ -72,4 +69,28 @@
     <string name="settings_clear_history_body">Todos os cálculos salvos serão excluídos.</string>
     <string name="converter_use">Usar</string>
     <string name="converter_use_description">Usar na calculadora</string>
+    <string name="settings_color">Cor</string>
+    <string name="palette_wallpaper">Papel de parede</string>
+    <string name="palette_indigo">Índigo</string>
+    <string name="palette_blue">Azul</string>
+    <string name="palette_teal">Verde-azulado</string>
+    <string name="palette_green">Verde</string>
+    <string name="palette_amber">Âmbar</string>
+    <string name="palette_orange">Laranja</string>
+    <string name="palette_red">Vermelho</string>
+    <string name="palette_pink">Rosa</string>
+    <string name="palette_purple">Roxo</string>
+    <string name="palette_graphite">Grafite</string>
+    <string name="about_title">Sobre</string>
+    <string name="about_row">Sobre o Calculator++</string>
+    <string name="about_tagline">Deslize uma tecla. Ganhe uma função.</string>
+    <string name="about_source">Código-fonte</string>
+    <string name="about_source_body">Código aberto no GitHub</string>
+    <string name="about_feedback">Enviar feedback</string>
+    <string name="about_story">O Calculator++ nasceu em 2011 como a calculadora de teclas deslizantes de Sergey Solovyev. Esta versão o reconstrói do zero: matemática decimal exata, uma fita de papel que você pode reutilizar e teclas que escondem uma segunda e uma terceira função sob o seu polegar.</string>
+    <string name="about_story_author">Bernardo Ferrari</string>
+    <string name="about_elsewhere">Em outros lugares</string>
+    <string name="about_privacy">Sem anúncios, sem contas, sem rastreamento. Seus cálculos nunca saem deste aparelho.</string>
+    <string name="about_credit">Baseado no Calculator++ de Sergey Solovyev</string>
+    <string name="about_feedback_body">Ideias, bugs, elogios</string>
 </resources>

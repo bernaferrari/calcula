@@ -14,7 +14,7 @@ fun App() {
     val theme: ThemeViewModel = viewModel { ThemeViewModel() }
     CalculatorTheme(
         darkTheme = theme.shouldUseDarkTheme(),
-        dynamicColor = theme.shouldUseDynamicColor(),
+        palette = theme.palette(),
         highContrast = theme.shouldUseHighContrast(),
     ) {
         AppNavigation(Modifier.fillMaxSize())

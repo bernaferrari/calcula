@@ -52,7 +52,7 @@ actual fun rememberKeySounds(): (KeySound) -> Unit = remember {
 }
 
 @Composable
-actual fun dynamicColorScheme(dark: Boolean): ColorScheme? = null
+actual fun wallpaperColorScheme(dark: Boolean): ColorScheme? = null
 
 actual val supportsDynamicColor: Boolean = false
 

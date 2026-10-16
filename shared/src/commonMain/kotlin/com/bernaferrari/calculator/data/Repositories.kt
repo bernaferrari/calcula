@@ -1,6 +1,7 @@
 package com.bernaferrari.calculator.data
 
 import com.bernaferrari.calculator.domain.model.AngleUnit
+import com.bernaferrari.calculator.domain.model.AppPalette
 import com.bernaferrari.calculator.domain.model.CalculationHistory
 import com.bernaferrari.calculator.domain.model.DecimalSeparator
 import com.bernaferrari.calculator.domain.model.ThemeMode
@@ -33,7 +34,7 @@ class StoredPreferencesRepository(private val store: KeyValueStore) : Preference
     }
 
     override suspend fun updateThemeMode(themeMode: ThemeMode) = edit { it.copy(themeMode = themeMode) }
-    override suspend fun updateDynamicColor(enabled: Boolean) = edit { it.copy(dynamicColor = enabled) }
+    override suspend fun updatePalette(palette: AppPalette) = edit { it.copy(palette = palette) }
     override suspend fun updateAngleUnit(angleUnit: AngleUnit) = edit { it.copy(angleUnit = angleUnit) }
     override suspend fun updateDecimalPlaces(decimalPlaces: Int) = edit { it.copy(decimalPlaces = decimalPlaces) }
     override suspend fun updateHapticFeedback(enabled: Boolean) = edit { it.copy(hapticFeedback = enabled) }

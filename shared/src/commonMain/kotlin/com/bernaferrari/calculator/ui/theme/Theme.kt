@@ -9,28 +9,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import com.bernaferrari.calculator.platform.SystemBarsAppearance
-import com.bernaferrari.calculator.platform.dynamicColorScheme
-import com.materialkolor.PaletteStyle
-import com.materialkolor.dynamiccolor.ColorSpec
-import com.materialkolor.material3.rememberDynamicColorScheme
-
-/** The one accent when wallpaper colors are off or unavailable. */
-private val Seed = Color(0xFF6366F1)
+import com.bernaferrari.calculator.domain.model.AppPalette
 
 @Composable
 fun CalculatorTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    palette: AppPalette = AppPalette.INDIGO,
     highContrast: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    val wallpaper = if (dynamicColor) dynamicColorScheme(darkTheme) else null
-    val baseScheme = wallpaper ?: rememberDynamicColorScheme(
-        seedColor = Seed,
-        isDark = darkTheme,
-        style = PaletteStyle.Expressive,
-        specVersion = ColorSpec.SpecVersion.SPEC_2025,
-    )
+    val baseScheme = paletteColorScheme(palette, darkTheme)
     // High contrast: true black or white backgrounds and full-strength secondary text.
     val colorScheme = when {
         !highContrast -> baseScheme

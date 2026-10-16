@@ -66,7 +66,7 @@ actual fun rememberKeySounds(): (KeySound) -> Unit {
 }
 
 @Composable
-actual fun dynamicColorScheme(dark: Boolean): ColorScheme? {
+actual fun wallpaperColorScheme(dark: Boolean): ColorScheme? {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return null
     val context = LocalContext.current
     return if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)

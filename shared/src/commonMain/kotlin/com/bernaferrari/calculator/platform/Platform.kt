@@ -26,7 +26,7 @@ expect fun rememberKeySounds(): (KeySound) -> Unit
 
 /** Wallpaper colors (Android 12+), or null where the platform has none. */
 @Composable
-expect fun dynamicColorScheme(dark: Boolean): ColorScheme?
+expect fun wallpaperColorScheme(dark: Boolean): ColorScheme?
 
 expect val supportsDynamicColor: Boolean
 

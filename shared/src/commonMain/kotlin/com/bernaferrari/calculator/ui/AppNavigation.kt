@@ -22,12 +22,13 @@ import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDe
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.bernaferrari.calculator.ui.about.AboutScreen
 import com.bernaferrari.calculator.ui.calculator.CalculatorScreen
 import com.bernaferrari.calculator.ui.converter.ConverterScreen
 import com.bernaferrari.calculator.ui.settings.SettingsScreen
 
-/** The app's three places. The calculator is always at the bottom of the stack. */
-enum class Screen { Calculator, Settings, Converter }
+/** The app's places. The calculator is always at the bottom of the stack. */
+enum class Screen { Calculator, Settings, Converter, About }
 
 /**
  * Navigation 3 with a shared-transition scope, so the tool row's icons can grow into the screens
@@ -71,7 +72,14 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                         )
                     }
                     entry<Screen>(Screen.Settings) {
-                        SettingsScreen(onNavigateBack = back, onOpenConverter = { converterSeed = null; open(Screen.Converter) })
+                        SettingsScreen(
+                            onNavigateBack = back,
+                            onOpenConverter = { converterSeed = null; open(Screen.Converter) },
+                            onOpenAbout = { open(Screen.About) },
+                        )
+                    }
+                    entry<Screen>(Screen.About) {
+                        AboutScreen(onNavigateBack = back)
                     }
                     entry<Screen>(Screen.Converter) {
                         ConverterScreen(
