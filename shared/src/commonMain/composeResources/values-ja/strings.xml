@@ -89,4 +89,9 @@
     <string name="settings_decimals_full">すべて</string>
     <string name="settings_separator_region">地域</string>
     <string name="settings_separator_example">表示例：%1$s</string>
+    <string name="graph_title">グラフ</string>
+    <string name="graph_reset">表示をリセット</string>
+    <string name="graph_remove">関数を削除</string>
+    <string name="graph_add">関数を追加</string>
+    <string name="graph_type_hint">x の関数を入力</string>
 </resources>

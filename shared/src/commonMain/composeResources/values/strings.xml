@@ -93,4 +93,9 @@
     <string name="settings_decimals_full">Full</string>
     <string name="settings_separator_region">Region</string>
     <string name="settings_separator_example">Shown as %1$s</string>
+    <string name="graph_title">Graph</string>
+    <string name="graph_reset">Reset view</string>
+    <string name="graph_remove">Remove function</string>
+    <string name="graph_add">Add function</string>
+    <string name="graph_type_hint">type a function of x</string>
 </resources>

@@ -19,7 +19,7 @@ object ExpressionEditor {
     private val FUNCTIONS = listOf("sin⁻¹", "cos⁻¹", "tan⁻¹", "sinh", "cosh", "tanh", "sin", "cos", "tan", "log", "abs", "ln")
 
     /** True if the character can end an operand, so an operator or `)` may follow it. */
-    fun endsOperand(c: Char?): Boolean = c != null && (c.isDigit() || c == '.' || c == ')' || c == 'π' || c == 'e' || c in POSTFIX_END)
+    fun endsOperand(c: Char?): Boolean = c != null && (c.isDigit() || c == '.' || c == ')' || c == 'π' || c == 'e' || c == 'x' || c in POSTFIX_END)
 
     fun insertDigit(e: Editor, digit: Char): Editor {
         val start = numberStart(e)

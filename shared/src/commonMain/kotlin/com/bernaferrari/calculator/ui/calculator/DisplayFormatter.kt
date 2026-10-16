@@ -96,8 +96,8 @@ class DisplayFormatter(separators: Separators = systemSeparators()) {
         return Formatted(text, rawToDisplay, displayToRaw.toIntArray())
     }
 
-    /** Function names (`sin`, `log`…) never contain `e`, so a lone `e` is always Euler's number. */
-    private fun isNameChar(c: Char) = c in 'a'..'z' && c != 'e'
+    /** Function names (`sin`, `log`…) never contain `e` or `x`, so those always stand alone. */
+    private fun isNameChar(c: Char) = c in 'a'..'z' && c != 'e' && c != 'x'
 
     private companion object {
         val SUPERSCRIPT = mapOf(

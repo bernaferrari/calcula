@@ -34,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
+import androidx.compose.material.icons.outlined.ShowChart
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import org.jetbrains.compose.resources.stringResource
@@ -68,15 +69,21 @@ fun ToolRow(
     onOpenConverter: () -> Unit,
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
+    onOpenGraph: () -> Unit = {},
 ) {
     val quiet = MaterialTheme.colorScheme.onSurfaceVariant
     Box(modifier.fillMaxWidth().height(52.dp).padding(horizontal = 8.dp)) {
-        IconButton(onClick = onToggleHistory, modifier = Modifier.align(Alignment.CenterStart)) {
-            Icon(
-                if (historyOpen) Icons.Outlined.Dialpad else Icons.Outlined.History,
-                contentDescription = stringResource(if (historyOpen) Res.string.show_keypad else Res.string.show_history),
-                tint = quiet,
-            )
+        Row(Modifier.align(Alignment.CenterStart)) {
+            IconButton(onClick = onToggleHistory) {
+                Icon(
+                    if (historyOpen) Icons.Outlined.Dialpad else Icons.Outlined.History,
+                    contentDescription = stringResource(if (historyOpen) Res.string.show_keypad else Res.string.show_history),
+                    tint = quiet,
+                )
+            }
+            IconButton(onClick = onOpenGraph, modifier = Modifier.containerTransform("graph")) {
+                Icon(Icons.Outlined.ShowChart, contentDescription = stringResource(Res.string.graph_title), tint = quiet)
+            }
         }
         // Functions mean nothing while browsing history, so the switch steps out of the way.
         AnimatedVisibility(

@@ -10,6 +10,8 @@ internal sealed interface Token {
     data class Root(val degree: Int) : Token
     data object LParen : Token
     data object RParen : Token
+    /** The plotting variable `x`; only meaningful to [Plot]. */
+    data object Var : Token
 }
 
 /**
@@ -47,6 +49,7 @@ internal object Tokenizer {
                 c == '∛' -> { tokens += Token.Root(3); i++ }
                 c == 'π' -> { tokens += Token.Const("π"); i++ }
                 c == 'e' -> { tokens += Token.Const("e"); i++ }
+                c == 'x' -> { tokens += Token.Var; i++ }
                 else -> {
                     val name = FUNCTIONS.firstOrNull { input.startsWith(it, i) }
                         ?: throw CalcException(CalcError.SYNTAX)

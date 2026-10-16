@@ -21,6 +21,8 @@ enum class Key {
     ASIN, ACOS, ATAN, EXP, POW10, CBRT, CUBE, RECIPROCAL,
     DOUBLE_ZERO, TRIPLE_ZERO,
     INVERSE,
+    /** The graph's variable `x`. */
+    VARIABLE,
 }
 
 data class CalcState(
@@ -154,6 +156,7 @@ object Calculator {
             Key.DELETE -> delete(e)
             Key.SQRT -> insertRaw(e, if (inverse) "∛" else "√")
             Key.PI -> insertRaw(e, "π")
+            Key.VARIABLE -> insertRaw(e, "x")
             Key.E -> insertRaw(e, "e")
             Key.POWER -> if (inverse) insertPostfix(e, "⁻¹") else insertOperator(e, '^')
             Key.FACTORIAL -> insertPostfix(e, "!")

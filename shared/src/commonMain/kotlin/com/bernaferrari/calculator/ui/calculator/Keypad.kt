@@ -87,12 +87,14 @@ fun MainKeypad(
     modifier: Modifier = Modifier,
     showDots: Boolean = true,
     bottomInset: Dp = 0.dp,
+    /** For the graph: the `%` key becomes the variable `x`, in the accent so it's easy to find. */
+    variable: Boolean = false,
 ) {
     val rows = listOf(
         listOf(
             Spec(Key.CLEAR, "AC", Tone.Function, "Clear"),
             Spec(Key.PARENS, "( )", Tone.Function, "Parentheses", up = Alt("(", Key.LPAREN, "open parenthesis"), down = Alt(")", Key.RPAREN, "close parenthesis"), flips = false),
-            Spec(Key.PERCENT, "%", Tone.Function, "Percent"),
+            if (variable) Spec(Key.VARIABLE, "x", Tone.Operator, "x") else Spec(Key.PERCENT, "%", Tone.Function, "Percent"),
             Spec(Key.DIVIDE, "÷", Tone.Operator, "Divide"),
         ),
         listOf(

@@ -89,4 +89,9 @@
     <string name="settings_decimals_full">Alle</string>
     <string name="settings_separator_region">Region</string>
     <string name="settings_separator_example">Anzeige: %1$s</string>
+    <string name="graph_title">Graph</string>
+    <string name="graph_reset">Ansicht zurücksetzen</string>
+    <string name="graph_remove">Funktion entfernen</string>
+    <string name="graph_add">Funktion hinzufügen</string>
+    <string name="graph_type_hint">Funktion von x eingeben</string>
 </resources>

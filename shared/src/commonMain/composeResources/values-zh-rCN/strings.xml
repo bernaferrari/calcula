@@ -89,4 +89,9 @@
     <string name="settings_decimals_full">全部</string>
     <string name="settings_separator_region">地区</string>
     <string name="settings_separator_example">显示为 %1$s</string>
+    <string name="graph_title">图表</string>
+    <string name="graph_reset">重置视图</string>
+    <string name="graph_remove">移除函数</string>
+    <string name="graph_add">添加函数</string>
+    <string name="graph_type_hint">输入关于 x 的函数</string>
 </resources>

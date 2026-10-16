@@ -62,6 +62,7 @@ import kotlinx.coroutines.launch
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.material.icons.outlined.ShowChart
 import kotlin.math.roundToInt
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
@@ -92,6 +93,7 @@ fun CalculatorScreen(
     initialExpression: String,
     onOpenSettings: () -> Unit,
     onOpenConverter: (seed: String?) -> Unit,
+    onOpenGraph: () -> Unit = {},
     pendingInsert: String? = null,
     onInsertConsumed: () -> Unit = {},
     viewModel: CalculatorViewModel = viewModel { CalculatorViewModel(savedState = createSavedStateHandle()) },
@@ -181,6 +183,9 @@ fun CalculatorScreen(
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
+                        IconButton(onClick = onOpenGraph, modifier = Modifier.containerTransform("graph")) {
+                            Icon(Icons.Outlined.ShowChart, contentDescription = stringResource(Res.string.graph_title), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
                         Spacer(Modifier.weight(1f))
                         IconButton(onClick = { onOpenConverter(currentNumber) }, modifier = Modifier.containerTransform("converter")) {
                             Icon(Icons.Outlined.Straighten, contentDescription = stringResource(Res.string.menu_unit_converter), tint = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -234,6 +239,7 @@ fun CalculatorScreen(
                     onToggleHistory = { haptics.tap(); historyOpen = !historyOpen },
                     onLayer = { next -> haptics.tap(); layer = next; historyOpen = false },
                     onOpenConverter = { onOpenConverter(currentNumber) },
+                    onOpenGraph = onOpenGraph,
                     onOpenSettings = onOpenSettings,
                     // Takes over the bottom inset as the keypad leaves, in step with it.
                     modifier = Modifier.padding(bottom = bottomInset * (1f - shown)),

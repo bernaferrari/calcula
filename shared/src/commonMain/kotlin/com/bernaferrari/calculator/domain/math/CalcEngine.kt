@@ -234,7 +234,7 @@ object CalcEngine {
     }
 
     private fun Token.startsOperand(): Boolean =
-        this is Token.Num || this is Token.Const || this is Token.LParen || this is Token.Func || this is Token.Root
+        this is Token.Num || this is Token.Const || this is Token.Var || this is Token.LParen || this is Token.Func || this is Token.Root
 
     private fun fromDouble(d: Double): Decimal {
         if (d.isNaN()) throw CalcException(CalcError.DOMAIN)
