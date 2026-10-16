@@ -104,13 +104,15 @@ fun MainKeypad(
         listOf(
             Spec(Key.D4, "4", Tone.Digit, up = Alt("ln", Key.LN, "natural log"), down = Alt("eˣ", Key.EXP, "e to the power")),
             Spec(Key.D5, "5", Tone.Digit, up = Alt("log", Key.LOG, "log base 10"), down = Alt("10ˣ", Key.POW10, "10 to the power")),
-            Spec(Key.D6, "6", Tone.Digit, up = Alt("√", Key.SQRT, "square root"), down = Alt("∛", Key.CBRT, "cube root")),
+            // The constants end the row.
+            Spec(Key.D6, "6", Tone.Digit, up = Alt("π", Key.PI, "pi"), down = Alt("e", Key.E, "Euler's number")),
             Spec(Key.MINUS, "−", Tone.Operator, "Minus"),
         ),
         listOf(
-            Spec(Key.D1, "1", Tone.Digit, up = Alt("π", Key.PI, "pi"), down = Alt("e", Key.E, "Euler's number")),
-            Spec(Key.D2, "2", Tone.Digit, up = Alt("x²", Key.SQUARE, "squared"), down = Alt("x³", Key.CUBE, "cubed")),
-            Spec(Key.D3, "3", Tone.Digit, up = Alt("x!", Key.FACTORIAL, "factorial"), down = Alt("1/x", Key.RECIPROCAL, "reciprocal")),
+            // Each number carries its own power and root: 1 over x, x², √ on 2, x³, ∛ on 3.
+            Spec(Key.D1, "1", Tone.Digit, up = Alt("1/x", Key.RECIPROCAL, "reciprocal"), down = Alt("x!", Key.FACTORIAL, "factorial")),
+            Spec(Key.D2, "2", Tone.Digit, up = Alt("x²", Key.SQUARE, "squared"), down = Alt("√", Key.SQRT, "square root")),
+            Spec(Key.D3, "3", Tone.Digit, up = Alt("x³", Key.CUBE, "cubed"), down = Alt("∛", Key.CBRT, "cube root")),
             Spec(Key.PLUS, "+", Tone.Operator, "Plus"),
         ),
         listOf(
