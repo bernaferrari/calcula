@@ -296,4 +296,16 @@
     <string name="settings_dynamic_color">Wallpaper colors</string>
     <string name="settings_about">About</string>
     <string name="settings_licenses">Open-source licenses</string>
+    <string name="converter_swap">Swap units</string>
+    <string name="converter_backspace">Backspace, hold to clear</string>
+    <string name="unit_length">Length</string>
+    <string name="unit_mass">Mass</string>
+    <string name="unit_temperature">Temperature</string>
+    <string name="unit_area">Area</string>
+    <string name="unit_volume">Volume</string>
+    <string name="unit_speed">Speed</string>
+    <string name="unit_time">Time</string>
+    <string name="unit_data">Data</string>
+    <string name="unit_energy">Energy</string>
+    <string name="unit_pressure">Pressure</string>
 </resources>

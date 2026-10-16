@@ -23,8 +23,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.BarChart
-import androidx.compose.material.icons.rounded.Code
 import androidx.compose.material.icons.rounded.DeleteSweep
 import androidx.compose.material.icons.rounded.Straighten
 import androidx.compose.material.icons.rounded.Vibration
@@ -83,8 +81,6 @@ class SettingsViewModel @Inject constructor(
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
     onOpenConverter: () -> Unit,
-    onOpenProgrammer: () -> Unit,
-    onOpenStatistics: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val prefs by viewModel.prefs.collectAsStateWithLifecycle()
@@ -145,20 +141,6 @@ fun SettingsScreen(
                     headlineContent = { Text(stringResource(R.string.menu_unit_converter)) },
                     leadingContent = { Icon(Icons.Rounded.Straighten, contentDescription = null) },
                     modifier = Modifier.clickable(onClick = onOpenConverter),
-                )
-            }
-            item {
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.menu_programmer)) },
-                    leadingContent = { Icon(Icons.Rounded.Code, contentDescription = null) },
-                    modifier = Modifier.clickable(onClick = onOpenProgrammer),
-                )
-            }
-            item {
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.menu_statistics)) },
-                    leadingContent = { Icon(Icons.Rounded.BarChart, contentDescription = null) },
-                    modifier = Modifier.clickable(onClick = onOpenStatistics),
                 )
             }
             item { SectionHeader(stringResource(R.string.settings_history)) }

@@ -8,10 +8,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.bernaferrari.calculator.ui.calculator.CalculatorScreen
-import com.bernaferrari.calculator.ui.converter.UnitConverterScreen
-import com.bernaferrari.calculator.ui.programmer.ProgrammerModeDisplay
+import com.bernaferrari.calculator.ui.converter.ConverterScreen
 import com.bernaferrari.calculator.ui.settings.SettingsScreen
-import com.bernaferrari.calculator.ui.statistics.StatisticsCalculator
 
 @Composable
 fun AppNavigation(modifier: Modifier = Modifier) {
@@ -32,12 +30,8 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             SettingsScreen(
                 onNavigateBack = back,
                 onOpenConverter = { navController.navigate("unit_converter") },
-                onOpenProgrammer = { navController.navigate("programmer") },
-                onOpenStatistics = { navController.navigate("statistics") },
             )
         }
-        composable("unit_converter") { UnitConverterScreen(onNavigateBack = back) }
-        composable("programmer") { ProgrammerModeDisplay(onNavigateBack = back) }
-        composable("statistics") { StatisticsCalculator(onNavigateBack = back) }
+        composable("unit_converter") { ConverterScreen(onNavigateBack = back) }
     }
 }

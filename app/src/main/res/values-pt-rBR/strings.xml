@@ -289,4 +289,16 @@
     <string name="settings_dynamic_color">Cores do papel de parede</string>
     <string name="settings_about">Sobre</string>
     <string name="settings_licenses">Licenças de código aberto</string>
+    <string name="converter_swap">Inverter unidades</string>
+    <string name="converter_backspace">Apagar, segure para limpar</string>
+    <string name="unit_length">Comprimento</string>
+    <string name="unit_mass">Massa</string>
+    <string name="unit_temperature">Temperatura</string>
+    <string name="unit_area">Área</string>
+    <string name="unit_volume">Volume</string>
+    <string name="unit_speed">Velocidade</string>
+    <string name="unit_time">Tempo</string>
+    <string name="unit_data">Dados</string>
+    <string name="unit_energy">Energia</string>
+    <string name="unit_pressure">Pressão</string>
 </resources>
