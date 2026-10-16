@@ -252,4 +252,38 @@
     <string name="notifications_help_background_sync">As notificações ajudam a manter seus apps atualizados em segundo plano</string>
     <string name="allow_notifications">Permitir Notificações</string>
 
+
+    <!-- Calculator -->
+    <string name="error_divide_by_zero">Não é possível dividir por zero</string>
+    <string name="error_domain">Indefinido para este valor</string>
+    <string name="error_syntax">Expressão incompleta</string>
+    <string name="error_overflow">Número grande demais</string>
+    <string name="tape_copy_result">Copiar resultado</string>
+    <string name="tape_edit">Editar cálculo</string>
+    <string name="tape_delete">Excluir</string>
+    <string name="copied">Copiado</string>
+    <string name="menu_more">Mais opções</string>
+    <string name="menu_clear_history">Limpar histórico</string>
+    <string name="menu_settings">Configurações</string>
+    <string name="menu_unit_converter">Conversor de unidades</string>
+    <string name="menu_programmer">Programador</string>
+    <string name="menu_statistics">Estatística</string>
+    <string name="angle_toggle_description">Unidade de ângulo, toque para alternar</string>
+    <string name="settings_appearance">Aparência</string>
+    <string name="settings_haptics">Vibração ao tocar</string>
+    <string name="settings_haptics_description">Sinta cada tecla</string>
+    <string name="settings_history">Histórico</string>
+    <string name="settings_clear_history">Limpar histórico</string>
+    <string name="swipe_tip">Deslize as teclas ↑↓ para sin, √, π e mais</string>
+    <string name="settings_tools">Ferramentas</string>
+    <string name="show_history">Mostrar histórico</string>
+    <string name="show_keypad">Mostrar teclado</string>
+    <string name="function_layer_description">Funções. Toque para uma, toque de novo ou segure para manter</string>
+    <string name="history_empty">Nenhum cálculo ainda</string>
+    <string name="history_clear">Limpar</string>
+    <string name="history_today">Hoje</string>
+    <string name="history_yesterday">Ontem</string>
+    <string name="history_deleted">Cálculo excluído</string>
+    <string name="history_cleared">Histórico limpo</string>
+    <string name="undo">Desfazer</string>
 </resources>

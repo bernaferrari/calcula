@@ -59,8 +59,8 @@ fun CalculatorButtonGrid(
 ) {
 // Award-winning organic layout with expressive spacing
     Column(
-        modifier = modifier.padding(4.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        modifier = modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         // Row 1: Navigation and operators
         CalculatorButtonRow(
@@ -104,7 +104,7 @@ fun CalculatorButtonGrid(
         // Row 2: Numbers 7-9 with scientific functions
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             // 7 with sin at bottom
             SwipeableNumberButton(
@@ -165,7 +165,7 @@ fun CalculatorButtonGrid(
         // Row 3: Numbers 4-6 with scientific functions
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             // 4 with ln at bottom
             SwipeableNumberButton(
@@ -226,7 +226,7 @@ fun CalculatorButtonGrid(
         // Row 4: Numbers 1-3 with scientific functions
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             // 1 with π at bottom
             SwipeableNumberButton(
@@ -287,7 +287,7 @@ fun CalculatorButtonGrid(
         // Row 5: Bottom row with split parenthesis and enhanced zero
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             // Split parenthesis button (vertical layout)
             SplitParenthesisButton(
@@ -1124,11 +1124,11 @@ private fun JoyfulCalculatorButton(
                     .shadow(
                         elevation =
                             if (isPressed) {
-                                2.dp
+                                1.dp
                             } else if (isEquals) {
-                                16.dp
+                                12.dp
                             } else {
-                                8.dp
+                                6.dp
                             },
                         shape = RoundedCornerShape(24.dp),
                         ambientColor = colors.first.copy(alpha = 0.2f),
@@ -1157,10 +1157,10 @@ private fun JoyfulCalculatorButton(
                     color = colors.second,
                     fontSize =
                         when {
-                            isEquals -> 36.sp
-                            isOperator -> 28.sp
-                            button.primary.length > 2 -> 16.sp
-                            else -> 24.sp
+                            isEquals -> 30.sp
+                            isOperator -> 24.sp
+                            button.primary.length > 2 -> 14.sp
+                            else -> 22.sp
                         },
                     fontWeight =
                         when {

@@ -39,8 +39,11 @@ class HistoryViewModel @Inject constructor(
         }
     }
     
+    private var lastDeleted: CalculationHistory? = null
+
     fun deleteHistoryItem(history: CalculationHistory) {
         viewModelScope.launch {
+            lastDeleted = history
             repository.deleteCalculation(history)
         }
     }
@@ -48,6 +51,14 @@ class HistoryViewModel @Inject constructor(
     fun clearHistory() {
         viewModelScope.launch {
             repository.clearAllHistory()
+        }
+    }
+
+    fun undoDelete() {
+        val item = lastDeleted ?: return
+        viewModelScope.launch {
+            repository.insertCalculation(item)
+            lastDeleted = null
         }
     }
 }

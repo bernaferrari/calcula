@@ -29,6 +29,10 @@ class PreferencesRepositoryImpl @Inject constructor(
         val HAPTIC_FEEDBACK = booleanPreferencesKey("haptic_feedback")
         val SHOW_HISTORY = booleanPreferencesKey("show_history")
         val COMMA_DECIMAL_SEPARATOR = booleanPreferencesKey("comma_decimal_separator")
+        val SOUND_ENABLED = booleanPreferencesKey("sound_enabled")
+        val REDUCE_MOTION = booleanPreferencesKey("reduce_motion")
+        val HIGH_CONTRAST = booleanPreferencesKey("high_contrast")
+        val SWIPE_HINT_SEEN = booleanPreferencesKey("swipe_hint_seen")
     }
 
     override fun getUserPreferences(): Flow<UserPreferences> {
@@ -40,12 +44,16 @@ class PreferencesRepositoryImpl @Inject constructor(
                         preferences[PreferencesKeys.THEME_MODE] ?: ThemeMode.MATERIAL_YOU.name
                     ),
                     angleUnit = AngleUnit.valueOf(
-                        preferences[PreferencesKeys.ANGLE_UNIT] ?: AngleUnit.RADIANS.name
+                        preferences[PreferencesKeys.ANGLE_UNIT] ?: AngleUnit.DEGREES.name
                     ),
                     decimalPlaces = preferences[PreferencesKeys.DECIMAL_PLACES] ?: 10,
                     hapticFeedback = preferences[PreferencesKeys.HAPTIC_FEEDBACK] ?: true,
                     showHistory = preferences[PreferencesKeys.SHOW_HISTORY] ?: true,
-                    useCommaDecimalSeparator = preferences[PreferencesKeys.COMMA_DECIMAL_SEPARATOR] ?: false
+                    useCommaDecimalSeparator = preferences[PreferencesKeys.COMMA_DECIMAL_SEPARATOR] ?: false,
+                    soundEnabled = preferences[PreferencesKeys.SOUND_ENABLED] ?: true,
+                    reduceMotion = preferences[PreferencesKeys.REDUCE_MOTION] ?: false,
+                    highContrast = preferences[PreferencesKeys.HIGH_CONTRAST] ?: false,
+                    swipeHintSeen = preferences[PreferencesKeys.SWIPE_HINT_SEEN] ?: false,
                 )
             }
     }
@@ -83,6 +91,30 @@ class PreferencesRepositoryImpl @Inject constructor(
     override suspend fun updateCommaDecimalSeparator(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.COMMA_DECIMAL_SEPARATOR] = enabled
+        }
+    }
+
+    override suspend fun updateSoundEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.SOUND_ENABLED] = enabled
+        }
+    }
+
+    override suspend fun updateReduceMotion(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.REDUCE_MOTION] = enabled
+        }
+    }
+
+    override suspend fun updateHighContrast(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.HIGH_CONTRAST] = enabled
+        }
+    }
+
+    override suspend fun markSwipeHintSeen() {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.SWIPE_HINT_SEEN] = true
         }
     }
 }

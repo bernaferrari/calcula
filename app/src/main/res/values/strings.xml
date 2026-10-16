@@ -257,4 +257,40 @@
     <string name="battery_optimization_may_delay_sync">Battery optimization may delay or prevent background sync from running</string>
     <string name="disable_optimization">Disable Optimization</string>
 
+
+    <!-- Calculator -->
+    <string name="error_divide_by_zero">Can\'t divide by zero</string>
+    <string name="error_domain">Undefined for this value</string>
+    <string name="error_syntax">Incomplete expression</string>
+    <string name="error_overflow">Number too large</string>
+    <string name="tape_copy_result">Copy result</string>
+    <string name="tape_edit">Edit calculation</string>
+    <string name="tape_delete">Delete</string>
+    <string name="copied">Copied</string>
+    <string name="menu_more">More options</string>
+    <string name="menu_clear_history">Clear history</string>
+    <string name="menu_settings">Settings</string>
+    <string name="menu_unit_converter">Unit converter</string>
+    <string name="menu_programmer">Programmer</string>
+    <string name="menu_statistics">Statistics</string>
+    <string name="angle_degrees">DEG</string>
+    <string name="angle_radians">RAD</string>
+    <string name="angle_toggle_description">Angle unit, tap to switch</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_haptics">Haptic feedback</string>
+    <string name="settings_haptics_description">Feel every key press</string>
+    <string name="settings_history">History</string>
+    <string name="settings_clear_history">Clear history</string>
+    <string name="swipe_tip">Flick keys ↑↓ for sin, √, π and more</string>
+    <string name="settings_tools">Tools</string>
+    <string name="show_history">Show history</string>
+    <string name="show_keypad">Show keypad</string>
+    <string name="function_layer_description">Functions. Tap for one, tap again or hold to keep them</string>
+    <string name="history_empty">No calculations yet</string>
+    <string name="history_clear">Clear</string>
+    <string name="history_today">Today</string>
+    <string name="history_yesterday">Yesterday</string>
+    <string name="history_deleted">Calculation deleted</string>
+    <string name="history_cleared">History cleared</string>
+    <string name="undo">Undo</string>
 </resources>

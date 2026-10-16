@@ -178,6 +178,36 @@ class ExpressionEvaluator(
                 val finalResult = if (angleUnit == AngleUnit.DEGREES) toDegrees(result) else result
                 BigDecimal(finalResult.toString(), mathContext)
             }
+            // Hyperbolic functions
+            token == "sinh" -> {
+                val value = parseFactor(tokenizer)
+                BigDecimal(sinh(value.toDouble()).toString(), mathContext)
+            }
+            token == "cosh" -> {
+                val value = parseFactor(tokenizer)
+                BigDecimal(cosh(value.toDouble()).toString(), mathContext)
+            }
+            token == "tanh" -> {
+                val value = parseFactor(tokenizer)
+                BigDecimal(tanh(value.toDouble()).toString(), mathContext)
+            }
+            // Inverse hyperbolic functions
+            token == "asinh" -> {
+                val value = parseFactor(tokenizer)
+                BigDecimal(asinh(value.toDouble()).toString(), mathContext)
+            }
+            token == "acosh" -> {
+                val value = parseFactor(tokenizer)
+                val doubleVal = value.toDouble()
+                if (doubleVal < 1.0) throw IllegalArgumentException("acosh domain error: x must be >= 1")
+                BigDecimal(acosh(doubleVal).toString(), mathContext)
+            }
+            token == "atanh" -> {
+                val value = parseFactor(tokenizer)
+                val doubleVal = value.toDouble()
+                if (doubleVal <= -1.0 || doubleVal >= 1.0) throw IllegalArgumentException("atanh domain error: -1 < x < 1")
+                BigDecimal(atanh(doubleVal).toString(), mathContext)
+            }
             token == "log" -> {
                 val value = parseFactor(tokenizer)
                 BigDecimal(log10(value.toDouble()).toString(), mathContext)

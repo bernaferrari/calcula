@@ -7,60 +7,37 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.bernaferrari.calculator.ui.calculator.ModernCalculatorScreen
-import com.bernaferrari.calculator.ui.graphing.GraphingScreen
-import com.bernaferrari.calculator.ui.history.HistoryScreen
+import com.bernaferrari.calculator.ui.calculator.CalculatorScreen
+import com.bernaferrari.calculator.ui.converter.UnitConverterScreen
+import com.bernaferrari.calculator.ui.programmer.ProgrammerModeDisplay
 import com.bernaferrari.calculator.ui.settings.SettingsScreen
+import com.bernaferrari.calculator.ui.statistics.StatisticsCalculator
 
 @Composable
 fun AppNavigation(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
+    val back: () -> Unit = { navController.popBackStack() }
 
-    NavHost(
-        navController = navController,
-        startDestination = "calculator",
-        modifier = modifier,
-    ) {
+    NavHost(navController = navController, startDestination = "calculator", modifier = modifier) {
         composable(
             route = "calculator?expression={expression}",
-            arguments =
-                listOf(
-                    navArgument("expression") {
-                        type = NavType.StringType
-                        defaultValue = ""
-                    },
-                ),
-        ) { backStackEntry ->
-            val expression = backStackEntry.arguments?.getString("expression") ?: ""
-            ModernCalculatorScreen(
-                initialExpression = expression,
-                onNavigateToHistory = { navController.navigate("history") },
-                onNavigateToSettings = { navController.navigate("settings") },
-                onNavigateToGraph = { navController.navigate("graphing") },
+            arguments = listOf(navArgument("expression") { type = NavType.StringType; defaultValue = "" }),
+        ) { entry ->
+            CalculatorScreen(
+                initialExpression = entry.arguments?.getString("expression").orEmpty(),
+                onOpenSettings = { navController.navigate("settings") },
             )
         }
-
-        composable("history") {
-            HistoryScreen(
-                onNavigateBack = { navController.popBackStack() },
-                onUseExpression = { expression ->
-                    navController.navigate("calculator?expression=$expression") {
-                        popUpTo("calculator") { inclusive = true }
-                    }
-                },
-            )
-        }
-
-        composable("graphing") {
-            GraphingScreen(
-                onNavigateBack = { navController.popBackStack() },
-            )
-        }
-
         composable("settings") {
             SettingsScreen(
-                onNavigateBack = { navController.popBackStack() },
+                onNavigateBack = back,
+                onOpenConverter = { navController.navigate("unit_converter") },
+                onOpenProgrammer = { navController.navigate("programmer") },
+                onOpenStatistics = { navController.navigate("statistics") },
             )
         }
+        composable("unit_converter") { UnitConverterScreen(onNavigateBack = back) }
+        composable("programmer") { ProgrammerModeDisplay(onNavigateBack = back) }
+        composable("statistics") { StatisticsCalculator(onNavigateBack = back) }
     }
 }

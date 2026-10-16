@@ -74,15 +74,15 @@ class TokenizedExpression {
     fun deleteLastCharacter() {
         val lastToken = tokens.lastOrNull() ?: return
 
-        if (lastToken.type == TokenType.NUMBER && lastToken.value.length > 1) {
-            // Remove last digit from number
+        // For any token with multiple characters, remove just the last character
+        if (lastToken.value.length > 1) {
             tokens[tokens.size - 1] =
                 lastToken.copy(
                     value = lastToken.value.dropLast(1),
                     endIndex = lastToken.endIndex - 1,
                 )
         } else {
-            // Remove entire token
+            // Remove entire token if it's just one character
             tokens.removeAt(tokens.size - 1)
         }
         updateIndices()

@@ -19,4 +19,12 @@ interface PreferencesRepository {
     suspend fun updateShowHistory(enabled: Boolean)
 
     suspend fun updateCommaDecimalSeparator(enabled: Boolean)
+
+    suspend fun updateSoundEnabled(enabled: Boolean)
+
+    suspend fun updateReduceMotion(enabled: Boolean)
+
+    suspend fun updateHighContrast(enabled: Boolean)
+
+    suspend fun markSwipeHintSeen()
 }

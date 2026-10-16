@@ -46,6 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -58,6 +59,15 @@ import com.bernaferrari.calculator.domain.model.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.*
+import androidx.compose.ui.semantics.*
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextRange
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.ui.platform.LocalConfiguration
+import android.content.res.Configuration
+import kotlinx.coroutines.CoroutineScope
+import androidx.compose.ui.hapticfeedback.HapticFeedback
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,10 +77,17 @@ fun ModernCalculatorScreen(
     onNavigateToHistory: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
     onNavigateToGraph: () -> Unit = {},
+    onNavigateToUnitConverter: () -> Unit = {},
+    onNavigateToProgrammer: () -> Unit = {},
+    onNavigateToStatistics: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
     val hapticFeedback = LocalHapticFeedback.current
+    val hapticManager = rememberHapticFeedbackManager()
+    val soundEffects = rememberSoundEffects()
     val scope = rememberCoroutineScope()
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     
     // Gesture states for undo/redo
     var swipeOffset by remember { mutableStateOf(0f) }
@@ -84,13 +101,23 @@ fun ModernCalculatorScreen(
     
     // Celebration state
     var showCelebration by remember { mutableStateOf(false) }
+    var showParticleSuccess by remember { mutableStateOf(false) }
     
     // Step-by-step dialog state
     var showStepByStep by remember { mutableStateOf(false) }
     
+    // Menu state
+    var showMenu by remember { mutableStateOf(false) }
+    
+    // Shortcuts panel state
+    var showShortcuts by remember { mutableStateOf(false) }
+    
     // Flying text animations
     var flyingTexts by remember { mutableStateOf<List<FlyingText>>(emptyList()) }
-    var cursorPixelPosition by remember { mutableStateOf(Offset.Zero) }
+    val pendingInsertions = remember { mutableStateMapOf<Long, () -> Unit>() }
+    val displayFieldInfo = rememberDisplayFieldTracker()
+    val textMeasurer = rememberTextMeasurer()
+    val density = LocalDensity.current
     
     // Track newly added text for fade-in effect
     var recentlyAddedPosition by remember { mutableStateOf(-1) }
@@ -99,12 +126,22 @@ fun ModernCalculatorScreen(
     // Track text position for shader ripple effect
     var textCenterPosition by remember { mutableStateOf<Offset?>(null) }
     var shaderRipplePosition by remember { mutableStateOf<Offset?>(null) }
+    var rippleOrigin by remember { mutableStateOf<Offset?>(null) }
+    val landingBursts = remember { mutableStateListOf<Pair<Long, Offset>>() }
     
     // Load initial expression if provided
     LaunchedEffect(initialExpression) {
         if (initialExpression.isNotEmpty()) {
             viewModel.updateExpression(initialExpression)
         }
+    }
+
+    // Respect preferences for haptics/sound/reduce motion
+    val prefsViewModel: com.bernaferrari.calculator.ui.settings.SettingsViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+    val prefs by prefsViewModel.prefs.collectAsState()
+    LaunchedEffect(prefs.hapticFeedback, prefs.soundEnabled, prefs.reduceMotion) {
+        hapticManager.isEnabled = prefs.hapticFeedback
+        soundEffects.isEnabled = prefs.soundEnabled
     }
     
     Box(
@@ -115,7 +152,7 @@ fun ModernCalculatorScreen(
                 detectHorizontalDragGestures(
                     onDragEnd = {
                         if (abs(swipeOffset) > 150) {
-                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                            hapticManager.undoRedo()
                             if (swipeOffset > 0) {
                                 viewModel.undo()
                             } else {
@@ -129,69 +166,274 @@ fun ModernCalculatorScreen(
                 }
             }
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .systemBarsPadding()
-.background(MaterialTheme.colorScheme.background)
-        ) {
-            // Clean Material 3 top bar
+        if (isLandscape) {
+            // Landscape layout: Display and buttons side by side
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxSize()
+                    .systemBarsPadding()
+                    .background(MaterialTheme.colorScheme.background)
             ) {
-                Text(
-                    "Calculator",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Normal,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                
-                Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Memory indicator
-                if (state.hasMemoryValue) {
-                    Text(
-                        text = "M",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier
-                            .background(
-                                MaterialTheme.colorScheme.primaryContainer,
-                                RoundedCornerShape(4.dp)
+                // Left side: Display and controls
+                Column(
+                    modifier = Modifier
+                        .weight(0.4f)
+                        .fillMaxHeight()
+                        .padding(16.dp)
+                ) {
+                    LandscapeDisplaySection(
+                        state = state,
+                        viewModel = viewModel,
+                        onNavigateToHistory = onNavigateToHistory,
+                        onNavigateToSettings = onNavigateToSettings,
+                        onNavigateToGraph = onNavigateToGraph,
+                        onNavigateToUnitConverter = onNavigateToUnitConverter,
+                        onNavigateToProgrammer = onNavigateToProgrammer,
+                        onNavigateToStatistics = onNavigateToStatistics,
+                        onDisplayFieldPositioned = { position, size -> 
+                            displayFieldInfo.value = displayFieldInfo.value.copy(
+                                position = position,
+                                size = size
                             )
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                        },
+                        onTextCenterPositioned = { textCenterPosition = it },
+                        recentlyAddedPosition = recentlyAddedPosition,
+                        recentlyAddedLength = recentlyAddedLength,
+                        onFadeInComplete = { recentlyAddedLength = 0 },
+                        showStepByStep = showStepByStep,
+                        onShowStepByStep = { showStepByStep = it },
+                        soundEffects = soundEffects,
+                        hapticManager = hapticManager
                     )
                 }
                 
-                Spacer(modifier = Modifier.weight(1f))
+                // Right side: Calculator buttons
+                Column(
+                    modifier = Modifier
+                        .weight(0.6f)
+                        .fillMaxHeight()
+                        .padding(16.dp)
+                ) {
+                    LandscapeButtonSection(
+                        state = state,
+                        viewModel = viewModel,
+                        activeButton = activeButton,
+                        onActiveButtonChange = { activeButton = it },
+                        onSecondaryActivate = { secondary, startPosition ->
+                            handleSecondaryActivate(
+                                secondary = secondary,
+                                startPosition = startPosition,
+                                displayFieldInfo = displayFieldInfo.value,
+                                state = state,
+                                textMeasurer = textMeasurer,
+                                density = density,
+                                flyingTexts = flyingTexts,
+                                onFlyingTextsChange = { flyingTexts = it },
+                                onRecentlyAddedPositionChange = { recentlyAddedPosition = it },
+                                onRecentlyAddedLengthChange = { recentlyAddedLength = it },
+                                viewModel = viewModel,
+                                soundEffects = soundEffects,
+                                scope = scope,
+                                pendingInsertions = pendingInsertions
+                            )
+                        },
+                        soundEffects = soundEffects,
+                        hapticManager = hapticManager
+                    )
+                }
+            }
+        } else {
+            // Portrait layout: Enhanced with intuitive features
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .systemBarsPadding()
+                    .background(MaterialTheme.colorScheme.background)
+            ) {
+                // Fixed smart suggestions bar - no more jumping UI!
+                FixedSmartSuggestionsBar(
+                    expression = state.currentExpression,
+                    openParenthesesCount = viewModel.getOpenParenthesesCount(),
+                    onSuggestionClick = { suggestion ->
+                        hapticManager.suggestionTap()
+                        val currentExpr = state.currentExpression
+                        viewModel.updateExpression(currentExpr + suggestion.text)
+                    },
+                    onParenthesesClick = {
+                        hapticManager.operatorTap()
+                        viewModel.onButtonClick(
+                            CalculatorButton("parenthesis", ")", null, ButtonType.PARENTHESIS, ButtonFunction.PARENTHESIS)
+                        )
+                    },
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+                )
+            // Clean Material 3 top bar with dynamic elevation
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                tonalElevation = 0.dp,
+                shadowElevation = 0.dp,
+                color = MaterialTheme.colorScheme.surface
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            "Calculator",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        // Contextual subtitle
+                        if (state.currentExpression.isNotEmpty()) {
+                            Text(
+                                "Working...",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.alpha(0.7f)
+                            )
+                        }
+                    }
                 
-                IconButton(onClick = onNavigateToHistory) {
-                    Icon(
-                        Icons.Default.History, 
-                        contentDescription = "History",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                IconButton(onClick = onNavigateToSettings) {
-                    Icon(
-                        Icons.Default.Settings, 
-                        contentDescription = "Settings",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Memory indicator with better Material Design 3 styling
+                        AnimatedVisibility(
+                            visible = state.hasMemoryValue,
+                            enter = scaleIn() + fadeIn(),
+                            exit = scaleOut() + fadeOut()
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(16.dp),
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                tonalElevation = 1.dp,
+                                modifier = Modifier.padding(end = 8.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Storage,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text(
+                                        text = "Memory",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                }
+                            }
+                        }
+                        
+                        // Action buttons with enhanced styling
+                        IconButton(
+                            onClick = onNavigateToHistory,
+                            modifier = Modifier.size(48.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.History, 
+                                contentDescription = "History",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        IconButton(
+                            onClick = onNavigateToSettings,
+                            modifier = Modifier.size(48.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Settings, 
+                                contentDescription = "Settings",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        
+                        // Enhanced menu button with better styling
+                        Box {
+                            IconButton(
+                                onClick = { showMenu = true },
+                                modifier = Modifier.size(48.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.MoreVert, 
+                                    contentDescription = "More Options",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Graphing Calculator") },
+                            onClick = {
+                                showMenu = false
+                                onNavigateToGraph()
+                            },
+                            leadingIcon = {
+                                Icon(Icons.Default.ShowChart, null)
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Unit Converter") },
+                            onClick = {
+                                showMenu = false
+                                onNavigateToUnitConverter()
+                            },
+                            leadingIcon = {
+                                Icon(Icons.Default.SwapHoriz, null)
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Programmer Mode") },
+                            onClick = {
+                                showMenu = false
+                                onNavigateToProgrammer()
+                            },
+                            leadingIcon = {
+                                Icon(Icons.Default.Code, null)
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Statistics") },
+                            onClick = {
+                                showMenu = false
+                                onNavigateToStatistics()
+                            },
+                            leadingIcon = {
+                                Icon(Icons.Default.Functions, null)
+                            }
+                        )
+                    }
+                        }
+                    }
                 }
             }
-            }
             
-            // Remove navigation controls to save space
+            // Live expression preview
+            LiveExpressionPreview(
+                expression = state.currentExpression,
+                result = if (!state.isError && state.currentResult != "0") state.currentResult else null,
+                isCalculating = false,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+            )
             
+            // Removed fixed-height contextual actions to free space
             
-            // Compact smart display - TESTING
+            // Award-winning Material Design 3 display
             SmartDisplay(
                 expression = state.currentExpression,
                 result = state.currentResult,
@@ -203,14 +445,25 @@ fun ModernCalculatorScreen(
                 showStepByStep = showStepByStep,
                 onExpressionChange = { viewModel.updateExpression(it) },
                 onCursorChange = { viewModel.updateCursorPosition(it) },
-                onCursorPositioned = { cursorPixelPosition = it },
+                onDisplayFieldPositioned = { position, size -> 
+                    displayFieldInfo.value = displayFieldInfo.value.copy(
+                        position = position,
+                        size = size
+                    )
+                },
+                onDisplayFieldInfoUpdate = { info ->
+                    displayFieldInfo.value = info
+                },
                 onTextCenterPositioned = { textCenterPosition = it },
                 onFadeInComplete = { 
                     recentlyAddedPosition = -1
                     recentlyAddedLength = 0
                 },
                 onCalculate = { 
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    hapticManager.equalsTap()
+                    if (state.currentExpression.isNotEmpty() && !state.isError) {
+                        showParticleSuccess = true
+                    }
                     viewModel.onButtonClick(
                         CalculatorButton("equals", "=", null, ButtonType.SPECIAL, ButtonFunction.EQUALS)
                     )
@@ -219,7 +472,7 @@ fun ModernCalculatorScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .wrapContentHeight()
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = 12.dp, vertical = 4.dp)
             )
             
             
@@ -234,61 +487,74 @@ fun ModernCalculatorScreen(
                         activeButton = null
                     }
                     
-                    // Different haptic patterns
-                    when (button.type) {
-                        ButtonType.NUMBER -> hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        ButtonType.OPERATOR -> hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                        else -> hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    // Play appropriate sound effect
+                    when {
+                        button.type == ButtonType.NUMBER -> soundEffects.playNumberTap()
+                        button.type == ButtonType.OPERATOR -> soundEffects.playOperatorTap()
+                        button.type == ButtonType.FUNCTION -> soundEffects.playFunctionTap()
+                        button.function in listOf(ButtonFunction.MEMORY_STORE, ButtonFunction.MEMORY_RECALL,
+                            ButtonFunction.MEMORY_PLUS, ButtonFunction.MEMORY_MINUS, ButtonFunction.MEMORY_CLEAR) ->
+                            soundEffects.playMemoryTap()
+                        button.function == ButtonFunction.EQUALS -> soundEffects.playEquals()
+                        button.function == ButtonFunction.BACKSPACE -> soundEffects.playDelete()
+                        button.function == ButtonFunction.CLEAR -> soundEffects.playDelete()
+                        else -> soundEffects.playOperatorTap()
                     }
                     
+                    // Advanced haptic patterns
+                    hapticManager.buttonPress(button.type, button.function)
+                    
                     when (button.id) {
-                        "arrow_left" -> viewModel.moveCursorLeft()
-                        "arrow_right" -> viewModel.moveCursorRight()
+                        "arrow_left" -> {
+                            viewModel.moveCursorLeft()
+                            hapticManager.numberTap()
+                        }
+                        "arrow_right" -> {
+                            viewModel.moveCursorRight()
+                            hapticManager.numberTap()
+                        }
                         else -> viewModel.onButtonClick(button)
                     }
                 },
                 onSecondaryActivate = { secondary, startPosition ->
-                    // Track where text will be added
-                    val currentLength = state.currentExpression.length
-                    
-                    // Add flying text animation
-                    flyingTexts = flyingTexts + FlyingText(
-                        text = secondary,
+                    handleSecondaryActivate(
+                        secondary = secondary,
                         startPosition = startPosition,
-                        endPosition = cursorPixelPosition,
-                        isSpecial = secondary in listOf("π", "e") // Mark special constants
+                        displayFieldInfo = displayFieldInfo.value,
+                        state = state,
+                        textMeasurer = textMeasurer,
+                        density = density,
+                        flyingTexts = flyingTexts,
+                        onFlyingTextsChange = { flyingTexts = it },
+                        onRecentlyAddedPositionChange = { recentlyAddedPosition = it },
+                        onRecentlyAddedLengthChange = { recentlyAddedLength = it },
+                        viewModel = viewModel,
+                        soundEffects = soundEffects,
+                        scope = scope,
+                        pendingInsertions = pendingInsertions
                     )
-                    
-                    // Track where text will be added
-                    recentlyAddedPosition = currentLength
-                    recentlyAddedLength = if (secondary in listOf("π", "e")) {
-                        secondary.length
-                    } else {
-                        secondary.length + 1 // Function name + opening parenthesis
-                    }
-                    
-                    // Don't activate the function yet - wait for animation to complete
-                    scope.launch {
-                        // Wait for flying animation to nearly complete
-                        delay(280) // Slightly less than animation to prevent flash
-                        
-                        // Activate the secondary function
-                        val secondaryButton = CalculatorButton(
-                            id = secondary,
-                            primary = secondary,
-                            secondary = null,
-                            type = ButtonType.FUNCTION,
-                            function = getSecondaryFunction(secondary)
-                        )
-                        viewModel.onButtonClick(secondaryButton)
-                    }
                 },
                 activeButton = activeButton,
+                hasMemoryValue = state.hasMemoryValue,
+                hapticManager = hapticManager,
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
             )
+            
+            // Floating shortcuts button overlay
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                contentAlignment = Alignment.BottomEnd
+            ) {
+                FloatingShortcutButton(
+                    onClick = { showShortcuts = true }
+                )
+            }
+            } // End of portrait Column
         }
         
         // Swipe indicator overlay
@@ -324,21 +590,53 @@ fun ModernCalculatorScreen(
             onFinished = { showCelebration = false }
         )
         
+        // Premium particle success effect
+        ParticleSuccess(
+            isActive = showParticleSuccess,
+            onFinished = { showParticleSuccess = false }
+        )
+        
+        // Keep end target synced to caret even if layout/cursor changes mid-flight
+        LaunchedEffect(displayFieldInfo.value.textLayoutResult, state.cursorPosition, state.currentExpression) {
+            if (flyingTexts.isNotEmpty()) {
+                val target = displayFieldInfo.value.getAccurateInsertionPosition(
+                    cursorPosition = state.cursorPosition,
+                    expression = state.currentExpression,
+                    textMeasurer = textMeasurer,
+                    density = density
+                )
+                flyingTexts = flyingTexts.map { it.copy(endPosition = target) }
+            }
+        }
+
         // Flying text overlay
         FlyingTextOverlay(
             flyingTexts = flyingTexts,
+            reduceMotion = prefs.reduceMotion,
             onAnimationEnd = { flyingText ->
                 flyingTexts = flyingTexts.filter { it.id != flyingText.id }
-                // Trigger shader ripple at text position
-                shaderRipplePosition = textCenterPosition
-                // Extra haptic for special constants
-                if (flyingText.isSpecial) {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                // Trigger shader ripple exactly where it lands
+                rippleOrigin = flyingText.endPosition
+                // Advanced haptic for flying text landing - stronger for "log"
+                if (flyingText.text == "log") {
+                    hapticManager.flyingTextLand(true) // Use special haptic for log
                 } else {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    hapticManager.flyingTextLand(flyingText.isSpecial)
                 }
+                // Perform the pending insertion tied to this animation
+                pendingInsertions.remove(flyingText.id)?.invoke()
+                // Spawn landing burst visual
+                landingBursts.add(flyingText.id to flyingText.endPosition)
             }
         )
+
+        // Landing burst overlays
+        landingBursts.forEach { (id, pos) ->
+            LandingBurst(
+                position = pos,
+                onFinished = { landingBursts.removeIf { it.first == id } }
+            )
+        }
         
         // Step-by-step dialog
         if (showStepByStep && state.currentExpression.isNotEmpty() && state.currentResult != "0") {
@@ -348,7 +646,290 @@ fun ModernCalculatorScreen(
                 onDismiss = { showStepByStep = false }
             )
         }
+        
+        // Calculation shortcuts panel
+        CalculationShortcutsPanel(
+            isExpanded = showShortcuts,
+            onDismiss = { showShortcuts = false },
+            onShortcutClick = { shortcut ->
+                hapticManager.buttonPress(ButtonType.FUNCTION, ButtonFunction.EQUALS)
+                showShortcuts = false
+                
+                when (shortcut.action) {
+                    is ShortcutAction.Expression -> {
+                        viewModel.updateExpression(shortcut.action.expr)
+                    }
+                    ShortcutAction.OpenConverter -> onNavigateToUnitConverter()
+                    ShortcutAction.OpenProgrammer -> onNavigateToProgrammer()
+                    ShortcutAction.OpenStatistics -> onNavigateToStatistics()
+                    ShortcutAction.OpenGraph -> onNavigateToGraph()
+                    is ShortcutAction.Function -> {
+                        // Handle quick function insertions
+                        when (shortcut.action.name) {
+                            "percent" -> viewModel.updateExpression("${state.currentExpression}%")
+                            "tip" -> viewModel.updateExpression("tip(${state.currentExpression})")
+                            else -> viewModel.updateExpression("${shortcut.action.name}(${state.currentExpression})")
+                        }
+                    }
+                }
+            }
+        )
     }
+}
+
+// Helper function to calculate flying text target position (delegating to new accurate method)
+private fun calculateFlyingTextTarget(
+    displayFieldInfo: DisplayFieldInfo,
+    expression: String,
+    cursorPosition: Int,
+    textMeasurer: TextMeasurer,
+    density: androidx.compose.ui.unit.Density
+): Offset {
+    return displayFieldInfo.getAccurateInsertionPosition(
+        cursorPosition = cursorPosition,
+        expression = expression,
+        textMeasurer = textMeasurer,
+        density = density
+    )
+}
+
+// Helper function to handle secondary activation logic
+private fun handleSecondaryActivate(
+    secondary: String,
+    startPosition: Offset,
+    displayFieldInfo: DisplayFieldInfo,
+    state: CalculatorState,
+    textMeasurer: TextMeasurer,
+    density: androidx.compose.ui.unit.Density,
+    flyingTexts: List<FlyingText>,
+    onFlyingTextsChange: (List<FlyingText>) -> Unit,
+    onRecentlyAddedPositionChange: (Int) -> Unit,
+    onRecentlyAddedLengthChange: (Int) -> Unit,
+    viewModel: CalculatorViewModel,
+    soundEffects: SoundEffectsManager,
+    scope: CoroutineScope,
+    pendingInsertions: MutableMap<Long, () -> Unit>
+) {
+    // Play secondary function sound
+    soundEffects.playSecondaryFunction()
+    
+    // Track where text will be added
+    val currentLength = state.currentExpression.length
+    
+    // Calculate the target position using text measurement
+    val targetPosition = displayFieldInfo.getAccurateInsertionPosition(
+        cursorPosition = state.cursorPosition,
+        expression = state.currentExpression,
+        textMeasurer = textMeasurer,
+        density = density
+    )
+    // Offset end position by half the width of the incoming text so the text lands centered at caret
+    val insertionTextStyle = displayFieldInfo.textStyle
+        ?: TextStyle(fontSize = 28.sp, fontWeight = FontWeight.Light, textAlign = TextAlign.End)
+    val measuredIncoming = textMeasurer.measure(secondary, insertionTextStyle)
+    val adjustedEnd = targetPosition.copy(x = targetPosition.x - measuredIncoming.size.width)
+    
+    // Add flying text animation and register completion insertion
+    val flight = FlyingText(
+        text = secondary,
+        startPosition = startPosition,
+        endPosition = adjustedEnd,
+        isSpecial = secondary in listOf("π", "e")
+    )
+    onFlyingTextsChange(flyingTexts + flight)
+    
+    // Track where text will be added
+    onRecentlyAddedPositionChange(currentLength)
+    onRecentlyAddedLengthChange(if (secondary in listOf("π", "e")) {
+        secondary.length
+    } else {
+        secondary.length + 1 // Function name + opening parenthesis
+    })
+    
+    // Defer insertion until animation end callback
+    pendingInsertions[flight.id] = {
+        val secondaryButton = CalculatorButton(
+            id = secondary,
+            primary = secondary,
+            secondary = null,
+            type = ButtonType.FUNCTION,
+            function = getSecondaryFunction(secondary)
+        )
+        viewModel.onButtonClick(secondaryButton)
+    }
+}
+
+@Composable
+private fun LandscapeDisplaySection(
+    state: CalculatorState,
+    viewModel: CalculatorViewModel,
+    onNavigateToHistory: () -> Unit,
+    onNavigateToSettings: () -> Unit,
+    onNavigateToGraph: () -> Unit,
+    onNavigateToUnitConverter: () -> Unit,
+    onNavigateToProgrammer: () -> Unit,
+    onNavigateToStatistics: () -> Unit,
+    onDisplayFieldPositioned: (Offset, androidx.compose.ui.unit.IntSize) -> Unit,
+    onTextCenterPositioned: (Offset) -> Unit,
+    recentlyAddedPosition: Int,
+    recentlyAddedLength: Int,
+    onFadeInComplete: () -> Unit,
+    showStepByStep: Boolean,
+    onShowStepByStep: (Boolean) -> Unit,
+    soundEffects: SoundEffectsManager,
+    hapticManager: HapticFeedbackManager
+) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Compact top bar for landscape
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "Calculator",
+                style = MaterialTheme.typography.headlineSmall.copy(fontSize = 18.sp),
+                fontWeight = FontWeight.Normal,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Memory indicator
+                if (state.hasMemoryValue) {
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.tertiary,
+                        modifier = Modifier.size(16.dp)
+                    ) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Text(
+                                "M",
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                color = MaterialTheme.colorScheme.onTertiary
+                            )
+                        }
+                    }
+                }
+                
+                IconButton(
+                    onClick = onNavigateToHistory,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        Icons.Default.History, 
+                        contentDescription = "History",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                IconButton(
+                    onClick = onNavigateToSettings,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Settings, 
+                        contentDescription = "Settings",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+        }
+        
+        // Expression and result display - takes more space in landscape
+        SmartDisplay(
+            expression = state.currentExpression,
+            result = state.currentResult,
+            isError = state.isError,
+            errorMessage = state.errorMessage,
+            cursorPosition = state.cursorPosition,
+            recentlyAddedPosition = recentlyAddedPosition,
+            recentlyAddedLength = recentlyAddedLength,
+            showStepByStep = showStepByStep,
+            onExpressionChange = viewModel::updateExpression,
+            onCursorChange = viewModel::updateCursorPosition,
+            onDisplayFieldPositioned = onDisplayFieldPositioned,
+            onDisplayFieldInfoUpdate = { info -> onDisplayFieldPositioned(info.position, info.size) },
+            onTextCenterPositioned = onTextCenterPositioned,
+            onFadeInComplete = onFadeInComplete,
+            onCalculate = { 
+                hapticManager.equalsTap()
+                viewModel.onButtonClick(
+                    CalculatorButton("equals", "=", null, ButtonType.SPECIAL, ButtonFunction.EQUALS)
+                )
+            },
+            onShowStepByStep = onShowStepByStep,
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun LandscapeButtonSection(
+    state: CalculatorState,
+    viewModel: CalculatorViewModel,
+    activeButton: String?,
+    onActiveButtonChange: (String?) -> Unit,
+    onSecondaryActivate: (String, Offset) -> Unit,
+    soundEffects: SoundEffectsManager,
+    hapticManager: HapticFeedbackManager
+) {
+    val scope = rememberCoroutineScope()
+    
+    SmartButtonGrid(
+        onButtonClick = { button ->
+            onActiveButtonChange(button.id)
+            scope.launch {
+                delay(100)
+                onActiveButtonChange(null)
+            }
+            
+            // Play appropriate sound effect
+            when {
+                button.type == ButtonType.NUMBER -> soundEffects.playNumberTap()
+                button.type == ButtonType.OPERATOR -> soundEffects.playOperatorTap()
+                button.type == ButtonType.FUNCTION -> soundEffects.playFunctionTap()
+                button.function in listOf(ButtonFunction.MEMORY_STORE, ButtonFunction.MEMORY_RECALL,
+                    ButtonFunction.MEMORY_PLUS, ButtonFunction.MEMORY_MINUS, ButtonFunction.MEMORY_CLEAR) ->
+                    soundEffects.playMemoryTap()
+                button.function == ButtonFunction.EQUALS -> soundEffects.playEquals()
+                button.function == ButtonFunction.BACKSPACE -> soundEffects.playDelete()
+                button.function == ButtonFunction.CLEAR -> soundEffects.playDelete()
+                else -> soundEffects.playOperatorTap()
+            }
+            
+            // Advanced haptic patterns
+            hapticManager.buttonPress(button.type, button.function)
+            
+            when (button.id) {
+                "arrow_left" -> {
+                    viewModel.moveCursorLeft()
+                    hapticManager.numberTap()
+                }
+                "arrow_right" -> {
+                    viewModel.moveCursorRight()
+                    hapticManager.numberTap()
+                }
+                else -> viewModel.onButtonClick(button)
+            }
+        },
+        onSecondaryActivate = onSecondaryActivate,
+        activeButton = activeButton,
+        hasMemoryValue = state.hasMemoryValue,
+        hapticManager = hapticManager,
+        modifier = Modifier.fillMaxSize()
+    )
 }
 
 @Composable
@@ -363,7 +944,8 @@ private fun SmartDisplay(
     showStepByStep: Boolean,
     onExpressionChange: (String) -> Unit,
     onCursorChange: (Int) -> Unit,
-    onCursorPositioned: (Offset) -> Unit,
+    onDisplayFieldPositioned: (Offset, androidx.compose.ui.unit.IntSize) -> Unit,
+    onDisplayFieldInfoUpdate: (DisplayFieldInfo) -> Unit,
     onTextCenterPositioned: (Offset) -> Unit,
     onFadeInComplete: () -> Unit,
     onCalculate: () -> Unit,
@@ -392,22 +974,31 @@ private fun SmartDisplay(
         )
     )
     
-    // Clean Material 3 SmartDisplay - constrained height
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+    // Clean Material 3 SmartDisplay with shader ripple effect
+    ShaderRippleEffect(
+        rippleOrigin = rippleOrigin,
+        onRippleComplete = { rippleOrigin = null },
         modifier = modifier
             .wrapContentHeight()
             .heightIn(max = 200.dp) // Constrain maximum height
     ) {
-        Column(
-            modifier = Modifier
-                .padding(20.dp)
-                .wrapContentHeight()
+        Card(
+            shape = RoundedCornerShape(28.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+            ),
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = 3.dp,
+                pressedElevation = 1.dp,
+                hoveredElevation = 4.dp
+            ),
+            modifier = Modifier.fillMaxWidth()
         ) {
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = 28.dp, vertical = 24.dp)
+                    .wrapContentHeight()
+            ) {
             // Simple text field for expression
             var textLayoutResult by remember { mutableStateOf<androidx.compose.ui.text.TextLayoutResult?>(null) }
             var fieldCoordinates by remember { mutableStateOf<androidx.compose.ui.layout.LayoutCoordinates?>(null) }
@@ -421,72 +1012,60 @@ private fun SmartDisplay(
                 textAlign = TextAlign.End
             )
             
-            // Calculate cursor position when expression or cursor position changes
-            LaunchedEffect(expression, cursorPosition, textLayoutResult, fieldCoordinates) {
-                fieldCoordinates?.let { coordinates ->
-                    val position = coordinates.positionInRoot()
-                    
-                    if (expression.isEmpty()) {
-                        // For empty field, position at the end (right side) vertically centered
-                        val center = position + Offset(
-                            coordinates.size.width.toFloat(),
-                            coordinates.size.height.toFloat() / 2
-                        )
-                        onCursorPositioned(center)
-                        onTextCenterPositioned(center)
-                    } else {
-                        // Use text measurer to get accurate cursor position
-                        val layoutResult = textMeasurer.measure(
-                            text = expression,
-                            style = textStyle,
-                            constraints = androidx.compose.ui.unit.Constraints(
-                                maxWidth = coordinates.size.width
-                            )
-                        )
-                        
-                        // Get cursor position - for end-aligned text, we need to account for the text width
-                        val cursorX = if (cursorPosition >= expression.length) {
-                            // At the end of text
-                            coordinates.size.width.toFloat()
-                        } else if (cursorPosition == 0) {
-                            // At the beginning - calculate where text starts for end-aligned text
-                            coordinates.size.width.toFloat() - layoutResult.size.width.toFloat()
-                        } else {
-                            // In the middle - measure text up to cursor position
-                            val textToCursor = expression.substring(0, cursorPosition)
-                            val partialLayout = textMeasurer.measure(
-                                text = textToCursor,
-                                style = textStyle
-                            )
-                            coordinates.size.width.toFloat() - layoutResult.size.width.toFloat() + partialLayout.size.width.toFloat()
-                        }
-                        
-                        val cursorY = coordinates.size.height.toFloat() / 2
-                        
-                        val cursorPos = position + Offset(cursorX, cursorY)
-                        onCursorPositioned(cursorPos)
-                        onTextCenterPositioned(cursorPos)
-                    }
+            // Track the display field position and size
+            LaunchedEffect(fieldCoordinates) {
+                fieldCoordinates?.let { coords ->
+                    onDisplayFieldPositioned(coords.positionInRoot(), coords.size)
                 }
             }
             
+            val textFieldValue = remember(expression, cursorPosition) {
+                androidx.compose.ui.text.input.TextFieldValue(
+                    text = expression,
+                    selection = androidx.compose.ui.text.TextRange(cursorPosition)
+                )
+            }
+            
             BasicTextField(
-                value = expression,
+                value = textFieldValue,
                 onValueChange = { newValue ->
-                    onExpressionChange(newValue)
-                    // Update cursor position for flying text
-                    onCursorChange(newValue.length)
+                    onExpressionChange(newValue.text)
+                    onCursorChange(newValue.selection.start)
                 },
                 textStyle = textStyle.copy(color = MaterialTheme.colorScheme.onSurface),
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                 onTextLayout = { layoutResult ->
                     textLayoutResult = layoutResult
+                    fieldCoordinates?.let { coords ->
+                        onDisplayFieldInfoUpdate(
+                            DisplayFieldInfo(
+                                position = coords.positionInRoot(),
+                                size = coords.size,
+                                textStyle = textStyle,
+                                textLayoutResult = layoutResult,
+                                expression = expression,
+                                cursorVisible = true
+                            )
+                        )
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 48.dp, max = 120.dp) // Constrain height
                     .onGloballyPositioned { coordinates ->
                         fieldCoordinates = coordinates
+                        // Also push base position/size update upstream
+                        onDisplayFieldPositioned(coordinates.positionInRoot(), coordinates.size)
+                    }
+                    .semantics {
+                        contentDescription = "Calculator expression input"
+                        stateDescription = if (expression.isEmpty()) 
+                            "Empty expression" 
+                        else 
+                            "Expression: ${expression.replace("×", " times ").replace("÷", " divided by ").replace("+", " plus ").replace("-", " minus ").replace("π", " pi ").replace("e", " e ")}"
+                        role = Role.Button
+                        editableText = AnnotatedString(expression)
+                        textSelectionRange = TextRange(expression.length)
                     },
                 decorationBox = { innerTextField ->
                     if (expression.isEmpty()) {
@@ -519,13 +1098,19 @@ private fun SmartDisplay(
                     )
                 )
                 
-                Surface(
-                    onClick = onCalculate,
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier
-                        .size(48.dp)
-                        .scale(buttonScale)
+                BreathingGlow(
+                    isActive = expression.isNotEmpty() && !isError,
+                    color = MaterialTheme.colorScheme.primary
+                ) {
+                    Surface(
+                        onClick = onCalculate,
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary,
+                        tonalElevation = 6.dp,
+                        shadowElevation = 12.dp,
+                        modifier = Modifier
+                            .size(56.dp)
+                            .scale(buttonScale)
                         .pointerInput(Unit) {
                             detectTapGestures(
                                 onLongPress = {
@@ -535,6 +1120,14 @@ private fun SmartDisplay(
                                     }
                                 }
                             )
+                        }
+                        .semantics {
+                            contentDescription = "Equals button. Calculate result"
+                            role = Role.Button
+                            stateDescription = if (expression.isEmpty()) 
+                                "Disabled - no expression to calculate" 
+                            else 
+                                "Enabled - tap to calculate, long press for step-by-step"
                         }
                 ) {
                     Box(
@@ -548,6 +1141,7 @@ private fun SmartDisplay(
                             fontWeight = FontWeight.Medium
                         )
                     }
+                }
                 }
                 
                 // Animated result with smart sizing
@@ -576,9 +1170,18 @@ private fun SmartDisplay(
                             letterSpacing = (-0.5).sp
                         ),
                         textAlign = TextAlign.End,
-                        maxLines = 1
+                        maxLines = 1,
+                        modifier = Modifier.semantics {
+                            contentDescription = if (isError) 
+                                "Error: $errorMessage" 
+                            else 
+                                "Result: ${displayText.replace("×", " times ").replace("÷", " divided by ").replace("+", " plus ").replace("-", " minus ")}"
+                            role = Role.Image
+                            stateDescription = if (isError) "Error state" else "Calculation result"
+                        }
                     )
                 }
+            }
             }
         }
     }
@@ -867,6 +1470,8 @@ private fun SmartButtonGrid(
     onButtonClick: (CalculatorButton) -> Unit,
     onSecondaryActivate: (String, Offset) -> Unit,
     activeButton: String?,
+    hasMemoryValue: Boolean,
+    hapticManager: HapticFeedbackManager,
     modifier: Modifier = Modifier
 ) {
     val buttons = remember { getSmartButtonLayout() }
@@ -889,10 +1494,11 @@ private fun SmartButtonGrid(
                         isActive = activeButton == button.id,
                         onClick = { onButtonClick(button) },
                         onSecondaryActivate = onSecondaryActivate,
+                        hasMemoryValue = hasMemoryValue,
+                        hapticManager = hapticManager,
                         modifier = Modifier.weight(
                             when {
                                 button.id == "0" -> 2f
-                                button.id == "equals" -> 2f
                                 else -> 1f
                             }
                         )
@@ -903,19 +1509,112 @@ private fun SmartButtonGrid(
     }
 }
 
+/**
+ * Generates accessible content description for calculator buttons
+ */
+private fun getButtonContentDescription(button: CalculatorButton): String {
+    return when (button.function) {
+        // Numbers
+        ButtonFunction.ZERO -> "Zero"
+        ButtonFunction.ONE -> "One"
+        ButtonFunction.TWO -> "Two"
+        ButtonFunction.THREE -> "Three"
+        ButtonFunction.FOUR -> "Four"
+        ButtonFunction.FIVE -> "Five"
+        ButtonFunction.SIX -> "Six"
+        ButtonFunction.SEVEN -> "Seven"
+        ButtonFunction.EIGHT -> "Eight"
+        ButtonFunction.NINE -> "Nine"
+        
+        // Basic operators
+        ButtonFunction.PLUS -> "Plus"
+        ButtonFunction.MINUS -> "Minus"
+        ButtonFunction.MULTIPLY -> "Multiply"
+        ButtonFunction.DIVIDE -> "Divide"
+        ButtonFunction.EQUALS -> "Equals"
+        ButtonFunction.DOT -> "Decimal point"
+        
+        // Scientific functions
+        ButtonFunction.SIN -> "Sine"
+        ButtonFunction.COS -> "Cosine"
+        ButtonFunction.TAN -> "Tangent"
+        ButtonFunction.ASIN -> "Arc sine"
+        ButtonFunction.ACOS -> "Arc cosine"
+        ButtonFunction.ATAN -> "Arc tangent"
+        ButtonFunction.SINH -> "Hyperbolic sine"
+        ButtonFunction.COSH -> "Hyperbolic cosine"
+        ButtonFunction.TANH -> "Hyperbolic tangent"
+        ButtonFunction.ASINH -> "Inverse hyperbolic sine"
+        ButtonFunction.ACOSH -> "Inverse hyperbolic cosine"
+        ButtonFunction.ATANH -> "Inverse hyperbolic tangent"
+        ButtonFunction.LOG -> "Logarithm base 10"
+        ButtonFunction.LN -> "Natural logarithm"
+        ButtonFunction.SQRT -> "Square root"
+        ButtonFunction.POWER -> "Power"
+        ButtonFunction.FACTORIAL -> "Factorial"
+        
+        // Special functions
+        ButtonFunction.CLEAR -> "Clear all"
+        ButtonFunction.CLEAR_ENTRY -> "Clear entry"
+        ButtonFunction.BACKSPACE -> "Backspace"
+        ButtonFunction.PARENTHESIS -> "Parentheses"
+        ButtonFunction.PI -> "Pi"
+        ButtonFunction.E -> "Euler's number"
+        ButtonFunction.ANS -> "Previous answer"
+        
+        // Memory functions
+        ButtonFunction.MEMORY_STORE -> "Memory store"
+        ButtonFunction.MEMORY_RECALL -> "Memory recall"
+        ButtonFunction.MEMORY_CLEAR -> "Memory clear"
+        ButtonFunction.MEMORY_PLUS -> "Memory add"
+        ButtonFunction.MEMORY_MINUS -> "Memory subtract"
+        
+        // Advanced
+        ButtonFunction.RECIPROCAL -> "Reciprocal"
+        ButtonFunction.SQUARE -> "Square"
+        ButtonFunction.CUBE -> "Cube"
+        ButtonFunction.PERCENT -> "Percent"
+        
+        // Variables
+        ButtonFunction.X_VAR -> "Variable X"
+        ButtonFunction.T_VAR -> "Variable T"
+    }
+}
+
+/**
+ * Generates accessible state description for calculator buttons
+ */
+private fun getButtonStateDescription(button: CalculatorButton, hasMemoryValue: Boolean): String {
+    return when (button.function) {
+        ButtonFunction.MEMORY_RECALL -> if (hasMemoryValue) "Has stored value" else "No stored value"
+        ButtonFunction.MEMORY_CLEAR -> if (hasMemoryValue) "Has stored value to clear" else "No stored value"
+        ButtonFunction.MEMORY_PLUS, ButtonFunction.MEMORY_MINUS, ButtonFunction.MEMORY_STORE -> 
+            if (hasMemoryValue) "Memory has stored value" else "Memory is empty"
+        else -> when (button.type) {
+            ButtonType.NUMBER -> "Number button"
+            ButtonType.OPERATOR -> "Operator button"
+            ButtonType.FUNCTION -> if (button.secondary != null) "Function button with secondary function ${button.secondary}" else "Function button"
+            ButtonType.SPECIAL -> "Special function button"
+            ButtonType.PARENTHESIS -> "Grouping button"
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SmartButton(
     button: CalculatorButton,
     isActive: Boolean,
     onClick: () -> Unit,
     onSecondaryActivate: (String, Offset) -> Unit,
+    hasMemoryValue: Boolean,
+    hapticManager: HapticFeedbackManager,
     modifier: Modifier = Modifier
 ) {
     var isPressed by remember { mutableStateOf(false) }
     var showingSecondary by remember { mutableStateOf(false) }
     var dragOffset by remember { mutableStateOf(0f) }
     var buttonPosition by remember { mutableStateOf(Offset.Zero) }
-    val hapticFeedback = LocalHapticFeedback.current
     
     val scope = rememberCoroutineScope()
     
@@ -958,7 +1657,7 @@ private fun SmartButton(
                         onDragEnd = {
                             if (showingSecondary && button.secondary != null) {
                                 onSecondaryActivate(button.secondary, buttonPosition)
-                                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                                hapticManager.secondaryFunctionActivation()
                             }
                             isPressed = false
                             showingSecondary = false
@@ -977,14 +1676,14 @@ private fun SmartButton(
                             if (shouldShow != showingSecondary) {
                                 showingSecondary = shouldShow
                                 if (shouldShow) {
-                                    hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    hapticManager.secondaryFunctionPreview()
                                 }
                             }
                             
                             // Cancel if dragged back down
                             if (showingSecondary && dragOffset > -cancelThreshold) {
                                 showingSecondary = false
-                                hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                hapticManager.secondaryFunctionPreview()
                             }
                         }
                     )
@@ -992,10 +1691,28 @@ private fun SmartButton(
                     detectTapGestures(
                         onPress = {
                             isPressed = true
-                            hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            hapticManager.numberTap() // Light haptic for button press
                             tryAwaitRelease()
                             isPressed = false
                         }
+                    )
+                }
+            }
+            .semantics {
+                contentDescription = getButtonContentDescription(button)
+                stateDescription = getButtonStateDescription(button, hasMemoryValue)
+                role = Role.Button
+                
+                // Add secondary function accessibility if available
+                if (button.secondary != null) {
+                    customActions = listOf(
+                        CustomAccessibilityAction(
+                            label = "Activate ${button.secondary}",
+                            action = { 
+                                onSecondaryActivate(button.secondary, buttonPosition)
+                                true
+                            }
+                        )
                     )
                 }
             },
@@ -1008,12 +1725,13 @@ private fun SmartButton(
         color = when {
             button.id == "equals" -> MaterialTheme.colorScheme.primary
             button.id == "clear" -> MaterialTheme.colorScheme.errorContainer
-            button.function in listOf(ButtonFunction.MEMORY_STORE, ButtonFunction.MEMORY_RECALL, 
-                ButtonFunction.MEMORY_PLUS, ButtonFunction.MEMORY_MINUS, ButtonFunction.MEMORY_CLEAR) -> 
+            button.function in listOf(ButtonFunction.MEMORY_STORE, ButtonFunction.MEMORY_RECALL,
+                ButtonFunction.MEMORY_PLUS, ButtonFunction.MEMORY_MINUS, ButtonFunction.MEMORY_CLEAR) ->
                 MaterialTheme.colorScheme.tertiaryContainer
             button.type == ButtonType.OPERATOR -> MaterialTheme.colorScheme.primaryContainer
             button.type == ButtonType.NUMBER -> MaterialTheme.colorScheme.surface
             button.id == "backspace" -> MaterialTheme.colorScheme.surfaceVariant
+            button.id in listOf("arrow_left", "arrow_right") -> MaterialTheme.colorScheme.surfaceVariant
             else -> MaterialTheme.colorScheme.secondaryContainer
         },
         tonalElevation = 0.dp,
@@ -1062,7 +1780,7 @@ private fun SmartButton(
                             button.id == "equals" -> MaterialTheme.colorScheme.onPrimary
                             button.id == "clear" -> MaterialTheme.colorScheme.onErrorContainer
                             button.function in listOf(ButtonFunction.MEMORY_STORE, ButtonFunction.MEMORY_RECALL,
-                                ButtonFunction.MEMORY_PLUS, ButtonFunction.MEMORY_CLEAR) ->
+                                ButtonFunction.MEMORY_PLUS, ButtonFunction.MEMORY_MINUS, ButtonFunction.MEMORY_CLEAR) ->
                                 MaterialTheme.colorScheme.onTertiaryContainer
                             button.type == ButtonType.OPERATOR -> MaterialTheme.colorScheme.onPrimaryContainer
                             button.type == ButtonType.NUMBER -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
@@ -1166,10 +1884,11 @@ private fun getSmartButtonLayout(): List<List<CalculatorButton>> {
         ),
         // Bottom number row
         listOf(
+            CalculatorButton("arrow_left", "◂", null, ButtonType.SPECIAL, ButtonFunction.BACKSPACE), // Using BACKSPACE as placeholder
             CalculatorButton("0", "0", null, ButtonType.NUMBER, ButtonFunction.ZERO),
             CalculatorButton("dot", ".", null, ButtonType.NUMBER, ButtonFunction.DOT),
-            CalculatorButton("backspace", "⌫", null, ButtonType.SPECIAL, ButtonFunction.BACKSPACE),
-            CalculatorButton("equals", "=", null, ButtonType.SPECIAL, ButtonFunction.EQUALS)
+            CalculatorButton("arrow_right", "▸", null, ButtonType.SPECIAL, ButtonFunction.BACKSPACE), // Using BACKSPACE as placeholder
+            CalculatorButton("backspace", "⌫", null, ButtonType.SPECIAL, ButtonFunction.BACKSPACE)
         )
     )
 }

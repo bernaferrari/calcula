@@ -1,14 +1,22 @@
+import nl.littlerobots.vcu.plugin.resolver.VersionSelectors
+
 plugins {
     alias(libs.plugins.gradle.versions)
     alias(libs.plugins.version.catalog.update)
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.android.library) apply false
-    alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.kotlin.parcelize) apply false
     alias(libs.plugins.hilt) apply false
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.compose) apply false
     alias(libs.plugins.spotless) apply false
+}
+
+versionCatalogUpdate {
+    versionSelector(VersionSelectors.LATEST)
+    keep {
+        keepUnusedVersions.set(true)
+    }
 }
 
 subprojects {
@@ -17,12 +25,12 @@ subprojects {
         kotlin {
             target("**/*.kt")
             targetExclude("${layout.buildDirectory}/**/*.kt")
-            ktlint()
+            ktlint(libs.versions.ktlint.get())
         }
         kotlinGradle {
             target("*.gradle.kts")
             targetExclude("${layout.buildDirectory}/**/*.kt")
-            ktlint()
+            ktlint(libs.versions.ktlint.get())
         }
     }
 }

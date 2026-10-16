@@ -206,7 +206,7 @@
     <string name="versions_lowercase">Versionen</string>
     <string name="api_format">API %d</string>
     <string name="target_sdk_format">Ziel-SDK %d</string>
-    <string name="apps_count_format">%d %s</string>
+    <string name="apps_count_format" formatted="false">%d %s</string>
     <string name="app_singular">App</string>
     <string name="apps_plural">Apps</string>
     <string name="no_apps_found_sdk">Keine Apps mit dieser SDK-Version gefunden</string>
