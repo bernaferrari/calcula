@@ -102,8 +102,8 @@ private fun LayerSwitch(layer: FunctionLayer, onLayer: (FunctionLayer) -> Unit) 
     )
     val indicatorColor by animateColorAsState(
         when {
-            locked -> colors.secondary
-            on -> colors.secondaryContainer
+            locked -> colors.primary
+            on -> colors.primaryContainer
             else -> colors.surfaceContainerHighest
         },
         label = "indicatorColor",
@@ -136,8 +136,8 @@ private fun LayerSwitch(layer: FunctionLayer, onLayer: (FunctionLayer) -> Unit) 
                 label = "ƒ",
                 selected = on,
                 color = when {
-                    locked -> colors.onSecondary
-                    on -> colors.onSecondaryContainer
+                    locked -> colors.onPrimary
+                    on -> colors.onPrimaryContainer
                     else -> colors.onSurfaceVariant
                 },
                 // Tap once for one function, again to lock; hold to lock straight away.

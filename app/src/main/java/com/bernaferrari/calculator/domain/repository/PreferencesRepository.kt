@@ -10,6 +10,8 @@ interface PreferencesRepository {
 
     suspend fun updateThemeMode(themeMode: ThemeMode)
 
+    suspend fun updateDynamicColor(enabled: Boolean)
+
     suspend fun updateAngleUnit(angleUnit: AngleUnit)
 
     suspend fun updateDecimalPlaces(decimalPlaces: Int)

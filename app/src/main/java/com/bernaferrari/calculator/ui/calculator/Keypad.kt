@@ -160,7 +160,7 @@ fun MainKeypad(
 @Composable
 private fun Spec.containerColor(onLayer: Boolean): Color = with(MaterialTheme.colorScheme) {
     when {
-        onLayer -> secondaryContainer
+        onLayer -> primaryContainer
         // One accent only: `=` is the single solid color; everything else is a calm neutral.
         tone == Tone.Digit -> surfaceContainerHigh
         tone == Tone.Equals -> primary
@@ -171,7 +171,7 @@ private fun Spec.containerColor(onLayer: Boolean): Color = with(MaterialTheme.co
 @Composable
 private fun Spec.contentColor(onLayer: Boolean): Color = with(MaterialTheme.colorScheme) {
     when {
-        onLayer -> onSecondaryContainer
+        onLayer -> onPrimaryContainer
         tone == Tone.Digit -> onSurface
         tone == Tone.Function -> if (key == Key.CLEAR) tertiary else onSurfaceVariant
         tone == Tone.Operator -> primary

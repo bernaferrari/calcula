@@ -286,4 +286,7 @@
     <string name="history_deleted">Cálculo excluído</string>
     <string name="history_cleared">Histórico limpo</string>
     <string name="undo">Desfazer</string>
+    <string name="settings_dynamic_color">Cores do papel de parede</string>
+    <string name="settings_about">Sobre</string>
+    <string name="settings_licenses">Licenças de código aberto</string>
 </resources>

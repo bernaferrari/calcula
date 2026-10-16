@@ -40,6 +40,8 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.outlined.Calculate
+import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
@@ -133,7 +135,6 @@ fun CalculatorScreen(
             modifier = modifier,
         )
     }
-    val topBar: @Composable (Boolean) -> Unit = { SettingsButton(onOpenSettings) }
 
     val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
@@ -146,8 +147,21 @@ fun CalculatorScreen(
                     .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal)),
             ) {
                 Box(Modifier.weight(0.42f).fillMaxHeight().padding(bottom = bottomInset)) {
-                    display(Modifier.fillMaxSize().statusBarsPadding(), true)
-                    Box(Modifier.statusBarsPadding()) { topBar(false) }
+                    display(Modifier.fillMaxSize().statusBarsPadding().padding(top = 44.dp), true)
+                    // Landscape has no tool row; its two non-key controls sit quietly at the top.
+                    Row(Modifier.statusBarsPadding().fillMaxWidth().padding(4.dp)) {
+                        IconButton(onClick = { haptics.tap(); historyOpen = !historyOpen }) {
+                            Icon(
+                                if (historyOpen) Icons.Outlined.Calculate else Icons.Outlined.History,
+                                contentDescription = stringResource(if (historyOpen) R.string.show_keypad else R.string.show_history),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Spacer(Modifier.weight(1f))
+                        IconButton(onClick = onOpenSettings) {
+                            Icon(Icons.Outlined.Settings, contentDescription = stringResource(R.string.menu_settings), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
                 }
                 Column(Modifier.weight(0.3f).fillMaxHeight()) {
                     Spacer(Modifier.fillMaxWidth().statusBarsPadding())
@@ -209,20 +223,6 @@ fun CalculatorScreen(
                     modifier = Modifier.fillMaxWidth().height(keypadHeight).clipToBounds(),
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun SettingsButton(onOpenSettings: () -> Unit) {
-    Box(Modifier.fillMaxWidth().padding(4.dp), contentAlignment = Alignment.TopEnd) {
-        IconButton(onClick = onOpenSettings) {
-            Icon(
-                Icons.Outlined.Settings,
-                contentDescription = stringResource(R.string.menu_settings),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                modifier = Modifier.size(22.dp),
-            )
         }
     }
 }

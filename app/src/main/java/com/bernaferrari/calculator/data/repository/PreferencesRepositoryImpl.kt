@@ -24,6 +24,7 @@ class PreferencesRepositoryImpl @Inject constructor(
 
     private object PreferencesKeys {
         val THEME_MODE = stringPreferencesKey("theme_mode")
+        val DYNAMIC_COLOR = booleanPreferencesKey("dynamic_color")
         val ANGLE_UNIT = stringPreferencesKey("angle_unit")
         val DECIMAL_PLACES = intPreferencesKey("decimal_places")
         val HAPTIC_FEEDBACK = booleanPreferencesKey("haptic_feedback")
@@ -40,9 +41,10 @@ class PreferencesRepositoryImpl @Inject constructor(
             .catch { emit(emptyPreferences()) }
             .map { preferences ->
                 UserPreferences(
-                    themeMode = ThemeMode.valueOf(
-                        preferences[PreferencesKeys.THEME_MODE] ?: ThemeMode.MATERIAL_YOU.name
-                    ),
+                    // MATERIAL_YOU used to mean "system + wallpaper colors"; it now reads as SYSTEM with dynamicColor.
+                    themeMode = ThemeMode.valueOf(preferences[PreferencesKeys.THEME_MODE] ?: ThemeMode.SYSTEM.name)
+                        .let { if (it == ThemeMode.MATERIAL_YOU) ThemeMode.SYSTEM else it },
+                    dynamicColor = preferences[PreferencesKeys.DYNAMIC_COLOR] ?: true,
                     angleUnit = AngleUnit.valueOf(
                         preferences[PreferencesKeys.ANGLE_UNIT] ?: AngleUnit.DEGREES.name
                     ),
@@ -61,6 +63,12 @@ class PreferencesRepositoryImpl @Inject constructor(
     override suspend fun updateThemeMode(themeMode: ThemeMode) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.THEME_MODE] = themeMode.name
+        }
+    }
+
+    override suspend fun updateDynamicColor(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.DYNAMIC_COLOR] = enabled
         }
     }
 

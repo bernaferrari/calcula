@@ -293,4 +293,7 @@
     <string name="history_deleted">Calculation deleted</string>
     <string name="history_cleared">History cleared</string>
     <string name="undo">Undo</string>
+    <string name="settings_dynamic_color">Wallpaper colors</string>
+    <string name="settings_about">About</string>
+    <string name="settings_licenses">Open-source licenses</string>
 </resources>

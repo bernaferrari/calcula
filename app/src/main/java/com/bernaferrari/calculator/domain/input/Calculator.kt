@@ -26,6 +26,8 @@ data class CalcState(
     val inverse: Boolean = false,
     val angleUnit: AngleUnit = AngleUnit.DEGREES,
     val error: CalcError? = null,
+    /** The trailing `+3` of the last calculation, so pressing `=` again repeats it. */
+    val repeatTail: String? = null,
 )
 
 sealed interface Outcome {
@@ -88,17 +90,31 @@ object Calculator {
 
     private fun evaluate(state: CalcState): Pair<CalcState, Outcome> {
         val text = state.editor.text
+        if (state.resultShown && state.repeatTail != null) {
+            return evaluate(state.copy(editor = Editor(parenthesizeNegative(text) + state.repeatTail), resultShown = false))
+        }
         if (text.isEmpty() || state.resultShown || isPlainNumber(text)) return state to Outcome.None
         val closed = text + ")".repeat(ExpressionEditor.openParentheses(text).coerceAtLeast(0))
         return try {
             val result = NumberFormatter.format(CalcEngine.evaluate(closed, state.angleUnit))
-            state.copy(editor = Editor(result), resultShown = true, error = null) to Outcome.Evaluated(closed, result)
+            state.copy(editor = Editor(result), resultShown = true, error = null, repeatTail = repeatTail(closed)) to
+                Outcome.Evaluated(closed, result)
         } catch (e: CalcException) {
             state.copy(error = e.error) to Outcome.Failed(e.error)
         } catch (e: ArithmeticException) {
             state.copy(error = CalcError.OVERFLOW) to Outcome.Failed(CalcError.OVERFLOW)
         }
     }
+
+    /** `2×(1+2)+3` → `+3`: a final top-level operator and plain number, if there is one. */
+    private fun repeatTail(expression: String): String? {
+        val match = Regex("([+−×÷^])(\\d+(?:\\.\\d+)?(?:E[−+]?\\d+)?)$").find(expression) ?: return null
+        val before = expression.substring(0, match.range.first)
+        if (before.isEmpty() || ExpressionEditor.openParentheses(before) != 0) return null
+        return match.value
+    }
+
+    private fun parenthesizeNegative(text: String) = if (text.startsWith("−")) "($text)" else text
 
     private fun edit(e: Editor, key: Key, inverse: Boolean): Editor = with(ExpressionEditor) {
         when (key) {

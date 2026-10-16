@@ -90,4 +90,14 @@ class CalculatorTest {
         assertEquals(1, ExpressionEditor.nudge(left, -1).cursor)
         assertEquals(5, ExpressionEditor.nudge(Editor("2sin(30)", 1), 1).cursor)
     }
+
+    @Test fun repeatedEqualsRepeatsLastOperation() {
+        val first = type(Key.D5, Key.PLUS, Key.D3, Key.EQUALS)
+        assertEquals("8", first.editor.text)
+        assertEquals("11", type(Key.EQUALS, from = first).editor.text)
+        assertEquals("14", type(Key.EQUALS, Key.EQUALS, from = first).editor.text)
+        // Nothing sensible to repeat after a function call.
+        val trig = type(Key.SIN, Key.D3, Key.D0, Key.EQUALS)
+        assertEquals("0.5", type(Key.EQUALS, from = trig).editor.text)
+    }
 }

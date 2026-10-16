@@ -23,8 +23,9 @@ class ThemeViewModel
     constructor(
         private val preferencesRepository: PreferencesRepository,
     ) : ViewModel() {
-        private val _themeMode = MutableStateFlow(ThemeMode.MATERIAL_YOU)
+        private val _themeMode = MutableStateFlow(ThemeMode.SYSTEM)
         val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
+        private val dynamicColor = MutableStateFlow(true)
 
         init {
             observeThemePreferences()
@@ -37,6 +38,7 @@ class ThemeViewModel
                     .catch { /* Handle error silently, use default */ }
                     .collect { preferences ->
                         _themeMode.value = preferences.themeMode
+                        dynamicColor.value = preferences.dynamicColor
                     }
             }
         }
@@ -56,8 +58,8 @@ class ThemeViewModel
 
         @Composable
         fun shouldUseDynamicColor(): Boolean {
-            val currentTheme by themeMode.collectAsState()
-            return currentTheme == ThemeMode.MATERIAL_YOU && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+            val enabled by dynamicColor.collectAsState()
+            return enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
         }
 
         fun updateThemeMode(themeMode: ThemeMode) {

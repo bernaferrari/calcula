@@ -1,7 +1,9 @@
 package com.bernaferrari.calculator.domain.model
 
 data class UserPreferences(
-    val themeMode: ThemeMode = ThemeMode.MATERIAL_YOU,
+    val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    /** Colors from the wallpaper (Android 12+). */
+    val dynamicColor: Boolean = true,
     val showHistory: Boolean = true,
     val angleUnit: AngleUnit = AngleUnit.DEGREES,
     val decimalPlaces: Int = 10,

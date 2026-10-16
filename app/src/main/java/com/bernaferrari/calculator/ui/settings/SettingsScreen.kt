@@ -1,11 +1,25 @@
 package com.bernaferrari.calculator.ui.settings
 
+import android.os.Build
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.rounded.Description
+import androidx.compose.material.icons.rounded.Palette
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -21,7 +35,6 @@ import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -58,6 +71,8 @@ class SettingsViewModel @Inject constructor(
 
     fun setTheme(mode: ThemeMode) = viewModelScope.launch { preferences.updateThemeMode(mode) }
 
+    fun setDynamicColor(enabled: Boolean) = viewModelScope.launch { preferences.updateDynamicColor(enabled) }
+
     fun setHaptics(enabled: Boolean) = viewModelScope.launch { preferences.updateHapticFeedback(enabled) }
 
     fun clearHistory() = viewModelScope.launch { history.clearAllHistory() }
@@ -74,6 +89,8 @@ fun SettingsScreen(
 ) {
     val prefs by viewModel.prefs.collectAsStateWithLifecycle()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    var showLicense by remember { mutableStateOf(false) }
+    if (showLicense) LicenseDialog(onDismiss = { showLicense = false })
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -87,16 +104,29 @@ fun SettingsScreen(
             )
         },
     ) { padding ->
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = 32.dp)) {
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 24.dp)) {
             item { SectionHeader(stringResource(R.string.settings_appearance)) }
-            ThemeMode.entries.forEach { mode ->
+            item {
+                // Three plain choices; wallpaper colors are a separate, independent switch.
+                val modes = listOf(ThemeMode.SYSTEM, ThemeMode.LIGHT, ThemeMode.DARK)
+                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+                    modes.forEachIndexed { index, mode ->
+                        SegmentedButton(
+                            selected = prefs.themeMode == mode,
+                            onClick = { viewModel.setTheme(mode) },
+                            shape = SegmentedButtonDefaults.itemShape(index, modes.size),
+                        ) { Text(stringResource(mode.title())) }
+                    }
+                }
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 item {
-                    val selected = prefs.themeMode == mode
                     ListItem(
-                        content = { Text(stringResource(mode.title())) },
-                        supportingContent = { Text(stringResource(mode.description())) },
-                        leadingContent = { RadioButton(selected = selected, onClick = null) },
-                        modifier = Modifier.selectable(selected, role = Role.RadioButton) { viewModel.setTheme(mode) },
+                        headlineContent = { Text(stringResource(R.string.settings_dynamic_color)) },
+                        supportingContent = { Text(stringResource(R.string.theme_material_you_description)) },
+                        leadingContent = { Icon(Icons.Rounded.Palette, contentDescription = null) },
+                        trailingContent = { Switch(checked = prefs.dynamicColor, onCheckedChange = null) },
+                        modifier = Modifier.toggleable(prefs.dynamicColor, role = Role.Switch) { viewModel.setDynamicColor(it) },
                     )
                 }
             }
@@ -140,8 +170,37 @@ fun SettingsScreen(
                     modifier = Modifier.clickable { viewModel.clearHistory() },
                 )
             }
+            item { SectionHeader(stringResource(R.string.settings_about)) }
+            item {
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.settings_licenses)) },
+                    supportingContent = { Text("Google Sans Flex · SIL Open Font License 1.1") },
+                    leadingContent = { Icon(Icons.Rounded.Description, contentDescription = null) },
+                    modifier = Modifier.clickable { showLicense = true },
+                )
+            }
         }
     }
+}
+
+@Composable
+private fun LicenseDialog(onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val text = remember {
+        runCatching { context.assets.open("licenses/GoogleSansFlex-OFL.txt").bufferedReader().use { it.readText() } }.getOrDefault("")
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.dismiss)) } },
+        title = { Text("Google Sans Flex") },
+        text = {
+            Text(
+                text,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+            )
+        },
+    )
 }
 
 @Composable
@@ -159,11 +218,4 @@ private fun ThemeMode.title() = when (this) {
     ThemeMode.SYSTEM -> R.string.theme_system
     ThemeMode.LIGHT -> R.string.theme_light
     ThemeMode.DARK -> R.string.theme_dark
-}
-
-private fun ThemeMode.description() = when (this) {
-    ThemeMode.MATERIAL_YOU -> R.string.theme_material_you_description
-    ThemeMode.SYSTEM -> R.string.theme_system_description
-    ThemeMode.LIGHT -> R.string.theme_light_description
-    ThemeMode.DARK -> R.string.theme_dark_description
 }
