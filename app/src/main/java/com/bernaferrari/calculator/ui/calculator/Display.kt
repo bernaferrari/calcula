@@ -115,7 +115,6 @@ fun CalculatorDisplay(
     haptics: Haptics,
     events: Flow<Outcome>,
     onCursorMoved: (Int) -> Unit,
-    onNudgeCursor: (Int) -> Boolean,
     onToggleAngle: () -> Unit,
     onCopy: (String) -> Unit,
     onUseResult: (CalculationHistory) -> Unit,
@@ -202,7 +201,7 @@ fun CalculatorDisplay(
                     formatter = formatter,
                     maxFontSize = entryMaxFontSize,
                     onCursorMoved = onCursorMoved,
-                    onNudgeCursor = { if (onNudgeCursor(it)) haptics.tick(); true },
+                    onCursorTick = haptics::tick,
                     onToggleAngle = { haptics.tap(); onToggleAngle() },
                     onCopy = { haptics.heavy(); onCopy(it) },
                     modifier = Modifier.offset { IntOffset(shake.value.roundToInt(), 0) },
@@ -219,7 +218,7 @@ private fun LiveEntry(
     formatter: DisplayFormatter,
     maxFontSize: TextUnit,
     onCursorMoved: (Int) -> Unit,
-    onNudgeCursor: (Int) -> Boolean,
+    onCursorTick: () -> Unit,
     onToggleAngle: () -> Unit,
     onCopy: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -230,30 +229,12 @@ private fun LiveEntry(
         formatter.format(entry.text, if (entry.resultShown) 0 else entry.openParentheses, formatColors)
     }
     val density = LocalDensity.current
-    val currentOnNudgeCursor by rememberUpdatedState(onNudgeCursor)
-    val copyText = entry.preview ?: entry.text
+        val copyText = entry.preview ?: entry.text
 
     Column(
         horizontalAlignment = Alignment.End,
         modifier = modifier
             .fillMaxWidth()
-            .pointerInput(Unit) {
-                // Drag sideways to slide the cursor through the expression, like a keyboard's space bar.
-                val step = with(density) { 14.dp.toPx() }
-                var travelled = 0f
-                detectHorizontalDragGestures(
-                    onDragStart = { travelled = 0f },
-                    onHorizontalDrag = { change, dx ->
-                        change.consume()
-                        travelled += dx
-                        while (kotlin.math.abs(travelled) >= step) {
-                            val direction = if (travelled > 0) 1 else -1
-                            travelled -= direction * step
-                            currentOnNudgeCursor(direction)
-                        }
-                    },
-                )
-            }
             .padding(start = 24.dp, end = 24.dp, top = 4.dp, bottom = 12.dp),
     ) {
         if (entry.text.isEmpty()) {
@@ -270,7 +251,11 @@ private fun LiveEntry(
                 maxFontSize = maxFontSize,
                 color = colors.onSurface,
                 onTap = { displayOffset ->
-                    onCursorMoved(formatted.displayToRaw[displayOffset.coerceIn(0, formatted.displayToRaw.lastIndex)])
+                    val raw = formatted.displayToRaw[displayOffset.coerceIn(0, formatted.displayToRaw.lastIndex)]
+                    if (raw != entry.cursor || entry.resultShown) {
+                        onCursorTick()
+                        onCursorMoved(raw)
+                    }
                 },
                 onLongPress = { onCopy(copyText) },
             )
@@ -400,6 +385,16 @@ private fun ExpressionText(
                     detectTapGestures(
                         onTap = { position -> layout?.let { currentOnTap(it.getOffsetForPosition(position)) } },
                         onLongPress = { currentOnLongPress() },
+                    )
+                }
+                .pointerInput(Unit) {
+                    // Drag along the expression and the cursor follows the finger to that exact spot.
+                    detectHorizontalDragGestures(
+                        onDragStart = { position -> layout?.let { currentOnTap(it.getOffsetForPosition(position)) } },
+                        onHorizontalDrag = { change, _ ->
+                            change.consume()
+                            layout?.let { currentOnTap(it.getOffsetForPosition(change.position)) }
+                        },
                     )
                 }
                 .drawWithContent {

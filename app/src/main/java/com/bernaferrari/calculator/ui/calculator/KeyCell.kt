@@ -16,14 +16,11 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.toShape
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material3.Surface
@@ -102,6 +99,9 @@ fun KeyCell(
     val pressed = remember { Animatable(0f) }
     val drag = remember { Animatable(0f) }
     var selection by remember { mutableStateOf<Swipe?>(null) }
+    // Holding a key (without flicking) reveals both of its functions so nothing is a guess.
+    var revealed by remember { mutableStateOf(false) }
+    var keyWidth by remember { mutableFloatStateOf(0f) }
     var keyHeight by remember { mutableFloatStateOf(0f) }
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
@@ -131,6 +131,7 @@ fun KeyCell(
                 awaitEachGesture {
                     val first = awaitFirstDown()
                     keyHeight = size.height.toFloat()
+                    keyWidth = size.width.toFloat()
                     // A quarter of the key, but never so little that a sloppy tap becomes a swipe.
                     val threshold = maxOf(26.dp.toPx(), size.height * 0.26f)
                     val velocity = VelocityTracker().apply { addPosition(first.uptimeMillis, first.position) }
@@ -153,6 +154,17 @@ fun KeyCell(
                     var current: Swipe? = null
                     var last = first.position
                     var cancelled = false
+                    val reveal = if (currentUp != null || currentDown != null) {
+                        scope.launch {
+                            delay(320)
+                            if (current == null) {
+                                revealed = true
+                                haptics.tick()
+                            }
+                        }
+                    } else {
+                        null
+                    }
                     while (true) {
                         val event = awaitPointerEvent()
                         val change = event.changes.firstOrNull { it.id == first.id }
@@ -198,7 +210,10 @@ fun KeyCell(
                         if (vy > fast && dy > minimum && currentDown != null) current = Swipe.Down
                     }
                     longPress?.cancel()
+                    reveal?.cancel()
                     grow.cancel()
+                    val wasRevealed = revealed
+                    revealed = false
                     selection = null
                     currentOnPressedChange(false)
                     scope.launch {
@@ -213,6 +228,8 @@ fun KeyCell(
                         cancelled || longPressed -> Unit
                         current == Swipe.Up -> currentUp?.action?.invoke()
                         current == Swipe.Down -> currentDown?.action?.invoke()
+                        // Revealed the options but chose neither: that's a cancel, not the digit.
+                        wasRevealed -> Unit
                         inside -> currentOnClick()
                     }
                 }
@@ -250,50 +267,78 @@ fun KeyCell(
             }
         }
 
-        val bubble = remember { MutableTransitionState(false) }
-        bubble.targetState = selection != null
-        var shown by remember { mutableStateOf<Hint?>(null) }
-        selection?.let { shown = if (it == Swipe.Up) up else down }
-        if (bubble.currentState || bubble.targetState) {
-            val lift = with(density) { (keyHeight / 2 + 48.dp.toPx() + 8.dp.toPx()).toInt() }
-            Popup(
-                alignment = Alignment.Center,
-                offset = IntOffset(0, -lift),
-                properties = PopupProperties(clippingEnabled = false),
-            ) {
-                AnimatedVisibility(
-                    visibleState = bubble,
-                    enter = scaleIn(spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium), initialScale = 0.4f, transformOrigin = TransformOrigin(0.5f, 1f)) + fadeIn(tween(90)),
-                    exit = scaleOut(tween(120), targetScale = 0.8f) + fadeOut(tween(120)),
-                ) {
-                    // A 9-sided cookie, M3 Expressive's signature shape, spinning into place.
-                    @OptIn(ExperimentalMaterial3ExpressiveApi::class)
-                    val bubbleShape = MaterialShapes.Cookie9Sided.toShape()
-                    val spin = remember { Animatable(-40f) }
-                    LaunchedEffect(Unit) { spin.animateTo(0f, spring(dampingRatio = 0.45f, stiffness = Spring.StiffnessMediumLow)) }
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .size(96.dp)
-                            .graphicsLayer {
-                                rotationZ = spin.value
-                                shadowElevation = 10.dp.toPx()
-                                shape = bubbleShape
-                                clip = true
-                            }
-                            .background(MaterialTheme.colorScheme.primary),
-                    ) {
-                        Text(
-                            shown?.label.orEmpty(),
-                            style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 28.sp, fontWeight = FontWeight.Medium),
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            maxLines = 1,
-                            modifier = Modifier.graphicsLayer { rotationZ = -spin.value },
-                        )
-                    }
+        val options = remember { MutableTransitionState(false) }
+        options.targetState = revealed || selection != null
+        if (options.currentState || options.targetState) {
+            FunctionOptions(
+                visible = options,
+                up = up,
+                down = down,
+                selection = selection,
+                keyWidth = keyWidth,
+                keyHeight = keyHeight,
+            )
+        }
+    }
+}
+
+/**
+ * The functions hiding on a key, shown while it is held or flicked: the up function in a pill
+ * above the key, the down one below. The one the finger is heading to fills with the accent.
+ */
+@Composable
+private fun FunctionOptions(
+    visible: MutableTransitionState<Boolean>,
+    up: Hint?,
+    down: Hint?,
+    selection: Swipe?,
+    keyWidth: Float,
+    keyHeight: Float,
+) {
+    val density = LocalDensity.current
+    val pill = 52.dp
+    val gap = 6.dp
+    Popup(alignment = Alignment.Center, properties = PopupProperties(clippingEnabled = false)) {
+        AnimatedVisibility(
+            visibleState = visible,
+            enter = fadeIn(tween(90)) + scaleIn(spring(dampingRatio = 0.55f, stiffness = Spring.StiffnessMedium), initialScale = 0.7f),
+            exit = fadeOut(tween(120)) + scaleOut(tween(120), targetScale = 0.9f),
+        ) {
+            with(density) {
+                Box(Modifier.size(width = keyWidth.toDp().coerceAtLeast(pill), height = keyHeight.toDp() + (pill + gap) * 2)) {
+                    if (up != null) OptionPill(up.label, selection == Swipe.Up, Modifier.align(Alignment.TopCenter))
+                    if (down != null) OptionPill(down.label, selection == Swipe.Down, Modifier.align(Alignment.BottomCenter))
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun OptionPill(label: String, selected: Boolean, modifier: Modifier) {
+    val colors = MaterialTheme.colorScheme
+    val scale by animateFloatAsState(if (selected) 1.12f else 1f, spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium), label = "pill")
+    val container by androidx.compose.animation.animateColorAsState(if (selected) colors.primary else colors.secondaryContainer, label = "pillColor")
+    val content = if (selected) colors.onPrimary else colors.onSecondaryContainer
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                shadowElevation = 6.dp.toPx()
+                shape = RoundedCornerShape(26.dp)
+                clip = true
+            }
+            .background(container)
+            .size(height = 52.dp, width = 84.dp),
+    ) {
+        Text(
+            label,
+            style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 22.sp, fontWeight = FontWeight.Medium),
+            color = content,
+            maxLines = 1,
+        )
     }
 }
 

@@ -115,15 +115,6 @@ class CalculatorViewModel @Inject constructor(
     /** A function picked by a flick or from the ƒ layer. */
     fun onSwipeKey(key: Key) = onKey(key)
 
-    /** Returns false when the cursor is already at that end, so the UI can skip the haptic tick. */
-    fun onNudgeCursor(direction: Int): Boolean {
-        val current = calc.value
-        val next = ExpressionEditor.nudge(current.editor, direction)
-        if (next == current.editor) return false
-        calc.value = current.copy(editor = next, resultShown = false)
-        return true
-    }
-
     fun onCursorMoved(position: Int) {
         calc.update { it.copy(editor = ExpressionEditor.moveCursor(it.editor, position), resultShown = false) }
     }

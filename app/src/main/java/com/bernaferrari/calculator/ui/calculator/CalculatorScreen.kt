@@ -121,7 +121,6 @@ fun CalculatorScreen(
             haptics = haptics,
             events = viewModel.events,
             onCursorMoved = viewModel::onCursorMoved,
-            onNudgeCursor = viewModel::onNudgeCursor,
             onToggleAngle = viewModel::onToggleAngleUnit,
             onCopy = copy,
             // Reusing a result means going back to calculating.
