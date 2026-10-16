@@ -3,7 +3,6 @@
     <string name="theme_system">System</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
-    <string name="dismiss">Dismiss</string>
     <string name="settings_title">Settings</string>
     <string name="cancel">Cancel</string>
     <string name="error_divide_by_zero">Can't divide by zero</string>
@@ -54,7 +53,6 @@
     <string name="settings_degrees">Degrees</string>
     <string name="settings_radians">Radians</string>
     <string name="settings_decimal_places">Decimal places</string>
-    <string name="settings_auto">Auto</string>
     <string name="settings_decimal_separator">Number format</string>
     <string name="settings_show_tape">Show recent calculations</string>
     <string name="settings_show_tape_description">Keep the tape above the result</string>
@@ -71,7 +69,6 @@
     <string name="settings_clear_history_body">All saved calculations will be deleted.</string>
     <string name="converter_use">Use</string>
     <string name="converter_use_description">Use in calculator</string>
-    <string name="settings_color">Color</string>
     <string name="palette_wallpaper">Wallpaper</string>
     <string name="palette_indigo">Indigo</string>
     <string name="palette_blue">Blue</string>
@@ -79,11 +76,9 @@
     <string name="palette_green">Green</string>
     <string name="palette_amber">Amber</string>
     <string name="palette_orange">Orange</string>
-    <string name="palette_red">Red</string>
     <string name="palette_pink">Pink</string>
     <string name="palette_purple">Purple</string>
     <string name="palette_graphite">Graphite</string>
-    <string name="about_title">About</string>
     <string name="about_row">About Calculator++</string>
     <string name="about_tagline">Flick a key. Get a function.</string>
     <string name="about_source">Source code</string>

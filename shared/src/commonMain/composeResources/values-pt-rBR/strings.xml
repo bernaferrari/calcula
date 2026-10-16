@@ -3,7 +3,6 @@
     <string name="theme_system">Sistema</string>
     <string name="theme_light">Claro</string>
     <string name="theme_dark">Escuro</string>
-    <string name="dismiss">Dispensar</string>
     <string name="settings_title">Configurações</string>
     <string name="cancel">Cancelar</string>
     <string name="error_divide_by_zero">Não é possível dividir por zero</string>
@@ -52,7 +51,6 @@
     <string name="settings_degrees">Graus</string>
     <string name="settings_radians">Radianos</string>
     <string name="settings_decimal_places">Casas decimais</string>
-    <string name="settings_auto">Auto</string>
     <string name="settings_decimal_separator">Formato numérico</string>
     <string name="settings_show_tape">Mostrar cálculos recentes</string>
     <string name="settings_show_tape_description">Manter a fita acima do resultado</string>
@@ -69,7 +67,6 @@
     <string name="settings_clear_history_body">Todos os cálculos salvos serão excluídos.</string>
     <string name="converter_use">Usar</string>
     <string name="converter_use_description">Usar na calculadora</string>
-    <string name="settings_color">Cor</string>
     <string name="palette_wallpaper">Papel de parede</string>
     <string name="palette_indigo">Índigo</string>
     <string name="palette_blue">Azul</string>
@@ -77,11 +74,9 @@
     <string name="palette_green">Verde</string>
     <string name="palette_amber">Âmbar</string>
     <string name="palette_orange">Laranja</string>
-    <string name="palette_red">Vermelho</string>
     <string name="palette_pink">Rosa</string>
     <string name="palette_purple">Roxo</string>
     <string name="palette_graphite">Grafite</string>
-    <string name="about_title">Sobre</string>
     <string name="about_row">Sobre o Calculator++</string>
     <string name="about_tagline">Deslize uma tecla. Ganhe uma função.</string>
     <string name="about_source">Código-fonte</string>

@@ -39,7 +39,6 @@ enum class AppPalette(val seed: Long) {
     GREEN(0xFF34A853),
     AMBER(0xFFF9AB00),
     ORANGE(0xFFF4511E),
-    RED(0xFFE53935),
     PINK(0xFFD81B60),
     PURPLE(0xFF8E24AA),
     GRAPHITE(0xFF5F6368),

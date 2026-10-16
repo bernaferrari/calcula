@@ -288,7 +288,6 @@ internal fun AppPalette.title(): StringResource = when (this) {
     AppPalette.GREEN -> Res.string.palette_green
     AppPalette.AMBER -> Res.string.palette_amber
     AppPalette.ORANGE -> Res.string.palette_orange
-    AppPalette.RED -> Res.string.palette_red
     AppPalette.PINK -> Res.string.palette_pink
     AppPalette.PURPLE -> Res.string.palette_purple
     AppPalette.GRAPHITE -> Res.string.palette_graphite

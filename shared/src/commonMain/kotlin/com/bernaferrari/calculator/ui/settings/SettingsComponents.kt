@@ -41,6 +41,13 @@ import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.graphics.LinearGradientShader
+import androidx.compose.ui.graphics.Shader
+import androidx.compose.ui.graphics.ShaderBrush
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.rotate
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
@@ -330,66 +337,90 @@ private fun DrawScope.drawMini(scheme: ColorScheme) {
 }
 
 /**
- * The color families as plain swatches in each family's own vivid color. The chosen one springs
- * into the calculator's rounded key shape, gains a ring and a check. No labels: the colors are
- * the labels (names stay available to screen readers).
+ * Every color family as a gradient swatch, wallpaper colors first where the platform has them: a disc turned 45° that springs upright into a rounded square with
+ * a ring when chosen. The gradient counter-rotates, so the colors hold still while the shape turns.
  */
 @Composable
 fun PaletteRow(position: SegmentPosition, selected: AppPalette, label: @Composable (AppPalette) -> String, onSelect: (AppPalette) -> Unit) {
+    val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
     RowSurface(position) {
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(16.dp),
-            modifier = Modifier.selectableGroup(),
-        ) {
-            items(availablePalettes) { palette ->
-                val color = if (palette == AppPalette.WALLPAPER) {
-                    paletteColorScheme(palette, dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f).primary
-                } else {
-                    Color(palette.seed)
+        Column(Modifier.fillMaxWidth().selectableGroup().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                availablePalettes.forEach { palette ->
+                    val seed = Color(palette.seed)
+                    val wallpaper = if (palette == AppPalette.WALLPAPER) paletteColorScheme(palette, dark) else null
+                    PaletteSwatch(
+                        // Wallpaper shows its own three colors; every other family its seed, lightening.
+                        colors = wallpaper?.let { listOf(it.primary, it.secondary, it.tertiary) }
+                            ?: listOf(seed, androidx.compose.ui.graphics.lerp(seed, Color.White, 0.45f)),
+                        selected = palette == selected,
+                        description = label(palette),
+                        onClick = { onSelect(palette) },
+                        icon = if (wallpaper != null) Icons.Outlined.Wallpaper else null,
+                    )
                 }
-                Swatch(
-                    color = color,
-                    wallpaper = palette == AppPalette.WALLPAPER,
-                    selected = palette == selected,
-                    description = label(palette),
-                    onClick = { onSelect(palette) },
-                )
             }
         }
     }
 }
 
+/** ChangeDetection's swatch: the change of shape, not only color, shows which one is chosen. */
 @Composable
-private fun Swatch(color: Color, wallpaper: Boolean, selected: Boolean, description: String, onClick: () -> Unit) {
+private fun PaletteSwatch(colors: List<Color>, selected: Boolean, description: String, onClick: () -> Unit, icon: ImageVector? = null, size: Dp = 46.dp) {
     val haptics = LocalHapticFeedback.current
-    val bouncy = spring<Float>(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium)
-    // 0.5 is a circle, 0.3 the rounded square of a key.
-    val corner by animateFloatAsState(if (selected) 0.3f else 0.5f, bouncy, label = "corner")
-    val ring by animateDpAsState(if (selected) 3.dp else 0.dp, label = "ring")
-    val check by animateFloatAsState(if (selected) 1f else 0f, bouncy, label = "check")
-    val shape = RoundedCornerShape(percent = (corner * 100).toInt())
-    val onColor = if (color.luminance() > 0.5f) Color.Black else Color.White
+    val interactions = remember { MutableInteractionSource() }
+    val bouncy = spring<Dp>(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium)
+    val corner by animateDpAsState(if (selected) size * 0.3f else size / 2, bouncy, label = "corner")
+    val ring = animateDpAsState(if (selected) 3.dp else 0.dp, bouncy, label = "ring").value.coerceAtLeast(0.dp)
+    val rotation by animateFloatAsState(
+        if (selected) 0f else 45f,
+        spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        label = "rotation",
+    )
+    val ringColor by animateColorAsState(if (selected) MaterialTheme.colorScheme.surfaceContainer else Color.Transparent, label = "ringColor")
+    val stops = if (colors.size == 1) colors + colors else colors
+    val angle = -rotation * kotlin.math.PI.toFloat() / 180f
+    val brush = remember(stops, angle) {
+        object : ShaderBrush() {
+            override fun createShader(size: Size): Shader {
+                // The diagonal, turned by the counter-rotation, centred on the swatch.
+                val half = Offset(
+                    size.width * kotlin.math.cos(angle) - size.height * kotlin.math.sin(angle),
+                    size.width * kotlin.math.sin(angle) + size.height * kotlin.math.cos(angle),
+                ) / 2f
+                val center = Offset(size.width / 2, size.height / 2)
+                return LinearGradientShader(from = center - half, to = center + half, colors = stops)
+            }
+        }
+    }
+    val outer = RoundedCornerShape(corner.coerceAtLeast(0.dp))
+    val inner = RoundedCornerShape((corner - ring).coerceAtLeast(0.dp))
+    val core = RoundedCornerShape((corner - ring - 2.dp).coerceAtLeast(0.dp))
     Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .size(48.dp)
+        Modifier
+            .size(size)
             .semantics { contentDescription = description }
-            .selectable(selected, role = Role.RadioButton, interactionSource = remember { MutableInteractionSource() }, indication = null) {
+            .selectable(selected = selected, role = Role.RadioButton, interactionSource = interactions, indication = null) {
                 if (!selected) {
                     haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
                     onClick()
                 }
             }
-            .then(if (ring > 0.5.dp) Modifier.border(ring, color, shape) else Modifier)
-            .padding(ring.coerceAtLeast(0.dp) + if (selected) 3.dp else 0.dp)
-            .clip(shape)
-            .background(color),
+            .rotate(rotation)
+            .clip(outer)
+            .background(brush)
+            .padding(ring)
+            .clip(inner)
+            .background(ringColor)
+            .padding(if (selected) 2.dp else 0.dp)
+            .clip(core)
+            .background(brush),
+        contentAlignment = Alignment.Center,
     ) {
-        if (check > 0.01f) {
-            Icon(Icons.Rounded.Check, null, tint = onColor, modifier = Modifier.size(22.dp).graphicsLayer { scaleX = check; scaleY = check; alpha = check.coerceIn(0f, 1f) })
-        } else if (wallpaper) {
-            Icon(Icons.Outlined.Wallpaper, null, tint = onColor, modifier = Modifier.size(20.dp))
-        }
+        if (icon != null) Icon(icon, null, Modifier.size(size * 0.42f).rotate(-rotation), tint = Color.White)
     }
 }
