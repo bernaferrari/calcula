@@ -1,38 +1,75 @@
 package com.bernaferrari.calculator.ui
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.ui.NavDisplay
 import com.bernaferrari.calculator.ui.calculator.CalculatorScreen
 import com.bernaferrari.calculator.ui.converter.ConverterScreen
 import com.bernaferrari.calculator.ui.settings.SettingsScreen
 
+/** The app's three places. The calculator is always at the bottom of the stack. */
+enum class Screen { Calculator, Settings, Converter }
+
+/**
+ * Navigation 3 with a shared-transition scope, so the tool row's icons can grow into the screens
+ * they open (an M3 container transform) and shrink back on back, predictive back included.
+ */
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun AppNavigation(modifier: Modifier = Modifier) {
-    val navController = rememberNavController()
-    val back: () -> Unit = { navController.popBackStack() }
+    val backStack = rememberSaveable(
+        saver = listSaver(save = { stack -> stack.map { it.name } }, restore = { names -> mutableStateListOf(*names.map(Screen::valueOf).toTypedArray()) }),
+    ) { mutableStateListOf(Screen.Calculator) }
+    val open: (Screen) -> Unit = { screen -> if (backStack.lastOrNull() != screen) backStack.add(screen) }
+    val back: () -> Unit = { if (backStack.size > 1) backStack.removeAt(backStack.lastIndex) }
 
-    NavHost(navController = navController, startDestination = "calculator", modifier = modifier) {
-        composable(
-            route = "calculator?expression={expression}",
-            arguments = listOf(navArgument("expression") { type = NavType.StringType; defaultValue = "" }),
-        ) { entry ->
-            CalculatorScreen(
-                initialExpression = entry.arguments?.getString("expression").orEmpty(),
-                onOpenSettings = { navController.navigate("settings") },
-                onOpenConverter = { navController.navigate("unit_converter") },
+    SharedTransitionLayout(modifier) {
+        CompositionLocalProvider(LocalSharedTransitionScope provides this) {
+            NavDisplay(
+                backStack = backStack,
+                onBack = back,
+                entryDecorators = listOf(
+                    rememberSaveableStateHolderNavEntryDecorator(),
+                    rememberViewModelStoreNavEntryDecorator(),
+                ),
+                sharedTransitionScope = this,
+                // The container transform carries the movement; the screens themselves only cross-fade.
+                // The screen underneath stays put while the container grows over it (and back).
+                transitionSpec = { fadeIn(tween(120)) togetherWith ExitTransition.KeepUntilTransitionsFinished },
+                popTransitionSpec = { EnterTransition.None togetherWith fadeOut(tween(200, delayMillis = 120)) },
+                predictivePopTransitionSpec = { fadeIn(tween(220)) togetherWith (fadeOut(tween(220)) + scaleOut(targetScale = 0.9f)) },
+                entryProvider = entryProvider {
+                    entry<Screen>(Screen.Calculator) {
+                        CalculatorScreen(
+                            initialExpression = "",
+                            onOpenSettings = { open(Screen.Settings) },
+                            onOpenConverter = { open(Screen.Converter) },
+                        )
+                    }
+                    entry<Screen>(Screen.Settings) {
+                        SettingsScreen(onNavigateBack = back, onOpenConverter = { open(Screen.Converter) })
+                    }
+                    entry<Screen>(Screen.Converter) {
+                        ConverterScreen(onNavigateBack = back)
+                    }
+                },
             )
         }
-        composable("settings") {
-            SettingsScreen(
-                onNavigateBack = back,
-                onOpenConverter = { navController.navigate("unit_converter") },
-            )
-        }
-        composable("unit_converter") { ConverterScreen(onNavigateBack = back) }
     }
 }

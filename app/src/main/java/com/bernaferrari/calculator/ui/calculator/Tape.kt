@@ -145,7 +145,7 @@ private fun TapeList(
     LazyColumn(
         state = state,
         reverseLayout = true,
-        contentPadding = PaddingValues(top = if (expanded) 8.dp else 64.dp),
+        contentPadding = PaddingValues(top = if (expanded) 8.dp else 24.dp),
         modifier = modifier
             // Fade the oldest entries out at the top instead of cutting them off.
             .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
@@ -154,8 +154,8 @@ private fun TapeList(
                 drawRect(
                     Brush.verticalGradient(
                         0f to Color.Transparent,
-                        (if (expanded) 0.dp else 44.dp).toPx() / size.height.coerceAtLeast(1f) to Color.Transparent,
-                        (if (expanded) 24.dp else 96.dp).toPx() / size.height.coerceAtLeast(1f) to Color.Black,
+                        // Just a short soft edge so entries don't clip hard under the status bar.
+                        20.dp.toPx() / size.height.coerceAtLeast(1f) to Color.Black,
                     ),
                     blendMode = BlendMode.DstIn,
                 )

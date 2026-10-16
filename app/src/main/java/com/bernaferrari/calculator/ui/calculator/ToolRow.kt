@@ -46,6 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bernaferrari.calculator.R
+import com.bernaferrari.calculator.ui.containerTransform
 import com.bernaferrari.calculator.ui.theme.GoogleSansFlex
 
 /** Off shows digits; Once flips back after one function, like Shift; Locked stays, like Caps Lock. */
@@ -87,10 +88,10 @@ fun ToolRow(
             LayerSwitch(layer, onLayer)
         }
         Row(Modifier.align(Alignment.CenterEnd)) {
-            IconButton(onClick = onOpenConverter) {
+            IconButton(onClick = onOpenConverter, modifier = Modifier.containerTransform("converter")) {
                 Icon(Icons.Outlined.Straighten, contentDescription = stringResource(R.string.menu_unit_converter), tint = quiet)
             }
-            IconButton(onClick = onOpenSettings) {
+            IconButton(onClick = onOpenSettings, modifier = Modifier.containerTransform("settings")) {
                 Icon(Icons.Outlined.Settings, contentDescription = stringResource(R.string.menu_settings), tint = quiet)
             }
         }

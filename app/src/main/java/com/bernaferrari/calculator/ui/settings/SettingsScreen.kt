@@ -55,6 +55,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.bernaferrari.calculator.BuildConfig
 import com.bernaferrari.calculator.R
+import com.bernaferrari.calculator.ui.containerTransform
 import com.bernaferrari.calculator.domain.model.AUTO_DECIMALS
 import com.bernaferrari.calculator.domain.model.AngleUnit
 import com.bernaferrari.calculator.domain.model.DecimalSeparator
@@ -105,7 +106,7 @@ fun SettingsScreen(
     var confirmClear by remember { mutableStateOf(false) }
     val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
-    Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxSize()) {
+    Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.containerTransform("settings", isScreen = true).fillMaxSize()) {
       Column(Modifier.fillMaxSize()) {
         // Pinned header, so scrolled content never slides under the status bar.
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.statusBarsPadding().padding(horizontal = 4.dp).height(56.dp)) {

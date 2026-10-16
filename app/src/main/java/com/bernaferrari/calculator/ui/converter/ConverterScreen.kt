@@ -1,6 +1,14 @@
 package com.bernaferrari.calculator.ui.converter
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -22,7 +30,6 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -32,17 +39,12 @@ import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Backspace
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.SwapVert
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -70,6 +72,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bernaferrari.calculator.R
+import com.bernaferrari.calculator.ui.containerTransform
 import com.bernaferrari.calculator.domain.convert.Category
 import com.bernaferrari.calculator.domain.convert.MeasureUnit
 import com.bernaferrari.calculator.domain.convert.Units
@@ -98,7 +101,7 @@ fun ConverterScreen(onNavigateBack: () -> Unit, viewModel: ConverterViewModel = 
     var picking by remember { mutableStateOf<Boolean?>(null) }
     val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
-    Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxSize()) {
+    Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.containerTransform("converter", isScreen = true).fillMaxSize()) {
     Column(Modifier.fillMaxSize()) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.statusBarsPadding().padding(horizontal = 4.dp).height(56.dp)) {
             IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null) }
@@ -140,27 +143,40 @@ fun ConverterScreen(onNavigateBack: () -> Unit, viewModel: ConverterViewModel = 
             }
         }
 
-        ConverterKeypad(
-            decimal = formatter.decimal,
-            haptics = haptics,
-            onDigit = viewModel::onDigit,
-            onDecimal = viewModel::onDecimal,
-            onDelete = viewModel::onDelete,
-            onClear = viewModel::onClear,
-            onNegate = viewModel::onNegate,
-            onSwap = viewModel::onSwap,
+        // Choosing a unit morphs the keypad into the unit tiles, in place: no sheet over the numbers.
+        BackHandler(enabled = picking != null) { picking = null }
+        AnimatedContent(
+            targetState = picking,
+            transitionSpec = {
+                (fadeIn(tween(160, delayMillis = 60)) + scaleIn(spring(dampingRatio = 0.75f, stiffness = 500f), initialScale = 0.94f)) togetherWith
+                    (fadeOut(tween(100)) + scaleOut(tween(140), targetScale = 0.96f))
+            },
+            label = "keypad",
             modifier = Modifier.fillMaxWidth().height(300.dp + bottomInset).padding(bottom = bottomInset),
-        )
+        ) { target ->
+            if (target == null) {
+                ConverterKeypad(
+                    decimal = formatter.decimal,
+                    haptics = haptics,
+                    onDigit = viewModel::onDigit,
+                    onDecimal = viewModel::onDecimal,
+                    onDelete = viewModel::onDelete,
+                    onClear = viewModel::onClear,
+                    onNegate = viewModel::onNegate,
+                    onSwap = viewModel::onSwap,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            } else {
+                UnitGrid(
+                    units = Units.of(state.category),
+                    selected = if (target) state.top else state.bottom,
+                    haptics = haptics,
+                    onPick = { viewModel.onUnit(target, it); picking = null },
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
     }
-    }
-
-    picking?.let { top ->
-        UnitPicker(
-            units = Units.of(state.category),
-            selected = if (top) state.top else state.bottom,
-            onPick = { viewModel.onUnit(top, it); picking = null },
-            onDismiss = { picking = null },
-        )
     }
 }
 
@@ -223,21 +239,33 @@ private fun UnitRow(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+/** Every unit of the category as a tile: big symbol, small name, the current one filled. */
 @Composable
-private fun UnitPicker(units: List<MeasureUnit>, selected: MeasureUnit, onPick: (MeasureUnit) -> Unit, onDismiss: () -> Unit) {
-    ModalBottomSheet(onDismissRequest = onDismiss) {
-        LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
-            items(units, key = { it.id }) { unit ->
-                ListItem(
-                    headlineContent = { Text(unit.name) },
-                    trailingContent = {
-                        if (unit == selected) Icon(Icons.Rounded.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                        else Text(unit.symbol, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    },
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    modifier = Modifier.clickable { onPick(unit) },
-                )
+private fun UnitGrid(units: List<MeasureUnit>, selected: MeasureUnit, haptics: Haptics, onPick: (MeasureUnit) -> Unit, modifier: Modifier = Modifier) {
+    val colors = MaterialTheme.colorScheme
+    val gap = 6.dp
+    val rows = units.chunked(3)
+    Column(verticalArrangement = Arrangement.spacedBy(gap), modifier = modifier.padding(horizontal = gap * 2, vertical = gap)) {
+        rows.forEach { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(gap), modifier = Modifier.weight(1f)) {
+                row.forEach { unit ->
+                    val isSelected = unit == selected
+                    val content = if (isSelected) colors.onPrimary else colors.onSurface
+                    KeyCell(
+                        container = if (isSelected) colors.primary else colors.surfaceContainerHigh,
+                        content = content,
+                        description = unit.name,
+                        haptics = haptics,
+                        onClick = { onPick(unit) },
+                        modifier = Modifier.weight(1f).fillMaxHeight(),
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(unit.symbol, style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 22.sp, fontWeight = FontWeight.Medium), color = content, maxLines = 1)
+                            Text(unit.name, style = MaterialTheme.typography.labelSmall, color = content.copy(alpha = 0.75f), maxLines = 1)
+                        }
+                    }
+                }
+                repeat(3 - row.size) { Box(Modifier.weight(1f)) }
             }
         }
     }
