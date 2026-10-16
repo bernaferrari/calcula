@@ -57,6 +57,7 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -84,14 +85,16 @@ import com.bernaferrari.calculator.domain.model.AngleUnit
 fun CalculatorScreen(
     initialExpression: String,
     onOpenSettings: () -> Unit,
+    onOpenConverter: () -> Unit,
     viewModel: CalculatorViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(initialExpression) { viewModel.loadExpression(initialExpression) }
 
     val locale = LocalConfiguration.current.locales[0]
-    val formatter = remember(locale) { DisplayFormatter(locale) }
-    val haptics = rememberHaptics { state.haptics }
+    val formatLocale = state.decimalSeparator.locale(locale)
+    val formatter = remember(formatLocale) { DisplayFormatter(formatLocale) }
+    val haptics = rememberHaptics(enabled = { state.haptics }, sounds = { state.sounds })
     val context = LocalContext.current
 
     var layer by rememberSaveable { mutableStateOf(FunctionLayer.Off) }
@@ -138,6 +141,7 @@ fun CalculatorScreen(
 
     val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
+    CompositionLocalProvider(LocalReduceMotion provides state.reduceMotion) {
     BoxWithConstraints(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
         val landscape = maxWidth > maxHeight && maxHeight < 600.dp
         if (landscape) {
@@ -205,6 +209,7 @@ fun CalculatorScreen(
                     layer = layer,
                     onToggleHistory = { haptics.tap(); historyOpen = !historyOpen },
                     onLayer = { next -> haptics.tap(); layer = next; historyOpen = false },
+                    onOpenConverter = onOpenConverter,
                     onOpenSettings = onOpenSettings,
                     modifier = Modifier.padding(bottom = if (historyOpen) bottomInset else 0.dp),
                 )
@@ -219,11 +224,13 @@ fun CalculatorScreen(
                         if (layer == FunctionLayer.Once) layer = FunctionLayer.Off
                     },
                     onClearAll = { viewModel.onKey(Key.CLEAR) },
+                    showDots = state.showFlickDots,
                     bottomInset = bottomInset,
                     modifier = Modifier.fillMaxWidth().height(keypadHeight).clipToBounds(),
                 )
             }
         }
+    }
     }
 }
 

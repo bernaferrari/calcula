@@ -24,6 +24,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             CalculatorScreen(
                 initialExpression = entry.arguments?.getString("expression").orEmpty(),
                 onOpenSettings = { navController.navigate("settings") },
+                onOpenConverter = { navController.navigate("unit_converter") },
             )
         }
         composable("settings") {

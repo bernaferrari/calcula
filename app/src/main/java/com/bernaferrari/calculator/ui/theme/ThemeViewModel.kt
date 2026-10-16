@@ -26,6 +26,7 @@ class ThemeViewModel
         private val _themeMode = MutableStateFlow(ThemeMode.SYSTEM)
         val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
         private val dynamicColor = MutableStateFlow(true)
+        private val highContrast = MutableStateFlow(false)
 
         init {
             observeThemePreferences()
@@ -39,6 +40,7 @@ class ThemeViewModel
                     .collect { preferences ->
                         _themeMode.value = preferences.themeMode
                         dynamicColor.value = preferences.dynamicColor
+                        highContrast.value = preferences.highContrast
                     }
             }
         }
@@ -60,6 +62,12 @@ class ThemeViewModel
         fun shouldUseDynamicColor(): Boolean {
             val enabled by dynamicColor.collectAsState()
             return enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+        }
+
+        @Composable
+        fun shouldUseHighContrast(): Boolean {
+            val enabled by highContrast.collectAsState()
+            return enabled
         }
 
         fun updateThemeMode(themeMode: ThemeMode) {

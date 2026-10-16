@@ -126,6 +126,7 @@ fun CalculatorDisplay(
     entryMaxFontSize: TextUnit = 72.sp,
 ) {
     val shake = remember { Animatable(0f) }
+    val reduceMotion = LocalReduceMotion.current
     val tapeState = rememberLazyListState()
 
     LaunchedEffect(events) {
@@ -136,7 +137,7 @@ fun CalculatorDisplay(
                     haptics.reject()
                     launch {
                         shake.snapTo(0f)
-                        shake.animateTo(0f, spring(dampingRatio = 0.25f, stiffness = 900f), initialVelocity = -1400f)
+                        if (!reduceMotion) shake.animateTo(0f, spring(dampingRatio = 0.25f, stiffness = 900f), initialVelocity = -1400f)
                     }
                 }
                 Outcome.Cleared -> haptics.heavy()
@@ -154,7 +155,8 @@ fun CalculatorDisplay(
     Box(modifier) {
         Column(Modifier.fillMaxSize()) {
             Tape(
-                history = state.history,
+                // With the tape turned off, history still lives one tap away in history mode.
+                history = if (state.showHistory || historyOpen) state.history else emptyList(),
                 formatter = formatter,
                 state = tapeState,
                 onUseResult = { haptics.tap(); onUseResult(it) },
@@ -176,7 +178,9 @@ fun CalculatorDisplay(
                 targetState = entry,
                 contentKey = { it.generation },
                 transitionSpec = {
-                    if (targetState.resultShown) {
+                    if (reduceMotion) {
+                        fadeIn(tween(120)) togetherWith fadeOut(tween(120))
+                    } else if (targetState.resultShown) {
                         // `=`: the question lifts a little and fades (its copy appears on the tape just after),
                         // while the answer grows in place from the size of the preview line.
                         (scaleIn(spring(dampingRatio = 0.7f, stiffness = 500f), initialScale = 34f / 72f, transformOrigin = TransformOrigin(1f, 0.8f)) +

@@ -120,6 +120,7 @@ fun MainKeypad(
             Spec(Key.EQUALS, "=", Tone.Equals, "Equals"),
         ),
     )
+    val reduceMotion = LocalReduceMotion.current
     Column(
         verticalArrangement = Arrangement.spacedBy(KeyGap),
         modifier = modifier.padding(start = KeyGap * 2, end = KeyGap * 2, top = KeyGap, bottom = KeyGap * 2 + bottomInset),
@@ -130,9 +131,10 @@ fun MainKeypad(
                 row.forEachIndexed { c, spec ->
                     // The pressed key widens and its row-mates make room, then everything springs back.
                     val weight by animateFloatAsState(
-                        when (pressedIndex) {
-                            -1 -> 1f
-                            c -> 1.1f
+                        when {
+                            reduceMotion -> 1f
+                            pressedIndex == -1 -> 1f
+                            pressedIndex == c -> 1.1f
                             else -> 0.967f
                         },
                         spring(dampingRatio = 0.6f, stiffness = Spring.StiffnessMedium),
@@ -196,8 +198,13 @@ private fun KeypadKey(
     // The face flips over its horizontal axis: out to 90°, swap the label, then spring back in.
     val rotation = remember { Animatable(0f) }
     var onLayer by remember { mutableStateOf(wantsLayer) }
+    val reduceMotion = LocalReduceMotion.current
     LaunchedEffect(wantsLayer) {
         if (onLayer == wantsLayer) return@LaunchedEffect
+        if (reduceMotion) {
+            onLayer = wantsLayer
+            return@LaunchedEffect
+        }
         delay(flipDelay)
         rotation.animateTo(90f, tween(110, easing = FastOutLinearInEasing))
         onLayer = wantsLayer

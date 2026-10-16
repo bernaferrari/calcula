@@ -308,4 +308,27 @@
     <string name="unit_data">Data</string>
     <string name="unit_energy">Energy</string>
     <string name="unit_pressure">Pressure</string>
+    <string name="settings_dynamic_color_description">Match your wallpaper</string>
+    <string name="settings_high_contrast">High contrast</string>
+    <string name="settings_high_contrast_description">Pure backgrounds and stronger text</string>
+    <string name="settings_calculator">Calculator</string>
+    <string name="settings_angle_unit">Angle unit</string>
+    <string name="settings_degrees">Degrees</string>
+    <string name="settings_radians">Radians</string>
+    <string name="settings_decimal_places">Decimal places</string>
+    <string name="settings_auto">Auto</string>
+    <string name="settings_decimal_separator">Number format</string>
+    <string name="settings_show_tape">Show recent calculations</string>
+    <string name="settings_show_tape_description">Keep the tape above the result</string>
+    <string name="settings_flick_dots">Show function dots</string>
+    <string name="settings_flick_dots_description">Mark keys that hide functions</string>
+    <string name="settings_feedback">Feedback</string>
+    <string name="settings_sounds">Key sounds</string>
+    <string name="settings_sounds_description">A soft click on every press</string>
+    <string name="settings_reduce_motion">Reduce motion</string>
+    <string name="settings_reduce_motion_description">Simple fades instead of flips and springs</string>
+    <string name="settings_more">More</string>
+    <string name="settings_version">Version %1$s</string>
+    <string name="settings_clear_history_title">Clear history?</string>
+    <string name="settings_clear_history_body">All saved calculations will be deleted.</string>
 </resources>

@@ -5,6 +5,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
+import com.bernaferrari.calculator.domain.model.DecimalSeparator
 import java.text.DecimalFormatSymbols
 import java.util.Locale
 
@@ -105,4 +106,11 @@ class DisplayFormatter(locale: Locale = Locale.getDefault()) {
             '8' to "⁸", '9' to "⁹", '−' to "⁻", '-' to "⁻", '+' to "",
         )
     }
+}
+
+/** The locale whose separators to use: the system's, or one forcing `1,234.5` or `1.234,5`. */
+fun DecimalSeparator.locale(system: Locale): Locale = when (this) {
+    DecimalSeparator.AUTO -> system
+    DecimalSeparator.DOT -> Locale.US
+    DecimalSeparator.COMMA -> Locale.GERMANY
 }

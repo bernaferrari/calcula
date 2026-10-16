@@ -301,4 +301,27 @@
     <string name="unit_data">Dados</string>
     <string name="unit_energy">Energia</string>
     <string name="unit_pressure">Pressão</string>
+    <string name="settings_dynamic_color_description">Combinar com o papel de parede</string>
+    <string name="settings_high_contrast">Alto contraste</string>
+    <string name="settings_high_contrast_description">Fundos puros e texto mais forte</string>
+    <string name="settings_calculator">Calculadora</string>
+    <string name="settings_angle_unit">Unidade de ângulo</string>
+    <string name="settings_degrees">Graus</string>
+    <string name="settings_radians">Radianos</string>
+    <string name="settings_decimal_places">Casas decimais</string>
+    <string name="settings_auto">Auto</string>
+    <string name="settings_decimal_separator">Formato numérico</string>
+    <string name="settings_show_tape">Mostrar cálculos recentes</string>
+    <string name="settings_show_tape_description">Manter a fita acima do resultado</string>
+    <string name="settings_flick_dots">Mostrar pontos de função</string>
+    <string name="settings_flick_dots_description">Marcar teclas com funções escondidas</string>
+    <string name="settings_feedback">Resposta</string>
+    <string name="settings_sounds">Sons das teclas</string>
+    <string name="settings_sounds_description">Um clique suave a cada toque</string>
+    <string name="settings_reduce_motion">Reduzir movimento</string>
+    <string name="settings_reduce_motion_description">Transições simples em vez de giros e molas</string>
+    <string name="settings_more">Mais</string>
+    <string name="settings_version">Versão %1$s</string>
+    <string name="settings_clear_history_title">Limpar histórico?</string>
+    <string name="settings_clear_history_body">Todos os cálculos salvos serão excluídos.</string>
 </resources>

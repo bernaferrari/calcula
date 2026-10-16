@@ -27,9 +27,10 @@ private val calculatorAccent = Color(0xFFEC4899) // Pink for scientific function
 fun CalculatorTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = true,
+    highContrast: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    val colorScheme =
+    val baseScheme =
         when {
             dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
                 val context = LocalContext.current
@@ -44,6 +45,26 @@ fun CalculatorTheme(
                     specVersion = ColorSpec.SpecVersion.SPEC_2025,
                 ).colorScheme
         }
+    // High contrast: true black or white backgrounds and full-strength secondary text.
+    val colorScheme = if (!highContrast) {
+        baseScheme
+    } else if (darkTheme) {
+        baseScheme.copy(
+            background = Color.Black,
+            surface = Color.Black,
+            onSurface = Color.White,
+            onSurfaceVariant = Color.White.copy(alpha = 0.86f),
+            outlineVariant = baseScheme.outline,
+        )
+    } else {
+        baseScheme.copy(
+            background = Color.White,
+            surface = Color.White,
+            onSurface = Color.Black,
+            onSurfaceVariant = Color.Black.copy(alpha = 0.8f),
+            outlineVariant = baseScheme.outline,
+        )
+    }
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {

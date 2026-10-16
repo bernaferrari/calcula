@@ -100,4 +100,11 @@ class CalculatorTest {
         val trig = type(Key.SIN, Key.D3, Key.D0, Key.EQUALS)
         assertEquals("0.5", type(Key.EQUALS, from = trig).editor.text)
     }
+
+    @Test fun fixedDecimalPlaces() {
+        val state = CalcState(decimalPlaces = 2)
+        assertEquals("0.33", type(Key.D1, Key.DIVIDE, Key.D3, Key.EQUALS, from = state).editor.text)
+        assertEquals("2", type(Key.D4, Key.DIVIDE, Key.D2, Key.EQUALS, from = state).editor.text)
+        assertEquals("0.67", Calculator.preview("2÷3", com.bernaferrari.calculator.domain.model.AngleUnit.DEGREES, 2))
+    }
 }

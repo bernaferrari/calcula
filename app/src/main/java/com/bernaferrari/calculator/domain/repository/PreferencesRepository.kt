@@ -1,6 +1,7 @@
 package com.bernaferrari.calculator.domain.repository
 
 import com.bernaferrari.calculator.domain.model.AngleUnit
+import com.bernaferrari.calculator.domain.model.DecimalSeparator
 import com.bernaferrari.calculator.domain.model.ThemeMode
 import com.bernaferrari.calculator.domain.model.UserPreferences
 import kotlinx.coroutines.flow.Flow
@@ -20,7 +21,9 @@ interface PreferencesRepository {
 
     suspend fun updateShowHistory(enabled: Boolean)
 
-    suspend fun updateCommaDecimalSeparator(enabled: Boolean)
+    suspend fun updateDecimalSeparator(separator: DecimalSeparator)
+
+    suspend fun updateShowFlickDots(enabled: Boolean)
 
     suspend fun updateSoundEnabled(enabled: Boolean)
 

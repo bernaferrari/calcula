@@ -12,6 +12,7 @@ import com.bernaferrari.calculator.domain.input.Outcome
 import com.bernaferrari.calculator.domain.math.CalcError
 import com.bernaferrari.calculator.domain.model.AngleUnit
 import com.bernaferrari.calculator.domain.model.CalculationHistory
+import com.bernaferrari.calculator.domain.model.DecimalSeparator
 import com.bernaferrari.calculator.domain.repository.CalculatorRepository
 import com.bernaferrari.calculator.domain.repository.PreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -43,6 +44,11 @@ data class CalculatorUiState(
     val angleUnit: AngleUnit = AngleUnit.DEGREES,
     val history: List<CalculationHistory> = emptyList(),
     val haptics: Boolean = true,
+    val sounds: Boolean = false,
+    val reduceMotion: Boolean = false,
+    val showHistory: Boolean = true,
+    val showFlickDots: Boolean = true,
+    val decimalSeparator: DecimalSeparator = DecimalSeparator.AUTO,
     /** Bumps on every `=` and clear, so the display can animate the hand-off. */
     val generation: Int = 0,
 ) {
@@ -65,9 +71,9 @@ class CalculatorViewModel @Inject constructor(
     val events: SharedFlow<Outcome> = _events
 
     private val preview = calc
-        .map { it.editor.text to it.angleUnit }
+        .map { Triple(it.editor.text, it.angleUnit, it.decimalPlaces) }
         .distinctUntilChanged()
-        .mapLatest { (text, angle) -> Calculator.preview(text, angle) }
+        .mapLatest { (text, angle, decimals) -> Calculator.preview(text, angle, decimals) }
         .flowOn(Dispatchers.Default)
 
     private val prefs = preferences.getUserPreferences()
@@ -85,6 +91,11 @@ class CalculatorViewModel @Inject constructor(
             angleUnit = calc.angleUnit,
             history = history,
             haptics = prefs.hapticFeedback,
+            sounds = prefs.soundEnabled,
+            reduceMotion = prefs.reduceMotion,
+            showHistory = prefs.showHistory,
+            showFlickDots = prefs.showFlickDots,
+            decimalSeparator = prefs.decimalSeparator,
             generation = generation,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), CalculatorUiState(text = calc.value.editor.text))
@@ -92,6 +103,9 @@ class CalculatorViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             prefs.map { it.angleUnit }.distinctUntilChanged().collect { unit -> calc.update { it.copy(angleUnit = unit) } }
+        }
+        viewModelScope.launch {
+            prefs.map { it.decimalPlaces }.distinctUntilChanged().collect { places -> calc.update { it.copy(decimalPlaces = places) } }
         }
     }
 

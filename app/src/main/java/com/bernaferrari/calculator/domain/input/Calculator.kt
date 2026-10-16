@@ -5,7 +5,10 @@ import com.bernaferrari.calculator.domain.math.CalcError
 import com.bernaferrari.calculator.domain.math.CalcException
 import com.bernaferrari.calculator.domain.math.NumberFormatter
 import com.bernaferrari.calculator.domain.math.Tokenizer
+import com.bernaferrari.calculator.domain.model.AUTO_DECIMALS
 import com.bernaferrari.calculator.domain.model.AngleUnit
+import java.math.BigDecimal
+import java.math.RoundingMode
 
 enum class Key {
     D0, D1, D2, D3, D4, D5, D6, D7, D8, D9, DOT,
@@ -28,6 +31,8 @@ data class CalcState(
     val error: CalcError? = null,
     /** The trailing `+3` of the last calculation, so pressing `=` again repeats it. */
     val repeatTail: String? = null,
+    /** Decimals to round results to, or [AUTO_DECIMALS]. */
+    val decimalPlaces: Int = AUTO_DECIMALS,
 )
 
 sealed interface Outcome {
@@ -65,7 +70,7 @@ object Calculator {
     }
 
     /** The value shown under the expression while typing, or null when it would add nothing. */
-    fun preview(text: String, angleUnit: AngleUnit): String? {
+    fun preview(text: String, angleUnit: AngleUnit, decimalPlaces: Int = AUTO_DECIMALS): String? {
         if (isPlainNumber(text)) return null
         var candidate = text
         // While an operator is dangling ("5+3×"), preview what's complete so far.
@@ -74,7 +79,7 @@ object Calculator {
         }
         if (candidate.isEmpty() || isPlainNumber(candidate)) return null
         val value = CalcEngine.evaluateOrNull(candidate, angleUnit) ?: return null
-        return NumberFormatter.format(value)
+        return formatResult(value, decimalPlaces)
     }
 
     fun isPlainNumber(text: String): Boolean {
@@ -96,7 +101,7 @@ object Calculator {
         if (text.isEmpty() || state.resultShown || isPlainNumber(text)) return state to Outcome.None
         val closed = text + ")".repeat(ExpressionEditor.openParentheses(text).coerceAtLeast(0))
         return try {
-            val result = NumberFormatter.format(CalcEngine.evaluate(closed, state.angleUnit))
+            val result = formatResult(CalcEngine.evaluate(closed, state.angleUnit), state.decimalPlaces)
             state.copy(editor = Editor(result), resultShown = true, error = null, repeatTail = repeatTail(closed)) to
                 Outcome.Evaluated(closed, result)
         } catch (e: CalcException) {
@@ -104,6 +109,14 @@ object Calculator {
         } catch (e: ArithmeticException) {
             state.copy(error = CalcError.OVERFLOW) to Outcome.Failed(CalcError.OVERFLOW)
         }
+    }
+
+    /** Rounds to the chosen number of decimals (keeping very large/small values in E notation). */
+    fun formatResult(value: BigDecimal, decimalPlaces: Int): String {
+        if (decimalPlaces < 0 || value.signum() == 0) return NumberFormatter.format(value)
+        val magnitude = value.precision() - value.scale() - 1
+        if (magnitude >= 16 || magnitude <= -10) return NumberFormatter.format(value)
+        return NumberFormatter.format(value.setScale(decimalPlaces, RoundingMode.HALF_UP))
     }
 
     /** `2×(1+2)+3` → `+3`: a final top-level operator and plain number, if there is one. */

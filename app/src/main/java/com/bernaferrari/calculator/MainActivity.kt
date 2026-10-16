@@ -26,6 +26,7 @@ class MainActivity : ComponentActivity() {
             CalculatorTheme(
                 darkTheme = themeViewModel.shouldUseDarkTheme(),
                 dynamicColor = themeViewModel.shouldUseDynamicColor(),
+                highContrast = themeViewModel.shouldUseHighContrast(),
             ) {
                 AppNavigation(
                     modifier = Modifier.fillMaxSize(),

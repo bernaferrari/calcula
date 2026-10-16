@@ -7,6 +7,8 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.bernaferrari.calculator.domain.model.ThemeMode
 import com.bernaferrari.calculator.domain.model.UserPreferences
 import com.bernaferrari.calculator.domain.model.AngleUnit
+import com.bernaferrari.calculator.domain.model.AUTO_DECIMALS
+import com.bernaferrari.calculator.domain.model.DecimalSeparator
 import com.bernaferrari.calculator.domain.repository.PreferencesRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
@@ -29,8 +31,9 @@ class PreferencesRepositoryImpl @Inject constructor(
         val DECIMAL_PLACES = intPreferencesKey("decimal_places")
         val HAPTIC_FEEDBACK = booleanPreferencesKey("haptic_feedback")
         val SHOW_HISTORY = booleanPreferencesKey("show_history")
-        val COMMA_DECIMAL_SEPARATOR = booleanPreferencesKey("comma_decimal_separator")
-        val SOUND_ENABLED = booleanPreferencesKey("sound_enabled")
+        val DECIMAL_SEPARATOR = stringPreferencesKey("decimal_separator")
+        val SOUND_ENABLED = booleanPreferencesKey("key_sounds")
+        val SHOW_FLICK_DOTS = booleanPreferencesKey("show_flick_dots")
         val REDUCE_MOTION = booleanPreferencesKey("reduce_motion")
         val HIGH_CONTRAST = booleanPreferencesKey("high_contrast")
         val SWIPE_HINT_SEEN = booleanPreferencesKey("swipe_hint_seen")
@@ -48,11 +51,13 @@ class PreferencesRepositoryImpl @Inject constructor(
                     angleUnit = AngleUnit.valueOf(
                         preferences[PreferencesKeys.ANGLE_UNIT] ?: AngleUnit.DEGREES.name
                     ),
-                    decimalPlaces = preferences[PreferencesKeys.DECIMAL_PLACES] ?: 10,
+                    decimalPlaces = preferences[PreferencesKeys.DECIMAL_PLACES] ?: AUTO_DECIMALS,
                     hapticFeedback = preferences[PreferencesKeys.HAPTIC_FEEDBACK] ?: true,
                     showHistory = preferences[PreferencesKeys.SHOW_HISTORY] ?: true,
-                    useCommaDecimalSeparator = preferences[PreferencesKeys.COMMA_DECIMAL_SEPARATOR] ?: false,
-                    soundEnabled = preferences[PreferencesKeys.SOUND_ENABLED] ?: true,
+                    decimalSeparator = preferences[PreferencesKeys.DECIMAL_SEPARATOR]
+                        ?.let { runCatching { DecimalSeparator.valueOf(it) }.getOrNull() } ?: DecimalSeparator.AUTO,
+                    soundEnabled = preferences[PreferencesKeys.SOUND_ENABLED] ?: false,
+                    showFlickDots = preferences[PreferencesKeys.SHOW_FLICK_DOTS] ?: true,
                     reduceMotion = preferences[PreferencesKeys.REDUCE_MOTION] ?: false,
                     highContrast = preferences[PreferencesKeys.HIGH_CONTRAST] ?: false,
                     swipeHintSeen = preferences[PreferencesKeys.SWIPE_HINT_SEEN] ?: false,
@@ -96,9 +101,15 @@ class PreferencesRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun updateCommaDecimalSeparator(enabled: Boolean) {
+    override suspend fun updateDecimalSeparator(separator: DecimalSeparator) {
         context.dataStore.edit { preferences ->
-            preferences[PreferencesKeys.COMMA_DECIMAL_SEPARATOR] = enabled
+            preferences[PreferencesKeys.DECIMAL_SEPARATOR] = separator.name
+        }
+    }
+
+    override suspend fun updateShowFlickDots(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.SHOW_FLICK_DOTS] = enabled
         }
     }
 

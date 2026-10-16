@@ -26,6 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Dialpad
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -63,29 +64,35 @@ fun ToolRow(
     layer: FunctionLayer,
     onToggleHistory: () -> Unit,
     onLayer: (FunctionLayer) -> Unit,
+    onOpenConverter: () -> Unit,
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val quiet = MaterialTheme.colorScheme.onSurfaceVariant
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier.fillMaxWidth().height(52.dp).padding(horizontal = 8.dp),
-    ) {
-        IconButton(onClick = onToggleHistory) {
+    Box(modifier.fillMaxWidth().height(52.dp).padding(horizontal = 8.dp)) {
+        IconButton(onClick = onToggleHistory, modifier = Modifier.align(Alignment.CenterStart)) {
             Icon(
                 if (historyOpen) Icons.Outlined.Dialpad else Icons.Outlined.History,
                 contentDescription = stringResource(if (historyOpen) R.string.show_keypad else R.string.show_history),
                 tint = quiet,
             )
         }
-        Spacer(Modifier.weight(1f))
         // Functions mean nothing while browsing history, so the switch steps out of the way.
-        AnimatedVisibility(!historyOpen, enter = fadeIn() + scaleIn(initialScale = 0.9f), exit = fadeOut() + scaleOut(targetScale = 0.9f)) {
+        AnimatedVisibility(
+            !historyOpen,
+            enter = fadeIn() + scaleIn(initialScale = 0.9f),
+            exit = fadeOut() + scaleOut(targetScale = 0.9f),
+            modifier = Modifier.align(Alignment.Center),
+        ) {
             LayerSwitch(layer, onLayer)
         }
-        Spacer(Modifier.weight(1f))
-        IconButton(onClick = onOpenSettings) {
-            Icon(Icons.Outlined.Settings, contentDescription = stringResource(R.string.menu_settings), tint = quiet)
+        Row(Modifier.align(Alignment.CenterEnd)) {
+            IconButton(onClick = onOpenConverter) {
+                Icon(Icons.Outlined.Straighten, contentDescription = stringResource(R.string.menu_unit_converter), tint = quiet)
+            }
+            IconButton(onClick = onOpenSettings) {
+                Icon(Icons.Outlined.Settings, contentDescription = stringResource(R.string.menu_settings), tint = quiet)
+            }
         }
     }
 }

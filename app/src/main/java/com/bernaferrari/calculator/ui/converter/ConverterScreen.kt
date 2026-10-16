@@ -77,6 +77,7 @@ import com.bernaferrari.calculator.ui.calculator.DisplayFormatter
 import com.bernaferrari.calculator.ui.calculator.Haptics
 import com.bernaferrari.calculator.ui.calculator.KeyCell
 import com.bernaferrari.calculator.ui.calculator.NumberFeatures
+import com.bernaferrari.calculator.ui.calculator.locale
 import com.bernaferrari.calculator.ui.calculator.rememberHaptics
 import com.bernaferrari.calculator.ui.settings.SettingsViewModel
 import com.bernaferrari.calculator.ui.theme.GoogleSansFlex
@@ -90,9 +91,10 @@ fun ConverterScreen(onNavigateBack: () -> Unit, viewModel: ConverterViewModel = 
     val state by viewModel.state.collectAsStateWithLifecycle()
     val settings: SettingsViewModel = hiltViewModel()
     val prefs by settings.prefs.collectAsStateWithLifecycle()
-    val haptics = rememberHaptics { prefs.hapticFeedback }
+    val haptics = rememberHaptics(enabled = { prefs.hapticFeedback }, sounds = { prefs.soundEnabled })
     val locale = LocalConfiguration.current.locales[0]
-    val formatter = remember(locale) { DisplayFormatter(locale) }
+    val formatLocale = prefs.decimalSeparator.locale(locale)
+    val formatter = remember(formatLocale) { DisplayFormatter(formatLocale) }
     var picking by remember { mutableStateOf<Boolean?>(null) }
     val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
