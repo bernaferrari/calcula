@@ -93,4 +93,7 @@
     <string name="about_privacy">Sem anúncios, sem contas, sem rastreamento. Seus cálculos nunca saem deste aparelho.</string>
     <string name="about_credit">Baseado no Calculator++ de Sergey Solovyev</string>
     <string name="about_feedback_body">Ideias, bugs, elogios</string>
+    <string name="settings_decimals_full">Todas</string>
+    <string name="settings_separator_region">Região</string>
+    <string name="settings_separator_example">Exibido como %1$s</string>
 </resources>

@@ -54,6 +54,11 @@ import androidx.compose.runtime.produceState
 import com.bernaferrari.calculator.AppGraph
 import com.bernaferrari.calculator.APP_VERSION
 import com.bernaferrari.calculator.domain.model.AppPalette
+import com.bernaferrari.calculator.ui.calculator.separators
+import com.bernaferrari.calculator.ui.calculator.DisplayFormatter
+import com.bernaferrari.calculator.domain.input.Calculator
+import com.bernaferrari.calculator.domain.math.MathContext
+import com.bernaferrari.calculator.domain.math.Decimal
 import com.bernaferrari.calculator.ui.theme.orDefault
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -175,8 +180,10 @@ fun SettingsScreen(
                             ChoiceRow(
                                 p, Icons.Outlined.FormatListNumbered, stringResource(Res.string.settings_decimal_places),
                                 DecimalChoices, if (prefs.decimalPlaces in DecimalChoices) prefs.decimalPlaces else AUTO_DECIMALS,
-                                label = { if (it == AUTO_DECIMALS) stringResource(Res.string.settings_auto) else it.toString() },
+                                label = { if (it == AUTO_DECIMALS) stringResource(Res.string.settings_decimals_full) else it.toString() },
                                 onSelect = viewModel::setDecimalPlaces,
+                                // A live example says more than "Auto" ever could.
+                                subtitle = decimalsExample(prefs.decimalPlaces, prefs.decimalSeparator),
                             )
                         },
                         { p ->
@@ -185,12 +192,16 @@ fun SettingsScreen(
                                 DecimalSeparator.entries.toList(), prefs.decimalSeparator,
                                 label = {
                                     when (it) {
-                                        DecimalSeparator.AUTO -> stringResource(Res.string.settings_auto)
+                                        DecimalSeparator.AUTO -> stringResource(Res.string.settings_separator_region)
                                         DecimalSeparator.DOT -> "1,234.5"
                                         DecimalSeparator.COMMA -> "1.234,5"
                                     }
                                 },
                                 onSelect = viewModel::setDecimalSeparator,
+                                subtitle = stringResource(
+                                    Res.string.settings_separator_example,
+                                    DisplayFormatter(prefs.decimalSeparator.separators()).number("1234567.8"),
+                                ),
                             )
                         },
                         { p ->
@@ -271,4 +282,11 @@ internal fun AppPalette.title(): StringResource = when (this) {
     AppPalette.PINK -> Res.string.palette_pink
     AppPalette.PURPLE -> Res.string.palette_purple
     AppPalette.GRAPHITE -> Res.string.palette_graphite
+}
+
+/** "2 ÷ 3 = 0.67", in the chosen decimals and separators. */
+private fun decimalsExample(decimals: Int, separator: DecimalSeparator): String {
+    val two = Decimal(2).divide(Decimal(3), MathContext(40))
+    val formatter = DisplayFormatter(separator.separators())
+    return "2 ÷ 3 = " + formatter.number(Calculator.formatResult(two, decimals))
 }

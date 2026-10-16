@@ -65,8 +65,6 @@ import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Wallpaper
 import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.remember
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -189,13 +187,14 @@ fun <T> ChoiceRow(
     selected: T,
     label: @Composable (T) -> String,
     onSelect: (T) -> Unit,
+    subtitle: String? = null,
 ) {
     RowSurface(position) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 RowIcon(icon)
                 Spacer(Modifier.width(16.dp))
-                RowText(title, null)
+                RowText(title, subtitle)
             }
             Row(
                 horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
@@ -328,56 +327,50 @@ private fun DrawScope.drawMini(scheme: ColorScheme) {
 }
 
 /**
- * The color families as swatches, each drawn from the scheme it would actually produce: a disc
- * split between that palette's accent and its container. The chosen one springs upright into
- * the calculator's own `=` key shape and takes a check.
+ * The color families as plain swatches in each family's own vivid color. The chosen one springs
+ * into the calculator's rounded key shape, gains a ring and a check. No labels: the colors are
+ * the labels (names stay available to screen readers).
  */
 @Composable
 fun PaletteRow(position: SegmentPosition, selected: AppPalette, label: @Composable (AppPalette) -> String, onSelect: (AppPalette) -> Unit) {
-    val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
     RowSurface(position) {
-        Column(Modifier.padding(vertical = 16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 16.dp)) {
-                RowIcon(Icons.Outlined.Palette)
-                Spacer(Modifier.width(16.dp))
-                RowText(stringResource(Res.string.settings_color), label(selected))
-            }
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                modifier = Modifier.padding(top = 16.dp).selectableGroup(),
-            ) {
-                items(availablePalettes) { palette ->
-                    val scheme = paletteColorScheme(palette, dark)
-                    Swatch(
-                        accent = scheme.primary,
-                        container = scheme.primaryContainer,
-                        onAccent = scheme.onPrimary,
-                        wallpaper = palette == AppPalette.WALLPAPER,
-                        selected = palette == selected,
-                        description = label(palette),
-                        onClick = { onSelect(palette) },
-                    )
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(16.dp),
+            modifier = Modifier.selectableGroup(),
+        ) {
+            items(availablePalettes) { palette ->
+                val color = if (palette == AppPalette.WALLPAPER) {
+                    paletteColorScheme(palette, dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f).primary
+                } else {
+                    Color(palette.seed)
                 }
+                Swatch(
+                    color = color,
+                    wallpaper = palette == AppPalette.WALLPAPER,
+                    selected = palette == selected,
+                    description = label(palette),
+                    onClick = { onSelect(palette) },
+                )
             }
         }
     }
 }
 
 @Composable
-private fun Swatch(accent: Color, container: Color, onAccent: Color, wallpaper: Boolean, selected: Boolean, description: String, onClick: () -> Unit) {
+private fun Swatch(color: Color, wallpaper: Boolean, selected: Boolean, description: String, onClick: () -> Unit) {
     val haptics = LocalHapticFeedback.current
     val bouncy = spring<Float>(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium)
     // 0.5 is a circle, 0.3 the rounded square of a key.
     val corner by animateFloatAsState(if (selected) 0.3f else 0.5f, bouncy, label = "corner")
-    val turn by animateFloatAsState(if (selected) 0f else -45f, spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow), label = "turn")
     val ring by animateDpAsState(if (selected) 3.dp else 0.dp, label = "ring")
     val check by animateFloatAsState(if (selected) 1f else 0f, bouncy, label = "check")
     val shape = RoundedCornerShape(percent = (corner * 100).toInt())
+    val onColor = if (color.luminance() > 0.5f) Color.Black else Color.White
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
-            .size(52.dp)
+            .size(48.dp)
             .semantics { contentDescription = description }
             .selectable(selected, role = Role.RadioButton, interactionSource = remember { MutableInteractionSource() }, indication = null) {
                 if (!selected) {
@@ -385,26 +378,15 @@ private fun Swatch(accent: Color, container: Color, onAccent: Color, wallpaper: 
                     onClick()
                 }
             }
-            .then(if (ring > 0.5.dp) Modifier.border(ring, accent, shape) else Modifier)
+            .then(if (ring > 0.5.dp) Modifier.border(ring, color, shape) else Modifier)
             .padding(ring.coerceAtLeast(0.dp) + if (selected) 3.dp else 0.dp)
-            .rotate(turn)
             .clip(shape)
-            .drawBehind {
-                // Accent on one side of the diagonal, its container on the other; chosen, it fills solid.
-                drawRect(androidx.compose.ui.graphics.lerp(container, accent, check.coerceIn(0f, 1f)))
-                val half = Path().apply {
-                    moveTo(0f, 0f)
-                    lineTo(size.width, 0f)
-                    lineTo(0f, size.height)
-                    close()
-                }
-                drawPath(half, accent)
-            },
+            .background(color),
     ) {
         if (check > 0.01f) {
-            Icon(Icons.Rounded.Check, null, tint = onAccent, modifier = Modifier.size(22.dp).rotate(-turn).graphicsLayer { scaleX = check; scaleY = check; alpha = check.coerceIn(0f, 1f) })
+            Icon(Icons.Rounded.Check, null, tint = onColor, modifier = Modifier.size(22.dp).graphicsLayer { scaleX = check; scaleY = check; alpha = check.coerceIn(0f, 1f) })
         } else if (wallpaper) {
-            Icon(Icons.Outlined.Wallpaper, null, tint = onAccent, modifier = Modifier.size(20.dp).rotate(-turn))
+            Icon(Icons.Outlined.Wallpaper, null, tint = onColor, modifier = Modifier.size(20.dp))
         }
     }
 }

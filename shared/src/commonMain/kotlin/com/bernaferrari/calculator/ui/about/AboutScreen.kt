@@ -107,7 +107,7 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
                     item(key = "hero") { Hero() }
                     item(key = "actions") {
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(3.dp),
                             modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(start = 16.dp, end = 16.dp, top = 32.dp),
                         ) {
                             ActionCard(
@@ -117,7 +117,7 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
                                 container = MaterialTheme.colorScheme.primaryContainer,
                                 content = MaterialTheme.colorScheme.onPrimaryContainer,
                                 badge = MaterialShapes.Cookie9Sided.toShape(),
-                                shape = RoundedCornerShape(topStart = 32.dp, bottomStart = 32.dp, topEnd = 12.dp, bottomEnd = 12.dp),
+                                shape = RoundedCornerShape(topStart = 28.dp, topEnd = 8.dp, bottomStart = 8.dp, bottomEnd = 8.dp),
                                 onClick = { open(SOURCE_URL) },
                                 modifier = Modifier.weight(1f),
                             )
@@ -128,13 +128,14 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
                                 container = MaterialTheme.colorScheme.secondaryContainer,
                                 content = MaterialTheme.colorScheme.onSecondaryContainer,
                                 badge = MaterialShapes.Clover4Leaf.toShape(),
-                                shape = RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp, topEnd = 32.dp, bottomEnd = 32.dp),
+                                shape = RoundedCornerShape(topStart = 8.dp, topEnd = 28.dp, bottomStart = 8.dp, bottomEnd = 8.dp),
                                 onClick = { open("mailto:$FEEDBACK_EMAIL?subject=Calculator%2B%2B%20$APP_VERSION") },
                                 modifier = Modifier.weight(1f),
                             )
                         }
                     }
-                    item(key = "story") { Story(Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp)) }
+                    // The two cards and the story read as one connected group: round outside, tight joins.
+                    item(key = "story") { Story(Modifier.padding(start = 16.dp, end = 16.dp, top = 3.dp)) }
                     item(key = "elsewhere") {
                         Text(
                             stringResource(Res.string.about_elsewhere),
@@ -247,7 +248,7 @@ private fun ActionCard(
 /** Where the app comes from, set like a quote. */
 @Composable
 private fun Story(modifier: Modifier = Modifier) {
-    Surface(shape = RoundedCornerShape(12.dp, 12.dp, 32.dp, 32.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh, modifier = modifier.fillMaxWidth()) {
+    Surface(shape = RoundedCornerShape(8.dp, 8.dp, 28.dp, 28.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh, modifier = modifier.fillMaxWidth()) {
         Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Icon(Icons.Rounded.FormatQuote, null, Modifier.size(36.dp), tint = MaterialTheme.colorScheme.primary)
             Text(stringResource(Res.string.about_story), style = MaterialTheme.typography.bodyLarge)
