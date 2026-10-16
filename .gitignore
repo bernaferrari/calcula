@@ -10,3 +10,6 @@ calculatorpp.zip
 .gradle/
 .kotlin/
 .DS_Store
+# Local snapshot of the pre-KMP app, kept for reference (it lives in git history already)
+/old-app/
+.DS_Store

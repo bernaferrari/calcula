@@ -50,6 +50,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -93,6 +94,8 @@ fun CalculatorEditor(
     highlightExpressions: Boolean = true,
     minTextSize: TextUnit = 38.sp,
     maxTextSize: TextUnit = 38.sp,
+    containerMinHeight: Dp = 60.dp,
+    containerMaxHeight: Dp = 110.dp,
     enableSmartCorrection: Boolean = false
 ) {
     var textFieldValue by remember { mutableStateOf(TextFieldValue()) }
@@ -189,7 +192,7 @@ fun CalculatorEditor(
             .fillMaxWidth()
             .background(Color.Transparent)
             .padding(start = 10.dp, end = 10.dp, top = 2.dp, bottom = 4.dp)
-            .heightIn(min = 60.dp, max = 110.dp),
+            .heightIn(min = containerMinHeight, max = containerMaxHeight),
         verticalAlignment = Alignment.Bottom
     ) {
         CompositionLocalProvider(LocalTextSelectionColors provides customTextSelectionColors) {
@@ -244,7 +247,7 @@ fun CalculatorEditor(
                             autoCorrectEnabled = false,
                             showKeyboardOnFocus = false
                         ),
-                        singleLine = false,
+                        singleLine = adaptiveMaxLines == 1,
                         maxLines = adaptiveMaxLines,
                         interactionSource = interactionSource,
                         onTextLayout = { layout ->

@@ -3,7 +3,6 @@
 package org.solovyev.android.calculator.ui
 
 import androidx.compose.animation.*
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -21,6 +20,8 @@ import androidx.compose.material.icons.filled.Tune
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.filled.Check
@@ -32,7 +33,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
@@ -207,64 +207,6 @@ fun CalculatorScreen(
             Scaffold(
                 modifier = Modifier.fillMaxSize(),
                 containerColor = MaterialTheme.colorScheme.surface,
-                topBar = {
-                    CalculatorTabBar(
-                        tabs = tabs.map { tab ->
-                            CalculatorTabData(
-                                id = tab.id,
-                                expression = tab.expression,
-                                result = tab.result
-                            )
-                        },
-                        activeTabId = activeTabId,
-                        onTabSelect = { tabId ->
-                            val persisted = persistActiveTab(tabs)
-                            val target = persisted.firstOrNull { it.id == tabId } ?: return@CalculatorTabBar
-                            tabs = persisted
-                            activeTabId = target.id
-                            onEditorTextChange(target.expression, target.selection)
-                        },
-                        onTabClose = { tabId ->
-                            if (tabs.size <= 1) return@CalculatorTabBar
-                            val persisted = persistActiveTab(tabs)
-                            val closeIndex = persisted.indexOfFirst { it.id == tabId }
-                            if (closeIndex < 0) return@CalculatorTabBar
-
-                            val remaining = persisted.toMutableList().apply { removeAt(closeIndex) }
-                            tabs = remaining
-                            if (activeTabId == tabId) {
-                                val fallbackIndex = (closeIndex - 1).coerceAtLeast(0)
-                                val nextActive = remaining.getOrNull(fallbackIndex) ?: remaining.first()
-                                activeTabId = nextActive.id
-                                onEditorTextChange(nextActive.expression, nextActive.selection)
-                            }
-                        },
-                        onAddTab = {
-                            if (tabs.size >= MAX_CALCULATOR_TABS) return@CalculatorTabBar
-                            val persisted = persistActiveTab(tabs)
-                            val newId = nextTabId.toString()
-                            nextTabId += 1
-                            tabs = persisted + CalculatorWorkspaceTab(id = newId)
-                            activeTabId = newId
-                            onEditorTextChange("", 0)
-                        },
-                        onTabMove = { fromIndex, toIndex ->
-                            if (
-                                fromIndex !in tabs.indices ||
-                                toIndex !in tabs.indices ||
-                                fromIndex == toIndex
-                            ) {
-                                return@CalculatorTabBar
-                            }
-                            val mutableTabs = tabs.toMutableList()
-                            val moved = mutableTabs.removeAt(fromIndex)
-                            mutableTabs.add(toIndex, moved)
-                            tabs = mutableTabs
-                        },
-                        canAddMore = tabs.size < MAX_CALCULATOR_TABS,
-                        modifier = Modifier.statusBarsPadding()
-                    )
-                },
                 bottomBar = {
                     val keyboardIcons = LocalKeyboardIcons.current
                     var bottomOverflowExpanded by remember { mutableStateOf(false) }
@@ -362,43 +304,114 @@ fun CalculatorScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.surface,
-                                    MaterialTheme.colorScheme.surfaceContainerLowest
-                                )
-                            )
-                        )
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(bottom = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    ElevatedCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(28.dp),
-                        colors = CardDefaults.elevatedCardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                        ),
-                        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 6.dp)
-                    ) {
-                        DisplayCard(
-                            state = displayState,
-                            editorState = editorState,
-                            previewResult = previewResult,
-                            unitHint = unitHint,
-                            rpnMode = rpnMode,
-                            rpnStack = rpnStack,
-                            tapeMode = tapeMode,
-                            tapeEntries = tapeEntries,
-                            liveTapeEntry = liveTapeEntry,
-                            onEquals = onEquals,
-                            onClearTape = onClearTape,
-                            onEditorTextChange = onEditorTextChange,
-                            onEditorSelectionChange = onEditorSelectionChange,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 8.dp)
-                        )
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            CalculatorTabBar(
+                                tabs = tabs.map { tab ->
+                                    CalculatorTabData(
+                                        id = tab.id,
+                                        expression = tab.expression,
+                                        result = tab.result
+                                    )
+                                },
+                                activeTabId = activeTabId,
+                                onTabSelect = { tabId ->
+                                    val persisted = persistActiveTab(tabs)
+                                    val target = persisted.firstOrNull { it.id == tabId } ?: return@CalculatorTabBar
+                                    tabs = persisted
+                                    activeTabId = target.id
+                                    onEditorTextChange(target.expression, target.selection)
+                                },
+                                onTabClose = { tabId ->
+                                    if (tabs.size <= 1) return@CalculatorTabBar
+                                    val persisted = persistActiveTab(tabs)
+                                    val closeIndex = persisted.indexOfFirst { it.id == tabId }
+                                    if (closeIndex < 0) return@CalculatorTabBar
+
+                                    val remaining = persisted.toMutableList().apply { removeAt(closeIndex) }
+                                    tabs = remaining
+                                    if (activeTabId == tabId) {
+                                        val fallbackIndex = (closeIndex - 1).coerceAtLeast(0)
+                                        val nextActive = remaining.getOrNull(fallbackIndex) ?: remaining.first()
+                                        activeTabId = nextActive.id
+                                        onEditorTextChange(nextActive.expression, nextActive.selection)
+                                    }
+                                },
+                                onAddTab = {
+                                    if (tabs.size >= MAX_CALCULATOR_TABS) return@CalculatorTabBar
+                                    val persisted = persistActiveTab(tabs)
+                                    val newId = nextTabId.toString()
+                                    nextTabId += 1
+                                    tabs = persisted + CalculatorWorkspaceTab(id = newId)
+                                    activeTabId = newId
+                                    onEditorTextChange("", 0)
+                                },
+                                onTabMove = { fromIndex, toIndex ->
+                                    if (
+                                        fromIndex !in tabs.indices ||
+                                        toIndex !in tabs.indices ||
+                                        fromIndex == toIndex
+                                    ) {
+                                        return@CalculatorTabBar
+                                    }
+                                    val mutableTabs = tabs.toMutableList()
+                                    val moved = mutableTabs.removeAt(fromIndex)
+                                    mutableTabs.add(toIndex, moved)
+                                    tabs = mutableTabs
+                                },
+                                canAddMore = tabs.size < MAX_CALCULATOR_TABS,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(
+                                topStart = 0.dp,
+                                topEnd = 0.dp,
+                                bottomStart = 30.dp,
+                                bottomEnd = 30.dp
+                            ),
+                            color = MaterialTheme.colorScheme.surfaceContainerLow,
+                            tonalElevation = 1.dp,
+                            border = BorderStroke(
+                                width = 1.dp,
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.38f)
+                            )
+                        ) {
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                if (tapeMode) {
+                                    TapePanel(
+                                        tapeEntries = tapeEntries,
+                                        liveTapeEntry = liveTapeEntry,
+                                        onClearTape = onClearTape,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                                DisplayCard(
+                                    state = displayState,
+                                    editorState = editorState,
+                                    previewResult = previewResult,
+                                    unitHint = unitHint,
+                                    rpnMode = rpnMode,
+                                rpnStack = rpnStack,
+                                onEditorTextChange = onEditorTextChange,
+                                onEditorSelectionChange = onEditorSelectionChange,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(
+                                        start = 16.dp,
+                                        end = 16.dp,
+                                        top = if (tapeMode) 8.dp else 12.dp,
+                                        bottom = 12.dp
+                                    )
+                            )
+                        }
+                    }
                     }
 
                     Box(
@@ -539,6 +552,9 @@ private data class PersistedCalculatorTabsState(
 )
 
 private const val MAX_CALCULATOR_TABS = 24
+private val DisplayCardFixedHeight = 188.dp
+private val DisplayCardCompactHeight = 124.dp
+private const val TapePreviewMaxChars = 5
 private val calculatorTabsStateJson = Json { ignoreUnknownKeys = true }
 
 private fun encodeCalculatorTabsState(state: PersistedCalculatorTabsState): String {
@@ -547,6 +563,16 @@ private fun encodeCalculatorTabsState(state: PersistedCalculatorTabsState): Stri
 
 private fun decodeCalculatorTabsState(state: String): PersistedCalculatorTabsState? {
     return runCatching { calculatorTabsStateJson.decodeFromString<PersistedCalculatorTabsState>(state) }.getOrNull()
+}
+
+private fun compactTapePreviewToken(value: String): String {
+    val normalized = value.trim().replace('\n', ' ')
+    if (normalized.isEmpty()) return "—"
+    return if (normalized.length <= TapePreviewMaxChars) {
+        normalized
+    } else {
+        normalized.take((TapePreviewMaxChars - 1).coerceAtLeast(1)) + "…"
+    }
 }
 
 @Composable
@@ -770,17 +796,12 @@ private fun DisplayCard(
     unitHint: String?,
     rpnMode: Boolean,
     rpnStack: List<String>,
-    tapeMode: Boolean,
-    tapeEntries: List<TapeEntry>,
-    liveTapeEntry: TapeEntry?,
-    onEquals: () -> Unit,
-    onClearTape: () -> Unit,
     onEditorTextChange: (String, Int) -> Unit,
     onEditorSelectionChange: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val inputFontSize = 30.sp
-    val resultFontSize = 54.sp
+    val inputFontSize = 32.sp
+    val resultFontSize = 56.sp
     val editorText = remember(editorState.text) { editorState.text }
     val resultResolution = rememberResolvedDisplayResult(
         state = state,
@@ -788,10 +809,19 @@ private fun DisplayCard(
     )
     val resolvedResultText = resultResolution.text
     val previewText = previewResult?.takeIf { resolvedResultText.isEmpty() }
-    val diagnosticsText = unitHint.orEmpty()
+    val hasResult = resolvedResultText.isNotEmpty()
+    val hasPreview = !previewText.isNullOrEmpty()
+    val hasInvalidState = !state.valid
+    val isCachedResult = resultResolution.isCachedValue
+
+    val resultColor = when {
+        hasInvalidState && !isCachedResult -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.onSurface
+    }
+    val cardHeight = if (rpnMode) DisplayCardFixedHeight else DisplayCardCompactHeight
 
     Column(
-        modifier = modifier,
+        modifier = modifier.height(cardHeight),
         horizontalAlignment = Alignment.End
     ) {
         if (rpnMode) {
@@ -799,119 +829,66 @@ private fun DisplayCard(
                 stack = rpnStack,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 6.dp)
-            )
-        }
-
-        if (diagnosticsText.isNotEmpty()) {
-            Text(
-                text = diagnosticsText,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.tertiary,
-                textAlign = TextAlign.End,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 6.dp)
-            )
-        }
-
-        if (tapeMode) {
-            TapePanel(
-                tapeEntries = tapeEntries,
-                liveTapeEntry = liveTapeEntry,
-                onClearTape = onClearTape,
-                modifier = Modifier
-                    .fillMaxWidth()
                     .padding(bottom = 8.dp)
             )
         }
 
-        CalculatorEditor(
-            state = editorState,
-            onTextChange = onEditorTextChange,
-            onSelectionChange = onEditorSelectionChange,
-            highlightExpressions = true,
-            minTextSize = 18.sp,
-            maxTextSize = inputFontSize,
-            modifier = Modifier.fillMaxWidth()
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(40.dp),
+            contentAlignment = Alignment.BottomEnd
+        ) {
+            CalculatorEditor(
+                state = editorState,
+                onTextChange = onEditorTextChange,
+                onSelectionChange = onEditorSelectionChange,
+                highlightExpressions = true,
+                minTextSize = 22.sp,
+                maxTextSize = inputFontSize,
+                containerMinHeight = 40.dp,
+                containerMaxHeight = 64.dp,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(110.dp),
+                .height(66.dp),
             contentAlignment = Alignment.BottomEnd
         ) {
-            val hasResult = resolvedResultText.isNotEmpty()
-            val hasPreview = !previewText.isNullOrEmpty()
-            val hasInvalidState = !state.valid
-            val isCachedResult = resultResolution.isCachedValue
-            val resultTextColor = when {
-                hasInvalidState && !isCachedResult -> MaterialTheme.colorScheme.error
-                else -> MaterialTheme.colorScheme.primary
-            }.copy(
-                alpha = when {
-                    isCachedResult -> 0.7f
-                    hasInvalidState -> 0.78f
-                    else -> 1f
-                }
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Bottom
-            ) {
-                Surface(
-                    modifier = Modifier
-                        .width(74.dp)
-                        .height(72.dp)
-                        .combinedClickable(
-                            onClick = onEquals
-                        ),
-                    shape = RoundedCornerShape(12.dp),
-                    color = when {
-                        hasResult && !hasInvalidState && !isCachedResult -> MaterialTheme.colorScheme.secondaryContainer
-                        hasResult -> MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.82f)
-                        hasPreview -> MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.88f)
-                        else -> MaterialTheme.colorScheme.surfaceContainerHigh
-                    },
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    tonalElevation = if (hasResult) 3.dp else 1.dp
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            text = if (rpnMode) "ENT" else "=",
-                            style = MaterialTheme.typography.displaySmall.copy(
-                                fontSize = if (rpnMode) 34.sp else 42.sp,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = (-0.4).sp
-                            )
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                if (hasResult) {
+            when {
+                hasResult -> {
                     AdaptiveResultText(
                         text = resolvedResultText,
-                        color = resultTextColor,
-                        modifier = Modifier.weight(1f),
+                        color = resultColor,
+                        modifier = Modifier.fillMaxWidth(),
                         maxFontSize = resultFontSize
                     )
-                } else {
+                }
+
+                hasPreview -> {
                     Text(
-                        text = previewText ?: " ",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                                alpha = if (hasPreview) 0.6f else 0.25f
-                            ),
-                            fontWeight = FontWeight.Medium
+                        text = previewText,
+                        style = MaterialTheme.typography.displaySmall.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.Normal
                         ),
                         textAlign = TextAlign.End,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                else -> {
+                    Text(
+                        text = "0",
+                        style = MaterialTheme.typography.displaySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
+                        textAlign = TextAlign.End,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
@@ -930,61 +907,60 @@ private fun TapePanel(
         val all = if (liveTapeEntry != null) tapeEntries + liveTapeEntry else tapeEntries
         all.distinctBy { it.id }.takeLast(2)
     }
-    val hasEntries = resolvedEntries.isNotEmpty()
+    val latestEntry = resolvedEntries.lastOrNull()
+    val hasEntries = latestEntry != null
+    val latestText = latestEntry?.let {
+        "${compactTapePreviewToken(it.expression)} = ${compactTapePreviewToken(it.result)}"
+    } ?: "—"
 
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.72f),
-        tonalElevation = 1.dp
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.88f))
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 12.dp, end = 8.dp, top = 7.dp, bottom = 7.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = stringResource(Res.string.cpp_tape),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.weight(1f)
-                )
+            Text(
+                text = stringResource(Res.string.cpp_tape),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.88f)
+            )
+            Text(
+                text = latestText,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = if (latestEntry?.committed == false) FontWeight.Medium else FontWeight.Normal
+                ),
+                color = if (latestEntry?.committed == false) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+                textAlign = TextAlign.End,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
+            )
+            if (hasEntries) {
                 TextButton(
                     onClick = onClearTape,
-                    enabled = hasEntries
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
                 ) {
-                    Text(stringResource(Res.string.cpp_clear_tape))
-                }
-            }
-
-            if (!hasEntries) {
-                Text(
-                    text = "-",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            } else {
-                resolvedEntries.forEach { entry ->
-                    val prefix = if (entry.committed) "" else "\u2022 "
                     Text(
-                        text = prefix + entry.expression + " = " + entry.result,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = if (entry.committed) {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        } else {
-                            MaterialTheme.colorScheme.primary
-                        },
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.End
+                        stringResource(Res.string.cpp_clear_tape),
+                        style = MaterialTheme.typography.labelSmall
                     )
                 }
             }
         }
+        HorizontalDivider(
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
+            thickness = 1.dp
+        )
     }
 }
 
@@ -998,47 +974,68 @@ private fun RpnStackPanel(
     val z = stack.getOrNull(stack.lastIndex - 2).orEmpty()
     val t = stack.getOrNull(stack.lastIndex - 3).orEmpty()
 
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.7f)
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            RpnRegisterLine(label = "T", value = t)
-            RpnRegisterLine(label = "Z", value = z)
-            RpnRegisterLine(label = "Y", value = y)
-            RpnRegisterLine(label = "X", value = x)
-        }
+        RpnRegisterLine(label = "T", value = t, isActive = false, modifier = Modifier.weight(1f))
+        RpnRegisterLine(label = "Z", value = z, isActive = false, modifier = Modifier.weight(1f))
+        RpnRegisterLine(label = "Y", value = y, isActive = false, modifier = Modifier.weight(1f))
+        RpnRegisterLine(label = "X", value = x, isActive = true, modifier = Modifier.weight(1f))
     }
 }
 
 @Composable
 private fun RpnRegisterLine(
     label: String,
-    value: String
+    value: String,
+    isActive: Boolean,
+    modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        color = if (isActive) {
+            MaterialTheme.colorScheme.primaryContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.64f)
+        }
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Text(
-            text = if (value.isEmpty()) " " else value,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.End,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f)
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 6.dp),
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.SemiBold
+                ),
+                color = if (isActive) {
+                    MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.9f)
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                }
+            )
+            Text(
+                text = if (value.isEmpty()) "—" else value,
+                style = MaterialTheme.typography.bodySmall.copy(
+                    fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Medium,
+                    fontFeatureSettings = "tnum"
+                ),
+                color = if (isActive) {
+                    MaterialTheme.colorScheme.onPrimaryContainer
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f)
+                },
+                textAlign = TextAlign.End,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
     }
 }
 
@@ -1050,8 +1047,12 @@ private fun AdaptiveResultText(
     maxFontSize: androidx.compose.ui.unit.TextUnit = 54.sp,
     minFontSize: androidx.compose.ui.unit.TextUnit = 14.sp
 ) {
-    val multilineThreshold = 24.sp
     val textMeasurer = rememberTextMeasurer()
+    val scrollState = rememberScrollState()
+
+    LaunchedEffect(text) {
+        scrollState.scrollTo(scrollState.maxValue)
+    }
 
     BoxWithConstraints(modifier = modifier) {
         val density = LocalDensity.current
@@ -1062,41 +1063,33 @@ private fun AdaptiveResultText(
             letterSpacing = (-0.7).sp
         )
 
-        fun fits(fontSizeSp: Float, lines: Int): Boolean {
+        fun fits(fontSizeSp: Float): Boolean {
             val measureResult = textMeasurer.measure(
                 text = AnnotatedString(text),
                 style = baseStyle.copy(fontSize = fontSizeSp.sp),
-                maxLines = lines,
-                softWrap = lines > 1,
+                maxLines = 1,
+                softWrap = false,
                 overflow = TextOverflow.Clip,
                 constraints = constraints
             )
-            return !(measureResult.didOverflowWidth || measureResult.didOverflowHeight)
+            return !measureResult.didOverflowWidth
         }
 
-        val (resolvedFontSize, resolvedLines) = remember(
+        val resolvedFontSize = remember(
             text,
             maxWidthPx,
             maxFontSize,
             minFontSize
         ) {
             var candidateSp = maxFontSize.value
-            while (candidateSp >= multilineThreshold.value) {
-                if (fits(candidateSp, lines = 1)) {
-                    return@remember candidateSp.sp to 1
-                }
-                candidateSp -= 1f
-            }
-
-            candidateSp = multilineThreshold.value.coerceAtMost(maxFontSize.value)
             while (candidateSp >= minFontSize.value) {
-                if (fits(candidateSp, lines = 2)) {
-                    return@remember candidateSp.sp to 2
+                if (fits(candidateSp)) {
+                    return@remember candidateSp.sp
                 }
                 candidateSp -= 1f
             }
 
-            minFontSize to 2
+            minFontSize
         }
 
         Text(
@@ -1104,10 +1097,12 @@ private fun AdaptiveResultText(
             style = baseStyle.copy(fontSize = resolvedFontSize),
             color = color,
             textAlign = TextAlign.End,
-            maxLines = resolvedLines,
-            softWrap = resolvedLines > 1,
+            maxLines = 1,
+            softWrap = false,
             overflow = TextOverflow.Clip,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(scrollState)
         )
     }
 }

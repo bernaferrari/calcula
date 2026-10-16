@@ -58,6 +58,23 @@ import org.solovyev.android.calculator.ui.animations.LocalFlyingAnimationHost
 import org.solovyev.android.calculator.ui.tokens.CalculatorButtonBorderTokens
 import org.solovyev.android.calculator.ui.tokens.CalculatorGestureTokens
 
+private val ModernButtonBaseRadius = 4.dp
+private val ModernButtonOuterRadius = 28.dp
+
+private enum class KeyboardCorner {
+    TopLeft,
+    TopRight,
+    BottomLeft,
+    BottomRight
+}
+
+private fun modernKeyboardCornerShape(corner: KeyboardCorner): Shape = RoundedCornerShape(
+    topStart = if (corner == KeyboardCorner.TopLeft) ModernButtonOuterRadius else ModernButtonBaseRadius,
+    topEnd = if (corner == KeyboardCorner.TopRight) ModernButtonOuterRadius else ModernButtonBaseRadius,
+    bottomStart = if (corner == KeyboardCorner.BottomLeft) ModernButtonOuterRadius else ModernButtonBaseRadius,
+    bottomEnd = if (corner == KeyboardCorner.BottomRight) ModernButtonOuterRadius else ModernButtonBaseRadius
+)
+
 /**
  * Modern keyboard with swipe gestures as the core feature.
  * Clean, elegant, minimal - the gestures ARE the experience.
@@ -75,8 +92,8 @@ fun ModernCalculatorKeyboard(
 ) {
     val icons = LocalKeyboardIcons.current
     var showScienceSheet by remember { mutableStateOf(false) }
-    val keyGap = 6.dp
-    val keyboardPadding = 4.dp
+    val keyGap = 4.dp
+    val keyboardPadding = 2.dp
 
     if (showScienceSheet) {
         ScientificBottomSheet(
@@ -104,6 +121,7 @@ fun ModernCalculatorKeyboard(
             ModernButton(
                 text = "C",
                 buttonType = ButtonType.CONTROL,
+                shape = modernKeyboardCornerShape(KeyboardCorner.TopLeft),
                 contentDescription = stringResource(Res.string.cpp_button_clear),
                 onClick = { actions.onClear() },
                 longPressOptions = listOf("MS", "MR", "M+", "M-", "MC") + MemoryRegisters.QUICK_REGISTERS,
@@ -142,6 +160,7 @@ fun ModernCalculatorKeyboard(
             ModernButton(
                 text = "/",
                 buttonType = ButtonType.OPERATION,
+                shape = modernKeyboardCornerShape(KeyboardCorner.TopRight),
                 directionTexts = DirectionTexts(up = "√"),
                 contentDescription = stringResource(Res.string.cpp_button_divide),
                 onClick = { actions.onOperatorClick("/") },
@@ -306,6 +325,7 @@ fun ModernCalculatorKeyboard(
                 ModernButton(
                     text = "",
                     buttonType = ButtonType.CONTROL,
+                    shape = modernKeyboardCornerShape(KeyboardCorner.BottomLeft),
                     contentDescription = stringResource(Res.string.cpp_button_delete),
                     onClick = { actions.onDelete() },
                     onLongClick = { actions.onClear() },
@@ -343,6 +363,7 @@ fun ModernCalculatorKeyboard(
             ModernButton(
                 text = "=",
                 buttonType = ButtonType.OPERATION_HIGHLIGHTED,
+                shape = modernKeyboardCornerShape(KeyboardCorner.BottomRight),
                 contentDescription = stringResource(Res.string.cpp_button_equals),
                 onClick = { actions.onEquals() },
                 onLongClick = { actions.onOpenFunctions() },
@@ -362,7 +383,7 @@ private fun ButtonRow(
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         content()
     }
@@ -378,7 +399,7 @@ internal fun ModernButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    shape: Shape = RoundedCornerShape(16.dp),
+    shape: Shape = RoundedCornerShape(ModernButtonBaseRadius),
     directionTexts: DirectionTexts = DirectionTexts(),
     contentDescription: String? = null,
     onLongClick: (() -> Unit)? = null,
@@ -430,6 +451,15 @@ internal fun ModernButton(
     }
     val effectiveOnSwipeUp = if (layerUpEnabled) onSwipeUp else null
     val effectiveOnSwipeDown = if (layerDownEnabled) onSwipeDown else null
+    val enabledState by rememberUpdatedState(enabled)
+    val onClickState by rememberUpdatedState(onClick)
+    val onLongClickState by rememberUpdatedState(onLongClick)
+    val onSwipeUpState by rememberUpdatedState(effectiveOnSwipeUp)
+    val onSwipeDownState by rememberUpdatedState(effectiveOnSwipeDown)
+    val onSwipeLeftState by rememberUpdatedState(onSwipeLeft)
+    val onSwipeRightState by rememberUpdatedState(onSwipeRight)
+    val longPressOptionsState by rememberUpdatedState(longPressOptions)
+    val onLongPressOptionSelectedState by rememberUpdatedState(onLongPressOptionSelected)
 
     // Get flying animation host
     val flyingAnimationHost = LocalFlyingAnimationHost.current
@@ -524,23 +554,23 @@ internal fun ModernButton(
     fun invokeSwipe(direction: GestureDragDirection, animationStart: Offset, animationProgress: Float): Boolean {
         val triggered = when (direction) {
             GestureDragDirection.UP -> {
-                if (effectiveOnSwipeUp == null) return false
-                effectiveOnSwipeUp()
+                val handler = onSwipeUpState ?: return false
+                handler()
                 true
             }
             GestureDragDirection.DOWN -> {
-                if (effectiveOnSwipeDown == null) return false
-                effectiveOnSwipeDown()
+                val handler = onSwipeDownState ?: return false
+                handler()
                 true
             }
             GestureDragDirection.LEFT -> {
-                if (onSwipeLeft == null) return false
-                onSwipeLeft()
+                val handler = onSwipeLeftState ?: return false
+                handler()
                 true
             }
             GestureDragDirection.RIGHT -> {
-                if (onSwipeRight == null) return false
-                onSwipeRight()
+                val handler = onSwipeRightState ?: return false
+                handler()
                 true
             }
         }
@@ -553,10 +583,10 @@ internal fun ModernButton(
     }
 
     fun supportsSwipe(direction: GestureDragDirection): Boolean = when (direction) {
-        GestureDragDirection.UP -> effectiveOnSwipeUp != null
-        GestureDragDirection.DOWN -> effectiveOnSwipeDown != null
-        GestureDragDirection.LEFT -> onSwipeLeft != null
-        GestureDragDirection.RIGHT -> onSwipeRight != null
+        GestureDragDirection.UP -> onSwipeUpState != null
+        GestureDragDirection.DOWN -> onSwipeDownState != null
+        GestureDragDirection.LEFT -> onSwipeLeftState != null
+        GestureDragDirection.RIGHT -> onSwipeRightState != null
     }
 
     // Enhanced scale animation - 0.95x for better feel
@@ -566,7 +596,7 @@ internal fun ModernButton(
             gestureCompleted -> 1.02f
             else -> 1f
         },
-        animationSpec = spring(dampingRatio = 0.5f, stiffness = 350f),
+        animationSpec = spring(dampingRatio = 0.82f, stiffness = 900f),
         label = "buttonScale"
     )
 
@@ -577,7 +607,7 @@ internal fun ModernButton(
             gestureCompleted -> 4f
             else -> 2f
         },
-        animationSpec = spring(dampingRatio = 0.6f, stiffness = 400f),
+        animationSpec = spring(dampingRatio = 0.85f, stiffness = 850f),
         label = "buttonElevation"
     )
 
@@ -614,19 +644,37 @@ internal fun ModernButton(
         }
     }
 
-    val baseBackgroundColor = when (buttonType) {
-        ButtonType.DIGIT -> MaterialTheme.colorScheme.surfaceContainerLowest
-        ButtonType.OPERATION -> MaterialTheme.colorScheme.primary
-        ButtonType.OPERATION_HIGHLIGHTED -> MaterialTheme.colorScheme.primary
-        ButtonType.CONTROL -> MaterialTheme.colorScheme.tertiaryContainer
-        ButtonType.SPECIAL -> MaterialTheme.colorScheme.secondaryContainer
-        ButtonType.MEMORY -> MaterialTheme.colorScheme.secondary
+    // Clean color system - distinct backgrounds with subtle tonal hierarchy.
+    val (baseBackgroundColor, textColor) = when (buttonType) {
+        ButtonType.DIGIT -> Pair(
+            MaterialTheme.colorScheme.surfaceContainerHighest,
+            MaterialTheme.colorScheme.onSurface
+        )
+        ButtonType.OPERATION -> Pair(
+            MaterialTheme.colorScheme.secondaryContainer,
+            MaterialTheme.colorScheme.onSecondaryContainer
+        )
+        ButtonType.OPERATION_HIGHLIGHTED -> Pair(
+            MaterialTheme.colorScheme.primary,
+            MaterialTheme.colorScheme.onPrimary
+        )
+        ButtonType.CONTROL -> Pair(
+            MaterialTheme.colorScheme.tertiaryContainer,
+            MaterialTheme.colorScheme.onTertiaryContainer
+        )
+        ButtonType.SPECIAL -> Pair(
+            MaterialTheme.colorScheme.surfaceContainerHigh,
+            MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        ButtonType.MEMORY -> Pair(
+            MaterialTheme.colorScheme.surfaceContainerHigh,
+            MaterialTheme.colorScheme.primary
+        )
     }
 
-    // Darken on press for "sink" effect
+    // Simple pressed state - just darken slightly
     val backgroundColor = if (isPressed) {
         baseBackgroundColor.copy(
-            alpha = 1f,
             red = baseBackgroundColor.red * 0.9f,
             green = baseBackgroundColor.green * 0.9f,
             blue = baseBackgroundColor.blue * 0.9f
@@ -634,44 +682,32 @@ internal fun ModernButton(
     } else {
         baseBackgroundColor
     }
-
-    val textColor = when (buttonType) {
-        ButtonType.DIGIT -> MaterialTheme.colorScheme.onSurface
-        ButtonType.OPERATION -> MaterialTheme.colorScheme.onPrimary
-        ButtonType.OPERATION_HIGHLIGHTED -> MaterialTheme.colorScheme.onPrimary
-        ButtonType.CONTROL -> MaterialTheme.colorScheme.onTertiaryContainer
-        ButtonType.SPECIAL -> MaterialTheme.colorScheme.onSecondaryContainer
-        ButtonType.MEMORY -> MaterialTheme.colorScheme.onSecondary
-    }
-    val borderColor = rememberButtonBorderColor(
-        enabled = enabled,
-        pressed = isPressed,
-        emphasis = if (buttonType == ButtonType.DIGIT) {
-            ButtonBorderEmphasis.DIGIT
-        } else {
-            ButtonBorderEmphasis.ACCENT
-        }
+    val borderColor = when (buttonType) {
+        ButtonType.DIGIT -> MaterialTheme.colorScheme.outlineVariant
+        ButtonType.OPERATION -> MaterialTheme.colorScheme.primary.copy(alpha = 0.38f)
+        ButtonType.OPERATION_HIGHLIGHTED -> MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
+        ButtonType.CONTROL -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f)
+        ButtonType.SPECIAL -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)
+        ButtonType.MEMORY -> MaterialTheme.colorScheme.primary.copy(alpha = 0.34f)
+    }.copy(
+        alpha = if (isPressed) 0.64f else 0.42f
     )
-
-    val effectiveLongPressOptions = longPressOptions
-    val onLongPressOptionSelectedEffective = onLongPressOptionSelected
 
     Box(
         modifier = modifier
             .fillMaxHeight()
             .scale(scale)
             .shadow(
-                elevation = elevation.dp,
+                elevation = if (enabled) elevation.dp else 0.dp,
                 shape = shape,
-                clip = true,
-                ambientColor = baseBackgroundColor.copy(alpha = 0.3f),
-                spotColor = baseBackgroundColor.copy(alpha = 0.5f)
+                clip = false,
+                ambientColor = Color.Black.copy(alpha = 0.08f),
+                spotColor = Color.Black.copy(alpha = 0.14f)
             )
             .clip(shape)
             .background(if (enabled) backgroundColor else backgroundColor.copy(alpha = 0.3f))
             .border(CalculatorButtonBorderTokens.Width, borderColor, shape)
             .then(
-                // Ripple effect on press
                 if (showRipple) {
                     Modifier.drawBehind {
                         drawRipple(rippleCenter, rippleProgress, baseBackgroundColor)
@@ -690,195 +726,194 @@ internal fun ModernButton(
                 contentDescription?.let { this.contentDescription = it }
                 if (!enabled) stateDescription = "Disabled"
             }
-            .pointerInput(
-                enabled,
-                onClick,
-                onLongClick,
-                effectiveOnSwipeUp,
-                effectiveOnSwipeDown,
-                onSwipeLeft,
-                onSwipeRight,
-                gestureAutoActivation,
-                layerUpEnabled,
-                layerDownEnabled
-            ) {
-                awaitEachGesture {
-                    val down = awaitFirstDown()
-                    isPressed = true
-                    gestureCompleted = false
-                    rippleCenter = down.position
-                    showRipple = true
-                    val start = down.position
-                    val downTime = down.uptimeMillis
-                    var lastPos = start
-                    var movedBeyondSlop = false
-                    var longPressFired = false
-                    var swipeHandled = false
-                    var longPressSelectionCanceled = false
-                    var wasAtOrAboveAutoThreshold = false
-                    val dragDetectionSlop = touchSlop * 0.55f
-                    dragProgress = 0f
-                    dragDirection = null
-                    lastEligibleDragDirection = null
-                    lastEligibleDragProgress = 0f
-                    returnHintDirection = null
-                    returnHintProgress = 0f
+            .pointerInput(Unit) {
+                try {
+                    awaitEachGesture {
+                        val down = awaitFirstDown()
+                        isPressed = true
+                        gestureCompleted = false
+                        rippleCenter = down.position
+                        showRipple = true
+                        val start = down.position
+                        val downTime = down.uptimeMillis
+                        var lastPos = start
+                        var movedBeyondSlop = false
+                        var longPressFired = false
+                        var swipeHandled = false
+                        var longPressSelectionCanceled = false
+                        var wasAtOrAboveAutoThreshold = false
+                        val dragDetectionSlop = touchSlop * 0.55f
+                        dragProgress = 0f
+                        dragDirection = null
+                        lastEligibleDragDirection = null
+                        lastEligibleDragProgress = 0f
+                        returnHintDirection = null
+                        returnHintProgress = 0f
 
-                    // Enhanced haptic feedback on press
-                    if (hapticsEnabled && enabled) {
-                        haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    }
+                        // Enhanced haptic feedback on press
+                        if (hapticsEnabled && enabledState) {
+                            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        }
 
-                    while (true) {
-                        val event = awaitPointerEvent()
-                        val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            val change = event.changes.firstOrNull { it.id == down.id } ?: break
 
-                        if (change.changedToUpIgnoreConsumed()) {
-                            if (!enabled) {
+                            if (change.changedToUpIgnoreConsumed()) {
+                                if (!enabledState) {
+                                    isPressed = false
+                                    dragProgress = 0f
+                                    dragDirection = null
+                                    break
+                                }
+                                if (showLongPressOptions && longPressOptionsState.isNotEmpty() && !longPressSelectionCanceled) {
+                                    val option = longPressOptionsState[highlightedOption.coerceIn(0, longPressOptionsState.lastIndex)]
+                                    if (hapticsEnabled) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    gestureCompleted = true
+                                    onLongPressOptionSelectedState(option)
+                                    showLongPressOptions = false
+                                    swipeHandled = true
+                                } else if (showLongPressOptions) {
+                                    showLongPressOptions = false
+                                }
+                                if (!longPressFired && !swipeHandled) {
+                                    val delta = lastPos - start
+                                    val releaseDirection = detectDragDirection(delta, dragDetectionSlop)
+                                    if (releaseDirection != null &&
+                                        supportsSwipe(releaseDirection) &&
+                                        releaseDirection.axisDistance(delta) > minDragDistancePx
+                                    ) {
+                                        val releaseProgress = animationProgressFor(releaseDirection)
+                                        swipeHandled = invokeSwipe(
+                                            releaseDirection,
+                                            flyingStartForDirection(releaseDirection, releaseProgress),
+                                            releaseProgress
+                                        )
+                                    }
+                                    if (!swipeHandled) {
+                                        // Completion haptic for equals button
+                                        if (hapticsEnabled && isEqualsButton) {
+                                            haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        } else if (hapticsEnabled) {
+                                            haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                                        }
+                                        gestureCompleted = true
+                                        onClickState()
+                                    }
+                                }
                                 isPressed = false
                                 dragProgress = 0f
                                 dragDirection = null
                                 break
                             }
-                            if (showLongPressOptions && effectiveLongPressOptions.isNotEmpty() && !longPressSelectionCanceled) {
-                                val option = effectiveLongPressOptions[highlightedOption.coerceIn(0, effectiveLongPressOptions.lastIndex)]
-                                if (hapticsEnabled) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                gestureCompleted = true
-                                onLongPressOptionSelectedEffective(option)
-                                showLongPressOptions = false
-                                swipeHandled = true
-                            } else if (showLongPressOptions) {
-                                showLongPressOptions = false
-                            }
-                            if (!longPressFired && !swipeHandled) {
-                                val delta = lastPos - start
-                                val releaseDirection = detectDragDirection(delta, dragDetectionSlop)
-                                if (releaseDirection != null &&
-                                    supportsSwipe(releaseDirection) &&
-                                    releaseDirection.axisDistance(delta) > minDragDistancePx
-                                ) {
-                                    val releaseProgress = animationProgressFor(releaseDirection)
-                                    swipeHandled = invokeSwipe(
-                                        releaseDirection,
-                                        flyingStartForDirection(releaseDirection, releaseProgress),
-                                        releaseProgress
-                                    )
-                                }
-                                if (!swipeHandled) {
-                                    // Completion haptic for equals button
-                                    if (hapticsEnabled && isEqualsButton) {
-                                        haptics.performHapticFeedback(HapticFeedbackType.Confirm)
-                                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    } else if (hapticsEnabled) {
-                                        haptics.performHapticFeedback(HapticFeedbackType.Confirm)
-                                    }
-                                    gestureCompleted = true
-                                    onClick()
-                                }
-                            }
-                            isPressed = false
-                            dragProgress = 0f
-                            dragDirection = null
-                            break
-                        }
 
-                        if (change.positionChanged()) {
-                            lastPos = change.position
-                            if (swipeHandled) {
-                                // After auto-trigger, return to idle visuals immediately and wait for finger lift.
-                                dragDirection = null
-                                dragProgress = 0f
-                                change.consume()
-                                continue
-                            }
-                            if (!movedBeyondSlop) {
-                                movedBeyondSlop = (lastPos - start).getDistance() > touchSlop
-                            }
-
-                            val delta = lastPos - start
-                            val effectiveThresholdPx = kotlin.math.max(
-                                autoActivationThresholdPx,
-                                kotlin.math.min(buttonSizePx.width, buttonSizePx.height) * 0.24f
-                            )
-
-                            val detectedDirection = detectDragDirection(delta, dragDetectionSlop)
-                            val activeDirection = detectedDirection?.takeIf { supportsSwipe(it) }
-                            if (activeDirection != null) {
-                                val computedProgress = normalizedDragProgress(
-                                    axisDistancePx = activeDirection.axisDistance(delta),
-                                    thresholdPx = effectiveThresholdPx,
-                                    touchSlopPx = dragDetectionSlop
-                                )
-                                dragDirection = activeDirection
-                                dragProgress = computedProgress
-                                lastEligibleDragDirection = activeDirection
-                                lastEligibleDragProgress = computedProgress
-                            } else {
-                                dragDirection = null
-                                dragProgress = 0f
-                            }
-
-                            // Auto-activation in modern mode when threshold is reached (no finger lift needed).
-                            val reachedAutoThreshold = activeDirection != null && dragProgress >= 1f
-                            if (enabled &&
-                                activeDirection != null &&
-                                reachedAutoThreshold &&
-                                !wasAtOrAboveAutoThreshold
-                            ) {
-                                val autoProgress = animationProgressFor(activeDirection)
-                                if (invokeSwipe(
-                                        activeDirection,
-                                        flyingStartForDirection(activeDirection, autoProgress),
-                                        autoProgress
-                                    )
-                                ) {
-                                    swipeHandled = true
-                                    isPressed = false
-                                    dragProgress = 0f
+                            if (change.positionChanged()) {
+                                lastPos = change.position
+                                if (swipeHandled) {
+                                    // After auto-trigger, return to idle visuals immediately and wait for finger lift.
                                     dragDirection = null
+                                    dragProgress = 0f
+                                    change.consume()
+                                    continue
                                 }
-                            }
-                            wasAtOrAboveAutoThreshold = reachedAutoThreshold
+                                if (!movedBeyondSlop) {
+                                    movedBeyondSlop = (lastPos - start).getDistance() > touchSlop
+                                }
 
-                            if (showLongPressOptions && effectiveLongPressOptions.isNotEmpty()) {
-                                val dragFromStart = lastPos - start
-                                if (kotlin.math.abs(dragFromStart.y) > minDragDistancePx) {
-                                    longPressSelectionCanceled = true
-                                    showLongPressOptions = false
+                                val delta = lastPos - start
+                                val effectiveThresholdPx = kotlin.math.max(
+                                    autoActivationThresholdPx,
+                                    kotlin.math.min(buttonSizePx.width, buttonSizePx.height) * 0.24f
+                                )
+
+                                val detectedDirection = detectDragDirection(delta, dragDetectionSlop)
+                                val activeDirection = detectedDirection?.takeIf { supportsSwipe(it) }
+                                if (activeDirection != null) {
+                                    val computedProgress = normalizedDragProgress(
+                                        axisDistancePx = activeDirection.axisDistance(delta),
+                                        thresholdPx = effectiveThresholdPx,
+                                        touchSlopPx = dragDetectionSlop
+                                    )
+                                    dragDirection = activeDirection
+                                    dragProgress = computedProgress
+                                    lastEligibleDragDirection = activeDirection
+                                    lastEligibleDragProgress = computedProgress
                                 } else {
-                                    val relative = lastPos.x - (buttonSizePx.width / 2f)
-                                    val baseIndex = (effectiveLongPressOptions.size - 1) / 2f
-                                    val rawIndex = (relative / optionWidthPx + baseIndex).roundToInt()
-                                    highlightedOption = rawIndex.coerceIn(0, effectiveLongPressOptions.lastIndex)
+                                    dragDirection = null
+                                    dragProgress = 0f
                                 }
-                            }
-                            change.consume()
-                        }
 
-                        if (!longPressFired &&
-                            enabled &&
-                            effectiveLongPressOptions.isNotEmpty() &&
-                            !movedBeyondSlop &&
-                            (change.uptimeMillis - downTime) >= longPressTimeout
-                        ) {
-                            longPressFired = true
-                            showLongPressOptions = true
-                            highlightedOption = (effectiveLongPressOptions.size - 1) / 2
-                            if (hapticsEnabled) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        } else if (onLongClick != null &&
-                            enabled &&
-                            !longPressFired &&
-                            !movedBeyondSlop &&
-                            (change.uptimeMillis - downTime) >= longPressTimeout
-                        ) {
-                            longPressFired = true
-                            if (hapticsEnabled) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            onLongClick()
+                                // Auto-activation in modern mode when threshold is reached (no finger lift needed).
+                                val reachedAutoThreshold = activeDirection != null && dragProgress >= 1f
+                                if (enabledState &&
+                                    activeDirection != null &&
+                                    reachedAutoThreshold &&
+                                    !wasAtOrAboveAutoThreshold
+                                ) {
+                                    val autoProgress = animationProgressFor(activeDirection)
+                                    if (invokeSwipe(
+                                            activeDirection,
+                                            flyingStartForDirection(activeDirection, autoProgress),
+                                            autoProgress
+                                        )
+                                    ) {
+                                        swipeHandled = true
+                                        isPressed = false
+                                        dragProgress = 0f
+                                        dragDirection = null
+                                    }
+                                }
+                                wasAtOrAboveAutoThreshold = reachedAutoThreshold
+
+                                if (showLongPressOptions && longPressOptionsState.isNotEmpty()) {
+                                    val dragFromStart = lastPos - start
+                                    if (kotlin.math.abs(dragFromStart.y) > minDragDistancePx) {
+                                        longPressSelectionCanceled = true
+                                        showLongPressOptions = false
+                                    } else {
+                                        val relative = lastPos.x - (buttonSizePx.width / 2f)
+                                        val baseIndex = (longPressOptionsState.size - 1) / 2f
+                                        val rawIndex = (relative / optionWidthPx + baseIndex).roundToInt()
+                                        highlightedOption = rawIndex.coerceIn(0, longPressOptionsState.lastIndex)
+                                    }
+                                }
+                                change.consume()
+                            }
+
+                            if (!longPressFired &&
+                                enabledState &&
+                                longPressOptionsState.isNotEmpty() &&
+                                !movedBeyondSlop &&
+                                (change.uptimeMillis - downTime) >= longPressTimeout
+                            ) {
+                                longPressFired = true
+                                showLongPressOptions = true
+                                highlightedOption = (longPressOptionsState.size - 1) / 2
+                                if (hapticsEnabled) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            } else if (onLongClickState != null &&
+                                enabledState &&
+                                !longPressFired &&
+                                !movedBeyondSlop &&
+                                (change.uptimeMillis - downTime) >= longPressTimeout
+                            ) {
+                                longPressFired = true
+                                if (hapticsEnabled) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onLongClickState?.invoke()
+                            }
                         }
+                        if (isPressed) {
+                            isPressed = false
+                        }
+                        dragProgress = 0f
+                        dragDirection = null
+                        lastEligibleDragDirection = null
+                        lastEligibleDragProgress = 0f
                     }
-                    if (isPressed) {
-                        isPressed = false
-                    }
+                } finally {
+                    // Always recover visual state if pointer scope is cancelled/restarted mid-gesture.
+                    isPressed = false
+                    showLongPressOptions = false
                     dragProgress = 0f
                     dragDirection = null
                     lastEligibleDragDirection = null
@@ -887,7 +922,7 @@ internal fun ModernButton(
             },
         contentAlignment = Alignment.Center
     ) {
-        if (showLongPressOptions && effectiveLongPressOptions.isNotEmpty() && buttonSizePx.height > 0f) {
+        if (showLongPressOptions && longPressOptionsState.isNotEmpty() && buttonSizePx.height > 0f) {
             Popup(
                 alignment = Alignment.TopCenter,
                 offset = IntOffset(
@@ -906,7 +941,7 @@ internal fun ModernButton(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        effectiveLongPressOptions.forEachIndexed { index, option ->
+                        longPressOptionsState.forEachIndexed { index, option ->
                             val isSelected = index == highlightedOption
                             Surface(
                                 shape = RoundedCornerShape(999.dp),
@@ -1208,7 +1243,18 @@ internal fun ModernButton(
             }
         }
 
-        // Main button text
+        // Main button text with refined typography
+        val fontWeight = when (buttonType) {
+            ButtonType.OPERATION_HIGHLIGHTED -> FontWeight.SemiBold
+            ButtonType.OPERATION -> FontWeight.SemiBold
+            ButtonType.CONTROL -> FontWeight.SemiBold
+            else -> FontWeight.Medium
+        }
+        val fontSize = when (buttonType) {
+            ButtonType.OPERATION_HIGHLIGHTED -> 26.sp
+            else -> 24.sp
+        }
+
         Text(
             text = text,
             modifier = Modifier.graphicsLayer {
@@ -1220,11 +1266,12 @@ internal fun ModernButton(
                 scaleY = s
             },
             style = TextStyle(
-                fontSize = 24.sp,
+                fontSize = fontSize,
                 color = textColor,
                 fontFamily = CalculatorFontFamily,
-                fontWeight = if (buttonType == ButtonType.OPERATION || buttonType == ButtonType.OPERATION_HIGHLIGHTED) FontWeight.SemiBold else FontWeight.Medium,
-                textAlign = TextAlign.Center
+                fontWeight = fontWeight,
+                textAlign = TextAlign.Center,
+                letterSpacing = if (buttonType == ButtonType.OPERATION_HIGHLIGHTED) (-0.5).sp else 0.sp
             )
         )
     }

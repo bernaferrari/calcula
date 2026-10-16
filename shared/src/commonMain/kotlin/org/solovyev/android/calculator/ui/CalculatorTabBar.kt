@@ -5,48 +5,43 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.zIndex
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -61,14 +56,14 @@ data class CalculatorTabData(
         return when {
             expression.isNotEmpty() -> middleEllipsize(expression, maxLength)
             result.isNotEmpty() -> middleEllipsize("= $result", maxLength)
-            else -> "New"
+            else -> "0"
         }
     }
 }
 
 /**
- * A horizontal scrollable tab bar for the calculator.
- * 
+ * A horizontal scrollable tab bar for the calculator with refined pill aesthetic.
+ *
  * Shows all open tabs with their expression previews. Users can:
  * - Tap a tab to switch to it
  * - Tap the × button to close a tab
@@ -83,6 +78,7 @@ data class CalculatorTabData(
  * @param modifier Modifier for the tab bar
  */
 @Composable
+@Suppress("UNUSED_PARAMETER")
 fun CalculatorTabBar(
     tabs: List<CalculatorTabData>,
     activeTabId: String,
@@ -91,47 +87,37 @@ fun CalculatorTabBar(
     onAddTab: () -> Unit,
     onTabMove: (fromIndex: Int, toIndex: Int) -> Unit,
     canAddMore: Boolean = true,
-    maxLabelLength: Int = 12,
+    maxLabelLength: Int = 5,
     reorderThreshold: Dp = 64.dp,
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
 
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .horizontalScroll(scrollState)
+            .padding(start = 10.dp, end = 10.dp, top = 0.dp, bottom = 0.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .horizontalScroll(scrollState)
-                .padding(horizontal = 8.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            tabs.forEachIndexed { index, tab ->
-                TabChip(
-                    tab = tab,
-                    index = index,
-                    tabCount = tabs.size,
-                    isActive = tab.id == activeTabId,
-                    showCloseButton = tabs.size > 1,
-                    maxLabelLength = maxLabelLength,
-                    reorderThreshold = reorderThreshold,
-                    onClick = { onTabSelect(tab.id) },
-                    onClose = { onTabClose(tab.id) },
-                    onMove = onTabMove
-                )
-            }
+        tabs.forEach { tab ->
+            TabChip(
+                tab = tab,
+                isActive = tab.id == activeTabId,
+                showCloseButton = tabs.size > 1,
+                maxLabelLength = maxLabelLength,
+                onClick = { onTabSelect(tab.id) },
+                onClose = { onTabClose(tab.id) }
+            )
+        }
 
-            // Add tab button
-            AnimatedVisibility(
-                visible = canAddMore,
-                enter = fadeIn() + scaleIn(),
-                exit = fadeOut() + scaleOut()
-            ) {
-                AddTabButton(onClick = onAddTab)
-            }
+        AnimatedVisibility(
+            visible = canAddMore,
+            enter = fadeIn() + scaleIn(),
+            exit = fadeOut() + scaleOut()
+        ) {
+            AddTabButton(onClick = onAddTab)
         }
     }
 }
@@ -139,108 +125,102 @@ fun CalculatorTabBar(
 @Composable
 private fun TabChip(
     tab: CalculatorTabData,
-    index: Int,
-    tabCount: Int,
     isActive: Boolean,
     showCloseButton: Boolean,
     maxLabelLength: Int,
-    reorderThreshold: Dp,
     onClick: () -> Unit,
     onClose: () -> Unit,
-    onMove: (fromIndex: Int, toIndex: Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val backgroundColor = if (isActive) {
-        MaterialTheme.colorScheme.primaryContainer
-    } else {
-        MaterialTheme.colorScheme.surfaceVariant
-    }
-
-    val textColor = if (isActive) {
-        MaterialTheme.colorScheme.onPrimaryContainer
-    } else {
-        MaterialTheme.colorScheme.onSurfaceVariant
-    }
     val reduceMotion = LocalCalculatorReduceMotion.current
-    val thresholdPx = with(LocalDensity.current) { reorderThreshold.toPx() }
-    var dragAccumulatedX by remember(index) { mutableFloatStateOf(0f) }
-    var isDragging by remember(index) { mutableStateOf(false) }
-    val dragScaleTarget = if (isDragging && !reduceMotion) 1.03f else 1f
-    val scale by animateFloatAsState(
-        targetValue = dragScaleTarget,
-        animationSpec = tween(durationMillis = if (reduceMotion) 0 else 120),
-        label = "tab_drag_scale"
+    val selectionAnimationDuration = if (reduceMotion) 0 else 220
+    val chipShape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp, bottomStart = 0.dp, bottomEnd = 0.dp)
+    val closeSlotWidth by animateDpAsState(
+        targetValue = if (showCloseButton) 38.dp else 0.dp,
+        animationSpec = tween(durationMillis = selectionAnimationDuration),
+        label = "tab_close_slot_width"
     )
-    val elevation by animateFloatAsState(
-        targetValue = if (isDragging) 8f else if (isActive) 2f else 0f,
-        animationSpec = tween(durationMillis = if (reduceMotion) 0 else 120),
-        label = "tab_drag_elevation"
+    val backgroundColor by animateColorAsState(
+        targetValue = if (isActive) {
+            MaterialTheme.colorScheme.surfaceContainerHigh
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.44f)
+        },
+        animationSpec = tween(durationMillis = selectionAnimationDuration),
+        label = "tab_bg_color"
+    )
+    val textColor by animateColorAsState(
+        targetValue = if (isActive) {
+            MaterialTheme.colorScheme.onSurface
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        },
+        animationSpec = tween(durationMillis = selectionAnimationDuration),
+        label = "tab_text_color"
+    )
+    val closeAlpha by animateFloatAsState(
+        targetValue = if (isActive && showCloseButton) 1f else 0f,
+        animationSpec = tween(durationMillis = selectionAnimationDuration),
+        label = "tab_close_alpha"
+    )
+    val closeScale by animateFloatAsState(
+        targetValue = if (isActive && showCloseButton) 1f else 0.85f,
+        animationSpec = tween(durationMillis = selectionAnimationDuration),
+        label = "tab_close_scale"
+    )
+    val closeOffsetX by animateFloatAsState(
+        targetValue = if (isActive && showCloseButton) 0f else -6f,
+        animationSpec = tween(durationMillis = selectionAnimationDuration),
+        label = "tab_close_offset_x"
     )
 
     Surface(
         modifier = modifier
-            .height(36.dp)
-            .clip(RoundedCornerShape(18.dp))
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
-            .zIndex(if (isDragging) 1f else 0f)
-            .pointerInput(index, tabCount) {
-                detectDragGesturesAfterLongPress(
-                    onDragStart = {
-                        isDragging = true
-                        dragAccumulatedX = 0f
-                    },
-                    onDragCancel = {
-                        isDragging = false
-                        dragAccumulatedX = 0f
-                    },
-                    onDragEnd = {
-                        isDragging = false
-                        dragAccumulatedX = 0f
-                    }
-                ) { change, dragAmount ->
-                    change.consume()
-                    dragAccumulatedX += dragAmount.x
-                    if (dragAccumulatedX > thresholdPx && index < tabCount - 1) {
-                        onMove(index, index + 1)
-                        dragAccumulatedX = 0f
-                    } else if (dragAccumulatedX < -thresholdPx && index > 0) {
-                        onMove(index, index - 1)
-                        dragAccumulatedX = 0f
-                    }
-                }
-            }
+            .heightIn(min = 44.dp)
+            .widthIn(min = 108.dp, max = 152.dp)
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(18.dp),
-        color = backgroundColor,
-        tonalElevation = elevation.dp
+        shape = chipShape,
+        color = backgroundColor
     ) {
         Row(
-            modifier = Modifier.padding(start = 14.dp, end = if (showCloseButton) 4.dp else 14.dp),
+            modifier = Modifier.padding(start = 14.dp, end = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = tab.getLabel(maxLength = maxLabelLength),
                 color = textColor,
                 fontSize = 14.sp,
-                fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal,
+                fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Medium,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.widthIn(min = 42.dp, max = 98.dp)
             )
 
-            if (showCloseButton) {
-                Spacer(modifier = Modifier.width(4.dp))
-
+            Spacer(modifier = Modifier.width(4.dp))
+            Box(
+                modifier = Modifier.width(closeSlotWidth),
+                contentAlignment = Alignment.Center
+            ) {
                 IconButton(
                     onClick = onClose,
-                    modifier = Modifier.size(28.dp)
+                    enabled = isActive && showCloseButton,
+                    colors = IconButtonDefaults.iconButtonColors(
+                        contentColor = textColor
+                    ),
+                    modifier = Modifier
+                        .size(36.dp)
+                        .graphicsLayer {
+                            alpha = closeAlpha
+                            scaleX = closeScale
+                            scaleY = closeScale
+                            translationX = closeOffsetX
+                        }
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Clear,
                         contentDescription = stringResource(Res.string.cpp_a11y_close),
-                        tint = textColor.copy(alpha = 0.7f)
+                        tint = textColor.copy(alpha = 0.9f),
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }
@@ -263,13 +243,23 @@ private fun AddTabButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    FilledTonalIconButton(
+    Surface(
         onClick = onClick,
-        modifier = modifier.size(36.dp)
+        modifier = modifier
+            .size(width = 44.dp, height = 44.dp),
+        shape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp, bottomStart = 0.dp, bottomEnd = 0.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.34f)
     ) {
-        Icon(
-            imageVector = Icons.Filled.Add,
-            contentDescription = "Add tab"
-        )
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Add,
+                contentDescription = "Add tab",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp)
+            )
+        }
     }
 }

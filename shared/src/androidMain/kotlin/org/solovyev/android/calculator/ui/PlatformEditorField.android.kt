@@ -147,8 +147,8 @@ internal actual fun PlatformEditorField(
             editText.isFocusable = enabled && !readOnly
             editText.isFocusableInTouchMode = enabled && !readOnly
 
-            editText.maxLines = maxLines
             editText.setSingleLine(singleLine)
+            editText.maxLines = maxLines
             editText.setHorizontallyScrolling(singleLine)
             editText.inputType = if (singleLine) {
                 InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
