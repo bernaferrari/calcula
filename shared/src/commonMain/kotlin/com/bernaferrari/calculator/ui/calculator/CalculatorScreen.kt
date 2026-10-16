@@ -62,6 +62,10 @@ import kotlinx.coroutines.launch
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import kotlin.math.roundToInt
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.layout
+import androidx.compose.animation.core.animateFloatAsState
 import com.bernaferrari.calculator.ui.containerTransform
 import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.ui.Modifier
@@ -212,10 +216,11 @@ fun CalculatorScreen(
         } else {
             // Rows grow with the screen but never get cramped or comically tall.
             val rowHeight = (maxHeight * 0.47f / 5).coerceIn(60.dp, 92.dp)
-            // History mode slides the keypad away and gives the whole screen to the tape.
-            val keypadHeight by animateDpAsState(
-                if (historyOpen) 0.dp else rowHeight * 5 + bottomInset,
-                spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
+            // History mode slides the keypad down and away, whole, and gives the screen to the tape.
+            val fullKeypad = rowHeight * 5 + bottomInset
+            val shown by animateFloatAsState(
+                if (historyOpen) 0f else 1f,
+                spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow),
                 label = "keypad",
             )
             Column(Modifier.fillMaxSize()) {
@@ -230,7 +235,8 @@ fun CalculatorScreen(
                     onLayer = { next -> haptics.tap(); layer = next; historyOpen = false },
                     onOpenConverter = { onOpenConverter(currentNumber) },
                     onOpenSettings = onOpenSettings,
-                    modifier = Modifier.padding(bottom = if (historyOpen) bottomInset else 0.dp),
+                    // Takes over the bottom inset as the keypad leaves, in step with it.
+                    modifier = Modifier.padding(bottom = bottomInset * (1f - shown)),
                 )
                 MainKeypad(
                     decimal = formatter.decimal,
@@ -245,7 +251,16 @@ fun CalculatorScreen(
                     onClearAll = { viewModel.onKey(Key.CLEAR) },
                     showDots = state.showFlickDots,
                     bottomInset = bottomInset,
-                    modifier = Modifier.fillMaxWidth().height(keypadHeight).clipToBounds(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clipToBounds()
+                        // Laid out at full size, revealed through a shrinking slot: keys never squash.
+                        .layout { measurable, constraints ->
+                            val full = fullKeypad.roundToPx()
+                            val placeable = measurable.measure(constraints.copy(minHeight = full, maxHeight = full))
+                            layout(placeable.width, (full * shown).roundToInt()) { placeable.place(0, 0) }
+                        }
+                        .graphicsLayer { alpha = (shown * 1.6f).coerceIn(0f, 1f) },
                 )
             }
         }

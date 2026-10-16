@@ -112,7 +112,12 @@ fun Tape(
     val rows = remember(history, expanded) { buildRows(history, expanded) }
 
     Column(modifier) {
-        if (expanded) {
+        // The title and Clear arrive with history mode, in step with the keypad leaving.
+        AnimatedVisibility(
+            expanded,
+            enter = expandVertically(spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow)) + fadeIn(tween(200, delayMillis = 60)),
+            exit = shrinkVertically(spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow)) + fadeOut(tween(100)),
+        ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 12.dp, top = 8.dp),
@@ -155,8 +160,6 @@ private fun TapeList(
         state = state,
         reverseLayout = true,
         contentPadding = PaddingValues(top = if (expanded) 8.dp else 24.dp),
-        // History mode reads top-down from under its title; the tape stays anchored to the display.
-        verticalArrangement = if (expanded) Arrangement.Top else Arrangement.Bottom,
         modifier = modifier
             // Fade the oldest entries out at the top instead of cutting them off.
             .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }

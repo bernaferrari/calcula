@@ -174,7 +174,11 @@ fun CalculatorDisplay(
                 state.text, state.cursor, state.resultShown, state.preview, state.error, state.openParentheses, state.generation, state.angleUnit,
             )
             // History mode is about the past: the live entry steps aside until the keypad returns.
-            AnimatedVisibility(!historyOpen, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+            AnimatedVisibility(
+                !historyOpen,
+                enter = expandVertically(spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow)) + fadeIn(tween(220, delayMillis = 80)),
+                exit = shrinkVertically(spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow)) + fadeOut(tween(120)),
+            ) {
             AnimatedContent(
                 targetState = entry,
                 contentKey = { it.generation },
