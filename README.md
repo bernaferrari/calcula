@@ -1,53 +1,49 @@
-# Calculator++ (Fork)
+# Calculator++
 
-Modern fork of [serso/android-calculatorpp](https://github.com/serso/android-calculatorpp), rebuilt around Kotlin Multiplatform + Compose.
+A scientific calculator for Android, iOS and the web, built with Compose Multiplatform and Material 3 Expressive. Modern fork of [serso/android-calculatorpp](https://github.com/serso/android-calculatorpp).
 
-## What this fork focuses on
+## What makes it Calculator++
 
-- Shared app logic/UI across Android and iOS (`shared` module).
-- Modern calculator UX (tabs, RPN, paper tape, programmer tools).
-- Compose Material 3 screens for history, graphing, converter, variables, and functions.
-- Android widgets and platform integrations in `androidApp`.
+- **Flick keys.** Swipe a key up or down for its second and third functions (sin, cos, √, x², …); hold a key to see both. Small dots mark the keys that have them.
+- **123 / ƒ.** One tap flips the keypad to a full function layer, once or locked.
+- **Paper tape.** Past calculations sit above the live entry; open history for days, swipe to delete, tap to reuse.
+- **Exact arithmetic.** A 40-digit decimal engine: `0.1 + 0.2 = 0.3`, smart percent (`200 + 10%` = 220), implicit multiplication, auto-closed parentheses.
+- **Unit converter.** Exact definitions across ten categories. It opens with the calculator's current number, and **Use** sends the converted value back.
 
 ## Modules
 
-- `androidApp`: Android app and widgets.
-- `shared`: KMP core logic + Compose UI.
-- `iosApp`: iOS host app.
-- `jscl`: math engine/parser.
-- `dragbutton`: gesture/button interaction module.
+- `shared`: everything: engine, input rules, UI, storage. Targets Android, iOS (arm64 and simulator) and wasmJs.
+- `androidApp`: Android host (`org.solovyev.android.calculator`, the existing Play listing).
+- `iosApp`: Xcode host project.
+- `webApp`: browser host (Kotlin/Wasm).
 
-## Quick start
+## Build and run
 
-Requirements:
-
-- JDK 17+
-- Android SDK (`compileSdk 36`, `minSdk 26`)
-- Android Studio (latest recommended)
-- Xcode 15+ (for iOS)
-
-Build Android debug:
-
-```bash
-./gradlew :androidApp:assembleDebug
-```
-
-Install on emulator/device:
+Android:
 
 ```bash
 ./gradlew :androidApp:installDebug
 ```
 
-Compile check:
+Web: build, then serve `webApp/build/dist/wasmJs/productionExecutable` with any static server:
 
 ```bash
-./gradlew :androidApp:compileDebugKotlin
+./gradlew :webApp:wasmJsBrowserDistribution
 ```
 
-iOS:
+Or a live development server:
 
-1. Open `iosApp/iosApp.xcodeproj`
-2. Run the `iosApp` target in Xcode
+```bash
+./gradlew :webApp:wasmJsBrowserDevelopmentRun
+```
+
+iOS: open `iosApp/iosApp.xcodeproj` and run the `iosApp` scheme. The Xcode build phase calls `:shared:embedAndSignAppleFrameworkForXcode`.
+
+Tests (shared code, on the JVM and the iOS simulator):
+
+```bash
+./gradlew :shared:testAndroidHostTest :shared:iosSimulatorArm64Test
+```
 
 ## Git remotes
 

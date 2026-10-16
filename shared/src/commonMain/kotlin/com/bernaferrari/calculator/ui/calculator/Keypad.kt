@@ -1,0 +1,325 @@
+package com.bernaferrari.calculator.ui.calculator
+
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Backspace
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.bernaferrari.calculator.domain.input.Key
+import com.bernaferrari.calculator.domain.model.AngleUnit
+import com.bernaferrari.calculator.ui.theme.GoogleSansFlex
+import kotlinx.coroutines.delay
+
+private val DigitStyle @Composable get() = TextStyle(fontFamily = GoogleSansFlex, fontSize = 34.sp, fontWeight = FontWeight.Normal)
+private val OperatorStyle @Composable get() = TextStyle(fontFamily = GoogleSansFlex, fontSize = 38.sp, fontWeight = FontWeight.Normal)
+private val FunctionStyle @Composable get() = TextStyle(fontFamily = GoogleSansFlex, fontSize = 26.sp, fontWeight = FontWeight.Medium)
+private val LayerStyle @Composable get() = TextStyle(fontFamily = GoogleSansFlex, fontSize = 24.sp, fontWeight = FontWeight.Medium)
+private val LayerInverseStyle @Composable get() = TextStyle(fontFamily = GoogleSansFlex, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+private val ScientificStyle @Composable get() = TextStyle(fontFamily = GoogleSansFlex, fontSize = 19.sp, fontWeight = FontWeight.Medium)
+
+private val KeyGap = 6.dp
+
+private enum class Tone { Digit, Function, Operator, Equals }
+
+/** A secondary function: what the key shows, and the key it types. */
+private data class Alt(val label: String, val key: Key, val description: String = label)
+
+private data class Spec(
+    val key: Key,
+    val label: String,
+    val tone: Tone,
+    val description: String = label,
+    /** Flick up; also what the key becomes on the ƒ layer when [flips] is set. */
+    val up: Alt? = null,
+    /** Flick down; on the ƒ layer it is shown small under the function. */
+    val down: Alt? = null,
+    val flips: Boolean = up != null,
+)
+
+/**
+ * The 4×5 keypad. Every key shows one label. The ƒ layer flips the digits into their functions
+ * (7 8 9 → trigonometry, 4 5 6 → logs and roots, 1 2 3 → constants and powers); the same functions
+ * are always one flick away, up for the function and down for its inverse.
+ */
+@Composable
+fun MainKeypad(
+    decimal: Char,
+    haptics: Haptics,
+    functionLayer: Boolean,
+    onKey: (Key) -> Unit,
+    onFunctionKey: (Key) -> Unit,
+    onClearAll: () -> Unit,
+    modifier: Modifier = Modifier,
+    showDots: Boolean = true,
+    bottomInset: Dp = 0.dp,
+) {
+    val rows = listOf(
+        listOf(
+            Spec(Key.CLEAR, "AC", Tone.Function, "Clear"),
+            Spec(Key.PARENS, "( )", Tone.Function, "Parentheses", up = Alt("(", Key.LPAREN, "open parenthesis"), down = Alt(")", Key.RPAREN, "close parenthesis"), flips = false),
+            Spec(Key.PERCENT, "%", Tone.Function, "Percent"),
+            Spec(Key.DIVIDE, "÷", Tone.Operator, "Divide"),
+        ),
+        listOf(
+            Spec(Key.D7, "7", Tone.Digit, up = Alt("sin", Key.SIN), down = Alt("sin⁻¹", Key.ASIN, "arcsine")),
+            Spec(Key.D8, "8", Tone.Digit, up = Alt("cos", Key.COS), down = Alt("cos⁻¹", Key.ACOS, "arccosine")),
+            Spec(Key.D9, "9", Tone.Digit, up = Alt("tan", Key.TAN), down = Alt("tan⁻¹", Key.ATAN, "arctangent")),
+            Spec(Key.TIMES, "×", Tone.Operator, "Multiply", up = Alt("xʸ", Key.POWER, "power")),
+        ),
+        listOf(
+            Spec(Key.D4, "4", Tone.Digit, up = Alt("ln", Key.LN, "natural log"), down = Alt("eˣ", Key.EXP, "e to the power")),
+            Spec(Key.D5, "5", Tone.Digit, up = Alt("log", Key.LOG, "log base 10"), down = Alt("10ˣ", Key.POW10, "10 to the power")),
+            Spec(Key.D6, "6", Tone.Digit, up = Alt("√", Key.SQRT, "square root"), down = Alt("∛", Key.CBRT, "cube root")),
+            Spec(Key.MINUS, "−", Tone.Operator, "Minus"),
+        ),
+        listOf(
+            Spec(Key.D1, "1", Tone.Digit, up = Alt("π", Key.PI, "pi"), down = Alt("e", Key.E, "Euler's number")),
+            Spec(Key.D2, "2", Tone.Digit, up = Alt("x²", Key.SQUARE, "squared"), down = Alt("x³", Key.CUBE, "cubed")),
+            Spec(Key.D3, "3", Tone.Digit, up = Alt("x!", Key.FACTORIAL, "factorial"), down = Alt("1/x", Key.RECIPROCAL, "reciprocal")),
+            Spec(Key.PLUS, "+", Tone.Operator, "Plus"),
+        ),
+        listOf(
+            Spec(Key.D0, "0", Tone.Digit, up = Alt("00", Key.DOUBLE_ZERO), down = Alt("000", Key.TRIPLE_ZERO), flips = false),
+            Spec(Key.DOT, decimal.toString(), Tone.Digit, "Decimal point"),
+            Spec(Key.DELETE, "⌫", Tone.Digit, "Backspace, hold to clear"),
+            Spec(Key.EQUALS, "=", Tone.Equals, "Equals"),
+        ),
+    )
+    val reduceMotion = LocalReduceMotion.current
+    Column(
+        verticalArrangement = Arrangement.spacedBy(KeyGap),
+        modifier = modifier.padding(start = KeyGap * 2, end = KeyGap * 2, top = KeyGap, bottom = KeyGap * 2 + bottomInset),
+    ) {
+        rows.forEachIndexed { r, row ->
+            var pressedIndex by remember { mutableIntStateOf(-1) }
+            Row(horizontalArrangement = Arrangement.spacedBy(KeyGap), modifier = Modifier.weight(1f).fillMaxWidth()) {
+                row.forEachIndexed { c, spec ->
+                    // The pressed key widens and its row-mates make room, then everything springs back.
+                    val weight by animateFloatAsState(
+                        when {
+                            reduceMotion -> 1f
+                            pressedIndex == -1 -> 1f
+                            pressedIndex == c -> 1.1f
+                            else -> 0.967f
+                        },
+                        spring(dampingRatio = 0.6f, stiffness = Spring.StiffnessMedium),
+                        label = "squeeze",
+                    )
+                    KeypadKey(
+                        spec = spec,
+                        haptics = haptics,
+                        functionLayer = functionLayer,
+                        // A wave from the top-left corner when the layer flips.
+                        flipDelay = r * 35L + c * 25L,
+                        showDots = showDots,
+                        onKey = onKey,
+                        onFunctionKey = onFunctionKey,
+                        onClearAll = onClearAll,
+                        onPressedChange = { down -> pressedIndex = if (down) c else if (pressedIndex == c) -1 else pressedIndex },
+                        modifier = Modifier.weight(weight).fillMaxHeight(),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun Spec.containerColor(onLayer: Boolean): Color = with(MaterialTheme.colorScheme) {
+    when {
+        onLayer -> primaryContainer
+        // One accent only: `=` is the single solid color; everything else is a calm neutral.
+        tone == Tone.Digit -> surfaceContainerHigh
+        tone == Tone.Equals -> primary
+        else -> surfaceContainerHighest
+    }
+}
+
+@Composable
+private fun Spec.contentColor(onLayer: Boolean): Color = with(MaterialTheme.colorScheme) {
+    when {
+        onLayer -> onPrimaryContainer
+        tone == Tone.Digit -> onSurface
+        tone == Tone.Function -> if (key == Key.CLEAR) primary else onSurfaceVariant
+        tone == Tone.Operator -> primary
+        else -> onPrimary
+    }
+}
+
+@Composable
+private fun KeypadKey(
+    spec: Spec,
+    haptics: Haptics,
+    functionLayer: Boolean,
+    flipDelay: Long,
+    showDots: Boolean,
+    onKey: (Key) -> Unit,
+    onFunctionKey: (Key) -> Unit,
+    onClearAll: () -> Unit,
+    onPressedChange: (Boolean) -> Unit,
+    modifier: Modifier,
+) {
+    val wantsLayer = functionLayer && spec.flips && spec.up != null
+    // The face flips over its horizontal axis: out to 90°, swap the label, then spring back in.
+    val rotation = remember { Animatable(0f) }
+    var onLayer by remember { mutableStateOf(wantsLayer) }
+    val reduceMotion = LocalReduceMotion.current
+    LaunchedEffect(wantsLayer) {
+        if (onLayer == wantsLayer) return@LaunchedEffect
+        if (reduceMotion) {
+            onLayer = wantsLayer
+            return@LaunchedEffect
+        }
+        delay(flipDelay)
+        rotation.animateTo(90f, tween(110, easing = FastOutLinearInEasing))
+        onLayer = wantsLayer
+        rotation.snapTo(-90f)
+        rotation.animateTo(0f, spring(dampingRatio = 0.55f, stiffness = Spring.StiffnessMedium))
+    }
+
+    val container by animateColorAsState(spec.containerColor(onLayer), label = "container")
+    val content = spec.contentColor(onLayer)
+    val isDelete = spec.key == Key.DELETE
+    KeyCell(
+        container = container,
+        content = content,
+        description = if (onLayer) spec.up!!.description else spec.description,
+        haptics = haptics,
+        // `=` answers with its own confirm/reject haptic once the result is known.
+        pressHaptic = spec.key != Key.EQUALS,
+        onClick = { if (onLayer) onFunctionKey(spec.up!!.key) else onKey(spec.key) },
+        up = spec.up?.let { Hint(it.label, it.description) { onFunctionKey(it.key) } },
+        down = spec.down?.let { Hint(it.label, it.description) { onFunctionKey(it.key) } },
+        showDots = showDots && !onLayer,
+        onLongClick = if (isDelete) ({ haptics.heavy(); onClearAll() }) else null,
+        onPressedChange = onPressedChange,
+        modifier = modifier,
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.graphicsLayer {
+                rotationX = rotation.value
+                cameraDistance = 16f * density
+            },
+        ) {
+            when {
+                onLayer -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(spec.up!!.label, style = LayerStyle, color = content)
+                    spec.down?.let { Text(it.label, style = LayerInverseStyle, color = content.copy(alpha = 0.6f)) }
+                }
+                isDelete -> Icon(Icons.AutoMirrored.Outlined.Backspace, contentDescription = null, tint = content, modifier = Modifier.size(28.dp))
+                else -> Text(
+                    spec.label,
+                    style = when (spec.tone) {
+                        Tone.Digit -> DigitStyle
+                        Tone.Function -> FunctionStyle
+                        Tone.Operator, Tone.Equals -> OperatorStyle
+                    },
+                    color = content,
+                )
+            }
+        }
+    }
+}
+
+private data class SciSpec(val key: Key, val label: String, val inverseLabel: String = label, val description: String = label)
+
+/** Landscape has room for every function as its own key, beside the main keypad. */
+@Composable
+fun ScientificGrid(
+    inverse: Boolean,
+    angleUnit: AngleUnit,
+    haptics: Haptics,
+    onKey: (Key) -> Unit,
+    onToggleAngle: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val rows = listOf(
+        listOf(SciSpec(Key.INVERSE, "INV", description = "Inverse functions"), SciSpec(Key.SQRT, "√", "∛"), SciSpec(Key.PI, "π")),
+        listOf(SciSpec(Key.SIN, "sin", "sin⁻¹"), SciSpec(Key.COS, "cos", "cos⁻¹"), SciSpec(Key.TAN, "tan", "tan⁻¹")),
+        listOf(SciSpec(Key.LN, "ln", "eˣ"), SciSpec(Key.LOG, "log", "10ˣ"), SciSpec(Key.E, "e")),
+        listOf(SciSpec(Key.POWER, "xʸ", "x⁻¹"), SciSpec(Key.SQUARE, "x²", "x³"), SciSpec(Key.FACTORIAL, "x!")),
+        listOf(SciSpec(Key.LPAREN, "("), SciSpec(Key.RPAREN, ")")),
+    )
+    Column(
+        verticalArrangement = Arrangement.spacedBy(KeyGap),
+        modifier = modifier.padding(start = KeyGap * 2, top = KeyGap, bottom = KeyGap * 2),
+    ) {
+        rows.forEachIndexed { index, row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(KeyGap), modifier = Modifier.weight(1f).fillMaxWidth()) {
+                row.forEach { ScientificKey(it, inverse, haptics, onKey, Modifier.weight(1f).fillMaxHeight()) }
+                if (index == rows.lastIndex) {
+                    KeyCell(
+                        container = MaterialTheme.colorScheme.surfaceContainer,
+                        content = MaterialTheme.colorScheme.primary,
+                        description = "Angle unit",
+                        haptics = haptics,
+                        onClick = onToggleAngle,
+                        modifier = Modifier.weight(1f).fillMaxHeight(),
+                    ) {
+                        Text(if (angleUnit == AngleUnit.DEGREES) "DEG" else "RAD", style = ScientificStyle, color = MaterialTheme.colorScheme.primary)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ScientificKey(spec: SciSpec, inverse: Boolean, haptics: Haptics, onKey: (Key) -> Unit, modifier: Modifier) {
+    val isInverseKey = spec.key == Key.INVERSE
+    val active = isInverseKey && inverse
+    val container by animateColorAsState(
+        if (active) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.surfaceContainer,
+        label = "inverse",
+    )
+    val content = if (active) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onSurfaceVariant
+    val label = if (inverse) spec.inverseLabel else spec.label
+    KeyCell(
+        container = container,
+        content = content,
+        description = if (isInverseKey) (if (inverse) "Inverse functions on" else "Inverse functions off") else label,
+        haptics = haptics,
+        onClick = { onKey(spec.key) },
+        modifier = modifier,
+    ) {
+        AnimatedContent(targetState = label, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "sci-label") {
+            Text(it, style = ScientificStyle, color = content)
+        }
+    }
+}

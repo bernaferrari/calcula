@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Calculator++ — a scientific calculator with swipe-up functions, an exact unit converter and a paper-tape history.">
+    <meta name="theme-color" content="#f8f8ff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#121318" media="(prefers-color-scheme: dark)">
+    <title>Calculator++</title>
+    <style>
+        html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #f8f8ff; }
+        @media (prefers-color-scheme: dark) { html, body { background: #121318; } }
+        canvas { width: 100%; height: 100%; display: block; }
+        #loading { position: fixed; inset: 0; display: grid; place-items: center; }
+        #loading span { width: 36px; height: 36px; border-radius: 10px; background: #6366f1; animation: pulse 0.9s ease-in-out infinite alternate; }
+        @keyframes pulse { from { opacity: .35; transform: scale(.9); } to { opacity: 1; transform: scale(1); } }
+        @media (prefers-reduced-motion: reduce) { #loading span { animation: none; } }
+    </style>
+</head>
+<body>
+<div id="loading" role="status" aria-label="Loading"><span></span></div>
+<script src="calculator.js"></script>
+</body>
+</html>

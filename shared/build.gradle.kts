@@ -1,121 +1,78 @@
+@file:OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
+
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.android.kotlin.multiplatform.library)
-    alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.compose.multiplatform)
-    alias(libs.plugins.ksp)
+    alias(libs.plugins.compose)
+    alias(libs.plugins.jetbrains.compose)
 }
 
 kotlin {
-    androidLibrary {
-        namespace = "org.solovyev.android.calculator.shared"
-        compileSdk = 36
-        
-        compilerOptions {
-            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
-        }
-        
-        minSdk = 26
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
     }
 
-    listOf(
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
+    android {
+        namespace = "com.bernaferrari.calculator.shared"
+        compileSdk {
+        version = release(37) { minorApiLevel = 2 }
+    }
+        minSdk = 26
+        compilerOptions { jvmTarget.set(JvmTarget.JVM_17) }
+        androidResources { enable = true }
+        withHostTest { }
+    }
+
+    listOf(iosArm64(), iosSimulatorArm64()).forEach { target ->
+        target.binaries.framework {
             baseName = "Shared"
             isStatic = true
         }
     }
 
+    wasmJs {
+        browser()
+    }
+
     sourceSets {
         commonMain.dependencies {
-            implementation(libs.kotlinx.coroutines.core)
-            implementation(libs.kotlinx.datetime)
-            implementation(libs.kotlinx.atomicfu)
-            implementation(libs.kotlinx.serialization.core)
-
-            // DataStore
-            implementation(libs.androidx.datastore.preferences)
-            implementation(libs.androidx.datastore)
-
-            // Room KMP
-            implementation(libs.androidx.room.runtime)
-            implementation(libs.androidx.sqlite.bundled)
-
-            // Compose Multiplatform
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
-            implementation(compose.materialIconsExtended)
             implementation(libs.compose.material3)
             implementation(libs.compose.ui)
+            implementation(libs.compose.ui.backhandler)
             implementation(libs.compose.components.resources)
-
-
-
-            // Internal - exposed as API so consumers can access jscl types
-            api(project(":jscl"))
-
-            // ViewModel (KMP - JetBrains)
-            implementation(libs.androidx.lifecycle.viewmodel.compose)
-
-            // Koin
-            implementation(libs.koin.core)
-            implementation(libs.koin.compose)
-            implementation(libs.koin.compose.viewmodel)
-
-            implementation(libs.jetbrains.navigation3.ui)
-
-            // Material Kolor
-            implementation(libs.materialkolor)
-
-            // Ktor
-            implementation(libs.ktor.client.core)
-            implementation(libs.ktor.client.content.negotiation)
-            implementation(libs.ktor.serialization.kotlinx.json)
+            implementation(libs.compose.material.icons.extended)
+            implementation(libs.lifecycle.viewmodel)
+            implementation(libs.lifecycle.viewmodel.compose)
+            implementation(libs.lifecycle.viewmodel.savedstate)
+            implementation(libs.lifecycle.runtime.compose)
+            implementation(libs.navigation3.ui)
+            implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+            implementation(libs.material.kolor)
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.datetime)
+            implementation(libs.kotlinx.serialization.json)
+            implementation(libs.bignum)
         }
-
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
-            implementation(libs.androidx.appcompat)
             implementation(libs.androidx.core.ktx)
-            implementation(libs.androidx.window.manager)
-            implementation(libs.androidx.compose.material.icons.extended)
-
-            // Koin Android
-            implementation(libs.koin.android)
-
-            // Ktor Android engine
-            implementation(libs.ktor.client.okhttp)
         }
-
-        iosMain.dependencies {
-            // Ktor iOS engine
-            implementation(libs.ktor.client.darwin)
+        wasmJsMain.dependencies {
+            implementation(libs.kotlinx.browser)
         }
-
-        androidInstrumentedTest.dependencies {
-            implementation(kotlin("test"))
-            implementation(libs.androidx.ui.test.junit4)
-            implementation(libs.androidx.junit)
-            implementation(libs.androidx.espresso.core)
-            implementation(libs.androidx.ui.test.manifest)
-        }
-
         commonTest.dependencies {
             implementation(kotlin("test"))
+            implementation(libs.kotlinx.coroutines.test)
         }
     }
 }
 
-// Room KSP configuration - target-specific only (not commonMain)
-dependencies {
-    add("kspAndroid", libs.androidx.room.compiler)
-    add("kspIosArm64", libs.androidx.room.compiler)
-    add("kspIosSimulatorArm64", libs.androidx.room.compiler)
-}
-
 compose.resources {
-    packageOfResClass = "org.solovyev.android.calculator.ui"
+    publicResClass = true
+    packageOfResClass = "com.bernaferrari.calculator.resources"
 }
