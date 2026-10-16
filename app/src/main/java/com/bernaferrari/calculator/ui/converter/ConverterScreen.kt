@@ -36,7 +36,6 @@ import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.SwapVert
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -44,6 +43,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -96,7 +96,8 @@ fun ConverterScreen(onNavigateBack: () -> Unit, viewModel: ConverterViewModel = 
     var picking by remember { mutableStateOf<Boolean?>(null) }
     val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
+    Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxSize()) {
+    Column(Modifier.fillMaxSize()) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.statusBarsPadding().padding(horizontal = 4.dp).height(56.dp)) {
             IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null) }
             Text(stringResource(R.string.menu_unit_converter), style = MaterialTheme.typography.titleLarge)
@@ -135,14 +136,6 @@ fun ConverterScreen(onNavigateBack: () -> Unit, viewModel: ConverterViewModel = 
                     modifier = Modifier.weight(1f),
                 )
             }
-            var turns by remember { mutableFloatStateOf(0f) }
-            val rotation by animateFloatAsState(turns * 180f, spring(dampingRatio = 0.6f, stiffness = Spring.StiffnessMediumLow), label = "swap")
-            FilledTonalIconButton(
-                onClick = { haptics.tap(); turns += 1; viewModel.onSwap() },
-                modifier = Modifier.align(Alignment.CenterStart).padding(start = 16.dp).size(48.dp),
-            ) {
-                Icon(Icons.Rounded.SwapVert, contentDescription = stringResource(R.string.converter_swap), modifier = Modifier.rotate(rotation))
-            }
         }
 
         ConverterKeypad(
@@ -153,8 +146,10 @@ fun ConverterScreen(onNavigateBack: () -> Unit, viewModel: ConverterViewModel = 
             onDelete = viewModel::onDelete,
             onClear = viewModel::onClear,
             onNegate = viewModel::onNegate,
+            onSwap = viewModel::onSwap,
             modifier = Modifier.fillMaxWidth().height(300.dp + bottomInset).padding(bottom = bottomInset),
         )
+    }
     }
 
     picking?.let { top ->
@@ -185,7 +180,7 @@ private fun UnitRow(
         modifier = modifier
             .fillMaxWidth()
             .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, role = Role.Button, onClick = onActivate)
-            .padding(start = 76.dp, end = 24.dp),
+            .padding(horizontal = 24.dp),
     ) {
         Column(horizontalAlignment = Alignment.End, modifier = Modifier.weight(1f)) {
             // The unit is a chip: tap it to choose a different one.
@@ -199,7 +194,7 @@ private fun UnitRow(
                 Text(unit.name, style = MaterialTheme.typography.titleMedium, color = colors.onSurfaceVariant)
                 Icon(Icons.Rounded.KeyboardArrowDown, contentDescription = null, tint = colors.onSurfaceVariant)
             }
-            Row(verticalAlignment = Alignment.Bottom) {
+            Row {
                 BasicText(
                     text = if (text.isEmpty()) "0" else formatter.number(text),
                     style = TextStyle(
@@ -211,13 +206,13 @@ private fun UnitRow(
                     ),
                     maxLines = 1,
                     autoSize = TextAutoSize.StepBased(minFontSize = 24.sp, maxFontSize = 56.sp, stepSize = 2.sp),
-                    modifier = Modifier.weight(1f, fill = false),
+                    modifier = Modifier.weight(1f, fill = false).alignByBaseline(),
                 )
                 Text(
                     unit.symbol,
                     style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 20.sp),
                     color = colors.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 8.dp, bottom = 10.dp),
+                    modifier = Modifier.padding(start = 8.dp).alignByBaseline(),
                 )
             }
             // A short accent bar marks the row you're typing into.
@@ -257,6 +252,7 @@ private fun ConverterKeypad(
     onDelete: () -> Unit,
     onClear: () -> Unit,
     onNegate: () -> Unit,
+    onSwap: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.colorScheme
@@ -276,7 +272,7 @@ private fun ConverterKeypad(
         Row(horizontalArrangement = Arrangement.spacedBy(gap), modifier = Modifier.weight(1f)) {
             TextKey("0", colors.surfaceContainerHigh, colors.onSurface, haptics, { onDigit('0') }, weight = 2f)
             TextKey(decimal.toString(), colors.surfaceContainerHigh, colors.onSurface, haptics, onDecimal)
-            Box(Modifier.weight(1f))
+            SwapKey(haptics, onSwap)
         }
     }
 }
@@ -318,6 +314,22 @@ private fun androidx.compose.foundation.layout.RowScope.IconKey(
         onLongClick = { haptics.heavy(); onLongClick() },
         modifier = Modifier.weight(1f).fillMaxHeight().semantics { contentDescription = description },
     ) { Icon(Icons.AutoMirrored.Outlined.Backspace, contentDescription = null, tint = content, modifier = Modifier.size(26.dp)) }
+}
+
+/** The accent key: swaps the two units, the arrows turning half a circle each time. */
+@Composable
+private fun androidx.compose.foundation.layout.RowScope.SwapKey(haptics: Haptics, onSwap: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    var turns by remember { mutableFloatStateOf(0f) }
+    val rotation by animateFloatAsState(turns * 180f, spring(dampingRatio = 0.6f, stiffness = Spring.StiffnessMediumLow), label = "swap")
+    KeyCell(
+        container = colors.primary,
+        content = colors.onPrimary,
+        description = stringResource(R.string.converter_swap),
+        haptics = haptics,
+        onClick = { turns += 1; onSwap() },
+        modifier = Modifier.weight(1f).fillMaxHeight(),
+    ) { Icon(Icons.Rounded.SwapVert, contentDescription = null, tint = colors.onPrimary, modifier = Modifier.size(30.dp).rotate(rotation)) }
 }
 
 private fun Category.title(): Int = when (this) {
