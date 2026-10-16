@@ -54,6 +54,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -122,101 +128,127 @@ fun ConverterScreen(
     val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
     Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.containerTransform("converter", isScreen = true).fillMaxSize()) {
-    Column(Modifier.fillMaxSize()) {
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.statusBarsPadding().padding(horizontal = 4.dp).height(56.dp)) {
-            IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null) }
-            Text(stringResource(Res.string.menu_unit_converter), style = MaterialTheme.typography.titleLarge)
+    BoxWithConstraints(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal))) {
+        val landscape = maxWidth > maxHeight && maxHeight < 600.dp
+        val header: @Composable () -> Unit = {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.statusBarsPadding().padding(horizontal = 4.dp).height(56.dp)) {
+                    IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null) }
+                    Text(stringResource(Res.string.menu_unit_converter), style = MaterialTheme.typography.titleLarge)
+                }
         }
-        val chips = rememberLazyListState()
-        LaunchedEffect(state.category) { chips.animateScrollToItem(Category.entries.indexOf(state.category), scrollOffset = -120) }
-        LazyRow(
-            state = chips,
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            items(Category.entries) { category ->
-                FilterChip(
-                    selected = category == state.category,
-                    onClick = { haptics.tap(); viewModel.onCategory(category) },
-                    label = { Text(stringResource(category.title())) },
-                )
-            }
-        }
-
-        // Both rows live in one card, the swap button riding the seam between them.
-        var turns by remember { mutableFloatStateOf(0f) }
-        val rotation by animateFloatAsState(turns * 180f, spring(dampingRatio = 0.6f, stiffness = Spring.StiffnessMediumLow), label = "swap")
-        Surface(
-            shape = RoundedCornerShape(28.dp),
-            color = MaterialTheme.colorScheme.surfaceContainerLow,
-            modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = 12.dp, vertical = 12.dp),
-        ) {
-            Box(Modifier.fillMaxSize()) {
-                Column(Modifier.fillMaxSize().padding(6.dp)) {
-                    listOf(true, false).forEach { top ->
-                        UnitRow(
-                            unit = if (top) state.top else state.bottom,
-                            text = if (top) state.topText else state.bottomText,
-                            active = state.topActive == top,
-                            formatter = formatter,
-                            picking = picking == top,
-                            dimmed = picking != null && picking != top,
-                            onActivate = { haptics.tap(); picking = null; viewModel.onActivate(top = top) },
-                            onCopy = { value ->
-                                haptics.confirm()
-                                clipboard.setText(AnnotatedString(value.replace('.', formatter.decimal).replace('−', '-')))
-                            },
-                            onPickUnit = { haptics.tap(); picking = if (picking == top) null else top },
-                            modifier = Modifier.weight(1f),
+        val categories: @Composable () -> Unit = {
+                val chips = rememberLazyListState()
+                LaunchedEffect(state.category) { chips.animateScrollToItem(Category.entries.indexOf(state.category), scrollOffset = -120) }
+                LazyRow(
+                    state = chips,
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(Category.entries) { category ->
+                        FilterChip(
+                            selected = category == state.category,
+                            onClick = { haptics.tap(); viewModel.onCategory(category) },
+                            label = { Text(stringResource(category.title())) },
                         )
                     }
                 }
-                FilledTonalIconButton(
-                    onClick = { haptics.tap(); turns += 1; viewModel.onSwap() },
-                    modifier = Modifier.align(Alignment.CenterStart).padding(start = 20.dp).size(52.dp),
+        }
+        val card: @Composable (Modifier) -> Unit = { modifier ->
+                // Both rows live in one card, the swap button riding the seam between them.
+                var turns by remember { mutableFloatStateOf(0f) }
+                val rotation by animateFloatAsState(turns * 180f, spring(dampingRatio = 0.6f, stiffness = Spring.StiffnessMediumLow), label = "swap")
+                Surface(
+                    shape = RoundedCornerShape(28.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    modifier = modifier.padding(horizontal = 12.dp, vertical = 12.dp),
                 ) {
-                    Icon(
-                        Icons.Rounded.SwapVert,
-                        contentDescription = stringResource(Res.string.converter_swap),
-                        modifier = Modifier.size(26.dp).rotate(rotation),
-                    )
+                    Box(Modifier.fillMaxSize()) {
+                        Column(Modifier.fillMaxSize().padding(6.dp)) {
+                            listOf(true, false).forEach { top ->
+                                UnitRow(
+                                    unit = if (top) state.top else state.bottom,
+                                    text = if (top) state.topText else state.bottomText,
+                                    active = state.topActive == top,
+                                    formatter = formatter,
+                                    picking = picking == top,
+                                    dimmed = picking != null && picking != top,
+                                    onActivate = { haptics.tap(); picking = null; viewModel.onActivate(top = top) },
+                                    onCopy = { value ->
+                                        haptics.confirm()
+                                        clipboard.setText(AnnotatedString(value.replace('.', formatter.decimal).replace('−', '-')))
+                                    },
+                                    onPickUnit = { haptics.tap(); picking = if (picking == top) null else top },
+                                    modifier = Modifier.weight(1f),
+                                )
+                            }
+                        }
+                        FilledTonalIconButton(
+                            onClick = { haptics.tap(); turns += 1; viewModel.onSwap() },
+                            modifier = Modifier.align(Alignment.CenterStart).padding(start = 20.dp).size(52.dp),
+                        ) {
+                            Icon(
+                                Icons.Rounded.SwapVert,
+                                contentDescription = stringResource(Res.string.converter_swap),
+                                modifier = Modifier.size(26.dp).rotate(rotation),
+                            )
+                        }
+                    }
                 }
-            }
+        }
+        val keys: @Composable (Modifier) -> Unit = { modifier ->
+                AnimatedContent(
+                    targetState = picking,
+                    transitionSpec = {
+                        (fadeIn(tween(160, delayMillis = 60)) + scaleIn(spring(dampingRatio = 0.75f, stiffness = 500f), initialScale = 0.94f)) togetherWith
+                            (fadeOut(tween(100)) + scaleOut(tween(140), targetScale = 0.96f))
+                    },
+                    label = "keypad",
+                    modifier = modifier,
+                ) { target ->
+                    if (target == null) {
+                        ConverterKeypad(
+                            decimal = formatter.decimal,
+                            haptics = haptics,
+                            onDigit = viewModel::onDigit,
+                            onDecimal = viewModel::onDecimal,
+                            onDelete = viewModel::onDelete,
+                            onClear = viewModel::onClear,
+                            onNegate = viewModel::onNegate,
+                            canUse = state.output.isNotEmpty(),
+                            onUse = { onUse(state.output) },
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    } else {
+                        UnitGrid(
+                            units = Units.of(state.category),
+                            selected = if (target) state.top else state.bottom,
+                            haptics = haptics,
+                            onPick = { viewModel.onUnit(target, it); picking = null },
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
+                }
         }
 
         // Choosing a unit morphs the keypad into the unit tiles, in place: no sheet over the numbers.
         @OptIn(ExperimentalComposeUiApi::class)
         BackHandler(enabled = picking != null) { picking = null }
-        AnimatedContent(
-            targetState = picking,
-            transitionSpec = {
-                (fadeIn(tween(160, delayMillis = 60)) + scaleIn(spring(dampingRatio = 0.75f, stiffness = 500f), initialScale = 0.94f)) togetherWith
-                    (fadeOut(tween(100)) + scaleOut(tween(140), targetScale = 0.96f))
-            },
-            label = "keypad",
-            modifier = Modifier.fillMaxWidth().height(300.dp + bottomInset).padding(bottom = bottomInset),
-        ) { target ->
-            if (target == null) {
-                ConverterKeypad(
-                    decimal = formatter.decimal,
-                    haptics = haptics,
-                    onDigit = viewModel::onDigit,
-                    onDecimal = viewModel::onDecimal,
-                    onDelete = viewModel::onDelete,
-                    onClear = viewModel::onClear,
-                    onNegate = viewModel::onNegate,
-                    canUse = state.output.isNotEmpty(),
-                    onUse = { onUse(state.output) },
-                    modifier = Modifier.fillMaxSize(),
-                )
-            } else {
-                UnitGrid(
-                    units = Units.of(state.category),
-                    selected = if (target) state.top else state.bottom,
-                    haptics = haptics,
-                    onPick = { viewModel.onUnit(target, it); picking = null },
-                    modifier = Modifier.fillMaxSize(),
-                )
+        if (landscape) {
+            // Side by side: values on the left, keys on the right, both at full height.
+            Row(Modifier.fillMaxSize()) {
+                Column(Modifier.weight(0.55f).fillMaxHeight()) {
+                    header()
+                    categories()
+                    card(Modifier.weight(1f).fillMaxWidth().padding(bottom = bottomInset))
+                }
+                keys(Modifier.weight(0.45f).fillMaxHeight().statusBarsPadding().padding(top = 8.dp, bottom = bottomInset + 8.dp))
+            }
+        } else {
+            Column(Modifier.fillMaxSize()) {
+                header()
+                categories()
+                card(Modifier.weight(1f).fillMaxWidth())
+                keys(Modifier.fillMaxWidth().height(300.dp + bottomInset).padding(bottom = bottomInset))
             }
         }
     }

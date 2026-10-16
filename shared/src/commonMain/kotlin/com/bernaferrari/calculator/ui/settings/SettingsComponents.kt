@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
@@ -236,8 +237,8 @@ fun ThemePicker(position: SegmentPosition, selected: PreviewKind, palette: AppPa
     val dark = paletteColorScheme(palette, dark = true)
     RowSurface(position) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.padding(16.dp).selectableGroup(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
+            modifier = Modifier.fillMaxWidth().padding(16.dp).selectableGroup(),
         ) {
             PreviewKind.entries.forEach { kind ->
                 val isSelected = kind == selected
@@ -249,8 +250,10 @@ fun ThemePicker(position: SegmentPosition, selected: PreviewKind, palette: AppPa
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp),
+                    // A phone-sized preview, never a poster on wide screens.
                     modifier = Modifier
-                        .weight(1f)
+                        .weight(1f, fill = false)
+                        .widthIn(max = 128.dp)
                         .clip(RoundedCornerShape(20.dp))
                         .selectable(isSelected, role = Role.RadioButton) { onSelect(kind) },
                 ) {

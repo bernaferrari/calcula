@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
@@ -43,6 +44,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import org.jetbrains.compose.resources.StringResource
@@ -114,13 +121,15 @@ fun SettingsScreen(
     val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
     Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.containerTransform("settings", isScreen = true).fillMaxSize()) {
-      Column(Modifier.fillMaxSize()) {
+      Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal))) {
         // Pinned header, so scrolled content never slides under the status bar.
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.statusBarsPadding().padding(horizontal = 4.dp).height(56.dp)) {
             IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null) }
             Text(stringResource(Res.string.settings_title), style = MaterialTheme.typography.titleLarge)
         }
-        LazyColumn(Modifier.weight(1f).clipToBounds().fadeBottomEdge(bottomInset + 12.dp), contentPadding = PaddingValues(bottom = bottomInset + 32.dp)) {
+        // On wide screens the list keeps a readable width, centred.
+        Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+        LazyColumn(Modifier.widthIn(max = 640.dp).fillMaxSize().clipToBounds().fadeBottomEdge(bottomInset + 12.dp), contentPadding = PaddingValues(bottom = bottomInset + 32.dp)) {
 
             item {
                 val palette = prefs.palette.orDefault()
@@ -250,6 +259,7 @@ fun SettingsScreen(
                     ),
                 )
             }
+        }
         }
       }
     }

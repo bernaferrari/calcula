@@ -62,6 +62,8 @@ import kotlinx.coroutines.launch
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import com.bernaferrari.calculator.ui.containerTransform
+import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.ui.Modifier
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -166,7 +168,7 @@ fun CalculatorScreen(
             ) {
                 Box(Modifier.weight(0.42f).fillMaxHeight().padding(bottom = bottomInset)) {
                     display(Modifier.fillMaxSize().statusBarsPadding().padding(top = 44.dp), true)
-                    // Landscape has no tool row; its two non-key controls sit quietly at the top.
+                    // Landscape has no tool row; its non-key controls sit quietly at the top.
                     Row(Modifier.statusBarsPadding().fillMaxWidth().padding(4.dp)) {
                         IconButton(onClick = { haptics.tap(); historyOpen = !historyOpen }) {
                             Icon(
@@ -176,7 +178,10 @@ fun CalculatorScreen(
                             )
                         }
                         Spacer(Modifier.weight(1f))
-                        IconButton(onClick = onOpenSettings) {
+                        IconButton(onClick = { onOpenConverter(currentNumber) }, modifier = Modifier.containerTransform("converter")) {
+                            Icon(Icons.Outlined.Straighten, contentDescription = stringResource(Res.string.menu_unit_converter), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        IconButton(onClick = onOpenSettings, modifier = Modifier.containerTransform("settings")) {
                             Icon(Icons.Outlined.Settings, contentDescription = stringResource(Res.string.menu_settings), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
