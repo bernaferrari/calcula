@@ -38,6 +38,11 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bernaferrari.calculator.domain.input.Key
@@ -135,9 +140,16 @@ fun MainKeypad(
         ),
     )
     val reduceMotion = LocalReduceMotion.current
+    BoxWithConstraints(modifier) {
+    // Labels follow the keys' size, so a keypad dragged short or tall keeps its proportions.
+    val rowHeight = (maxHeight - KeyGap * 7 - bottomInset) / 5
+    val density = LocalDensity.current
+    // Gentler than the keys themselves: text follows about 60% of the change.
+    val scale = (0.4f + 0.6f * (rowHeight / 82.dp)).coerceIn(0.78f, 1.12f)
+    CompositionLocalProvider(LocalDensity provides Density(density.density, density.fontScale * scale)) {
     Column(
         verticalArrangement = Arrangement.spacedBy(KeyGap),
-        modifier = modifier.padding(start = KeyGap * 2, end = KeyGap * 2, top = KeyGap, bottom = KeyGap * 2 + bottomInset),
+        modifier = Modifier.fillMaxSize().padding(start = KeyGap * 2, end = KeyGap * 2, top = KeyGap, bottom = KeyGap * 2 + bottomInset),
     ) {
         rows.forEachIndexed { r, row ->
             var pressedIndex by remember { mutableIntStateOf(-1) }
@@ -160,7 +172,8 @@ fun MainKeypad(
                         functionLayer = functionLayer,
                         // A wave from the top-left corner when the layer flips.
                         flipDelay = r * 35L + c * 25L,
-                        showDots = showDots,
+                        // Short rows have no room for hint dots; the flicks still work.
+                        showDots = showDots && rowHeight >= 60.dp,
                         onKey = onKey,
                         onFunctionKey = onFunctionKey,
                         onClearAll = onClearAll,
@@ -170,6 +183,8 @@ fun MainKeypad(
                 }
             }
         }
+    }
+    }
     }
 }
 

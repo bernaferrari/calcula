@@ -47,6 +47,7 @@ data class CalculatorUiState(
     val reduceMotion: Boolean = false,
     val showHistory: Boolean = true,
     val showFlickDots: Boolean = true,
+    val keypadScale: Float = 1f,
     val decimalSeparator: DecimalSeparator = DecimalSeparator.AUTO,
     /** Bumps on every `=` and clear, so the display can animate the hand-off. */
     val generation: Int = 0,
@@ -93,6 +94,7 @@ class CalculatorViewModel(
             reduceMotion = prefs.reduceMotion,
             showHistory = prefs.showHistory,
             showFlickDots = prefs.showFlickDots,
+            keypadScale = prefs.keypadScale,
             decimalSeparator = prefs.decimalSeparator,
             generation = generation,
         )
@@ -143,6 +145,10 @@ class CalculatorViewModel(
 
     /** Entries just removed from the tape, so the screen can offer to undo. */
     val removed: SharedFlow<List<CalculationHistory>> = _removed
+
+    fun onKeypadScale(scale: Float) {
+        viewModelScope.launch { preferences.updateKeypadScale(scale) }
+    }
 
     fun onDeleteEntry(entry: CalculationHistory) {
         viewModelScope.launch {

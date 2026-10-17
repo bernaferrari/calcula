@@ -54,6 +54,14 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.unit.min
+import androidx.compose.ui.unit.max
+import androidx.compose.ui.unit.Dp
+import kotlinx.coroutines.coroutineScope
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.animation.core.Animatable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -219,15 +227,38 @@ fun CalculatorScreen(
                 )
             }
         } else {
-            // Rows grow with the screen but never get cramped or comically tall.
-            val rowHeight = (maxHeight * 0.47f / 5).coerceIn(60.dp, 92.dp)
+            // Rows grow with the screen but never get cramped or comically tall; dragging the bar
+            // above the keys scales them within those limits, and the tape takes what's left.
+            val defaultRow = (maxHeight * 0.47f / 5).coerceIn(60.dp, 92.dp)
+            val minRow = 56.dp
+            val maxRow = max(defaultRow, min(maxHeight * 0.66f / 5, 120.dp))
+            var dragRow by remember { mutableStateOf<Dp?>(null) }
+            val rowHeight = dragRow ?: (defaultRow * state.keypadScale).coerceIn(minRow, maxRow)
             // History mode slides the keypad down and away, whole, and gives the screen to the tape.
             val fullKeypad = rowHeight * 5 + bottomInset
-            val shown by animateFloatAsState(
-                if (historyOpen) 0f else 1f,
-                spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow),
-                label = "keypad",
+            val reveal = remember { Animatable(if (historyOpen) 0f else 1f) }
+            var pulling by remember { mutableStateOf(false) }
+            LaunchedEffect(historyOpen) {
+                if (!pulling) reveal.animateTo(if (historyOpen) 0f else 1f, spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow))
+            }
+            val shown = reveal.value
+            val resize = Modifier.keypadResize(
+                rowHeight = rowHeight,
+                limits = minRow..maxRow,
+                fullKeypad = fullKeypad,
+                historyOpen = historyOpen,
+                reveal = reveal,
+                onPulling = { pulling = it },
+                onRow = { dragRow = it },
+                onTick = haptics::tick,
+                onDone = { row ->
+                    val scale = row / defaultRow
+                    if (scale == state.keypadScale) dragRow = null else viewModel.onKeypadScale(scale)
+                },
+                onHistory = { open -> historyOpen = open },
             )
+            // The saved size has caught up with the finger: hand the height back to it.
+            LaunchedEffect(state.keypadScale) { dragRow = null }
             Column(Modifier.fillMaxSize()) {
                 Box(Modifier.weight(1f).fillMaxWidth()) {
                     display(Modifier.fillMaxSize().statusBarsPadding(), false)
@@ -241,8 +272,9 @@ fun CalculatorScreen(
                     onOpenConverter = { onOpenConverter(currentNumber) },
                     onOpenGraph = onOpenGraph,
                     onOpenSettings = onOpenSettings,
+                    handle = true,
                     // Takes over the bottom inset as the keypad leaves, in step with it.
-                    modifier = Modifier.padding(bottom = bottomInset * (1f - shown)),
+                    modifier = resize.padding(bottom = bottomInset * (1f - shown)),
                 )
                 MainKeypad(
                     decimal = formatter.decimal,
@@ -271,5 +303,123 @@ fun CalculatorScreen(
             }
         }
     }
+    }
+}
+
+/**
+ * The bar above the keys is a handle: drag it to make the keypad taller or shorter (the tape
+ * gets the rest), keep pulling down past the smallest size and the keypad slides away into
+ * history mode, and from history drag it back up to bring the keys home. Let go early and it
+ * springs back; a tick marks each limit and the point of no return.
+ */
+@Composable
+private fun Modifier.keypadResize(
+    rowHeight: Dp,
+    limits: ClosedRange<Dp>,
+    fullKeypad: Dp,
+    historyOpen: Boolean,
+    reveal: Animatable<Float, *>,
+    onPulling: (Boolean) -> Unit,
+    onRow: (Dp?) -> Unit,
+    onTick: () -> Unit,
+    onDone: (Dp) -> Unit,
+    onHistory: (Boolean) -> Unit,
+): Modifier {
+    // The gesture outlives recompositions; it reads today's sizes, not the first frame's.
+    val currentRow by rememberUpdatedState(rowHeight)
+    val currentLimits by rememberUpdatedState(limits)
+    val currentFull by rememberUpdatedState(fullKeypad)
+    val currentHistory by rememberUpdatedState(historyOpen)
+    val currentDone by rememberUpdatedState(onDone)
+    return keypadResizeGesture({ currentRow }, { currentLimits }, { currentFull }, { currentHistory }, reveal, onPulling, onRow, onTick, { currentDone(it) }, onHistory)
+}
+
+private fun Modifier.keypadResizeGesture(
+    rowHeight: () -> Dp,
+    limits: () -> ClosedRange<Dp>,
+    fullKeypad: () -> Dp,
+    historyOpen: () -> Boolean,
+    reveal: Animatable<Float, *>,
+    onPulling: (Boolean) -> Unit,
+    onRow: (Dp?) -> Unit,
+    onTick: () -> Unit,
+    onDone: (Dp) -> Unit,
+    onHistory: (Boolean) -> Unit,
+): Modifier = pointerInput(Unit) {
+    var startRow = 0f
+    var offset = 0f
+    var fromHistory = false
+    var past = false
+    var atLimit = false
+    var row = 0.dp
+    val threshold = 72.dp.toPx()
+    coroutineScope {
+        detectVerticalDragGestures(
+            onDragStart = {
+                startRow = rowHeight().toPx()
+                offset = 0f
+                fromHistory = historyOpen()
+                past = false
+                atLimit = false
+                row = rowHeight()
+                onPulling(true)
+            },
+            onVerticalDrag = { change, dy ->
+                change.consume()
+                offset += dy
+                val full = fullKeypad().toPx()
+                if (fromHistory) {
+                    // Up from history: the keys rise with the finger.
+                    val r = (-offset / full).coerceIn(0f, 1f)
+                    launch { reveal.snapTo(r) }
+                    val nowPast = -offset > threshold
+                    if (nowPast != past) { past = nowPast; onTick() }
+                    return@detectVerticalDragGestures
+                }
+                // The keypad's top follows the finger: five rows share the change.
+                val range = limits()
+                val wanted = startRow - offset / 5f
+                val min = range.start.toPx()
+                val max = range.endInclusive.toPx()
+                val clamped = when {
+                    wanted < min -> min
+                    // A little give beyond the tallest size, so the limit is felt rather than hit.
+                    wanted > max -> max + (wanted - max) * 0.15f
+                    else -> wanted
+                }
+                row = clamped.toDp()
+                onRow(row)
+                val limited = wanted <= min || wanted >= max
+                if (limited && !atLimit) onTick()
+                atLimit = limited
+                // Past the smallest size, the pull starts sending the keypad away.
+                val over = ((min - wanted) * 5f).coerceAtLeast(0f)
+                launch { reveal.snapTo(1f - (over / full).coerceIn(0f, 1f)) }
+                val nowPast = over > threshold
+                if (nowPast != past) { past = nowPast; onTick() }
+            },
+            onDragEnd = {
+                onPulling(false)
+                if (fromHistory) {
+                    if (past) onHistory(false) else launch { reveal.animateTo(0f, spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow)) }
+                    return@detectVerticalDragGestures
+                }
+                if (past) {
+                    // A pull into history isn't a vote for tiny keys: they come back at the size they had.
+                    onRow(null)
+                    onHistory(true)
+                    return@detectVerticalDragGestures
+                }
+                val range = limits()
+                val settled = row.coerceIn(range.start, range.endInclusive)
+                onRow(settled)
+                onDone(settled)
+                launch { reveal.animateTo(1f, spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow)) }
+            },
+            onDragCancel = {
+                onPulling(false)
+                launch { reveal.animateTo(if (historyOpen()) 0f else 1f) }
+            },
+        )
     }
 }

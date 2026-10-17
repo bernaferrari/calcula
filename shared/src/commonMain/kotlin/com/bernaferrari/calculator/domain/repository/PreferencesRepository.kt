@@ -33,4 +33,6 @@ interface PreferencesRepository {
     suspend fun updateHighContrast(enabled: Boolean)
 
     suspend fun markSwipeHintSeen()
+
+    suspend fun updateKeypadScale(scale: Float)
 }

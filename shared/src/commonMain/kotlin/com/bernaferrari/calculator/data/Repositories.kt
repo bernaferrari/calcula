@@ -46,6 +46,7 @@ class StoredPreferencesRepository(private val store: KeyValueStore) : Preference
     override suspend fun updateReduceMotion(enabled: Boolean) = edit { it.copy(reduceMotion = enabled) }
     override suspend fun updateHighContrast(enabled: Boolean) = edit { it.copy(highContrast = enabled) }
     override suspend fun markSwipeHintSeen() = edit { it.copy(swipeHintSeen = true) }
+    override suspend fun updateKeypadScale(scale: Float) = edit { it.copy(keypadScale = scale) }
 
     private companion object {
         const val KEY = "preferences"

@@ -20,6 +20,8 @@ data class UserPreferences(
     val highContrast: Boolean = false,
     /** Whether the person has already flicked a key, so the swipe tip can go away for good. */
     val swipeHintSeen: Boolean = false,
+    /** The keypad's height relative to the default, set by dragging the bar above it. */
+    val keypadScale: Float = 1f,
 )
 
 const val AUTO_DECIMALS = -1

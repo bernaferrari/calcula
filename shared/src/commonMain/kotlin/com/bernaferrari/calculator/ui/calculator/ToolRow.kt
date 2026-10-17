@@ -70,9 +70,20 @@ fun ToolRow(
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
     onOpenGraph: () -> Unit = {},
+    /** Shows a grab handle on top: the bar can be dragged to resize the keypad. */
+    handle: Boolean = false,
 ) {
     val quiet = MaterialTheme.colorScheme.onSurfaceVariant
-    Box(modifier.fillMaxWidth().height(52.dp).padding(horizontal = 8.dp)) {
+    Box(modifier.fillMaxWidth().height(if (handle) 60.dp else 52.dp).padding(horizontal = 8.dp).padding(top = if (handle) 8.dp else 0.dp)) {
+        if (handle) {
+            Box(
+                Modifier
+                    .align(Alignment.TopCenter)
+                    .offset(y = (-6).dp)
+                    .size(width = 32.dp, height = 4.dp)
+                    .background(quiet.copy(alpha = 0.35f), CircleShape),
+            )
+        }
         Row(Modifier.align(Alignment.CenterStart)) {
             IconButton(onClick = onToggleHistory) {
                 Icon(
