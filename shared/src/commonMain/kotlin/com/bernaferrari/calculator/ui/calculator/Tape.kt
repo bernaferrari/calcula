@@ -246,7 +246,9 @@ private fun TapeEntry(
                     style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 22.sp, textAlign = TextAlign.End),
                     color = colors.onSurfaceVariant,
                 )
-                // Right after "=", the answer is still the big number below, so it joins the line later.
+                // The "=" always closes the question, so "1+1 =" reads as asked-and-answered even while
+                // the answer is still the big number below; the answer joins the line later.
+                Text("  =", style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 22.sp), color = colors.outline, maxLines = 1)
                 AnimatedVisibility(
                     visible = showResult,
                     enter = expandHorizontally(spring(stiffness = Spring.StiffnessMediumLow), expandFrom = Alignment.Start) + fadeIn(tween(220, delayMillis = 60)),
@@ -254,7 +256,7 @@ private fun TapeEntry(
                 ) {
                     Text(
                         buildAnnotatedString {
-                            withStyle(SpanStyle(color = colors.outline)) { append("  =  ") }
+                            append("  ")
                             append(formatter.number(entry.result))
                         },
                         style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 22.sp, fontWeight = FontWeight.Medium),

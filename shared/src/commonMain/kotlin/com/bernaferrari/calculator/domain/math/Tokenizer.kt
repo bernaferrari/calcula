@@ -12,6 +12,8 @@ internal sealed interface Token {
     data object RParen : Token
     /** A plotting variable, `x` or `y`; only meaningful to [Plot]. */
     data class Var(val name: Char) : Token
+    /** A graph's slider parameter, `a` to `d`; only meaningful to [Plot]. */
+    data class Param(val name: Char) : Token
 }
 
 /**
@@ -23,6 +25,9 @@ internal object Tokenizer {
     val FUNCTIONS = listOf(
         "sin⁻¹", "cos⁻¹", "tan⁻¹", "sinh", "cosh", "tanh", "sin", "cos", "tan", "log", "abs", "ln",
     )
+
+    /** The graph's slider parameters, in the order they are handed out. */
+    const val PARAMETERS = "abcd"
 
     fun tokenize(input: String): List<Token> {
         val tokens = mutableListOf<Token>()
@@ -51,14 +56,24 @@ internal object Tokenizer {
                 c == 'e' -> { tokens += Token.Const("e"); i++ }
                 c == 'x' || c == 'y' -> { tokens += Token.Var(c); i++ }
                 else -> {
-                    val name = FUNCTIONS.firstOrNull { input.startsWith(it, i) }
-                        ?: throw CalcException(CalcError.SYNTAX)
-                    tokens += Token.Func(name)
-                    i += name.length
+                    val name = functionAt(input, i)
+                    when {
+                        name != null -> { tokens += Token.Func(name); i += name.length }
+                        c in PARAMETERS -> { tokens += Token.Param(c); i++ }
+                        else -> throw CalcException(CalcError.SYNTAX)
+                    }
                 }
             }
         }
         return tokens
+    }
+
+    /**
+     * The function name starting at [i], if any. Names that begin with a parameter letter (`abs`,
+     * `cos`) only count when their `(` follows, so `a` then `b` then `sin(` reads `a·b·sin(`.
+     */
+    fun functionAt(input: String, i: Int): String? = FUNCTIONS.firstOrNull {
+        input.startsWith(it, i) && (it[0] !in PARAMETERS || input.getOrNull(i + it.length) == '(')
     }
 
     /** A number is digits with an optional fraction and an optional `E±n` exponent. */

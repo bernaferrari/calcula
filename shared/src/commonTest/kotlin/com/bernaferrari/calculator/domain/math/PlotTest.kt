@@ -72,3 +72,21 @@ class PlotTest {
         assertNull(Plot.compile("x+y"))
     }
 }
+
+class ParameterTest {
+    @Test fun parametersMultiplyAndTakeTheirValues() {
+        val plot = Plot.compile("ax²+bx+c", params = mapOf('a' to 2.0, 'b' to 0.0, 'c' to -1.0))!!
+        kotlin.test.assertEquals(7.0, plot.at(2.0))
+    }
+
+    @Test fun functionNamesStillWin() {
+        kotlin.test.assertEquals(3.0, Plot.compile("abs(x)")!!.at(-3.0))
+        // `a` then `cos(`: a parameter times cosine, not a typo for arccos.
+        kotlin.test.assertEquals(2.0, Plot.compile("acos(x)", params = mapOf('a' to 2.0))!!.at(0.0))
+        kotlin.test.assertEquals(listOf('a', 'b'), Curve.parameters("absin(x)"))
+    }
+
+    @Test fun calculatorStillRejectsParameters() {
+        kotlin.test.assertNull(CalcEngine.evaluateOrNull("2a"))
+    }
+}

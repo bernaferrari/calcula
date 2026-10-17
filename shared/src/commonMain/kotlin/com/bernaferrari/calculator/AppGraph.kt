@@ -1,5 +1,7 @@
 package com.bernaferrari.calculator
 
+import com.bernaferrari.calculator.data.GraphStore
+import com.bernaferrari.calculator.data.StoredGraphStore
 import com.bernaferrari.calculator.data.StoredHistoryRepository
 import com.bernaferrari.calculator.data.StoredPreferencesRepository
 import com.bernaferrari.calculator.domain.repository.CalculatorRepository
@@ -11,6 +13,7 @@ object AppGraph {
     private val store by lazy { keyValueStore() }
     val preferences: PreferencesRepository by lazy { StoredPreferencesRepository(store) }
     val history: CalculatorRepository by lazy { StoredHistoryRepository(store) }
+    val graph: GraphStore by lazy { StoredGraphStore(store) }
 }
 
 /** Shown in Settings → About. Keep in step with the Android versionName and the iOS bundle version. */

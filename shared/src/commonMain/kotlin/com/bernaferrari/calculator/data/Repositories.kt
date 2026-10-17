@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 private val json = Json {
@@ -82,5 +83,34 @@ class StoredHistoryRepository(private val store: KeyValueStore) : CalculatorRepo
     private companion object {
         const val KEY = "history"
         const val LIMIT = 500
+    }
+}
+
+/** The graph as saved between launches. */
+@Serializable
+data class GraphDocument(
+    val functions: List<String> = emptyList(),
+    val active: Int = 0,
+    val centerX: Double = 0.0,
+    val centerY: Double = 0.0,
+    val span: Double = 0.0,
+    val parameters: Map<String, StoredParameter> = emptyMap(),
+)
+
+@Serializable
+data class StoredParameter(val value: Double = 1.0, val min: Double = -10.0, val max: Double = 10.0)
+
+interface GraphStore {
+    fun load(): GraphDocument?
+    fun save(document: GraphDocument)
+}
+
+/** The graph's functions, view and sliders, kept beside the settings. */
+class StoredGraphStore(private val store: KeyValueStore) : GraphStore {
+    override fun load(): GraphDocument? = store.get(KEY)?.let { runCatching { json.decodeFromString<GraphDocument>(it) }.getOrNull() }
+    override fun save(document: GraphDocument) = store.put(KEY, json.encodeToString(document))
+
+    private companion object {
+        const val KEY = "graph"
     }
 }

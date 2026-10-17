@@ -100,4 +100,6 @@
     <string name="graph_point_y_intercept">Intercetta y</string>
     <string name="graph_point_intersection">Intersezione</string>
     <string name="settings_theme">Tema</string>
+    <string name="graph_play">Riproduci</string>
+    <string name="graph_pause">Pausa</string>
 </resources>

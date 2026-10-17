@@ -100,4 +100,6 @@
     <string name="graph_point_y_intercept">y切片</string>
     <string name="graph_point_intersection">交点</string>
     <string name="settings_theme">テーマ</string>
+    <string name="graph_play">再生</string>
+    <string name="graph_pause">一時停止</string>
 </resources>

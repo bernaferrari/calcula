@@ -29,9 +29,12 @@ fun interface Plot {
     fun at(x: Double): Double
 
     companion object {
-        /** Compiles [expression], or returns null if it isn't a complete function of x alone. */
-        fun compile(expression: String, angle: AngleUnit = AngleUnit.RADIANS): Plot? =
-            Field.compile(expression, angle, allowY = false)?.let { f -> Plot { x -> f.at(x, 0.0) } }
+        /**
+         * Compiles [expression], or returns null if it isn't a complete function of x alone.
+         * Parameters take their value from [params], 1 when missing.
+         */
+        fun compile(expression: String, angle: AngleUnit = AngleUnit.RADIANS, params: Map<Char, Double> = emptyMap()): Plot? =
+            Field.compile(expression, angle, params, allowY = false)?.let { f -> Plot { x -> f.at(x, 0.0) } }
     }
 }
 
@@ -40,12 +43,12 @@ fun interface Field {
     fun at(x: Double, y: Double): Double
 
     companion object {
-        internal fun compile(expression: String, angle: AngleUnit, allowY: Boolean = true): Field? = try {
+        internal fun compile(expression: String, angle: AngleUnit, params: Map<Char, Double> = emptyMap(), allowY: Boolean = true): Field? = try {
             val tokens = Tokenizer.tokenize(expression)
             when {
                 tokens.isEmpty() -> null
                 !allowY && tokens.any { it == Token.Var('y') } -> null
-                else -> PlotParser(tokens, angle).parseAll()
+                else -> PlotParser(tokens, angle, params).parseAll()
             }
         } catch (e: CalcException) {
             null
@@ -63,22 +66,31 @@ sealed interface Curve {
     data class Implicit(val field: Field) : Curve
 
     companion object {
-        fun compile(text: String, angle: AngleUnit = AngleUnit.RADIANS): Curve? {
+        fun compile(text: String, angle: AngleUnit = AngleUnit.RADIANS, params: Map<Char, Double> = emptyMap()): Curve? {
             val sides = text.split('=')
-            if (sides.size == 1) return Plot.compile(text, angle)?.let(::Explicit)
+            if (sides.size == 1) return Plot.compile(text, angle, params)?.let(::Explicit)
             if (sides.size != 2) return null
             val (left, right) = sides.map { it.trim() }
             if (left.isEmpty() || right.isEmpty()) return null
-            if (left == "y") Plot.compile(right, angle)?.let { return Explicit(it) }
-            if (right == "y") Plot.compile(left, angle)?.let { return Explicit(it) }
-            val l = Field.compile(left, angle) ?: return null
-            val r = Field.compile(right, angle) ?: return null
+            if (left == "y") Plot.compile(right, angle, params)?.let { return Explicit(it) }
+            if (right == "y") Plot.compile(left, angle, params)?.let { return Explicit(it) }
+            val l = Field.compile(left, angle, params) ?: return null
+            val r = Field.compile(right, angle, params) ?: return null
             return Implicit { x, y -> l.at(x, y) - r.at(x, y) }
         }
+
+        /** The slider parameters [text] uses, in alphabetical order. */
+        fun parameters(text: String): List<Char> = text.split('=').flatMap { side ->
+            try {
+                Tokenizer.tokenize(side).filterIsInstance<Token.Param>().map { it.name }
+            } catch (e: CalcException) {
+                emptyList()
+            }
+        }.distinct().sorted()
     }
 }
 
-private class PlotParser(private val tokens: List<Token>, private val angle: AngleUnit) {
+private class PlotParser(private val tokens: List<Token>, private val angle: AngleUnit, private val params: Map<Char, Double>) {
     private var pos = 0
 
     private class Term(val f: Field, val percent: Boolean = false)
@@ -169,6 +181,7 @@ private class PlotParser(private val tokens: List<Token>, private val angle: Ang
     private fun primary(): Term = when (val token = next()) {
         is Token.Num -> token.value.toDouble().let { v -> Term(Field { _, _ -> v }) }
         is Token.Const -> (if (token.name == "π") PI else kotlin.math.E).let { v -> Term(Field { _, _ -> v }) }
+        is Token.Param -> (params[token.name] ?: 1.0).let { v -> Term(Field { _, _ -> v }) }
         is Token.Var -> Term(if (token.name == 'y') Field { _, y -> y } else Field { x, _ -> x })
         is Token.LParen -> Term(group())
         is Token.Func -> {
@@ -213,7 +226,7 @@ private class PlotParser(private val tokens: List<Token>, private val angle: Ang
     }
 
     private fun Token.startsOperand(): Boolean =
-        this is Token.Num || this is Token.Const || this is Token.Var || this is Token.LParen || this is Token.Func || this is Token.Root
+        this is Token.Num || this is Token.Const || this is Token.Var || this is Token.Param || this is Token.LParen || this is Token.Func || this is Token.Root
 
     /** Real powers, with odd roots of negatives kept real: (−8)^(1/3) = −2. */
     private fun pow(b: Double, e: Double): Double {

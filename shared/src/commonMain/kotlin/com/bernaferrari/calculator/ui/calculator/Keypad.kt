@@ -69,8 +69,8 @@ private data class Spec(
     /** Flick down; on the ƒ layer it is shown small under the function. */
     val down: Alt? = null,
     val flips: Boolean = up != null,
-    /** Prints its up flick small above the label, for a flick nobody would guess. */
-    val showsUp: Boolean = false,
+    /** Prints its flicks small in the top and bottom corners, for flicks nobody would guess. */
+    val labelsFlicks: Boolean = false,
 )
 
 /**
@@ -91,12 +91,20 @@ fun MainKeypad(
     bottomInset: Dp = 0.dp,
     /** For the graph: the `%` key becomes the variable `x` (flick up for `y`), in the accent so it's easy to find. */
     variable: Boolean = false,
+    /** For the graph: the slider parameter a flick down on `x` types, or null when none is left. */
+    nextParameter: Char? = null,
 ) {
     val rows = listOf(
         listOf(
             Spec(Key.CLEAR, "AC", Tone.Function, "Clear"),
             Spec(Key.PARENS, "( )", Tone.Function, "Parentheses", up = Alt("(", Key.LPAREN, "open parenthesis"), down = Alt(")", Key.RPAREN, "close parenthesis"), flips = false),
-            if (variable) Spec(Key.VARIABLE, "x", Tone.Operator, "x", up = Alt("y", Key.VARIABLE_Y), flips = false, showsUp = true) else Spec(Key.PERCENT, "%", Tone.Function, "Percent"),
+            if (variable) Spec(
+                Key.VARIABLE, "x", Tone.Operator, "x",
+                up = Alt("y", Key.VARIABLE_Y),
+                down = nextParameter?.let { Alt(it.toString(), parameterKey(it), "parameter $it") },
+                flips = false,
+                labelsFlicks = true,
+            ) else Spec(Key.PERCENT, "%", Tone.Function, "Percent"),
             Spec(Key.DIVIDE, "÷", Tone.Operator, "Divide"),
         ),
         listOf(
@@ -232,7 +240,7 @@ private fun KeypadKey(
         up = spec.up?.let { Hint(it.label, it.description) { onFunctionKey(it.key) } },
         down = spec.down?.let { Hint(it.label, it.description) { onFunctionKey(it.key) } },
         showDots = showDots && !onLayer,
-        labelUp = spec.showsUp,
+        labelFlicks = spec.labelsFlicks,
         onLongClick = if (isDelete) ({ haptics.heavy(); onClearAll() }) else null,
         onPressedChange = onPressedChange,
         modifier = modifier,
@@ -329,4 +337,11 @@ private fun ScientificKey(spec: SciSpec, inverse: Boolean, haptics: Haptics, onK
             Text(it, style = ScientificStyle, color = content)
         }
     }
+}
+
+private fun parameterKey(name: Char): Key = when (name) {
+    'a' -> Key.PARAM_A
+    'b' -> Key.PARAM_B
+    'c' -> Key.PARAM_C
+    else -> Key.PARAM_D
 }

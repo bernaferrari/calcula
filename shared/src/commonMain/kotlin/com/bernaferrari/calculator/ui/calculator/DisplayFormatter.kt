@@ -5,6 +5,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
+import com.bernaferrari.calculator.domain.math.Tokenizer
 import com.bernaferrari.calculator.domain.model.DecimalSeparator
 import com.bernaferrari.calculator.platform.systemSeparators
 
@@ -73,6 +74,8 @@ class DisplayFormatter(separators: Separators = systemSeparators()) {
                     // A graph's equation: spaced so both sides read on their own.
                     c == '=' -> emit(i, " = ", colors?.let { SpanStyle(color = it.operator) })
                     c in "()^" -> emit(i, c.toString(), colors?.let { SpanStyle(color = it.operator) })
+                    // A graph's slider parameter standing alone (`a`, not the `a` of `abs(`).
+                    c in Tokenizer.PARAMETERS && Tokenizer.functionAt(raw, i) == null -> emit(i, c.toString())
                     isNameChar(c) -> {
                         var end = i
                         while (end < raw.length && (isNameChar(raw[end]) || raw[end] in "⁻¹")) end++

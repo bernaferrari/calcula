@@ -25,6 +25,11 @@ enum class Key {
     VARIABLE,
     VARIABLE_Y,
     EQUATION,
+    /** The graph's slider parameters. */
+    PARAM_A,
+    PARAM_B,
+    PARAM_C,
+    PARAM_D,
 }
 
 data class CalcState(
@@ -160,6 +165,10 @@ object Calculator {
             Key.PI -> insertRaw(e, "π")
             Key.VARIABLE -> insertRaw(e, "x")
             Key.VARIABLE_Y -> insertRaw(e, "y")
+            Key.PARAM_A -> insertRaw(e, "a")
+            Key.PARAM_B -> insertRaw(e, "b")
+            Key.PARAM_C -> insertRaw(e, "c")
+            Key.PARAM_D -> insertRaw(e, "d")
             Key.EQUATION -> if ('=' in e.text) e else insertRaw(e, "=")
             Key.E -> insertRaw(e, "e")
             Key.POWER -> if (inverse) insertPostfix(e, "⁻¹") else insertOperator(e, '^')

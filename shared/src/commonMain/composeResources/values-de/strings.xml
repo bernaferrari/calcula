@@ -100,4 +100,6 @@
     <string name="graph_point_y_intercept">y-Achsenabschnitt</string>
     <string name="graph_point_intersection">Schnittpunkt</string>
     <string name="settings_theme">Design</string>
+    <string name="graph_play">Abspielen</string>
+    <string name="graph_pause">Pausieren</string>
 </resources>

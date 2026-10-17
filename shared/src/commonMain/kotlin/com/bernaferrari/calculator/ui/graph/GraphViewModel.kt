@@ -1,7 +1,10 @@
 package com.bernaferrari.calculator.ui.graph
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.bernaferrari.calculator.data.GraphDocument
+import com.bernaferrari.calculator.data.GraphStore
+import com.bernaferrari.calculator.data.StoredParameter
 import com.bernaferrari.calculator.domain.input.CalcState
 import com.bernaferrari.calculator.domain.input.Calculator
 import com.bernaferrari.calculator.domain.input.Editor
@@ -9,17 +12,24 @@ import com.bernaferrari.calculator.domain.input.ExpressionEditor
 import com.bernaferrari.calculator.domain.input.Key
 import com.bernaferrari.calculator.domain.math.Curve
 import com.bernaferrari.calculator.domain.model.AngleUnit
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
+import kotlin.math.abs
+import kotlin.math.floor
+import kotlin.math.log10
+import kotlin.math.max
+import kotlin.math.pow
+import kotlin.math.round
 
-/** One function being graphed: its text, where the cursor is, and its compiled form. */
+/** One function being graphed: its text and where the cursor is. */
 data class GraphFunction(val editor: Editor) {
     val text: String get() = editor.text
-    /** Null while the text is empty or not yet a complete function or equation. */
-    val curve: Curve? = if (editor.text.isBlank()) null else Curve.compile(editor.text, AngleUnit.RADIANS)
-    /** Mid-equation (`x² + y²` with no `=` yet, or nothing after it): unfinished rather than wrong. */
-    val pending: Boolean get() = curve == null && (('y' in text && '=' !in text) || text.split('=').any { it.isBlank() })
     /** Typed as an equation, so the row shows it whole instead of after `y =`. */
     val isEquation: Boolean get() = '=' in text || 'y' in text
 }
@@ -31,24 +41,61 @@ data class Viewport(val centerX: Double = 0.0, val centerY: Double = 0.0, val sp
     }
 }
 
+/** A slider: its value and the range it moves over. */
+data class Parameter(val value: Double = 1.0, val min: Double = -10.0, val max: Double = 10.0)
+
 data class GraphState(
     val functions: List<GraphFunction> = listOf(GraphFunction(Editor("sin(x)"))),
     val active: Int = 0,
     val viewport: Viewport = Viewport(),
+    /** Every slider ever made, so a letter deleted and typed again comes back where it was. */
+    val parameters: Map<Char, Parameter> = emptyMap(),
 ) {
     val activeFunction: GraphFunction get() = functions[active.coerceIn(0, functions.lastIndex)]
     val canAdd: Boolean get() = functions.size < MAX_FUNCTIONS && functions.none { it.text.isBlank() }
+
+    /** The parameters the functions use right now, each with a slider. */
+    val used: List<Char> = functions.flatMap { Curve.parameters(it.text) }.distinct().sorted()
+
+    /** The letter the keypad hands out next, or null once all four are in use. */
+    val nextParameter: Char? = PARAMETERS.firstOrNull { it !in used }
+
+    fun parameter(name: Char): Parameter = parameters[name] ?: Parameter()
+
+    /** Each function compiled with the sliders' current values; null while blank or incomplete. */
+    val curves: List<Curve?> = run {
+        val values = used.associateWith { parameter(it).value }
+        functions.map { if (it.text.isBlank()) null else Curve.compile(it.text, AngleUnit.RADIANS, values) }
+    }
+
+    /** Mid-equation (`x² + y²` with no `=` yet, or nothing after it): unfinished rather than wrong. */
+    fun pending(index: Int): Boolean {
+        val text = functions[index].text
+        return curves[index] == null && (('y' in text && '=' !in text) || text.split('=').any { it.isBlank() })
+    }
 }
 
 const val MAX_FUNCTIONS = 3
+const val PARAMETERS = "abcd"
 
 /**
- * Up to three functions of x or equations in x and y, typed with the calculator's own keys, over a window you pan and
- * pinch. Graphs work in radians, as graphs everywhere do.
+ * Up to three functions of x or equations in x and y, typed with the calculator's own keys,
+ * over a window you pan and pinch, with a slider for every parameter. Graphs work in radians,
+ * as graphs everywhere do. Everything is kept between launches.
  */
-class GraphViewModel(private val saved: SavedStateHandle) : ViewModel() {
-    private val _state = MutableStateFlow(restore())
+@OptIn(FlowPreview::class)
+class GraphViewModel(private val store: GraphStore) : ViewModel() {
+    private val _state = MutableStateFlow(store.load()?.toState() ?: GraphState())
     val state: StateFlow<GraphState> = _state
+
+    init {
+        // Pans and slider drags change the state every frame; the disk only needs where they stop.
+        _state.drop(1).debounce(400).onEach { store.save(it.toDocument()) }.launchIn(viewModelScope)
+    }
+
+    public override fun onCleared() {
+        store.save(_state.value.toDocument())
+    }
 
     fun onKey(key: Key) {
         when (key) {
@@ -61,15 +108,18 @@ class GraphViewModel(private val saved: SavedStateHandle) : ViewModel() {
         }
     }
 
+    /** Types a parameter's letter where the cursor is, e.g. from its slider. */
+    fun onInsertParameter(name: Char) = editActive { ExpressionEditor.insertRaw(it, name.toString()) }
+
     fun onCursorMoved(position: Int) = editActive { ExpressionEditor.moveCursor(it, position) }
 
-    fun onActivate(index: Int) = update { it.copy(active = index.coerceIn(0, it.functions.lastIndex)) }
+    fun onActivate(index: Int) = _state.update { it.copy(active = index.coerceIn(0, it.functions.lastIndex)) }
 
-    fun onAdd() = update {
+    fun onAdd() = _state.update {
         if (!it.canAdd) it else it.copy(functions = it.functions + GraphFunction(Editor()), active = it.functions.size)
     }
 
-    fun onRemove(index: Int) = update {
+    fun onRemove(index: Int) = _state.update {
         if (it.functions.size <= 1) {
             it.copy(functions = listOf(GraphFunction(Editor())), active = 0)
         } else {
@@ -85,26 +135,65 @@ class GraphViewModel(private val saved: SavedStateHandle) : ViewModel() {
 
     fun onResetView() = onViewport(Viewport())
 
-    private fun editActive(change: (Editor) -> Editor) = update { s ->
+    /**
+     * Moves a slider. A finger's values snap to a step that suits the range, so they read cleanly;
+     * playback glides between steps.
+     */
+    fun onParameter(name: Char, value: Double, snapped: Boolean = true) = _state.update { s ->
+        val p = s.parameter(name)
+        s.copy(parameters = s.parameters + (name to p.copy(value = if (snapped) snap(value, p) else value.coerceIn(p.min, p.max))))
+    }
+
+    /** Changes a slider's range; the value stays inside it. */
+    fun onRange(name: Char, min: Double, max: Double) = _state.update { s ->
+        if (!(min < max) || !min.isFinite() || !max.isFinite()) return@update s
+        val p = Parameter(s.parameter(name).value, min, max)
+        s.copy(parameters = s.parameters + (name to p.copy(value = snap(p.value, p))))
+    }
+
+    private fun editActive(change: (Editor) -> Editor) = _state.update { s ->
         s.copy(functions = s.functions.mapIndexed { i, f -> if (i == s.active) GraphFunction(change(f.editor)) else f })
     }
 
-    private fun update(change: (GraphState) -> GraphState) {
-        _state.update(change)
-        val s = _state.value
-        saved[KEY_FUNCTIONS] = s.functions.joinToString(SEPARATOR) { it.text }
-        saved[KEY_ACTIVE] = s.active
-    }
+    companion object {
+        /** About a hundred steps across the range, rounded to 1, 2 or 5 times a power of ten. */
+        fun stepFor(p: Parameter): Double {
+            val rough = max(p.max - p.min, 1e-9) / 100
+            val magnitude = 10.0.pow(floor(log10(rough)))
+            val n = rough / magnitude
+            return magnitude * when {
+                n < 1.5 -> 1.0
+                n < 3.5 -> 2.0
+                n < 7.5 -> 5.0
+                else -> 10.0
+            }
+        }
 
-    private fun restore(): GraphState {
-        val texts = saved.get<String>(KEY_FUNCTIONS)?.split(SEPARATOR) ?: return GraphState()
-        val functions = texts.take(MAX_FUNCTIONS).map { GraphFunction(Editor(it)) }.ifEmpty { listOf(GraphFunction(Editor())) }
-        return GraphState(functions = functions, active = (saved.get<Int>(KEY_ACTIVE) ?: 0).coerceIn(0, functions.lastIndex))
+        fun snap(value: Double, p: Parameter): Double {
+            val step = stepFor(p)
+            val snapped = (round(value / step) * step).coerceIn(p.min, p.max)
+            return if (abs(snapped) < step / 2) 0.0 else snapped
+        }
     }
+}
 
-    private companion object {
-        const val KEY_FUNCTIONS = "functions"
-        const val KEY_ACTIVE = "active"
-        const val SEPARATOR = "\n"
-    }
+private fun GraphState.toDocument() = GraphDocument(
+    functions = functions.map { it.text },
+    active = active,
+    centerX = viewport.centerX,
+    centerY = viewport.centerY,
+    span = viewport.span,
+    parameters = parameters.map { (k, v) -> k.toString() to StoredParameter(v.value, v.min, v.max) }.toMap(),
+)
+
+private fun GraphDocument.toState(): GraphState {
+    val functions = functions.take(MAX_FUNCTIONS).map { GraphFunction(Editor(it)) }.ifEmpty { listOf(GraphFunction(Editor())) }
+    return GraphState(
+        functions = functions,
+        active = active.coerceIn(0, functions.lastIndex),
+        viewport = if (span > 0 && span.isFinite()) Viewport(centerX, centerY, span) else Viewport(),
+        parameters = parameters.mapNotNull { (k, v) ->
+            k.singleOrNull()?.takeIf { it in PARAMETERS }?.let { it to Parameter(v.value, v.min, v.max) }
+        }.toMap(),
+    )
 }

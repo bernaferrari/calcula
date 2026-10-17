@@ -100,4 +100,6 @@
     <string name="graph_point_y_intercept">Ordonnée à l\'origine</string>
     <string name="graph_point_intersection">Intersection</string>
     <string name="settings_theme">Thème</string>
+    <string name="graph_play">Lecture</string>
+    <string name="graph_pause">Pause</string>
 </resources>

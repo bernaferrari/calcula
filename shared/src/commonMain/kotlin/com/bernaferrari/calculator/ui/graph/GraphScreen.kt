@@ -1,6 +1,13 @@
 package com.bernaferrari.calculator.ui.graph
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.runtime.key
+import androidx.compose.material3.Slider
+import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.Pause
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -72,6 +79,7 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.input.pointer.positionChanged
@@ -84,8 +92,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.bernaferrari.calculator.AppGraph
 import com.bernaferrari.calculator.domain.math.Curve
 import com.bernaferrari.calculator.domain.math.Decimal
 import com.bernaferrari.calculator.domain.math.Exact
@@ -114,7 +122,7 @@ import kotlin.math.pow
 import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.stringResource
 
-private val QuickExamples = listOf("x²", "x²+y²=9", "x³−x", "sin(x)÷x", "y²=x", "1÷x", "x²÷9+y²÷4=1", "2^x")
+private val QuickExamples = listOf("x²", "a×sin(b×x)", "x²+y²=9", "x³−x", "ax²+bx+c", "sin(x)÷x", "y²=x", "x²÷9+y²÷4=1")
 
 /**
  * Graphs, Calculator++ style: the plot on top with pinch, pan and a hold-to-trace finger, the
@@ -124,7 +132,7 @@ private val QuickExamples = listOf("x²", "x²+y²=9", "x³−x", "sin(x)÷x", "
 @Composable
 fun GraphScreen(
     onNavigateBack: () -> Unit,
-    viewModel: GraphViewModel = viewModel { GraphViewModel(createSavedStateHandle()) },
+    viewModel: GraphViewModel = viewModel { GraphViewModel(AppGraph.graph) },
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val settings: SettingsViewModel = viewModel { SettingsViewModel() }
@@ -168,6 +176,13 @@ fun GraphScreen(
                     onAdd = { haptics.tap(); viewModel.onAdd() },
                     onExample = { haptics.tap(); viewModel.onExample(it) },
                 )
+                ParameterSliders(
+                    state = state,
+                    formatter = formatter,
+                    onInsert = { haptics.tap(); viewModel.onInsertParameter(it) },
+                    onChange = viewModel::onParameter,
+                    onTick = haptics::tick,
+                )
             }
             val keys: @Composable (Modifier) -> Unit = { modifier ->
                 MainKeypad(
@@ -181,6 +196,7 @@ fun GraphScreen(
                     showDots = false,
                     bottomInset = bottomInset,
                     variable = true,
+                    nextParameter = state.nextParameter,
                     modifier = modifier,
                 )
             }
@@ -237,7 +253,7 @@ private fun FunctionList(
         state.functions.forEachIndexed { index, function ->
             val active = index == state.active
             val field by animateColorAsState(if (active) scheme.surfaceContainerHigh else Color.Transparent, label = "field")
-            val invalid = function.text.isNotBlank() && function.curve == null && !function.pending
+            val invalid = function.text.isNotBlank() && state.curves[index] == null && !state.pending(index)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
@@ -299,6 +315,80 @@ private fun FunctionList(
 }
 
 /**
+ * A slider for each parameter the functions use: its letter (tap to type it again), its value,
+ * and a play button that sweeps it back and forth so you can watch what it does.
+ */
+@Composable
+private fun ParameterSliders(
+    state: GraphState,
+    formatter: DisplayFormatter,
+    onInsert: (Char) -> Unit,
+    onChange: (Char, Double, Boolean) -> Unit,
+    onTick: () -> Unit,
+) {
+    val scheme = MaterialTheme.colorScheme
+    Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp).animateContentSize()) {
+        state.used.forEach { name ->
+            key(name) {
+                val p = state.parameter(name)
+                val currentP by rememberUpdatedState(p)
+                var playing by remember { mutableStateOf(false) }
+                LaunchedEffect(playing) {
+                    if (!playing) return@LaunchedEffect
+                    // Across the whole range in four seconds, bouncing off the ends.
+                    var direction = 1.0
+                    var last = withFrameNanos { it }
+                    while (true) {
+                        val now = withFrameNanos { it }
+                        val q = currentP
+                        var next = q.value + direction * (q.max - q.min) / 4.0 * ((now - last) / 1e9)
+                        if (next >= q.max) { next = q.max; direction = -1.0; onTick() }
+                        if (next <= q.min) { next = q.min; direction = 1.0; onTick() }
+                        onChange(name, next, false)
+                        last = now
+                    }
+                }
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().height(48.dp)) {
+                    Surface(
+                        onClick = { onInsert(name) },
+                        shape = CircleShape,
+                        color = scheme.primaryContainer,
+                        contentColor = scheme.onPrimaryContainer,
+                        modifier = Modifier.size(36.dp),
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(name.toString(), style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 19.sp, fontWeight = FontWeight.Medium))
+                        }
+                    }
+                    val decimals = max(0, -floor(log10(GraphViewModel.stepFor(p))).toInt())
+                    Text(
+                        // 2 rather than 2.0: whole values read whole.
+                        "= " + formatter.number(label(p.value, decimals).let { if ('.' in it) it.trimEnd('0').trimEnd('.') else it }),
+                        style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 18.sp),
+                        color = scheme.onSurface,
+                        maxLines = 1,
+                        modifier = Modifier.padding(start = 10.dp).widthIn(min = 64.dp),
+                    )
+                    Slider(
+                        value = p.value.toFloat(),
+                        onValueChange = { playing = false; onChange(name, it.toDouble(), true) },
+                        valueRange = p.min.toFloat()..p.max.toFloat(),
+                        modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+                    )
+                    IconButton(onClick = { onTick(); playing = !playing }) {
+                        Icon(
+                            if (playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                            contentDescription = stringResource(if (playing) Res.string.graph_pause else Res.string.graph_play),
+                            tint = scheme.primary,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
  * The plot. One finger pans, two pinch; hold still for a moment and the finger traces instead,
  * reading out x and every curve's y. The readout stays after you let go (tap to put it away);
  * double-tap to come home.
@@ -323,7 +413,8 @@ private fun GraphCanvas(
     var selected by remember { mutableStateOf<ShownPoint?>(null) }
     var canvasSize by remember { mutableStateOf(IntSize.Zero) }
     // The active curve's roots, turns and y-intercept, and where it meets the others.
-    val points = remember(state.functions, state.active, state.viewport, canvasSize) { keyPoints(state, canvasSize) }
+    val gapPx = with(LocalDensity.current) { 22.dp.toPx() }
+    val points = remember(state.curves, state.active, state.viewport, canvasSize) { keyPoints(state, canvasSize, gapPx) }
     LaunchedEffect(state.functions, state.active) { selected = null }
     val kinds = KeyPoint.Kind.entries.associateWith { stringResource(it.title()) }
     val currentViewport by rememberUpdatedState(state.viewport)
@@ -442,7 +533,7 @@ private fun GraphCanvas(
 
         state.functions.forEachIndexed { index, f ->
             val color = colors[index % colors.size]
-            val plot = when (val curve = f.curve) {
+            val plot = when (val curve = state.curves[index]) {
                 is Curve.Explicit -> curve.plot
                 is Curve.Implicit -> {
                     drawImplicit(curve.field, xMin, yMax, unitsPerPx, color)
@@ -486,19 +577,27 @@ private fun GraphCanvas(
 /** A key point on screen: which curve it belongs to, and whether it's on the one being edited. */
 private data class ShownPoint(val point: KeyPoint, val function: Int, val onActive: Boolean)
 
-private fun keyPoints(state: GraphState, size: IntSize): List<ShownPoint> {
+private fun keyPoints(state: GraphState, size: IntSize, gapPx: Float): List<ShownPoint> {
     if (size.width == 0) return emptyList()
     val v = state.viewport
     val half = v.span / 2
-    val active = (state.activeFunction.curve as? Curve.Explicit)?.plot ?: return emptyList()
+    val active = (state.curves.getOrNull(state.active) as? Curve.Explicit)?.plot ?: return emptyList()
     val points = KeyPoints.of(active, v.centerX - half, v.centerX + half).map { ShownPoint(it, state.active, true) }
-    val meets = state.functions.flatMapIndexed { i, f ->
-        val other = (f.curve as? Curve.Explicit)?.plot
+    val meets = state.curves.flatMapIndexed { i, curve ->
+        val other = (curve as? Curve.Explicit)?.plot
         if (i == state.active || other == null) emptyList()
         else KeyPoints.intersections(active, other, v.centerX - half, v.centerX + half).map { ShownPoint(it, state.active, true) }
     }
     val yHalf = half * size.height / size.width
-    return (points + meets).filter { it.point.y in (v.centerY - yHalf)..(v.centerY + yHalf) }
+    val visible = (points + meets).filter { it.point.y in (v.centerY - yHalf)..(v.centerY + yHalf) }
+    // A fast wiggle has dozens of roots and turns; rings closer than a fingertip become a chain
+    // of beads, so keep only those with room around them (intersections first: they matter most).
+    val room = v.span / size.width * gapPx
+    val kept = mutableListOf<ShownPoint>()
+    for (p in visible.sortedBy { if (it.point.kind == KeyPoint.Kind.INTERSECTION) 0 else 1 }) {
+        if (kept.none { abs(it.point.x - p.point.x) < room && abs(it.point.y - p.point.y) < room }) kept += p
+    }
+    return kept
 }
 
 private fun KeyPoint.Kind.title() = when (this) {
@@ -689,7 +788,7 @@ private fun DrawScope.drawTrace(
         append("x = " + formatter.number(readout(x)))
         state.functions.forEachIndexed { index, f ->
             // Equations can cross a vertical line any number of times; the readout follows functions.
-            val y = (f.curve as? Curve.Explicit)?.plot?.at(x) ?: return@forEachIndexed
+            val y = (state.curves[index] as? Curve.Explicit)?.plot?.at(x) ?: return@forEachIndexed
             if (!y.isFinite()) return@forEachIndexed
             val py = sy(y)
             if (py in 0f..size.height) {

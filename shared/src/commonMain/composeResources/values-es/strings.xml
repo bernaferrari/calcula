@@ -100,4 +100,6 @@
     <string name="graph_point_y_intercept">Corte con el eje y</string>
     <string name="graph_point_intersection">Intersección</string>
     <string name="settings_theme">Tema</string>
+    <string name="graph_play">Reproducir</string>
+    <string name="graph_pause">Pausar</string>
 </resources>
