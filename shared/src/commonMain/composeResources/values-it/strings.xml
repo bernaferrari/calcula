@@ -99,4 +99,5 @@
     <string name="graph_point_min">Minimo</string>
     <string name="graph_point_y_intercept">Intercetta y</string>
     <string name="graph_point_intersection">Intersezione</string>
+    <string name="settings_theme">Tema</string>
 </resources>

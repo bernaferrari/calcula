@@ -19,7 +19,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.outlined.Animation
+import androidx.compose.material.icons.outlined.BrightnessAuto
+import androidx.compose.material.icons.outlined.BrightnessMedium
 import androidx.compose.material.icons.outlined.Contrast
+import androidx.compose.material.icons.outlined.DarkMode
+import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.FormatListNumbered
@@ -137,32 +141,27 @@ fun SettingsScreen(
                     stringResource(Res.string.settings_appearance),
                     listOfNotNull(
                         { p ->
-                            ThemePicker(
-                                position = p,
-                                selected = when (prefs.themeMode) {
-                                    ThemeMode.LIGHT -> PreviewKind.Light
-                                    ThemeMode.DARK -> PreviewKind.Dark
-                                    else -> PreviewKind.System
-                                },
-                                palette = palette,
+                            // Follow the system, or pin light or dark: one connected group, like the other choices.
+                            ChoiceRow(
+                                p, Icons.Outlined.BrightnessMedium, stringResource(Res.string.settings_theme),
+                                listOf(ThemeMode.SYSTEM, ThemeMode.LIGHT, ThemeMode.DARK), if (prefs.themeMode == ThemeMode.MATERIAL_YOU) ThemeMode.SYSTEM else prefs.themeMode,
                                 label = {
                                     stringResource(
                                         when (it) {
-                                            PreviewKind.System -> Res.string.theme_system
-                                            PreviewKind.Light -> Res.string.theme_light
-                                            PreviewKind.Dark -> Res.string.theme_dark
+                                            ThemeMode.LIGHT -> Res.string.theme_light
+                                            ThemeMode.DARK -> Res.string.theme_dark
+                                            else -> Res.string.theme_system
                                         },
                                     )
                                 },
-                                onSelect = {
-                                    viewModel.setTheme(
-                                        when (it) {
-                                            PreviewKind.System -> ThemeMode.SYSTEM
-                                            PreviewKind.Light -> ThemeMode.LIGHT
-                                            PreviewKind.Dark -> ThemeMode.DARK
-                                        },
-                                    )
+                                optionIcon = {
+                                    when (it) {
+                                        ThemeMode.LIGHT -> Icons.Outlined.LightMode
+                                        ThemeMode.DARK -> Icons.Outlined.DarkMode
+                                        else -> Icons.Outlined.BrightnessAuto
+                                    }
                                 },
+                                onSelect = viewModel::setTheme,
                             )
                         },
                         { p -> PaletteRow(p, palette, label = { stringResource(it.title()) }, onSelect = viewModel::setPalette) },

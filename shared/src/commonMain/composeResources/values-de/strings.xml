@@ -99,4 +99,5 @@
     <string name="graph_point_min">Minimum</string>
     <string name="graph_point_y_intercept">y-Achsenabschnitt</string>
     <string name="graph_point_intersection">Schnittpunkt</string>
+    <string name="settings_theme">Design</string>
 </resources>

@@ -103,4 +103,5 @@
     <string name="graph_point_min">Minimum</string>
     <string name="graph_point_y_intercept">y-intercept</string>
     <string name="graph_point_intersection">Intersection</string>
+    <string name="settings_theme">Theme</string>
 </resources>

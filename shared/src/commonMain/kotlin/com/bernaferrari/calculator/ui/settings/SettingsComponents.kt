@@ -117,11 +117,18 @@ fun SettingsSection(title: String, rows: List<@Composable (SegmentPosition) -> U
 }
 
 @Composable
-private fun RowSurface(position: SegmentPosition, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+private fun RowSurface(
+    position: SegmentPosition,
+    modifier: Modifier = Modifier,
+    /** Click or toggle handling; applied inside the clip so the press ripple keeps the row's corners. */
+    interaction: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    val shape = segmentShape(position)
     Surface(
-        shape = segmentShape(position),
+        shape = shape,
         color = MaterialTheme.colorScheme.surfaceContainer,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().clip(shape).then(interaction),
     ) { content() }
 }
 
@@ -150,7 +157,7 @@ fun SwitchRow(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    RowSurface(position, Modifier.toggleable(checked, role = Role.Switch, onValueChange = onCheckedChange)) {
+    RowSurface(position, interaction = Modifier.toggleable(checked, role = Role.Switch, onValueChange = onCheckedChange)) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.heightIn(min = 72.dp).padding(horizontal = 16.dp, vertical = 12.dp)) {
             RowIcon(icon)
             Spacer(Modifier.width(16.dp))
@@ -173,7 +180,7 @@ fun ActionRow(
     modifier: Modifier = Modifier,
 ) {
     val tint = if (destructive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
-    RowSurface(position, modifier.then(if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier)) {
+    RowSurface(position, modifier, interaction = if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.heightIn(min = 72.dp).padding(horizontal = 16.dp, vertical = 12.dp)) {
             RowIcon(icon, tint)
             Spacer(Modifier.width(16.dp))
@@ -196,6 +203,7 @@ fun <T> ChoiceRow(
     label: @Composable (T) -> String,
     onSelect: (T) -> Unit,
     subtitle: String? = null,
+    optionIcon: ((T) -> ImageVector)? = null,
 ) {
     RowSurface(position) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -227,112 +235,16 @@ fun <T> ChoiceRow(
                             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         ),
                         modifier = Modifier.weight(width).heightIn(min = 48.dp),
-                    ) { Text(labels[index], maxLines = 1, softWrap = false) }
-                }
-            }
-        }
-    }
-}
-
-enum class PreviewKind { System, Light, Dark }
-
-/** Three little calculators to pick the theme by sight rather than by name. */
-@Composable
-fun ThemePicker(position: SegmentPosition, selected: PreviewKind, palette: AppPalette, label: @Composable (PreviewKind) -> String, onSelect: (PreviewKind) -> Unit) {
-    // The previews wear the chosen palette in both modes, so the choice is visible before it's made.
-    val light = paletteColorScheme(palette, dark = false)
-    val dark = paletteColorScheme(palette, dark = true)
-    RowSurface(position) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
-            modifier = Modifier.fillMaxWidth().padding(16.dp).selectableGroup(),
-        ) {
-            PreviewKind.entries.forEach { kind ->
-                val isSelected = kind == selected
-                val ring by animateDpAsState(if (isSelected) 3.dp else 0.dp, label = "ring")
-                val labelColor by animateColorAsState(
-                    if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                    label = "label",
-                )
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    // A phone-sized preview, never a poster on wide screens.
-                    modifier = Modifier
-                        .weight(1f, fill = false)
-                        .widthIn(max = 128.dp)
-                        .clip(RoundedCornerShape(20.dp))
-                        .selectable(isSelected, role = Role.RadioButton) { onSelect(kind) },
-                ) {
-                    Box(
-                        Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(0.72f)
-                            .border(ring, MaterialTheme.colorScheme.primary, RoundedCornerShape(20.dp))
-                            .padding(5.dp)
-                            .clip(RoundedCornerShape(16.dp)),
                     ) {
-                        MiniCalculator(kind, light, dark, Modifier.fillMaxSize())
-                        if (isSelected) {
-                            Box(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier.align(Alignment.TopEnd).padding(6.dp).size(22.dp).background(MaterialTheme.colorScheme.primary, CircleShape),
-                            ) { Icon(Icons.Rounded.Check, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(16.dp)) }
+                        optionIcon?.let {
+                            Icon(it(option), contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
                         }
+                        Text(labels[index], maxLines = 1, softWrap = false)
                     }
-                    Text(label(kind), style = MaterialTheme.typography.labelLarge, color = labelColor, modifier = Modifier.padding(bottom = 4.dp))
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun MiniCalculator(kind: PreviewKind, light: ColorScheme, dark: ColorScheme, modifier: Modifier) {
-    Canvas(modifier) {
-        when (kind) {
-            PreviewKind.Light -> drawMini(light)
-            PreviewKind.Dark -> drawMini(dark)
-            PreviewKind.System -> {
-                // Half light, half dark, split on the diagonal.
-                drawMini(light)
-                val half = Path().apply {
-                    moveTo(size.width, 0f)
-                    lineTo(size.width, size.height)
-                    lineTo(0f, size.height)
-                    close()
-                }
-                clipPath(half) { drawMini(dark) }
-            }
-        }
-    }
-}
-
-/** A tiny calculator in [scheme]'s colors: a display line on top and a 3×4 keypad with an accent `=`. */
-private fun DrawScope.drawMini(scheme: ColorScheme) {
-    drawRect(scheme.surface)
-    val pad = size.width * 0.1f
-    val gap = size.width * 0.05f
-    // Display: two lines of "text".
-    drawRoundRect(scheme.onSurfaceVariant.copy(alpha = 0.5f), Offset(size.width * 0.45f, size.height * 0.12f), Size(size.width * 0.45f, size.height * 0.04f), CornerRadius(8f))
-    drawRoundRect(scheme.onSurface, Offset(size.width * 0.3f, size.height * 0.2f), Size(size.width * 0.6f, size.height * 0.07f), CornerRadius(8f))
-    val cols = 3
-    val rows = 4
-    val top = size.height * 0.38f
-    val keyW = (size.width - pad * 2 - gap * (cols - 1)) / cols
-    val keyH = (size.height - top - pad - gap * (rows - 1)) / rows
-    for (r in 0 until rows) for (c in 0 until cols) {
-        val color = when {
-            r == rows - 1 && c == cols - 1 -> scheme.primary
-            c == cols - 1 -> scheme.surfaceContainerHighest
-            else -> scheme.surfaceContainerHigh
-        }
-        drawRoundRect(
-            color,
-            Offset(pad + c * (keyW + gap), top + r * (keyH + gap)),
-            Size(keyW, keyH),
-            CornerRadius(keyH * 0.3f),
-        )
     }
 }
 

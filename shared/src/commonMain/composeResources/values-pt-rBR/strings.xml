@@ -101,4 +101,5 @@
     <string name="graph_point_min">Mínimo</string>
     <string name="graph_point_y_intercept">Corte no eixo y</string>
     <string name="graph_point_intersection">Interseção</string>
+    <string name="settings_theme">Tema</string>
 </resources>

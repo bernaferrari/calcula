@@ -286,12 +286,18 @@ private fun Elsewhere(open: (String) -> Unit) {
             Surface(
                 onClick = { open(url) },
                 shape = shape,
-                color = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                modifier = Modifier.weight(1f).heightIn(min = 56.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f),
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(painterResource(icon), contentDescription = label, modifier = Modifier.size(24.dp))
+                // The logo in full contrast with its name under it: recognisable at a glance in any palette.
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.padding(vertical = 14.dp),
+                ) {
+                    Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(24.dp))
+                    Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                 }
             }
         }

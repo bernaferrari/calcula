@@ -99,4 +99,5 @@
     <string name="graph_point_min">极小值</string>
     <string name="graph_point_y_intercept">y 轴截距</string>
     <string name="graph_point_intersection">交点</string>
+    <string name="settings_theme">主题</string>
 </resources>
