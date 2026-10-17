@@ -95,6 +95,7 @@ import com.bernaferrari.calculator.ui.containerTransform
 import com.bernaferrari.calculator.ui.settings.SettingsViewModel
 import com.bernaferrari.calculator.ui.theme.GoogleSansFlex
 import kotlin.math.abs
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.log10
@@ -290,7 +291,8 @@ private fun FunctionList(
 
 /**
  * The plot. One finger pans, two pinch; hold still for a moment and the finger traces instead,
- * reading out x and every curve's y where it rests. Double-tap to come home.
+ * reading out x and every curve's y. The readout stays after you let go (tap to put it away);
+ * double-tap to come home.
  */
 @Composable
 private fun GraphCanvas(
@@ -306,7 +308,8 @@ private fun GraphCanvas(
     val measurer = rememberTextMeasurer()
     val labelStyle = TextStyle(fontFamily = GoogleSansFlex, fontSize = 11.sp, color = scheme.onSurfaceVariant)
     val traceStyle = TextStyle(fontFamily = GoogleSansFlex, fontSize = 14.sp, color = scheme.onSurface)
-    var trace by remember { mutableStateOf<Float?>(null) }
+    // Where the trace sits, in graph units, so it stays on the same x while you pan and zoom.
+    var traceX by remember { mutableStateOf<Double?>(null) }
     val currentViewport by rememberUpdatedState(state.viewport)
     val currentOnViewport by rememberUpdatedState(onViewport)
 
@@ -315,52 +318,69 @@ private fun GraphCanvas(
             .pointerInput(Unit) {
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
-                    val longPress = viewConfiguration.longPressTimeoutMillis
+                    fun graphX(px: Float): Double {
+                        val v = currentViewport
+                        return v.centerX + (px - size.width / 2f) * (v.span / size.width)
+                    }
+                    // Holding still for the long-press timeout starts a trace; moving first (or a
+                    // second finger) means pan and zoom. Waiting with a timeout catches a finger
+                    // that rests perfectly still and sends no events at all.
                     var moved = false
-                    var tracing = false
-                    var lastTap = 0L
+                    val early = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            if (event.changes.none { it.pressed }) return@withTimeoutOrNull event
+                            val drift = event.changes.first().position - down.position
+                            if (event.changes.count { it.pressed } > 1 || drift.getDistance() > viewConfiguration.touchSlop) {
+                                moved = true
+                                return@withTimeoutOrNull event
+                            }
+                        }
+                        @Suppress("UNREACHABLE_CODE") null
+                    }
+                    val tracing = early == null
+                    if (tracing) {
+                        onTraceTick()
+                        traceX = graphX(down.position.x)
+                    }
+                    if (!tracing && !moved) return@awaitEachGesture // a tap; the tap detector handles it
                     while (true) {
                         val event = awaitPointerEvent()
                         val pressed = event.changes.filter { it.pressed }
-                        if (pressed.isEmpty()) break
-                        val elapsed = event.changes.first().uptimeMillis - down.uptimeMillis
-                        if (!moved && !tracing && pressed.size == 1 && elapsed >= longPress) {
-                            tracing = true
-                            onTraceTick()
+                        if (pressed.isEmpty()) {
+                            // This gesture was a trace or a pan, not a tap: keep the tap detector out of it.
+                            event.changes.forEach { it.consume() }
+                            break
                         }
                         if (tracing) {
-                            trace = pressed.first().position.x
+                            traceX = graphX(pressed.first().position.x)
                             pressed.forEach { it.consume() }
                             continue
                         }
                         val zoom = event.calculateZoom()
                         val pan = event.calculatePan()
-                        if (!moved && (abs(pan.x) + abs(pan.y) > viewConfiguration.touchSlop / 4 || zoom != 1f)) moved = true
-                        if (moved) {
-                            val v = currentViewport
-                            val unitsPerPx = v.span / size.width
-                            val centroid = event.calculateCentroid()
-                            // Zoom around the fingers: the point under them stays under them.
-                            val span = (v.span / zoom).coerceIn(1e-6, 1e8)
-                            val focusX = v.centerX + (centroid.x - size.width / 2f) * unitsPerPx
-                            val focusY = v.centerY - (centroid.y - size.height / 2f) * unitsPerPx
-                            val ratio = span / v.span
-                            currentOnViewport(
-                                Viewport(
-                                    centerX = focusX - (focusX - v.centerX) * ratio - pan.x * unitsPerPx,
-                                    centerY = focusY - (focusY - v.centerY) * ratio + pan.y * unitsPerPx,
-                                    span = span,
-                                ),
-                            )
-                            pressed.forEach { if (it.positionChanged()) it.consume() }
-                        }
+                        val v = currentViewport
+                        val unitsPerPx = v.span / size.width
+                        val centroid = event.calculateCentroid()
+                        // Zoom around the fingers: the point under them stays under them.
+                        val span = (v.span / zoom).coerceIn(1e-6, 1e8)
+                        val focusX = v.centerX + (centroid.x - size.width / 2f) * unitsPerPx
+                        val focusY = v.centerY - (centroid.y - size.height / 2f) * unitsPerPx
+                        val ratio = span / v.span
+                        currentOnViewport(
+                            Viewport(
+                                centerX = focusX - (focusX - v.centerX) * ratio - pan.x * unitsPerPx,
+                                centerY = focusY - (focusY - v.centerY) * ratio + pan.y * unitsPerPx,
+                                span = span,
+                            ),
+                        )
+                        pressed.forEach { if (it.positionChanged()) it.consume() }
                     }
-                    trace = null
-                    lastTap = down.uptimeMillis
                 }
             }
             .pointerInput(Unit) {
-                detectTapGestures(onDoubleTap = { onReset() })
+                // A tap puts the trace away; a double-tap also brings the view home.
+                detectTapGestures(onTap = { traceX = null }, onDoubleTap = { traceX = null; onReset() })
             },
     ) {
         val v = state.viewport
@@ -398,7 +418,10 @@ private fun GraphCanvas(
             drawPath(path, colors[index % colors.size], style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
         }
 
-        trace?.let { tx -> drawTrace(tx, xMin, unitsPerPx, state, colors, ::sy, scheme, measurer, traceStyle, formatter) }
+        traceX?.let { x ->
+            val tx = sx(x)
+            if (tx in 0f..size.width) drawTrace(tx, xMin, unitsPerPx, state, colors, ::sy, scheme, measurer, traceStyle, formatter)
+        }
     }
 }
 
