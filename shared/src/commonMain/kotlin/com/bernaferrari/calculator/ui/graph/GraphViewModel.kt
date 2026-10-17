@@ -7,7 +7,7 @@ import com.bernaferrari.calculator.domain.input.Calculator
 import com.bernaferrari.calculator.domain.input.Editor
 import com.bernaferrari.calculator.domain.input.ExpressionEditor
 import com.bernaferrari.calculator.domain.input.Key
-import com.bernaferrari.calculator.domain.math.Plot
+import com.bernaferrari.calculator.domain.math.Curve
 import com.bernaferrari.calculator.domain.model.AngleUnit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,8 +16,12 @@ import kotlinx.coroutines.flow.update
 /** One function being graphed: its text, where the cursor is, and its compiled form. */
 data class GraphFunction(val editor: Editor) {
     val text: String get() = editor.text
-    /** Null while the text is empty or not yet a complete function. */
-    val plot: Plot? = if (editor.text.isBlank()) null else Plot.compile(editor.text, AngleUnit.RADIANS)
+    /** Null while the text is empty or not yet a complete function or equation. */
+    val curve: Curve? = if (editor.text.isBlank()) null else Curve.compile(editor.text, AngleUnit.RADIANS)
+    /** Mid-equation (`x² + y²` with no `=` yet, or nothing after it): unfinished rather than wrong. */
+    val pending: Boolean get() = curve == null && (('y' in text && '=' !in text) || text.split('=').any { it.isBlank() })
+    /** Typed as an equation, so the row shows it whole instead of after `y =`. */
+    val isEquation: Boolean get() = '=' in text || 'y' in text
 }
 
 /** The visible window: its centre in graph units and how many units fit across. */
@@ -39,7 +43,7 @@ data class GraphState(
 const val MAX_FUNCTIONS = 3
 
 /**
- * Up to three functions of x, typed with the calculator's own keys, over a window you pan and
+ * Up to three functions of x or equations in x and y, typed with the calculator's own keys, over a window you pan and
  * pinch. Graphs work in radians, as graphs everywhere do.
  */
 class GraphViewModel(private val saved: SavedStateHandle) : ViewModel() {
@@ -48,8 +52,8 @@ class GraphViewModel(private val saved: SavedStateHandle) : ViewModel() {
 
     fun onKey(key: Key) {
         when (key) {
-            // On the graph, = means "this one's done, give me another".
-            Key.EQUALS -> onAdd()
+            // On the graph `=` is part of the language: y = …, x² + y² = 9.
+            Key.EQUALS -> onKey(Key.EQUATION)
             Key.CLEAR -> editActive { Editor() }
             else -> editActive { editor ->
                 Calculator.press(CalcState(editor = editor, angleUnit = AngleUnit.RADIANS), key).first.editor

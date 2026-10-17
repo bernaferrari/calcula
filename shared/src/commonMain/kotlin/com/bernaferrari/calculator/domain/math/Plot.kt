@@ -29,12 +29,51 @@ fun interface Plot {
     fun at(x: Double): Double
 
     companion object {
-        /** Compiles [expression], or returns null if it isn't a complete function. */
-        fun compile(expression: String, angle: AngleUnit = AngleUnit.RADIANS): Plot? = try {
+        /** Compiles [expression], or returns null if it isn't a complete function of x alone. */
+        fun compile(expression: String, angle: AngleUnit = AngleUnit.RADIANS): Plot? =
+            Field.compile(expression, angle, allowY = false)?.let { f -> Plot { x -> f.at(x, 0.0) } }
+    }
+}
+
+/** A function of both `x` and `y`: one side of an equation minus the other. */
+fun interface Field {
+    fun at(x: Double, y: Double): Double
+
+    companion object {
+        internal fun compile(expression: String, angle: AngleUnit, allowY: Boolean = true): Field? = try {
             val tokens = Tokenizer.tokenize(expression)
-            if (tokens.isEmpty()) null else PlotParser(tokens, angle).parseAll()
+            when {
+                tokens.isEmpty() -> null
+                !allowY && tokens.any { it == Token.Var('y') } -> null
+                else -> PlotParser(tokens, angle).parseAll()
+            }
         } catch (e: CalcException) {
             null
+        }
+    }
+}
+
+/**
+ * What a graph row draws. Plain text is `y =` that function of x; with an `=` it is an equation,
+ * which is still a plain function when one side is just `y` (`y = x²`, `x² = y`), and otherwise
+ * a curve in x and y, drawn wherever both sides agree: `x² + y² = 9`, `x = 3`, `y² = x`.
+ */
+sealed interface Curve {
+    data class Explicit(val plot: Plot) : Curve
+    data class Implicit(val field: Field) : Curve
+
+    companion object {
+        fun compile(text: String, angle: AngleUnit = AngleUnit.RADIANS): Curve? {
+            val sides = text.split('=')
+            if (sides.size == 1) return Plot.compile(text, angle)?.let(::Explicit)
+            if (sides.size != 2) return null
+            val (left, right) = sides.map { it.trim() }
+            if (left.isEmpty() || right.isEmpty()) return null
+            if (left == "y") Plot.compile(right, angle)?.let { return Explicit(it) }
+            if (right == "y") Plot.compile(left, angle)?.let { return Explicit(it) }
+            val l = Field.compile(left, angle) ?: return null
+            val r = Field.compile(right, angle) ?: return null
+            return Implicit { x, y -> l.at(x, y) - r.at(x, y) }
         }
     }
 }
@@ -42,12 +81,12 @@ fun interface Plot {
 private class PlotParser(private val tokens: List<Token>, private val angle: AngleUnit) {
     private var pos = 0
 
-    private class Term(val f: Plot, val percent: Boolean = false)
+    private class Term(val f: Field, val percent: Boolean = false)
 
     private fun peek(): Token? = tokens.getOrNull(pos)
     private fun next(): Token = tokens.getOrNull(pos++) ?: throw CalcException(CalcError.SYNTAX)
 
-    fun parseAll(): Plot {
+    fun parseAll(): Field {
         val f = additive().f
         if (pos != tokens.size) throw CalcException(CalcError.SYNTAX)
         return f
@@ -62,8 +101,8 @@ private class PlotParser(private val tokens: List<Token>, private val angle: Ang
             val right = multiplicative()
             val l = left.f
             val r = right.f
-            val amount: Plot = if (right.percent) Plot { x -> l.at(x) * r.at(x) } else r
-            left = Term(if (op == '+') Plot { x -> l.at(x) + amount.at(x) } else Plot { x -> l.at(x) - amount.at(x) })
+            val amount: Field = if (right.percent) Field { x, y -> l.at(x, y) * r.at(x, y) } else r
+            left = Term(if (op == '+') Field { x, y -> l.at(x, y) + amount.at(x, y) } else Field { x, y -> l.at(x, y) - amount.at(x, y) })
         }
         return left
     }
@@ -74,9 +113,9 @@ private class PlotParser(private val tokens: List<Token>, private val angle: Ang
             val token = peek()
             val l = left.f
             left = when {
-                token is Token.Op && token.symbol == '×' -> { pos++; val r = unary().f; Term(Plot { x -> l.at(x) * r.at(x) }) }
-                token is Token.Op && token.symbol == '÷' -> { pos++; val r = unary().f; Term(Plot { x -> l.at(x) / r.at(x) }) }
-                token != null && token.startsOperand() -> { val r = power().f; Term(Plot { x -> l.at(x) * r.at(x) }) }
+                token is Token.Op && token.symbol == '×' -> { pos++; val r = unary().f; Term(Field { x, y -> l.at(x, y) * r.at(x, y) }) }
+                token is Token.Op && token.symbol == '÷' -> { pos++; val r = unary().f; Term(Field { x, y -> l.at(x, y) / r.at(x, y) }) }
+                token != null && token.startsOperand() -> { val r = power().f; Term(Field { x, y -> l.at(x, y) * r.at(x, y) }) }
                 else -> return left
             }
         }
@@ -88,7 +127,7 @@ private class PlotParser(private val tokens: List<Token>, private val angle: Ang
             pos++
             val inner = unary()
             val f = inner.f
-            return Term(Plot { x -> -f.at(x) }, inner.percent)
+            return Term(Field { x, y -> -f.at(x, y) }, inner.percent)
         }
         if (token is Token.Op && token.symbol == '+') {
             pos++
@@ -105,7 +144,7 @@ private class PlotParser(private val tokens: List<Token>, private val angle: Ang
             if (peek() == null) throw CalcException(CalcError.SYNTAX)
             val b = base.f
             val e = unary().f
-            return Term(Plot { x -> pow(b.at(x), e.at(x)) })
+            return Term(Field { x, y -> pow(b.at(x, y), e.at(x, y)) })
         }
         return base
     }
@@ -117,20 +156,20 @@ private class PlotParser(private val tokens: List<Token>, private val angle: Ang
             pos++
             val f = term.f
             term = when (token.symbol) {
-                "%" -> Term(Plot { x -> f.at(x) / 100.0 }, percent = true)
-                "!" -> Term(Plot { x -> factorial(f.at(x)) })
-                "²" -> Term(Plot { x -> f.at(x).let { it * it } })
-                "³" -> Term(Plot { x -> f.at(x).let { it * it * it } })
-                "⁻¹" -> Term(Plot { x -> 1.0 / f.at(x) })
+                "%" -> Term(Field { x, y -> f.at(x, y) / 100.0 }, percent = true)
+                "!" -> Term(Field { x, y -> factorial(f.at(x, y)) })
+                "²" -> Term(Field { x, y -> f.at(x, y).let { it * it } })
+                "³" -> Term(Field { x, y -> f.at(x, y).let { it * it * it } })
+                "⁻¹" -> Term(Field { x, y -> 1.0 / f.at(x, y) })
                 else -> throw CalcException(CalcError.SYNTAX)
             }
         }
     }
 
     private fun primary(): Term = when (val token = next()) {
-        is Token.Num -> token.value.toDouble().let { v -> Term(Plot { v }) }
-        is Token.Const -> (if (token.name == "π") PI else kotlin.math.E).let { v -> Term(Plot { v }) }
-        is Token.Var -> Term(Plot { x -> x })
+        is Token.Num -> token.value.toDouble().let { v -> Term(Field { _, _ -> v }) }
+        is Token.Const -> (if (token.name == "π") PI else kotlin.math.E).let { v -> Term(Field { _, _ -> v }) }
+        is Token.Var -> Term(if (token.name == 'y') Field { _, y -> y } else Field { x, _ -> x })
         is Token.LParen -> Term(group())
         is Token.Func -> {
             val arg = if (peek() is Token.LParen) { pos++; group() } else power().f
@@ -138,12 +177,12 @@ private class PlotParser(private val tokens: List<Token>, private val angle: Ang
         }
         is Token.Root -> {
             val arg = postfix().f
-            Term(if (token.degree == 2) Plot { x -> sqrt(arg.at(x)) } else Plot { x -> cbrt(arg.at(x)) })
+            Term(if (token.degree == 2) Field { x, y -> sqrt(arg.at(x, y)) } else Field { x, y -> cbrt(arg.at(x, y)) })
         }
         else -> throw CalcException(CalcError.SYNTAX)
     }
 
-    private fun group(): Plot {
+    private fun group(): Field {
         if (peek() == null) throw CalcException(CalcError.SYNTAX)
         val inner = additive().f
         when (peek()) {
@@ -157,19 +196,19 @@ private class PlotParser(private val tokens: List<Token>, private val angle: Ang
     private val toRadians = if (angle == AngleUnit.DEGREES) PI / 180.0 else 1.0
     private val fromRadians = 1.0 / toRadians
 
-    private fun function(name: String, a: Plot): Plot = when (name) {
-        "sin" -> Plot { x -> sin(a.at(x) * toRadians) }
-        "cos" -> Plot { x -> cos(a.at(x) * toRadians) }
-        "tan" -> Plot { x -> tan(a.at(x) * toRadians) }
-        "sin⁻¹" -> Plot { x -> asin(a.at(x)) * fromRadians }
-        "cos⁻¹" -> Plot { x -> acos(a.at(x)) * fromRadians }
-        "tan⁻¹" -> Plot { x -> atan(a.at(x)) * fromRadians }
-        "sinh" -> Plot { x -> sinh(a.at(x)) }
-        "cosh" -> Plot { x -> cosh(a.at(x)) }
-        "tanh" -> Plot { x -> tanh(a.at(x)) }
-        "ln" -> Plot { x -> ln(a.at(x)) }
-        "log" -> Plot { x -> log10(a.at(x)) }
-        "abs" -> Plot { x -> abs(a.at(x)) }
+    private fun function(name: String, a: Field): Field = when (name) {
+        "sin" -> Field { x, y -> sin(a.at(x, y) * toRadians) }
+        "cos" -> Field { x, y -> cos(a.at(x, y) * toRadians) }
+        "tan" -> Field { x, y -> tan(a.at(x, y) * toRadians) }
+        "sin⁻¹" -> Field { x, y -> asin(a.at(x, y)) * fromRadians }
+        "cos⁻¹" -> Field { x, y -> acos(a.at(x, y)) * fromRadians }
+        "tan⁻¹" -> Field { x, y -> atan(a.at(x, y)) * fromRadians }
+        "sinh" -> Field { x, y -> sinh(a.at(x, y)) }
+        "cosh" -> Field { x, y -> cosh(a.at(x, y)) }
+        "tanh" -> Field { x, y -> tanh(a.at(x, y)) }
+        "ln" -> Field { x, y -> ln(a.at(x, y)) }
+        "log" -> Field { x, y -> log10(a.at(x, y)) }
+        "abs" -> Field { x, y -> abs(a.at(x, y)) }
         else -> throw CalcException(CalcError.SYNTAX)
     }
 

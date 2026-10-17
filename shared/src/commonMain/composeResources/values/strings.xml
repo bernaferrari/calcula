@@ -98,4 +98,9 @@
     <string name="graph_remove">Remove function</string>
     <string name="graph_add">Add function</string>
     <string name="graph_type_hint">type a function of x</string>
+    <string name="graph_point_root">Root</string>
+    <string name="graph_point_max">Maximum</string>
+    <string name="graph_point_min">Minimum</string>
+    <string name="graph_point_y_intercept">y-intercept</string>
+    <string name="graph_point_intersection">Intersection</string>
 </resources>

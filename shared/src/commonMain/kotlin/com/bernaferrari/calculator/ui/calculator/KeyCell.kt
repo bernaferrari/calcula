@@ -90,6 +90,8 @@ fun KeyCell(
     up: Hint? = null,
     down: Hint? = null,
     showDots: Boolean = true,
+    /** Names the up flick in small type where its dot would sit, for a flick nobody would guess. */
+    labelUp: Boolean = false,
     pressHaptic: Boolean = true,
     restRadius: androidx.compose.ui.unit.Dp = 14.dp,
     onPressedChange: (Boolean) -> Unit = {},
@@ -260,9 +262,17 @@ fun KeyCell(
                 },
         ) {
             val mainAlpha by animateFloatAsState(if (selection != null) 0.3f else 1f, label = "main")
-            Box(Modifier.graphicsLayer { alpha = mainAlpha }) { label() }
+            Box(Modifier.graphicsLayer { alpha = mainAlpha }.padding(top = if (labelUp && up != null) 9.dp else 0.dp)) { label() }
+            if (labelUp && up != null) {
+                Text(
+                    up.label,
+                    style = androidx.compose.ui.text.TextStyle(fontSize = 13.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Medium, fontFamily = com.bernaferrari.calculator.ui.theme.GoogleSansFlex),
+                    color = content.copy(alpha = if (selection == Swipe.Up) 1f else 0.55f),
+                    modifier = Modifier.align(Alignment.TopCenter).padding(top = 2.dp),
+                )
+            }
             if (showDots) {
-                if (up != null) FlickDot(selection == Swipe.Up, content, Modifier.align(Alignment.TopCenter).padding(top = 3.dp))
+                if (up != null && !labelUp) FlickDot(selection == Swipe.Up, content, Modifier.align(Alignment.TopCenter).padding(top = 3.dp))
                 if (down != null) FlickDot(selection == Swipe.Down, content, Modifier.align(Alignment.BottomCenter).padding(bottom = 3.dp))
             }
         }

@@ -96,4 +96,9 @@
     <string name="graph_remove">Remover função</string>
     <string name="graph_add">Adicionar função</string>
     <string name="graph_type_hint">digite uma função de x</string>
+    <string name="graph_point_root">Raiz</string>
+    <string name="graph_point_max">Máximo</string>
+    <string name="graph_point_min">Mínimo</string>
+    <string name="graph_point_y_intercept">Corte no eixo y</string>
+    <string name="graph_point_intersection">Interseção</string>
 </resources>

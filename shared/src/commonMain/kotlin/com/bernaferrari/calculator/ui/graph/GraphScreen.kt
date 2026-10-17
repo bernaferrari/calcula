@@ -51,6 +51,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -70,6 +71,9 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -82,7 +86,12 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.bernaferrari.calculator.domain.math.Curve
 import com.bernaferrari.calculator.domain.math.Decimal
+import com.bernaferrari.calculator.domain.math.Exact
+import com.bernaferrari.calculator.domain.math.Field
+import com.bernaferrari.calculator.domain.math.KeyPoint
+import com.bernaferrari.calculator.domain.math.KeyPoints
 import com.bernaferrari.calculator.domain.math.MathContext
 import com.bernaferrari.calculator.domain.math.NumberFormatter
 import com.bernaferrari.calculator.domain.math.RoundingMode
@@ -105,12 +114,12 @@ import kotlin.math.pow
 import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.stringResource
 
-private val QuickExamples = listOf("x²", "x³−x", "√x", "1÷x", "ln(x)", "2^x", "sin(x)÷x")
+private val QuickExamples = listOf("x²", "x²+y²=9", "x³−x", "sin(x)÷x", "y²=x", "1÷x", "x²÷9+y²÷4=1", "2^x")
 
 /**
  * Graphs, Calculator++ style: the plot on top with pinch, pan and a hold-to-trace finger, the
  * functions in the middle (tap one to edit it), and the calculator's own keys below, flicks
- * included, with `x` where `%` usually sits.
+ * included, with `x` where `%` usually sits (flick it up for `y`) and `=` typing equations.
  */
 @Composable
 fun GraphScreen(
@@ -228,7 +237,7 @@ private fun FunctionList(
         state.functions.forEachIndexed { index, function ->
             val active = index == state.active
             val field by animateColorAsState(if (active) scheme.surfaceContainerHigh else Color.Transparent, label = "field")
-            val invalid = function.text.isNotBlank() && function.plot == null
+            val invalid = function.text.isNotBlank() && function.curve == null && !function.pending
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
@@ -243,7 +252,7 @@ private fun FunctionList(
                 Spacer(Modifier.width(12.dp))
                 Text(
                     buildAnnotatedString {
-                        withStyle(SpanStyle(color = scheme.onSurfaceVariant)) { append("y = ") }
+                        if (!function.isEquation) withStyle(SpanStyle(color = scheme.onSurfaceVariant)) { append("y = ") }
                         if (function.text.isEmpty()) {
                             withStyle(SpanStyle(color = scheme.outline, fontSize = 16.sp)) { append(if (active) stringResource(Res.string.graph_type_hint) else "") }
                         } else {
@@ -308,19 +317,32 @@ private fun GraphCanvas(
     val measurer = rememberTextMeasurer()
     val labelStyle = TextStyle(fontFamily = GoogleSansFlex, fontSize = 11.sp, color = scheme.onSurfaceVariant)
     val traceStyle = TextStyle(fontFamily = GoogleSansFlex, fontSize = 14.sp, color = scheme.onSurface)
+    val kindStyle = TextStyle(fontFamily = GoogleSansFlex, fontSize = 12.sp, fontWeight = FontWeight.Medium)
     // Where the trace sits, in graph units, so it stays on the same x while you pan and zoom.
     var traceX by remember { mutableStateOf<Double?>(null) }
+    var selected by remember { mutableStateOf<ShownPoint?>(null) }
+    var canvasSize by remember { mutableStateOf(IntSize.Zero) }
+    // The active curve's roots, turns and y-intercept, and where it meets the others.
+    val points = remember(state.functions, state.active, state.viewport, canvasSize) { keyPoints(state, canvasSize) }
+    LaunchedEffect(state.functions, state.active) { selected = null }
+    val kinds = KeyPoint.Kind.entries.associateWith { stringResource(it.title()) }
     val currentViewport by rememberUpdatedState(state.viewport)
     val currentOnViewport by rememberUpdatedState(onViewport)
+    val currentPoints by rememberUpdatedState(points)
 
     Canvas(
         modifier
+            .onSizeChanged { canvasSize = it }
             .pointerInput(Unit) {
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
                     fun graphX(px: Float): Double {
                         val v = currentViewport
                         return v.centerX + (px - size.width / 2f) * (v.span / size.width)
+                    }
+                    fun screenX(x: Double): Float {
+                        val v = currentViewport
+                        return (size.width / 2f + (x - v.centerX) / (v.span / size.width)).toFloat()
                     }
                     // Holding still for the long-press timeout starts a trace; moving first (or a
                     // second finger) means pan and zoom. Waiting with a timeout catches a finger
@@ -339,9 +361,19 @@ private fun GraphCanvas(
                         @Suppress("UNREACHABLE_CODE") null
                     }
                     val tracing = early == null
+                    // The trace clicks onto a key point when the finger passes close to one.
+                    var snappedTo: ShownPoint? = null
+                    fun traceAt(px: Float) {
+                        val snap = currentPoints.filter { it.onActive }.minByOrNull { abs(screenX(it.point.x) - px) }
+                            ?.takeIf { abs(screenX(it.point.x) - px) < 12.dp.toPx() }
+                        if (snap != null && snap != snappedTo) onTraceTick()
+                        snappedTo = snap
+                        traceX = snap?.point?.x ?: graphX(px)
+                    }
                     if (tracing) {
                         onTraceTick()
-                        traceX = graphX(down.position.x)
+                        selected = null
+                        traceAt(down.position.x)
                     }
                     if (!tracing && !moved) return@awaitEachGesture // a tap; the tap detector handles it
                     while (true) {
@@ -353,7 +385,7 @@ private fun GraphCanvas(
                             break
                         }
                         if (tracing) {
-                            traceX = graphX(pressed.first().position.x)
+                            traceAt(pressed.first().position.x)
                             pressed.forEach { it.consume() }
                             continue
                         }
@@ -379,8 +411,24 @@ private fun GraphCanvas(
                 }
             }
             .pointerInput(Unit) {
-                // A tap puts the trace away; a double-tap also brings the view home.
-                detectTapGestures(onTap = { traceX = null }, onDoubleTap = { traceX = null; onReset() })
+                // A tap on a key point names it; anywhere else puts the trace and label away.
+                // A double-tap also brings the view home.
+                detectTapGestures(
+                    onTap = { tap ->
+                        val v = currentViewport
+                        val unitsPerPx = v.span / size.width
+                        fun at(p: KeyPoint) = Offset(
+                            (size.width / 2f + (p.x - v.centerX) / unitsPerPx).toFloat(),
+                            (size.height / 2f - (p.y - v.centerY) / unitsPerPx).toFloat(),
+                        )
+                        val hit = currentPoints.minByOrNull { (at(it.point) - tap).getDistance() }
+                            ?.takeIf { (at(it.point) - tap).getDistance() < 24.dp.toPx() }
+                        traceX = null
+                        selected = if (hit == selected) null else hit
+                        if (hit != null) onTraceTick()
+                    },
+                    onDoubleTap = { traceX = null; selected = null; onReset() },
+                )
             },
     ) {
         val v = state.viewport
@@ -393,7 +441,15 @@ private fun GraphCanvas(
         drawGrid(xMin, yMax, unitsPerPx, ::sx, ::sy, scheme.outlineVariant, scheme.onSurfaceVariant, measurer, labelStyle, formatter)
 
         state.functions.forEachIndexed { index, f ->
-            val plot = f.plot ?: return@forEachIndexed
+            val color = colors[index % colors.size]
+            val plot = when (val curve = f.curve) {
+                is Curve.Explicit -> curve.plot
+                is Curve.Implicit -> {
+                    drawImplicit(curve.field, xMin, yMax, unitsPerPx, color)
+                    return@forEachIndexed
+                }
+                null -> return@forEachIndexed
+            }
             val path = Path()
             var drawing = false
             var lastY = 0f
@@ -415,8 +471,10 @@ private fun GraphCanvas(
                 lastY = py
                 px += step
             }
-            drawPath(path, colors[index % colors.size], style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+            drawPath(path, color, style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
         }
+
+        drawKeyPoints(points, selected, colors, ::sx, ::sy, scheme, measurer, kindStyle, traceStyle, kinds, formatter)
 
         traceX?.let { x ->
             val tx = sx(x)
@@ -424,6 +482,142 @@ private fun GraphCanvas(
         }
     }
 }
+
+/** A key point on screen: which curve it belongs to, and whether it's on the one being edited. */
+private data class ShownPoint(val point: KeyPoint, val function: Int, val onActive: Boolean)
+
+private fun keyPoints(state: GraphState, size: IntSize): List<ShownPoint> {
+    if (size.width == 0) return emptyList()
+    val v = state.viewport
+    val half = v.span / 2
+    val active = (state.activeFunction.curve as? Curve.Explicit)?.plot ?: return emptyList()
+    val points = KeyPoints.of(active, v.centerX - half, v.centerX + half).map { ShownPoint(it, state.active, true) }
+    val meets = state.functions.flatMapIndexed { i, f ->
+        val other = (f.curve as? Curve.Explicit)?.plot
+        if (i == state.active || other == null) emptyList()
+        else KeyPoints.intersections(active, other, v.centerX - half, v.centerX + half).map { ShownPoint(it, state.active, true) }
+    }
+    val yHalf = half * size.height / size.width
+    return (points + meets).filter { it.point.y in (v.centerY - yHalf)..(v.centerY + yHalf) }
+}
+
+private fun KeyPoint.Kind.title() = when (this) {
+    KeyPoint.Kind.ROOT -> Res.string.graph_point_root
+    KeyPoint.Kind.MAXIMUM -> Res.string.graph_point_max
+    KeyPoint.Kind.MINIMUM -> Res.string.graph_point_min
+    KeyPoint.Kind.Y_INTERCEPT -> Res.string.graph_point_y_intercept
+    KeyPoint.Kind.INTERSECTION -> Res.string.graph_point_intersection
+}
+
+/**
+ * Key points as small rings on the curve, like a student marks them in pencil; the one you tapped
+ * fills in and says what it is and where.
+ */
+private fun DrawScope.drawKeyPoints(
+    points: List<ShownPoint>,
+    selected: ShownPoint?,
+    colors: List<Color>,
+    sx: (Double) -> Float,
+    sy: (Double) -> Float,
+    scheme: androidx.compose.material3.ColorScheme,
+    measurer: androidx.compose.ui.text.TextMeasurer,
+    kindStyle: TextStyle,
+    style: TextStyle,
+    kinds: Map<KeyPoint.Kind, String>,
+    formatter: DisplayFormatter,
+) {
+    for (p in points) {
+        val center = Offset(sx(p.point.x), sy(p.point.y))
+        val color = colors[p.function % colors.size]
+        if (p == selected) {
+            drawCircle(color.copy(alpha = 0.2f), 12.dp.toPx(), center)
+            drawCircle(color, 6.dp.toPx(), center)
+        } else {
+            drawCircle(scheme.surfaceContainerLow, 5.dp.toPx(), center)
+            drawCircle(color, 5.dp.toPx(), center, style = Stroke(2.dp.toPx()))
+        }
+    }
+    val p = selected?.takeIf { it in points } ?: return
+    val center = Offset(sx(p.point.x), sy(p.point.y))
+    val text = buildAnnotatedString {
+        withStyle(kindStyle.toSpanStyle().copy(color = scheme.inverseOnSurface.copy(alpha = 0.7f))) { append(kinds.getValue(p.point.kind)) }
+        val comma = if (formatter.decimal == ',') "; " else ", "
+        val decimals = "(" + formatter.number(readout(p.point.x)) + comma + formatter.number(readout(p.point.y)) + ")"
+        val exactX = Exact.recognize(p.point.x)
+        val exactY = Exact.recognize(p.point.y)
+        if (exactX != null || exactY != null) {
+            // π/2 says more than 1.5708; the decimals stay underneath.
+            fun exact(v: Double, e: String?) = e ?: formatter.number(readout(v))
+            append("\n(" + exact(p.point.x, exactX) + comma + exact(p.point.y, exactY) + ")")
+            withStyle(kindStyle.toSpanStyle().copy(color = scheme.inverseOnSurface.copy(alpha = 0.7f))) { append("\n≈ $decimals") }
+        } else {
+            append("\n$decimals")
+        }
+    }
+    val layout = measurer.measure(text, style)
+    val pad = 10.dp.toPx()
+    val w = layout.size.width + pad * 2
+    val h = layout.size.height + pad * 2
+    val gap = 16.dp.toPx()
+    // Above the point, or below it near the top; always inside the plot.
+    val top = if (center.y - gap - h > 0f) center.y - gap - h else center.y + gap
+    val left = (center.x - w / 2).coerceIn(pad, max(pad, size.width - w - pad))
+    drawRoundRect(scheme.inverseSurface, Offset(left, top), Size(w, h), androidx.compose.ui.geometry.CornerRadius(14.dp.toPx()))
+    drawText(layout, color = scheme.inverseOnSurface, topLeft = Offset(left + pad, top + pad))
+}
+
+/**
+ * An equation in x and y, drawn where its two sides agree, by marching squares: sample the
+ * difference on a fine grid, and wherever it changes sign along a cell's edge the curve passes
+ * between the two samples. Cells straddling a pole (tan, 1/…) flip sign without a zero; their
+ * centre is larger than any corner, and they are skipped.
+ */
+private fun DrawScope.drawImplicit(field: Field, xMin: Double, yMax: Double, unitsPerPx: Double, color: Color) {
+    val cell = 3.dp.toPx()
+    val cols = ceil(size.width / cell).toInt()
+    val rows = ceil(size.height / cell).toInt()
+    val stride = cols + 1
+    val values = DoubleArray(stride * (rows + 1))
+    for (r in 0..rows) for (c in 0..cols) {
+        values[r * stride + c] = field.at(xMin + c * cell * unitsPerPx, yMax - r * cell * unitsPerPx)
+    }
+    val path = Path()
+    val points = FloatArray(8)
+    for (r in 0 until rows) for (c in 0 until cols) {
+        val a = values[r * stride + c] // top left
+        val b = values[r * stride + c + 1] // top right
+        val d = values[(r + 1) * stride + c + 1] // bottom right
+        val e = values[(r + 1) * stride + c] // bottom left
+        if (!a.isFinite() || !b.isFinite() || !d.isFinite() || !e.isFinite()) continue
+        val positive = (a > 0).toInt() + (b > 0).toInt() + (d > 0).toInt() + (e > 0).toInt()
+        if (positive == 0 || positive == 4) continue
+        val x0 = c * cell
+        val y0 = r * cell
+        val centre = field.at(xMin + (x0 + cell / 2) * unitsPerPx, yMax - (y0 + cell / 2) * unitsPerPx)
+        if (!centre.isFinite() || abs(centre) > maxOf(abs(a), abs(b), abs(d), abs(e))) continue
+        var n = 0
+        fun cross(v1: Double, v2: Double, px1: Float, py1: Float, px2: Float, py2: Float) {
+            if ((v1 > 0) == (v2 > 0)) return
+            val t = (v1 / (v1 - v2)).toFloat()
+            points[n++] = px1 + (px2 - px1) * t
+            points[n++] = py1 + (py2 - py1) * t
+        }
+        cross(a, b, x0, y0, x0 + cell, y0)
+        cross(b, d, x0 + cell, y0, x0 + cell, y0 + cell)
+        cross(d, e, x0 + cell, y0 + cell, x0, y0 + cell)
+        cross(e, a, x0, y0 + cell, x0, y0)
+        // Two crossings make one segment; a saddle makes four, paired around the edges.
+        var i = 0
+        while (i + 3 < n) {
+            path.moveTo(points[i], points[i + 1])
+            path.lineTo(points[i + 2], points[i + 3])
+            i += 4
+        }
+    }
+    drawPath(path, color, style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+}
+
+private fun Boolean.toInt() = if (this) 1 else 0
 
 private fun DrawScope.drawGrid(
     xMin: Double,
@@ -494,7 +688,8 @@ private fun DrawScope.drawTrace(
     val text = buildAnnotatedString {
         append("x = " + formatter.number(readout(x)))
         state.functions.forEachIndexed { index, f ->
-            val y = f.plot?.at(x) ?: return@forEachIndexed
+            // Equations can cross a vertical line any number of times; the readout follows functions.
+            val y = (f.curve as? Curve.Explicit)?.plot?.at(x) ?: return@forEachIndexed
             if (!y.isFinite()) return@forEachIndexed
             val py = sy(y)
             if (py in 0f..size.height) {

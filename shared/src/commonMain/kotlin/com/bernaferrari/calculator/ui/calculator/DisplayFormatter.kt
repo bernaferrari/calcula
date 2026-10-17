@@ -70,6 +70,8 @@ class DisplayFormatter(separators: Separators = systemSeparators()) {
                         continue
                     }
                     c in "+−×÷" -> emit(i, c.toString(), colors?.let { SpanStyle(color = it.operator) })
+                    // A graph's equation: spaced so both sides read on their own.
+                    c == '=' -> emit(i, " = ", colors?.let { SpanStyle(color = it.operator) })
                     c in "()^" -> emit(i, c.toString(), colors?.let { SpanStyle(color = it.operator) })
                     isNameChar(c) -> {
                         var end = i
@@ -96,8 +98,8 @@ class DisplayFormatter(separators: Separators = systemSeparators()) {
         return Formatted(text, rawToDisplay, displayToRaw.toIntArray())
     }
 
-    /** Function names (`sin`, `log`…) never contain `e` or `x`, so those always stand alone. */
-    private fun isNameChar(c: Char) = c in 'a'..'z' && c != 'e' && c != 'x'
+    /** Function names (`sin`, `log`…) never contain `e`, `x` or `y`, so those always stand alone. */
+    private fun isNameChar(c: Char) = c in 'a'..'z' && c != 'e' && c != 'x' && c != 'y'
 
     private companion object {
         val SUPERSCRIPT = mapOf(

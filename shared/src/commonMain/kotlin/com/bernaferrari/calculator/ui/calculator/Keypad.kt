@@ -69,6 +69,8 @@ private data class Spec(
     /** Flick down; on the ƒ layer it is shown small under the function. */
     val down: Alt? = null,
     val flips: Boolean = up != null,
+    /** Prints its up flick small above the label, for a flick nobody would guess. */
+    val showsUp: Boolean = false,
 )
 
 /**
@@ -87,14 +89,14 @@ fun MainKeypad(
     modifier: Modifier = Modifier,
     showDots: Boolean = true,
     bottomInset: Dp = 0.dp,
-    /** For the graph: the `%` key becomes the variable `x`, in the accent so it's easy to find. */
+    /** For the graph: the `%` key becomes the variable `x` (flick up for `y`), in the accent so it's easy to find. */
     variable: Boolean = false,
 ) {
     val rows = listOf(
         listOf(
             Spec(Key.CLEAR, "AC", Tone.Function, "Clear"),
             Spec(Key.PARENS, "( )", Tone.Function, "Parentheses", up = Alt("(", Key.LPAREN, "open parenthesis"), down = Alt(")", Key.RPAREN, "close parenthesis"), flips = false),
-            if (variable) Spec(Key.VARIABLE, "x", Tone.Operator, "x") else Spec(Key.PERCENT, "%", Tone.Function, "Percent"),
+            if (variable) Spec(Key.VARIABLE, "x", Tone.Operator, "x", up = Alt("y", Key.VARIABLE_Y), flips = false, showsUp = true) else Spec(Key.PERCENT, "%", Tone.Function, "Percent"),
             Spec(Key.DIVIDE, "÷", Tone.Operator, "Divide"),
         ),
         listOf(
@@ -230,6 +232,7 @@ private fun KeypadKey(
         up = spec.up?.let { Hint(it.label, it.description) { onFunctionKey(it.key) } },
         down = spec.down?.let { Hint(it.label, it.description) { onFunctionKey(it.key) } },
         showDots = showDots && !onLayer,
+        labelUp = spec.showsUp,
         onLongClick = if (isDelete) ({ haptics.heavy(); onClearAll() }) else null,
         onPressedChange = onPressedChange,
         modifier = modifier,

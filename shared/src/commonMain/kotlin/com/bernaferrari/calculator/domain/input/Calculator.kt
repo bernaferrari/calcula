@@ -21,8 +21,10 @@ enum class Key {
     ASIN, ACOS, ATAN, EXP, POW10, CBRT, CUBE, RECIPROCAL,
     DOUBLE_ZERO, TRIPLE_ZERO,
     INVERSE,
-    /** The graph's variable `x`. */
+    /** The graph's variables `x` and `y`, and the `=` of an equation. */
     VARIABLE,
+    VARIABLE_Y,
+    EQUATION,
 }
 
 data class CalcState(
@@ -157,6 +159,8 @@ object Calculator {
             Key.SQRT -> insertRaw(e, if (inverse) "∛" else "√")
             Key.PI -> insertRaw(e, "π")
             Key.VARIABLE -> insertRaw(e, "x")
+            Key.VARIABLE_Y -> insertRaw(e, "y")
+            Key.EQUATION -> if ('=' in e.text) e else insertRaw(e, "=")
             Key.E -> insertRaw(e, "e")
             Key.POWER -> if (inverse) insertPostfix(e, "⁻¹") else insertOperator(e, '^')
             Key.FACTORIAL -> insertPostfix(e, "!")

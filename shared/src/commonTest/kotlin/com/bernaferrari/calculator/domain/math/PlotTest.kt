@@ -46,4 +46,29 @@ class PlotTest {
     @Test fun calculatorStillRejectsX() {
         assertNull(CalcEngine.evaluateOrNull("2x"))
     }
+
+    @Test fun equationsWithYAloneAreFunctions() {
+        val curve = Curve.compile("y=x²")
+        assertTrue(curve is Curve.Explicit)
+        near(9.0, curve.plot.at(3.0))
+        assertTrue(Curve.compile("x+1=y") is Curve.Explicit)
+        assertTrue(Curve.compile("x²") is Curve.Explicit)
+    }
+
+    @Test fun otherEquationsAreImplicit() {
+        val circle = Curve.compile("x²+y²=9")
+        assertTrue(circle is Curve.Implicit)
+        near(0.0, circle.field.at(3.0, 0.0))
+        near(-9.0, circle.field.at(0.0, 0.0))
+        assertTrue(Curve.compile("x=3") is Curve.Implicit)
+        assertTrue(Curve.compile("2y=x") is Curve.Implicit)
+    }
+
+    @Test fun unfinishedEquationsDontCompile() {
+        assertNull(Curve.compile("x²+y²"))
+        assertNull(Curve.compile("x²+y²="))
+        assertNull(Curve.compile("=4"))
+        assertNull(Curve.compile("x=y=1"))
+        assertNull(Plot.compile("x+y"))
+    }
 }

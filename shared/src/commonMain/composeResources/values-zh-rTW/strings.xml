@@ -94,4 +94,9 @@
     <string name="graph_remove">移除函數</string>
     <string name="graph_add">新增函數</string>
     <string name="graph_type_hint">輸入 x 的函數</string>
+    <string name="graph_point_root">零點</string>
+    <string name="graph_point_max">極大值</string>
+    <string name="graph_point_min">極小值</string>
+    <string name="graph_point_y_intercept">y 軸截距</string>
+    <string name="graph_point_intersection">交點</string>
 </resources>

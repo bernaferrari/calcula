@@ -94,4 +94,9 @@
     <string name="graph_remove">関数を削除</string>
     <string name="graph_add">関数を追加</string>
     <string name="graph_type_hint">x の関数を入力</string>
+    <string name="graph_point_root">零点</string>
+    <string name="graph_point_max">極大</string>
+    <string name="graph_point_min">極小</string>
+    <string name="graph_point_y_intercept">y切片</string>
+    <string name="graph_point_intersection">交点</string>
 </resources>

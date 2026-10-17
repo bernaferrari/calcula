@@ -19,7 +19,7 @@ object ExpressionEditor {
     private val FUNCTIONS = listOf("sin⁻¹", "cos⁻¹", "tan⁻¹", "sinh", "cosh", "tanh", "sin", "cos", "tan", "log", "abs", "ln")
 
     /** True if the character can end an operand, so an operator or `)` may follow it. */
-    fun endsOperand(c: Char?): Boolean = c != null && (c.isDigit() || c == '.' || c == ')' || c == 'π' || c == 'e' || c == 'x' || c in POSTFIX_END)
+    fun endsOperand(c: Char?): Boolean = c != null && (c.isDigit() || c == '.' || c == ')' || c == 'π' || c == 'e' || c == 'x' || c == 'y' || c in POSTFIX_END)
 
     fun insertDigit(e: Editor, digit: Char): Editor {
         val start = numberStart(e)
@@ -114,7 +114,9 @@ object ExpressionEditor {
 
     fun moveCursor(e: Editor, position: Int): Editor = e.copy(cursor = snap(e.text, position.coerceIn(0, e.text.length)))
 
-    fun openParentheses(text: String): Int = text.count { it == '(' } - text.count { it == ')' }
+    fun openParentheses(text: String): Int =
+        // Each side of a graph's equation balances its own parentheses.
+        text.substringAfterLast('=').let { side -> side.count { it == '(' } - side.count { it == ')' } }
 
     /** Keeps the cursor out of the middle of a function name like `si|n(`. */
     private fun snap(text: String, position: Int): Int {
