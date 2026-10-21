@@ -2,21 +2,19 @@
 
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
-import { Button } from "@/components/ui/button";
 
+/** Flips between light and dark from whatever is showing now, system included. */
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
-
+  const { resolvedTheme, setTheme } = useTheme();
   return (
-    <Button
-      variant="ghost"
-      size="icon-sm"
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className="text-muted-foreground hover:text-foreground"
+    <button
+      type="button"
+      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+      className="pressable relative rounded-full p-2 text-muted hover:text-foreground"
+      aria-label="Switch between light and dark"
     >
-      <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-      <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-      <span className="sr-only">Toggle theme</span>
-    </Button>
+      <Sun className="size-5 dark:hidden" />
+      <Moon className="hidden size-5 dark:block" />
+    </button>
   );
 }
