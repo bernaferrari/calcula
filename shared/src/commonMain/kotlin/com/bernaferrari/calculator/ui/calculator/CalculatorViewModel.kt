@@ -1,5 +1,7 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import com.bernaferrari.calculator.domain.model.hints
+import com.bernaferrari.calculator.domain.model.FlickHints
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -47,7 +49,7 @@ data class CalculatorUiState(
     val sounds: Boolean = false,
     val reduceMotion: Boolean = false,
     val showHistory: Boolean = true,
-    val showFlickDots: Boolean = true,
+    val flickHints: FlickHints = FlickHints.DOTS,
     val keypadScale: Float = 1f,
     val decimalSeparator: DecimalSeparator = DecimalSeparator.AUTO,
     /** Bumps on every `=` and clear, so the display can animate the hand-off. */
@@ -98,7 +100,7 @@ class CalculatorViewModel(
             sounds = prefs.soundEnabled,
             reduceMotion = prefs.reduceMotion,
             showHistory = prefs.showHistory,
-            showFlickDots = prefs.showFlickDots,
+            flickHints = prefs.hints,
             keypadScale = prefs.keypadScale,
             decimalSeparator = prefs.decimalSeparator,
             generation = generation,

@@ -1,5 +1,19 @@
 package com.bernaferrari.calculator.platform
 
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asSkiaBitmap
+import kotlinx.cinterop.BetaInteropApi
+import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.addressOf
+import kotlinx.cinterop.usePinned
+import org.jetbrains.skia.EncodedImageFormat
+import org.jetbrains.skia.Image
+import platform.Foundation.NSData
+import platform.Foundation.create
+import platform.UIKit.UIActivityViewController
+import platform.UIKit.UIApplication
+import platform.UIKit.UIImage
+import platform.UIKit.popoverPresentationController
 import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -60,3 +74,23 @@ actual val supportsDynamicColor: Boolean = false
 actual fun SystemBarsAppearance(darkTheme: Boolean) = Unit
 
 actual val systemConfirmsCopy: Boolean = false
+
+actual fun ImageBitmap.encodePng(): ByteArray =
+    Image.makeFromBitmap(asSkiaBitmap()).encodeToData(EncodedImageFormat.PNG)?.bytes ?: ByteArray(0)
+
+@OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
+@Composable
+actual fun rememberImageSharer(): (png: ByteArray, fileName: String) -> Unit = remember {
+    { png, _ ->
+        val data = png.usePinned { NSData.create(bytes = it.addressOf(0), length = png.size.toULong()) }
+        val image = UIImage.imageWithData(data)
+        var top = UIApplication.sharedApplication.keyWindow?.rootViewController
+        while (top?.presentedViewController != null) top = top.presentedViewController
+        if (image != null && top != null) {
+            val sheet = UIActivityViewController(listOf(image), null)
+            // iPad shows the sheet as a popover, which needs somewhere to point.
+            sheet.popoverPresentationController?.sourceView = top.view
+            top.presentViewController(sheet, animated = true, completion = null)
+        }
+    }
+}

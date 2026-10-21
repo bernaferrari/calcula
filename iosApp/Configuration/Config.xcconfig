@@ -1,7 +1,7 @@
 TEAM_ID=
 
 PRODUCT_NAME=CalculatorPlusPlus
-PRODUCT_BUNDLE_IDENTIFIER=org.solovyev.android.calculator.ios
+PRODUCT_BUNDLE_IDENTIFIER=com.bernaferrari.calcula
 
 CURRENT_PROJECT_VERSION=1
 MARKETING_VERSION=3.0

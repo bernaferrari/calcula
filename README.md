@@ -1,8 +1,8 @@
-# Calculator++
+# Calcula
 
-A scientific calculator for Android, iOS and the web, built with Compose Multiplatform and Material 3 Expressive. Modern fork of [serso/android-calculatorpp](https://github.com/serso/android-calculatorpp).
+A scientific calculator for Android, iOS and the web, built with Compose Multiplatform and Material 3 Expressive. A modern rebuild of Calculator++ ([serso/android-calculatorpp](https://github.com/serso/android-calculatorpp)).
 
-## What makes it Calculator++
+## What makes it Calcula
 
 - **Flick keys.** Swipe a key up or down for its second and third functions (sin, cos, √, x², …); hold a key to see both. Small dots mark the keys that have them.
 - **123 / ƒ.** One tap flips the keypad to a full function layer, once or locked.
@@ -13,7 +13,7 @@ A scientific calculator for Android, iOS and the web, built with Compose Multipl
 ## Modules
 
 - `shared`: everything: engine, input rules, UI, storage. Targets Android, iOS (arm64 and simulator) and wasmJs.
-- `androidApp`: Android host (`org.solovyev.android.calculator`, the existing Play listing).
+- `androidApp`: Android host (`com.bernaferrari.calcula`).
 - `iosApp`: Xcode host project.
 - `webApp`: browser host (Kotlin/Wasm).
 

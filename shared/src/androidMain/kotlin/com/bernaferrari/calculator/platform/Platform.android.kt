@@ -1,5 +1,13 @@
 package com.bernaferrari.calculator.platform
 
+import android.content.ClipData
+import android.content.Intent
+import android.graphics.Bitmap
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.core.content.FileProvider
+import java.io.ByteArrayOutputStream
+import java.io.File
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
@@ -88,3 +96,27 @@ actual fun SystemBarsAppearance(darkTheme: Boolean) {
 }
 
 actual val systemConfirmsCopy: Boolean = Build.VERSION.SDK_INT >= 33
+
+actual fun ImageBitmap.encodePng(): ByteArray =
+    ByteArrayOutputStream().also { asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it) }.toByteArray()
+
+@Composable
+actual fun rememberImageSharer(): (png: ByteArray, fileName: String) -> Unit {
+    val context = LocalContext.current
+    return remember(context) {
+        { png, fileName ->
+            // A file in the cache, handed over through the app's FileProvider for the receiver to read.
+            val dir = File(context.cacheDir, "shared").apply { mkdirs() }
+            val file = File(dir, fileName).apply { writeBytes(png) }
+            val uri = FileProvider.getUriForFile(context, "${context.packageName}.files", file)
+            val send = Intent(Intent.ACTION_SEND).apply {
+                type = "image/png"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                // Lets the share sheet show a preview of the image.
+                clipData = ClipData.newRawUri(null, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            context.startActivity(Intent.createChooser(send, null).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION))
+        }
+    }
+}

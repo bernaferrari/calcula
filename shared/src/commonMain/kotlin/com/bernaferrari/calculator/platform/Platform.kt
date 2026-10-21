@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.platform
 
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import com.bernaferrari.calculator.ui.calculator.Separators
@@ -36,3 +37,13 @@ expect fun SystemBarsAppearance(darkTheme: Boolean)
 
 /** Whether the OS shows its own "copied" confirmation (Android 13+), so the app shouldn't. */
 expect val systemConfirmsCopy: Boolean
+
+/** The image as PNG bytes, ready to share. */
+expect fun ImageBitmap.encodePng(): ByteArray
+
+/**
+ * Offers a PNG to the system's share sheet (Android, iOS); on the web it downloads instead.
+ * Returns the function that does it, for a click handler.
+ */
+@Composable
+expect fun rememberImageSharer(): (png: ByteArray, fileName: String) -> Unit

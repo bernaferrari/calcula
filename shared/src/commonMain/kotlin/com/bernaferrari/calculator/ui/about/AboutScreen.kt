@@ -2,6 +2,11 @@
 
 package com.bernaferrari.calculator.ui.about
 
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.foundation.Canvas
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -89,7 +94,7 @@ private const val SOURCE_URL = "https://github.com/bernaferrari/android-calculat
 private const val FEEDBACK_EMAIL = "bernaferrari2@gmail.com"
 
 /**
- * About, in the Expressive style: the ++ mark on a slowly turning shape you can poke, the two
+ * About, in the Expressive style: the Calcula mark on a slowly turning shape you can poke, the two
  * things people come here for (the code and a way to reach the author) as bold cards, the story
  * in a few lines, the author's other places, and a plain privacy promise.
  */
@@ -157,7 +162,7 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
     }
 }
 
-/** The one hero moment: ++ on a slowly turning cookie. Tap it and it spins up and settles. */
+/** The one hero moment: Calcula's mark on a slowly turning cookie. Tap it and it spins up and settles. */
 @Composable
 private fun Hero() {
     val haptics = rememberHaptics(enabled = { true })
@@ -188,14 +193,7 @@ private fun Hero() {
                 },
         ) {
             Box(Modifier.fillMaxSize().graphicsLayer { rotationZ = drift + kick.value }.clip(shape).background(MaterialTheme.colorScheme.primaryContainer))
-            Text(
-                "++",
-                fontFamily = GoogleSansFlex,
-                fontWeight = FontWeight.Bold,
-                fontSize = 64.sp,
-                letterSpacing = (-2).sp,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-            )
+            CalculaMark(MaterialTheme.colorScheme.onPrimaryContainer, Modifier.size(112.dp))
         }
         Text(
             stringResource(Res.string.app_name),
@@ -326,5 +324,30 @@ private fun Footer() {
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = 8.dp),
         )
+    }
+}
+
+/**
+ * Calcula's mark, as on the app icon: a lowercase c between the two flick dots every key uses to
+ * hint at its hidden functions. Drawn on an 80-unit square so it scales to any size.
+ */
+@Composable
+internal fun CalculaMark(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier) {
+        val u = size.minDimension / 80f
+        val center = Offset(size.width / 2, size.height / 2)
+        val r = 15f * u
+        // The c opens to the right: a 270° arc from 45° above the axis round to 45° below.
+        drawArc(
+            color = color,
+            startAngle = -45f,
+            sweepAngle = -270f,
+            useCenter = false,
+            topLeft = Offset(center.x - r, center.y - r),
+            size = Size(r * 2, r * 2),
+            style = Stroke(width = 9f * u, cap = StrokeCap.Round),
+        )
+        drawCircle(color, 3.6f * u, Offset(center.x, center.y - 27f * u))
+        drawCircle(color, 3.6f * u, Offset(center.x, center.y + 27f * u))
     }
 }

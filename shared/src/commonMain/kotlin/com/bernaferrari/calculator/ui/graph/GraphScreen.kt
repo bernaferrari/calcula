@@ -1,5 +1,17 @@
 package com.bernaferrari.calculator.ui.graph
 
+import com.bernaferrari.calculator.domain.model.hints
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import kotlinx.coroutines.delay
+import com.bernaferrari.calculator.ui.calculator.FunctionLayer
+import com.bernaferrari.calculator.ui.calculator.LayerSwitch
+import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.Share
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.text.rememberTextMeasurer
+import com.bernaferrari.calculator.platform.encodePng
+import com.bernaferrari.calculator.platform.rememberImageSharer
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.withFrameNanos
@@ -136,7 +148,7 @@ import org.jetbrains.compose.resources.stringResource
 private val QuickExamples = listOf("x²", "a×sin(b×x)", "x²+y²=9", "x³−x", "ax²+bx+c", "sin(x)÷x", "y²=x", "x²÷9+y²÷4=1")
 
 /**
- * Graphs, Calculator++ style: the plot on top with pinch, pan and a hold-to-trace finger, the
+ * Graphs, Calcula style: the plot on top with pinch, pan and a hold-to-trace finger, the
  * functions in the middle (tap one to edit it), and the calculator's own keys below, flicks
  * included, with `x` where `%` usually sits (flick it up for `y`) and `=` typing equations.
  */
@@ -153,6 +165,13 @@ fun GraphScreen(
     val formatter = remember(separators) { DisplayFormatter(separators) }
     val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val colors = curveColors()
+    val recent by viewModel.recent.collectAsStateWithLifecycle()
+    var libraryOpen by rememberSaveable { mutableStateOf(false) }
+    val share = rememberImageSharer()
+    val exportMeasurer = rememberTextMeasurer()
+    val exportFont = GoogleSansFlex
+    val scheme = MaterialTheme.colorScheme
+    var layer by rememberSaveable { mutableStateOf(FunctionLayer.Off) }
 
     Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.containerTransform("graph", isScreen = true).fillMaxSize()) {
         BoxWithConstraints(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal))) {
@@ -161,6 +180,15 @@ fun GraphScreen(
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 4.dp).height(56.dp)) {
                     IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null) }
                     Text(stringResource(Res.string.graph_title), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+                    IconButton(onClick = { haptics.tap(); libraryOpen = true }) {
+                        Icon(Icons.Outlined.History, contentDescription = stringResource(Res.string.graph_open_library), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    IconButton(onClick = {
+                        haptics.tap()
+                        share(renderGraphImage(state, colors, scheme, exportMeasurer, formatter, exportFont).encodePng(), "graph.png")
+                    }) {
+                        Icon(Icons.Outlined.Share, contentDescription = stringResource(Res.string.graph_share), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                     IconButton(onClick = { haptics.tap(); viewModel.onResetView() }) {
                         Icon(Icons.Rounded.CenterFocusStrong, contentDescription = stringResource(Res.string.graph_reset), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
@@ -185,7 +213,6 @@ fun GraphScreen(
                     onActivate = { haptics.tap(); viewModel.onActivate(it) },
                     onCursor = { index, position -> haptics.tick(); viewModel.onActivate(index); viewModel.onCursorMoved(position) },
                     onRemove = { haptics.heavy(); viewModel.onRemove(it) },
-                    onAdd = { haptics.tap(); viewModel.onAdd() },
                     onExample = { haptics.tap(); viewModel.onExample(it) },
                 )
                 ParameterSliders(
@@ -200,17 +227,36 @@ fun GraphScreen(
                 MainKeypad(
                     decimal = formatter.decimal,
                     haptics = haptics,
-                    functionLayer = false,
+                    functionLayer = layer != FunctionLayer.Off,
                     onKey = viewModel::onKey,
-                    onFunctionKey = viewModel::onKey,
+                    onFunctionKey = { key ->
+                        viewModel.onKey(key)
+                        // Like Shift: one function, then back to digits (unless locked).
+                        if (layer == FunctionLayer.Once) layer = FunctionLayer.Off
+                    },
                     onClearAll = { viewModel.onKey(com.bernaferrari.calculator.domain.input.Key.CLEAR) },
-                    // Short rows leave no room for hint dots; the flicks still work.
-                    showDots = false,
+                    // The same keypad as the calculator, dots and all (they step aside on very short rows).
+                    hints = prefs.hints,
                     bottomInset = bottomInset,
                     variable = true,
                     nextParameter = state.nextParameter,
                     modifier = modifier,
                 )
+            }
+            // The calculator's own 123|ƒ switch, so every function is a tap away here too, and the
+            // way to add another function, always in reach above the keys.
+            val bar: @Composable () -> Unit = {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().height(GraphBarHeight).padding(horizontal = 12.dp)) {
+                    LayerSwitch(layer) { haptics.tap(); layer = it }
+                    Spacer(Modifier.weight(1f))
+                    if (state.canAdd) {
+                        TextButton(onClick = { haptics.tap(); viewModel.onAdd() }) {
+                            Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text(stringResource(Res.string.graph_add))
+                        }
+                    }
+                }
             }
             if (landscape) {
                 Row(Modifier.fillMaxSize()) {
@@ -220,6 +266,7 @@ fun GraphScreen(
                     }
                     Column(Modifier.weight(0.45f).fillMaxHeight().statusBarsPadding()) {
                         functions()
+                        bar()
                         keys(Modifier.weight(1f).fillMaxWidth())
                     }
                 }
@@ -230,7 +277,7 @@ fun GraphScreen(
                 // The plot is the point: it always keeps a good share of the screen. The functions and
                 // sliders get what's left and scroll beyond that, instead of squeezing the plot to a strip.
                 val minPlot = maxOf(200.dp, maxHeight * 0.3f)
-                val panel = (maxHeight - top - keypad - minPlot).coerceAtLeast(96.dp)
+                val panel = (maxHeight - top - keypad - GraphBarHeight - minPlot).coerceAtLeast(96.dp)
                 Column(Modifier.fillMaxSize()) {
                     header()
                     plot(Modifier.weight(1f).fillMaxWidth())
@@ -256,19 +303,34 @@ fun GraphScreen(
                     ) {
                         functions()
                     }
+                    bar()
                     keys(Modifier.fillMaxWidth().height(keypad))
                 }
             }
         }
+        if (libraryOpen) {
+            GraphLibrarySheet(
+                graphs = visibleRecent(recent, state),
+                colors = colors,
+                formatter = formatter,
+                onRestore = { haptics.tap(); viewModel.onRestore(it); libraryOpen = false },
+                onTogglePin = { haptics.tick(); viewModel.onTogglePin(it) },
+                onDelete = { haptics.heavy(); viewModel.onDelete(it) },
+                onNew = { haptics.tap(); viewModel.onNewGraph(); libraryOpen = false },
+                onDismiss = { libraryOpen = false },
+            )
+        }
     }
 }
+
+private val GraphBarHeight = 48.dp
 
 /**
  * One color per function: the theme's accent first, then orange, green, blue, purple and teal, chosen to stay apart
  * from every palette and from each other, lighter on dark backgrounds.
  */
 @Composable
-private fun curveColors(): List<Color> {
+internal fun curveColors(): List<Color> {
     val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
     return listOf(
         MaterialTheme.colorScheme.primary,
@@ -289,7 +351,6 @@ private fun FunctionList(
     /** A tap inside a function's text: make it active and put the cursor there (a raw offset). */
     onCursor: (index: Int, position: Int) -> Unit,
     onRemove: (Int) -> Unit,
-    onAdd: () -> Unit,
     onExample: (String) -> Unit,
 ) {
     val scheme = MaterialTheme.colorScheme
@@ -317,26 +378,29 @@ private fun FunctionList(
                 Spacer(Modifier.width(12.dp))
                 val plain = remember(function.text) { formatter.format(function.text, 0, null) }
                 val prefix = if (function.isEquation) 0 else "y = ".length
-                val caret = if (active && function.text.isNotEmpty()) plain.rawToDisplay[function.editor.cursor.coerceIn(0, function.text.length)] else -1
+                // Where the cursor sits in the drawn text, after the `y = ` prefix.
+                val caret = prefix + if (function.text.isEmpty()) 0 else plain.rawToDisplay[function.editor.cursor.coerceIn(0, function.text.length)]
                 var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
-                val currentCaret by rememberUpdatedState(caret)
                 val currentPlain by rememberUpdatedState(plain)
+                // A cursor like any text field's: solid while you type or move it, then blinking.
+                val blink = remember { Animatable(1f) }
+                LaunchedEffect(active, function.text, caret) {
+                    blink.snapTo(1f)
+                    while (active) {
+                        delay(550)
+                        blink.animateTo(0f, tween(150))
+                        delay(350)
+                        blink.animateTo(1f, tween(150))
+                    }
+                }
+                val cursorColor = scheme.primary
                 Text(
                     buildAnnotatedString {
                         if (!function.isEquation) withStyle(SpanStyle(color = scheme.onSurfaceVariant)) { append("y = ") }
                         if (function.text.isEmpty()) {
                             withStyle(SpanStyle(color = scheme.outline, fontSize = 16.sp)) { append(if (active) stringResource(Res.string.graph_type_hint) else "") }
                         } else {
-                            val formatted = formatter.format(function.text, 0, DisplayFormatter.Colors(scheme.primary, scheme.onSurfaceVariant, scheme.outline)).text
-                            if (active) {
-                                // A caret where the next key lands.
-                                val cursor = formatter.format(function.text, 0, null).rawToDisplay[function.editor.cursor.coerceIn(0, function.text.length)]
-                                append(formatted.subSequence(0, cursor))
-                                withStyle(SpanStyle(color = scheme.primary)) { append("|") }
-                                append(formatted.subSequence(cursor, formatted.length))
-                            } else {
-                                append(formatted)
-                            }
+                            append(formatter.format(function.text, 0, DisplayFormatter.Colors(scheme.primary, scheme.onSurfaceVariant, scheme.outline)).text)
                         }
                     },
                     style = TextStyle(fontFamily = GoogleSansFlex, fontSize = if (active) 22.sp else 18.sp),
@@ -354,15 +418,26 @@ private fun FunctionList(
                                     onActivate(index)
                                     return@detectTapGestures
                                 }
-                                var offset = l.getOffsetForPosition(position) - prefix
-                                // The drawn caret is a character of its own; skip over it.
-                                if (currentCaret >= 0 && offset > currentCaret) offset--
+                                val offset = l.getOffsetForPosition(position) - prefix
                                 onCursor(index, map[offset.coerceIn(0, map.lastIndex)])
                             }
+                        }
+                        .drawWithContent {
+                            drawContent()
+                            val l = layout ?: return@drawWithContent
+                            if (!active) return@drawWithContent
+                            val rect = l.getCursorRect(caret.coerceIn(0, l.layoutInput.text.length))
+                            val w = 2.dp.toPx()
+                            drawRect(
+                                cursorColor.copy(alpha = blink.value),
+                                topLeft = Offset(rect.left - w / 2, rect.top + rect.height * 0.12f),
+                                size = Size(w, rect.height * 0.76f),
+                            )
                         },
                 )
                 if (state.functions.size > 1 || function.text.isNotEmpty()) {
-                    IconButton(onClick = { onRemove(index) }, modifier = Modifier.size(if (active) 48.dp else 36.dp)) {
+                    // One size for every row, so the ✕ stays put as rows become active.
+                    IconButton(onClick = { onRemove(index) }, modifier = Modifier.size(40.dp)) {
                         Icon(Icons.Rounded.Close, contentDescription = stringResource(Res.string.graph_remove), tint = scheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
                     }
                 }
@@ -375,12 +450,6 @@ private fun FunctionList(
                 items(QuickExamples) { example ->
                     AssistChip(onClick = { onExample(example) }, label = { Text(formatter.format(example, 0, null).text.text) })
                 }
-            }
-        } else if (state.canAdd) {
-            TextButton(onClick = onAdd) {
-                Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(6.dp))
-                Text(stringResource(Res.string.graph_add))
             }
         }
     }
@@ -603,39 +672,7 @@ private fun GraphCanvas(
 
         drawGrid(xMin, yMax, unitsPerPx, ::sx, ::sy, scheme.outlineVariant, scheme.onSurfaceVariant, measurer, labelStyle, formatter)
 
-        state.functions.forEachIndexed { index, f ->
-            val color = colors[index % colors.size]
-            val plot = when (val curve = state.curves[index]) {
-                is Curve.Explicit -> curve.plot
-                is Curve.Implicit -> {
-                    drawImplicit(curve.field, xMin, yMax, unitsPerPx, color)
-                    return@forEachIndexed
-                }
-                null -> return@forEachIndexed
-            }
-            val path = Path()
-            var drawing = false
-            var lastY = 0f
-            val step = 2f
-            var px = 0f
-            while (px <= size.width) {
-                val y = plot.at(xMin + px * unitsPerPx)
-                val py = sy(y)
-                val ok = y.isFinite() && abs(py) < size.height * 4
-                // Break the line at holes and at jumps (asymptotes) instead of drawing a wall.
-                if (!ok || (drawing && abs(py - lastY) > size.height)) {
-                    drawing = false
-                } else if (!drawing) {
-                    path.moveTo(px, py)
-                    drawing = true
-                } else {
-                    path.lineTo(px, py)
-                }
-                lastY = py
-                px += step
-            }
-            drawPath(path, color, style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
-        }
+        drawCurves(state, colors, xMin, yMax, unitsPerPx, ::sy, 3.dp.toPx())
 
         drawKeyPoints(points, selected, colors, ::sx, ::sy, scheme, measurer, kindStyle, traceStyle, kinds, formatter)
 
@@ -643,6 +680,46 @@ private fun GraphCanvas(
             val tx = sx(x)
             if (tx in 0f..size.width) drawTrace(tx, xMin, unitsPerPx, state, colors, ::sy, scheme, measurer, traceStyle, formatter)
         }
+    }
+}
+
+/**
+ * Every function's curve over the window that starts at [xMin] and [yMax], in its color. Shared
+ * by the plot, the recent list's thumbnails and the image that gets shared.
+ */
+internal fun DrawScope.drawCurves(state: GraphState, colors: List<Color>, xMin: Double, yMax: Double, unitsPerPx: Double, sy: (Double) -> Float, strokePx: Float) {
+    state.functions.forEachIndexed { index, f ->
+        val color = colors[index % colors.size]
+        val plot = when (val curve = state.curves[index]) {
+            is Curve.Explicit -> curve.plot
+            is Curve.Implicit -> {
+                drawImplicit(curve.field, xMin, yMax, unitsPerPx, color)
+                return@forEachIndexed
+            }
+            null -> return@forEachIndexed
+        }
+        val path = Path()
+        var drawing = false
+        var lastY = 0f
+        val step = 2f
+        var px = 0f
+        while (px <= size.width) {
+            val y = plot.at(xMin + px * unitsPerPx)
+            val py = sy(y)
+            val ok = y.isFinite() && abs(py) < size.height * 4
+            // Break the line at holes and at jumps (asymptotes) instead of drawing a wall.
+            if (!ok || (drawing && abs(py - lastY) > size.height)) {
+                drawing = false
+            } else if (!drawing) {
+                path.moveTo(px, py)
+                drawing = true
+            } else {
+                path.lineTo(px, py)
+            }
+            lastY = py
+            px += step
+        }
+        drawPath(path, color, style = Stroke(width = strokePx, cap = StrokeCap.Round, join = StrokeJoin.Round))
     }
 }
 
@@ -743,7 +820,7 @@ private fun DrawScope.drawKeyPoints(
  * between the two samples. Cells straddling a pole (tan, 1/…) flip sign without a zero; their
  * centre is larger than any corner, and they are skipped.
  */
-private fun DrawScope.drawImplicit(field: Field, xMin: Double, yMax: Double, unitsPerPx: Double, color: Color) {
+internal fun DrawScope.drawImplicit(field: Field, xMin: Double, yMax: Double, unitsPerPx: Double, color: Color) {
     val cell = 3.dp.toPx()
     val cols = ceil(size.width / cell).toInt()
     val rows = ceil(size.height / cell).toInt()
@@ -790,7 +867,7 @@ private fun DrawScope.drawImplicit(field: Field, xMin: Double, yMax: Double, uni
 
 private fun Boolean.toInt() = if (this) 1 else 0
 
-private fun DrawScope.drawGrid(
+internal fun DrawScope.drawGrid(
     xMin: Double,
     yMax: Double,
     unitsPerPx: Double,

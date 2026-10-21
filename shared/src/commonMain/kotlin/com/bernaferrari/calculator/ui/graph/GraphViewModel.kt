@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bernaferrari.calculator.data.GraphDocument
 import com.bernaferrari.calculator.data.GraphStore
+import com.bernaferrari.calculator.data.SavedGraph
+import kotlin.time.Clock
 import com.bernaferrari.calculator.data.StoredParameter
 import com.bernaferrari.calculator.domain.input.CalcState
 import com.bernaferrari.calculator.domain.input.Calculator
@@ -75,6 +77,9 @@ data class GraphState(
     }
 }
 
+/** How many unpinned graphs recent keeps; pinned ones don't count. */
+const val RECENT_LIMIT = 30
+
 /** One per curve color; past six the plot turns to spaghetti. */
 const val MAX_FUNCTIONS = 6
 const val PARAMETERS = "abcd"
@@ -89,6 +94,14 @@ class GraphViewModel(private val store: GraphStore) : ViewModel() {
     private val _state = MutableStateFlow(store.load()?.toState() ?: GraphState())
     val state: StateFlow<GraphState> = _state
 
+    private val _recent = MutableStateFlow(store.loadRecent())
+
+    /** Every graph made here, newest first, the current one included once you move on from it. */
+    val recent: StateFlow<List<SavedGraph>> = _recent
+
+    /** The recent graphs worth showing: everything but the one on screen now. */
+    fun visibleRecent(): List<SavedGraph> = visibleRecent(_recent.value, _state.value)
+
     init {
         // Pans and slider drags change the state every frame; the disk only needs where they stop.
         _state.drop(1).debounce(400).onEach { store.save(it.toDocument()) }.launchIn(viewModelScope)
@@ -96,6 +109,49 @@ class GraphViewModel(private val store: GraphStore) : ViewModel() {
 
     public override fun onCleared() {
         store.save(_state.value.toDocument())
+        keep(_state.value)
+    }
+
+    /** Puts the current graph in recent and starts a blank one. */
+    fun onNewGraph() {
+        keep(_state.value)
+        _state.value = GraphState(functions = listOf(GraphFunction(Editor())))
+    }
+
+    /** Brings a recent graph back; the one on screen goes to recent first, so nothing is lost. */
+    fun onRestore(id: Long) {
+        val saved = _recent.value.firstOrNull { it.id == id } ?: return
+        keep(_state.value)
+        _state.value = saved.document.toState()
+        keep(_state.value)
+    }
+
+    fun onTogglePin(id: Long) = editRecent { list -> list.map { if (it.id == id) it.copy(pinned = !it.pinned) else it } }
+
+    fun onDelete(id: Long) = editRecent { list -> list.filterNot { it.id == id } }
+
+    /**
+     * Files [graph] in recent: the same functions update their entry (keeping its pin) instead of
+     * adding another. Empty graphs aren't kept.
+     */
+    private fun keep(graph: GraphState) {
+        val key = graph.key()
+        if (key.isEmpty()) return
+        val now = Clock.System.now().toEpochMilliseconds()
+        editRecent { list ->
+            val existing = list.firstOrNull { it.key() == key }
+            val entry = existing?.copy(document = graph.toDocument(), savedAt = now)
+                ?: SavedGraph(id = (list.maxOfOrNull { it.id } ?: 0L) + 1, document = graph.toDocument(), savedAt = now)
+            listOf(entry) + list.filterNot { it.id == entry.id }
+        }
+    }
+
+    private fun editRecent(change: (List<SavedGraph>) -> List<SavedGraph>) {
+        // Newest first; pinned graphs never roll off, the rest keep the latest [RECENT_LIMIT].
+        val changed = change(_recent.value).sortedByDescending { it.savedAt }
+        val unpinned = changed.filterNot { it.pinned }.take(RECENT_LIMIT).map { it.id }.toSet()
+        _recent.value = changed.filter { it.pinned || it.id in unpinned }
+        store.saveRecent(_recent.value)
     }
 
     fun onKey(key: Key) {
@@ -120,7 +176,13 @@ class GraphViewModel(private val store: GraphStore) : ViewModel() {
         if (!it.canAdd) it else it.copy(functions = it.functions + GraphFunction(Editor()), active = it.functions.size)
     }
 
-    fun onRemove(index: Int) = _state.update {
+    fun onRemove(index: Int) {
+        // Removing the last function ends this graph: keep it in recent first.
+        if (_state.value.functions.size <= 1) keep(_state.value)
+        removeAt(index)
+    }
+
+    private fun removeAt(index: Int) = _state.update {
         if (it.functions.size <= 1) {
             it.copy(functions = listOf(GraphFunction(Editor())), active = 0)
         } else {
@@ -178,6 +240,14 @@ class GraphViewModel(private val store: GraphStore) : ViewModel() {
     }
 }
 
+/** [recent] without the graph on screen, which would only repeat what's already there. */
+fun visibleRecent(recent: List<SavedGraph>, current: GraphState): List<SavedGraph> = recent.filter { it.key() != current.key() }
+
+/** What makes two graphs the same graph: their non-blank functions, in order. */
+private fun GraphState.key(): List<String> = functions.map { it.text }.filter { it.isNotBlank() }
+
+private fun SavedGraph.key(): List<String> = document.functions.filter { it.isNotBlank() }
+
 private fun GraphState.toDocument() = GraphDocument(
     functions = functions.map { it.text },
     active = active,
@@ -187,7 +257,7 @@ private fun GraphState.toDocument() = GraphDocument(
     parameters = parameters.map { (k, v) -> k.toString() to StoredParameter(v.value, v.min, v.max) }.toMap(),
 )
 
-private fun GraphDocument.toState(): GraphState {
+internal fun GraphDocument.toState(): GraphState {
     val functions = functions.take(MAX_FUNCTIONS).map { GraphFunction(Editor(it)) }.ifEmpty { listOf(GraphFunction(Editor())) }
     return GraphState(
         functions = functions,

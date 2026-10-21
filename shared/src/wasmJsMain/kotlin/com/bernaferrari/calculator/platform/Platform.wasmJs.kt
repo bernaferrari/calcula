@@ -2,6 +2,13 @@
 
 package com.bernaferrari.calculator.platform
 
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asSkiaBitmap
+import org.jetbrains.skia.EncodedImageFormat
+import org.jetbrains.skia.Image
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import com.bernaferrari.calculator.ui.calculator.Separators
@@ -41,3 +48,16 @@ actual val supportsDynamicColor: Boolean = false
 actual fun SystemBarsAppearance(darkTheme: Boolean) = Unit
 
 actual val systemConfirmsCopy: Boolean = false
+
+actual fun ImageBitmap.encodePng(): ByteArray =
+    Image.makeFromBitmap(asSkiaBitmap()).encodeToData(EncodedImageFormat.PNG)?.bytes ?: ByteArray(0)
+
+private fun download(url: String, name: String): Unit =
+    js("{ const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); }")
+
+/** Browsers have no share sheet for files everywhere, so the image downloads. */
+@OptIn(ExperimentalEncodingApi::class)
+@Composable
+actual fun rememberImageSharer(): (png: ByteArray, fileName: String) -> Unit = remember {
+    { png, fileName -> download("data:image/png;base64," + Base64.encode(png), fileName) }
+}

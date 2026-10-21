@@ -54,8 +54,6 @@
     <string name="settings_decimal_separator">Formato numerico</string>
     <string name="settings_show_tape">Mostra calcoli recenti</string>
     <string name="settings_show_tape_description">Tieni il rotolo sopra il risultato</string>
-    <string name="settings_flick_dots">Mostra punti funzione</string>
-    <string name="settings_flick_dots_description">Segna i tasti che nascondono funzioni</string>
     <string name="settings_feedback">Riscontro</string>
     <string name="settings_sounds">Suoni dei tasti</string>
     <string name="settings_sounds_description">Un clic leggero a ogni tocco</string>
@@ -77,12 +75,12 @@
     <string name="palette_pink">Rosa</string>
     <string name="palette_purple">Viola</string>
     <string name="palette_graphite">Grafite</string>
-    <string name="about_row">Informazioni su Calculator++</string>
+    <string name="about_row">Informazioni su Calcula</string>
     <string name="about_tagline">Scorri un tasto. Ottieni una funzione.</string>
     <string name="about_source">Codice sorgente</string>
     <string name="about_source_body">Open source su GitHub</string>
     <string name="about_feedback">Invia un feedback</string>
-    <string name="about_story">Calculator++ è nato nel 2011 come la calcolatrice a tasti scorrevoli di Sergey Solovyev. Questa versione la ricostruisce da zero: matematica decimale esatta, un rotolo riutilizzabile e tasti che nascondono una seconda e una terza funzione sotto il pollice.</string>
+    <string name="about_story">Calcula nasce da Calculator++, la calcolatrice a tasti scorrevoli creata da Sergey Solovyev nel 2011. È stata ricostruita da zero: matematica decimale esatta, un rotolo di carta riutilizzabile e tasti che nascondono una seconda e una terza funzione sotto il pollice.</string>
     <string name="about_elsewhere">Altrove</string>
     <string name="about_privacy">Niente pubblicità, niente account, niente tracciamento. I tuoi calcoli non lasciano mai questo dispositivo.</string>
     <string name="about_credit">Basato su Calculator++ di Sergey Solovyev</string>
@@ -103,4 +101,22 @@
     <string name="settings_theme">Tema</string>
     <string name="graph_play">Riproduci</string>
     <string name="graph_pause">Pausa</string>
+    <string name="graph_library">Grafici</string>
+    <string name="graph_new">Nuovo grafico</string>
+    <string name="graph_pinned">Fissati</string>
+    <string name="graph_recent">Recenti</string>
+    <string name="graph_pin">Fissa</string>
+    <string name="graph_unpin">Rimuovi</string>
+    <string name="graph_share">Condividi grafico</string>
+    <string name="graph_library_empty">I grafici che crei appaiono qui</string>
+    <string name="graph_open_library">Grafici recenti</string>
+    <string name="graph_delete">Elimina</string>
+    <string name="resize_pull_history">Trascina per la cronologia</string>
+    <string name="resize_release_history">Rilascia per la cronologia</string>
+    <string name="resize_pull_keypad">Trascina per la tastiera</string>
+    <string name="resize_release_keypad">Rilascia per la tastiera</string>
+    <string name="settings_flick_hints">Suggerimenti funzioni</string>
+    <string name="settings_flick_labels">Etichette</string>
+    <string name="settings_flick_dots_option">Punti</string>
+    <string name="settings_flick_none">Nessuno</string>
 </resources>

@@ -76,7 +76,6 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                     entry<Screen>(Screen.Settings) {
                         SettingsScreen(
                             onNavigateBack = back,
-                            onOpenConverter = { converterSeed = null; open(Screen.Converter) },
                             onOpenAbout = { open(Screen.About) },
                         )
                     }

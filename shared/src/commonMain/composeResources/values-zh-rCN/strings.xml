@@ -54,8 +54,6 @@
     <string name="settings_decimal_separator">数字格式</string>
     <string name="settings_show_tape">显示最近的计算</string>
     <string name="settings_show_tape_description">在结果上方保留纸带</string>
-    <string name="settings_flick_dots">显示函数圆点</string>
-    <string name="settings_flick_dots_description">标记藏有函数的按键</string>
     <string name="settings_feedback">反馈</string>
     <string name="settings_sounds">按键音</string>
     <string name="settings_sounds_description">每次按键轻轻一响</string>
@@ -77,12 +75,12 @@
     <string name="palette_pink">粉色</string>
     <string name="palette_purple">紫色</string>
     <string name="palette_graphite">石墨</string>
-    <string name="about_row">关于 Calculator++</string>
+    <string name="about_row">关于 Calcula</string>
     <string name="about_tagline">滑动按键，获得函数。</string>
     <string name="about_source">源代码</string>
     <string name="about_source_body">在 GitHub 上开源</string>
     <string name="about_feedback">发送反馈</string>
-    <string name="about_story">Calculator++ 始于 2011 年，是 Sergey Solovyev 的滑动按键计算器。这一版从零重建：精确的十进制运算、可重复使用的纸带，以及在拇指下藏着第二、第三个函数的按键。</string>
+    <string name="about_story">Calcula 源自 Sergey Solovyev 于 2011 年创建的滑动按键计算器 Calculator++。它从零重建：精确的十进制运算、可重复使用的纸带记录，以及在拇指下隐藏第二、第三个函数的按键。</string>
     <string name="about_elsewhere">其他地方</string>
     <string name="about_privacy">无广告、无账户、无追踪。你的计算永远不会离开这台设备。</string>
     <string name="about_credit">基于 Sergey Solovyev 的 Calculator++</string>
@@ -103,4 +101,22 @@
     <string name="settings_theme">主题</string>
     <string name="graph_play">播放</string>
     <string name="graph_pause">暂停</string>
+    <string name="graph_library">图表</string>
+    <string name="graph_new">新图表</string>
+    <string name="graph_pinned">已置顶</string>
+    <string name="graph_recent">最近</string>
+    <string name="graph_pin">置顶</string>
+    <string name="graph_unpin">取消置顶</string>
+    <string name="graph_share">分享图表</string>
+    <string name="graph_library_empty">你创建的图表会显示在这里</string>
+    <string name="graph_open_library">最近的图表</string>
+    <string name="graph_delete">删除</string>
+    <string name="resize_pull_history">下拉查看历史</string>
+    <string name="resize_release_history">松开查看历史</string>
+    <string name="resize_pull_keypad">上拉显示键盘</string>
+    <string name="resize_release_keypad">松开显示键盘</string>
+    <string name="settings_flick_hints">函数提示</string>
+    <string name="settings_flick_labels">标签</string>
+    <string name="settings_flick_dots_option">圆点</string>
+    <string name="settings_flick_none">无</string>
 </resources>

@@ -54,8 +54,6 @@
     <string name="settings_decimal_separator">Zahlenformat</string>
     <string name="settings_show_tape">Letzte Rechnungen zeigen</string>
     <string name="settings_show_tape_description">Den Papierstreifen über dem Ergebnis behalten</string>
-    <string name="settings_flick_dots">Funktionspunkte zeigen</string>
-    <string name="settings_flick_dots_description">Tasten markieren, die Funktionen verbergen</string>
     <string name="settings_feedback">Rückmeldung</string>
     <string name="settings_sounds">Tastentöne</string>
     <string name="settings_sounds_description">Ein leises Klicken bei jedem Tastendruck</string>
@@ -77,12 +75,12 @@
     <string name="palette_pink">Pink</string>
     <string name="palette_purple">Lila</string>
     <string name="palette_graphite">Graphit</string>
-    <string name="about_row">Über Calculator++</string>
+    <string name="about_row">Über Calcula</string>
     <string name="about_tagline">Taste wischen. Funktion erhalten.</string>
     <string name="about_source">Quellcode</string>
     <string name="about_source_body">Open Source auf GitHub</string>
     <string name="about_feedback">Feedback senden</string>
-    <string name="about_story">Calculator++ begann 2011 als Sergey Solovyevs Rechner mit Wischtasten. Diese Version baut ihn von Grund auf neu: exakte Dezimalrechnung, ein wiederverwendbarer Papierstreifen und Tasten, die unter deinem Daumen eine zweite und dritte Funktion verbergen.</string>
+    <string name="about_story">Calcula ist aus Calculator++ hervorgegangen, dem Rechner mit Wischtasten, den Sergey Solovyev 2011 begann. Er wurde von Grund auf neu gebaut: exakte Dezimalrechnung, ein Papierstreifen zum Wiederverwenden und Tasten, die unter deinem Daumen eine zweite und dritte Funktion verbergen.</string>
     <string name="about_elsewhere">Anderswo</string>
     <string name="about_privacy">Keine Werbung, keine Konten, kein Tracking. Deine Rechnungen verlassen dieses Gerät nie.</string>
     <string name="about_credit">Basiert auf Calculator++ von Sergey Solovyev</string>
@@ -103,4 +101,22 @@
     <string name="settings_theme">Design</string>
     <string name="graph_play">Abspielen</string>
     <string name="graph_pause">Pausieren</string>
+    <string name="graph_library">Graphen</string>
+    <string name="graph_new">Neuer Graph</string>
+    <string name="graph_pinned">Angeheftet</string>
+    <string name="graph_recent">Zuletzt</string>
+    <string name="graph_pin">Anheften</string>
+    <string name="graph_unpin">Loslösen</string>
+    <string name="graph_share">Graph teilen</string>
+    <string name="graph_library_empty">Deine Graphen erscheinen hier</string>
+    <string name="graph_open_library">Letzte Graphen</string>
+    <string name="graph_delete">Löschen</string>
+    <string name="resize_pull_history">Ziehen für Verlauf</string>
+    <string name="resize_release_history">Loslassen für Verlauf</string>
+    <string name="resize_pull_keypad">Ziehen für Tastatur</string>
+    <string name="resize_release_keypad">Loslassen für Tastatur</string>
+    <string name="settings_flick_hints">Funktionshinweise</string>
+    <string name="settings_flick_labels">Beschriftung</string>
+    <string name="settings_flick_dots_option">Punkte</string>
+    <string name="settings_flick_none">Keine</string>
 </resources>

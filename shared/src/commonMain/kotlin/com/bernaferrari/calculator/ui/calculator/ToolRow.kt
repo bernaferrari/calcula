@@ -6,6 +6,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material.icons.rounded.ExpandLess
 import androidx.compose.material.icons.rounded.UnfoldMore
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.animation.togetherWith
@@ -40,13 +41,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Dialpad
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -88,6 +89,8 @@ data class ResizeFeedback(
     /** The size relative to the default, in percent. */
     val percent: Int,
     val mode: Mode,
+    /** Letting go now would switch to history or back to the keypad (not just resize). */
+    val armed: Boolean = false,
 ) {
     enum class Mode { Resize, ToHistory, ToKeypad }
 }
@@ -131,7 +134,8 @@ fun ToolRow(
         ) { open ->
             if (open) {
                 IconButton(onClick = onToggleHistory) {
-                    Icon(Icons.Outlined.Dialpad, contentDescription = stringResource(Res.string.show_keypad), tint = quiet)
+                    // The keys come back up from below: a chevron says so better than a dial pad.
+                    Icon(Icons.Rounded.ExpandLess, contentDescription = stringResource(Res.string.show_keypad), tint = quiet)
                 }
             } else {
                 LayerSwitch(layer, onLayer)
@@ -151,6 +155,18 @@ fun ToolRow(
                     Icon(Icons.Outlined.MoreVert, contentDescription = stringResource(Res.string.more_options), tint = quiet)
                 }
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                    // The tools by name too: the menu is where people look, and it teaches the icons.
+                    DropdownMenuItem(
+                        text = { Text(stringResource(Res.string.graph_title)) },
+                        leadingIcon = { Icon(Icons.Outlined.ShowChart, contentDescription = null) },
+                        onClick = { menu = false; onOpenGraph() },
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(Res.string.menu_unit_converter)) },
+                        leadingIcon = { Icon(Icons.Outlined.Straighten, contentDescription = null) },
+                        onClick = { menu = false; onOpenConverter() },
+                    )
+                    HorizontalDivider()
                     if (!historyOpen) {
                         DropdownMenuItem(
                             text = { Text(stringResource(Res.string.settings_history)) },
@@ -189,12 +205,16 @@ private fun ResizePill(feedback: ResizeFeedback?, modifier: Modifier) {
     ) {
         val f = last ?: return@AnimatedVisibility
         val fill by animateFloatAsState(f.fraction, spring(stiffness = Spring.StiffnessHigh), label = "fill")
+        // Solid once letting go will act, like pull-to-refresh: the pill says what release does.
+        val solid = f.armed && f.mode != ResizeFeedback.Mode.Resize
+        val pillColor by animateColorAsState(if (solid) colors.primary else colors.primaryContainer, label = "pill")
+        val ink by animateColorAsState(if (solid) colors.onPrimary else colors.onPrimaryContainer, label = "pillInk")
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .height(40.dp)
                 .clip(CircleShape)
-                .background(colors.primaryContainer)
+                .background(pillColor)
                 .animateContentSize(spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMedium))
                 .padding(horizontal = 16.dp),
         ) {
@@ -208,10 +228,10 @@ private fun ResizePill(feedback: ResizeFeedback?, modifier: Modifier) {
                         when (mode) {
                             ResizeFeedback.Mode.Resize -> Icons.Rounded.UnfoldMore
                             ResizeFeedback.Mode.ToHistory -> Icons.Outlined.History
-                            ResizeFeedback.Mode.ToKeypad -> Icons.Outlined.Dialpad
+                            ResizeFeedback.Mode.ToKeypad -> Icons.Rounded.ExpandLess
                         },
                         contentDescription = null,
-                        tint = colors.onPrimaryContainer,
+                        tint = ink,
                         modifier = Modifier.size(20.dp),
                     )
                     Spacer(Modifier.width(8.dp))
@@ -220,7 +240,7 @@ private fun ResizePill(feedback: ResizeFeedback?, modifier: Modifier) {
                             Text(
                                 "${f.percent}%",
                                 style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 15.sp, fontWeight = FontWeight.Medium, fontFeatureSettings = "tnum"),
-                                color = colors.onPrimaryContainer,
+                                color = ink,
                                 modifier = Modifier.widthIn(min = 44.dp),
                             )
                             Spacer(Modifier.width(8.dp))
@@ -235,8 +255,16 @@ private fun ResizePill(feedback: ResizeFeedback?, modifier: Modifier) {
                                 )
                             }
                         }
-                        ResizeFeedback.Mode.ToHistory -> Text(stringResource(Res.string.settings_history), style = MaterialTheme.typography.labelLarge, color = colors.onPrimaryContainer)
-                        ResizeFeedback.Mode.ToKeypad -> Text(stringResource(Res.string.show_keypad), style = MaterialTheme.typography.labelLarge, color = colors.onPrimaryContainer)
+                        ResizeFeedback.Mode.ToHistory -> Text(
+                            stringResource(if (f.armed) Res.string.resize_release_history else Res.string.resize_pull_history),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = ink,
+                        )
+                        ResizeFeedback.Mode.ToKeypad -> Text(
+                            stringResource(if (f.armed) Res.string.resize_release_keypad else Res.string.resize_pull_keypad),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = ink,
+                        )
                     }
                 }
             }
@@ -245,7 +273,7 @@ private fun ResizePill(feedback: ResizeFeedback?, modifier: Modifier) {
 }
 
 @Composable
-private fun LayerSwitch(layer: FunctionLayer, onLayer: (FunctionLayer) -> Unit) {
+internal fun LayerSwitch(layer: FunctionLayer, onLayer: (FunctionLayer) -> Unit) {
     val colors = MaterialTheme.colorScheme
     val on = layer != FunctionLayer.Off
     val locked = layer == FunctionLayer.Locked

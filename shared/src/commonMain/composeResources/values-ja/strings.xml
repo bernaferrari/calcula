@@ -54,8 +54,6 @@
     <string name="settings_decimal_separator">数値の書式</string>
     <string name="settings_show_tape">最近の計算を表示</string>
     <string name="settings_show_tape_description">結果の上に計算の記録を表示</string>
-    <string name="settings_flick_dots">関数ドットを表示</string>
-    <string name="settings_flick_dots_description">関数が隠れているキーに印を付ける</string>
     <string name="settings_feedback">フィードバック</string>
     <string name="settings_sounds">キー音</string>
     <string name="settings_sounds_description">押すたびに小さなクリック音</string>
@@ -77,12 +75,12 @@
     <string name="palette_pink">ピンク</string>
     <string name="palette_purple">パープル</string>
     <string name="palette_graphite">グラファイト</string>
-    <string name="about_row">Calculator++ について</string>
+    <string name="about_row">Calcula について</string>
     <string name="about_tagline">キーをフリック。関数が手に入る。</string>
     <string name="about_source">ソースコード</string>
     <string name="about_source_body">GitHub でオープンソース</string>
     <string name="about_feedback">フィードバックを送る</string>
-    <string name="about_story">Calculator++ は 2011 年、Sergey Solovyev のフリック入力電卓として始まりました。このバージョンは一から作り直したものです。正確な 10 進数計算、再利用できる計算の記録、そして親指の下に第 2・第 3 の関数を隠したキー。</string>
+    <string name="about_story">Calcula は、Sergey Solovyev が 2011 年に始めたフリック入力電卓 Calculator++ から生まれました。ゼロから作り直し、正確な10進計算、再利用できる計算テープ、そして親指の下に第2・第3の関数を隠したキーを備えています。</string>
     <string name="about_elsewhere">そのほかのリンク</string>
     <string name="about_privacy">広告なし、アカウントなし、トラッキングなし。計算がこの端末の外に出ることはありません。</string>
     <string name="about_credit">Sergey Solovyev による Calculator++ が原作</string>
@@ -103,4 +101,22 @@
     <string name="settings_theme">テーマ</string>
     <string name="graph_play">再生</string>
     <string name="graph_pause">一時停止</string>
+    <string name="graph_library">グラフ</string>
+    <string name="graph_new">新しいグラフ</string>
+    <string name="graph_pinned">固定済み</string>
+    <string name="graph_recent">最近</string>
+    <string name="graph_pin">固定</string>
+    <string name="graph_unpin">固定を解除</string>
+    <string name="graph_share">グラフを共有</string>
+    <string name="graph_library_empty">作成したグラフがここに表示されます</string>
+    <string name="graph_open_library">最近のグラフ</string>
+    <string name="graph_delete">削除</string>
+    <string name="resize_pull_history">引き下げて履歴</string>
+    <string name="resize_release_history">離すと履歴</string>
+    <string name="resize_pull_keypad">引き上げてキーパッド</string>
+    <string name="resize_release_keypad">離すとキーパッド</string>
+    <string name="settings_flick_hints">関数のヒント</string>
+    <string name="settings_flick_labels">ラベル</string>
+    <string name="settings_flick_dots_option">ドット</string>
+    <string name="settings_flick_none">なし</string>
 </resources>

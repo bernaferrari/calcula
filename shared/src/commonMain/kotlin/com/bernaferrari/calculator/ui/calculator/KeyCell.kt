@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
@@ -265,13 +266,15 @@ fun KeyCell(
             val mainAlpha by animateFloatAsState(if (selection != null) 0.3f else 1f, label = "main")
             Box(Modifier.graphicsLayer { alpha = mainAlpha }) { label() }
             if (labelFlicks) {
-                val small = androidx.compose.ui.text.TextStyle(fontSize = 13.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Medium, fontFamily = com.bernaferrari.calculator.ui.theme.GoogleSansFlex)
-                up?.let { Text(it.label, style = small, color = content.copy(alpha = if (!it.enabled) 0.25f else if (selection == Swipe.Up) 1f else 0.55f), modifier = Modifier.align(Alignment.TopEnd).padding(end = 12.dp)) }
-                down?.let { Text(it.label, style = small, color = content.copy(alpha = if (!it.enabled) 0.25f else if (selection == Swipe.Down) 1f else 0.55f), modifier = Modifier.align(Alignment.BottomEnd).padding(end = 12.dp)) }
+                val small = androidx.compose.ui.text.TextStyle(fontSize = 11.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Medium, fontFamily = com.bernaferrari.calculator.ui.theme.GoogleSansFlex)
+                // The functions by name, small, above and below the label: what a flick that way types.
+                up?.let { Text(it.label, style = small, maxLines = 1, color = content.copy(alpha = if (!it.enabled) 0.25f else if (selection == Swipe.Up) 1f else 0.55f), modifier = Modifier.align(Alignment.TopCenter).offset(y = (-5).dp)) }
+                down?.let { Text(it.label, style = small, maxLines = 1, color = content.copy(alpha = if (!it.enabled) 0.25f else if (selection == Swipe.Down) 1f else 0.55f), modifier = Modifier.align(Alignment.BottomCenter).offset(y = 5.dp)) }
             }
             if (showDots && !labelFlicks) {
-                if (up != null) FlickDot(selection == Swipe.Up, content, Modifier.align(Alignment.TopCenter).padding(top = 3.dp))
-                if (down != null) FlickDot(selection == Swipe.Down, content, Modifier.align(Alignment.BottomCenter).padding(bottom = 3.dp))
+                // Close to the key's edges, clear of the label on every key size, the graph's short ones too.
+                if (up != null) FlickDot(selection == Swipe.Up, content, Modifier.align(Alignment.TopCenter).offset(y = (-3).dp))
+                if (down != null) FlickDot(selection == Swipe.Down, content, Modifier.align(Alignment.BottomCenter).offset(y = 3.dp))
             }
         }
 

@@ -4,14 +4,15 @@ plugins {
 }
 
 android {
-    // The Play listing has always been org.solovyev.android.calculator; keep it so updates land.
+    // Calcula ships under its own id. The old Calculator++ listing (org.solovyev.android.calculator)
+    // is a different app as far as Android and Play are concerned: no data or updates carry over.
     namespace = "com.bernaferrari.calculator"
     compileSdk {
         version = release(37) { minorApiLevel = 2 }
     }
 
     defaultConfig {
-        applicationId = "org.solovyev.android.calculator"
+        applicationId = "com.bernaferrari.calcula"
         minSdk = 26
         targetSdk = 37
         versionCode = 200

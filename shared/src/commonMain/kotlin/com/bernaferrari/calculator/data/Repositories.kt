@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.data
 
+import com.bernaferrari.calculator.domain.model.FlickHints
 import com.bernaferrari.calculator.domain.model.AngleUnit
 import com.bernaferrari.calculator.domain.model.AppPalette
 import com.bernaferrari.calculator.domain.model.CalculationHistory
@@ -41,7 +42,7 @@ class StoredPreferencesRepository(private val store: KeyValueStore) : Preference
     override suspend fun updateHapticFeedback(enabled: Boolean) = edit { it.copy(hapticFeedback = enabled) }
     override suspend fun updateShowHistory(enabled: Boolean) = edit { it.copy(showHistory = enabled) }
     override suspend fun updateDecimalSeparator(separator: DecimalSeparator) = edit { it.copy(decimalSeparator = separator) }
-    override suspend fun updateShowFlickDots(enabled: Boolean) = edit { it.copy(showFlickDots = enabled) }
+    override suspend fun updateFlickHints(hints: FlickHints) = edit { it.copy(flickHints = hints) }
     override suspend fun updateSoundEnabled(enabled: Boolean) = edit { it.copy(soundEnabled = enabled) }
     override suspend fun updateReduceMotion(enabled: Boolean) = edit { it.copy(reduceMotion = enabled) }
     override suspend fun updateHighContrast(enabled: Boolean) = edit { it.copy(highContrast = enabled) }
@@ -101,17 +102,32 @@ data class GraphDocument(
 @Serializable
 data class StoredParameter(val value: Double = 1.0, val min: Double = -10.0, val max: Double = 10.0)
 
+/** A graph kept in the recent list: what it was, when it was last looked at, and whether it's pinned. */
+@Serializable
+data class SavedGraph(
+    val id: Long,
+    val document: GraphDocument,
+    val savedAt: Long,
+    val pinned: Boolean = false,
+)
+
 interface GraphStore {
     fun load(): GraphDocument?
     fun save(document: GraphDocument)
+    fun loadRecent(): List<SavedGraph> = emptyList()
+    fun saveRecent(graphs: List<SavedGraph>) {}
 }
 
 /** The graph's functions, view and sliders, kept beside the settings. */
 class StoredGraphStore(private val store: KeyValueStore) : GraphStore {
     override fun load(): GraphDocument? = store.get(KEY)?.let { runCatching { json.decodeFromString<GraphDocument>(it) }.getOrNull() }
     override fun save(document: GraphDocument) = store.put(KEY, json.encodeToString(document))
+    override fun loadRecent(): List<SavedGraph> =
+        store.get(RECENT)?.let { runCatching { json.decodeFromString<List<SavedGraph>>(it) }.getOrNull() }.orEmpty()
+    override fun saveRecent(graphs: List<SavedGraph>) = store.put(RECENT, json.encodeToString(graphs))
 
     private companion object {
         const val KEY = "graph"
+        const val RECENT = "graph_recent"
     }
 }

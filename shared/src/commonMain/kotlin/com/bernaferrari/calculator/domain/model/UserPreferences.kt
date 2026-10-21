@@ -14,8 +14,10 @@ data class UserPreferences(
     val decimalSeparator: DecimalSeparator = DecimalSeparator.AUTO,
     val hapticFeedback: Boolean = true,
     val soundEnabled: Boolean = false,
-    /** Tiny dots on keys that hide flick functions. */
+    /** The old on/off for hint dots; read only to carry the choice over to [flickHints]. */
     val showFlickDots: Boolean = true,
+    /** How keys show the functions a flick reaches; null until chosen, see [hints]. */
+    val flickHints: FlickHints? = null,
     val reduceMotion: Boolean = false,
     val highContrast: Boolean = false,
     /** Whether the person has already flicked a key, so the swipe tip can go away for good. */
@@ -23,6 +25,12 @@ data class UserPreferences(
     /** The keypad's height relative to the default, set by dragging the bar above it. */
     val keypadScale: Float = 1f,
 )
+
+/** The hint style in effect: the chosen one, or what the old dots switch said. */
+val UserPreferences.hints: FlickHints get() = flickHints ?: if (showFlickDots) FlickHints.DOTS else FlickHints.NONE
+
+/** How a key shows its flick functions: their names above and below, two dots, or nothing. */
+enum class FlickHints { LABELS, DOTS, NONE }
 
 const val AUTO_DECIMALS = -1
 

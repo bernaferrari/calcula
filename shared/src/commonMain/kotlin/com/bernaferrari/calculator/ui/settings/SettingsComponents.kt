@@ -70,7 +70,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.outlined.Palette
-import androidx.compose.material.icons.outlined.Wallpaper
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.graphicsLayer
@@ -254,7 +254,6 @@ fun <T> ChoiceRow(
  */
 @Composable
 fun PaletteRow(position: SegmentPosition, selected: AppPalette, label: @Composable (AppPalette) -> String, onSelect: (AppPalette) -> Unit) {
-    val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
     RowSurface(position) {
         Column(Modifier.fillMaxWidth().selectableGroup().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             FlowRow(
@@ -264,15 +263,18 @@ fun PaletteRow(position: SegmentPosition, selected: AppPalette, label: @Composab
             ) {
                 availablePalettes.forEach { palette ->
                     val seed = Color(palette.seed)
-                    val wallpaper = if (palette == AppPalette.WALLPAPER) paletteColorScheme(palette, dark) else null
+                    // The wallpaper's richer tones (its light-theme colors) in both themes, so the swatch
+                    // is as vivid as the others instead of a washed-out pastel in dark mode.
+                    val wallpaper = if (palette == AppPalette.WALLPAPER) paletteColorScheme(palette, false) else null
                     PaletteSwatch(
                         // Wallpaper shows its own three colors; every other family its seed, lightening.
-                        colors = wallpaper?.let { listOf(it.primary, it.secondary, it.tertiary) }
+                        colors = wallpaper?.let { listOf(it.primary, it.tertiary, it.secondary) }
                             ?: listOf(seed, androidx.compose.ui.graphics.lerp(seed, Color.White, 0.45f)),
                         selected = palette == selected,
                         description = label(palette),
                         onClick = { onSelect(palette) },
-                        icon = if (wallpaper != null) Icons.Outlined.Wallpaper else null,
+                        // Sparkles: colors picked for you, from the wallpaper.
+                        icon = if (wallpaper != null) Icons.Rounded.AutoAwesome else null,
                     )
                 }
             }
@@ -333,6 +335,10 @@ private fun PaletteSwatch(colors: List<Color>, selected: Boolean, description: S
             .background(brush),
         contentAlignment = Alignment.Center,
     ) {
-        if (icon != null) Icon(icon, null, Modifier.size(size * 0.42f).rotate(-rotation), tint = Color.White)
+        if (icon != null) {
+            // Ink that reads on this swatch's own brightness, not always white.
+            val light = colors.map { it.luminance() }.average() > 0.45
+            Icon(icon, null, Modifier.size(size * 0.42f).rotate(-rotation), tint = if (light) Color.Black.copy(alpha = 0.75f) else Color.White)
+        }
     }
 }

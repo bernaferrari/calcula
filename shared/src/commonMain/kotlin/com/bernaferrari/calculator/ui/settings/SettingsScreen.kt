@@ -1,5 +1,7 @@
 package com.bernaferrari.calculator.ui.settings
 
+import com.bernaferrari.calculator.domain.model.hints
+import com.bernaferrari.calculator.domain.model.FlickHints
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -31,7 +33,6 @@ import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Palette
-import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.material.icons.outlined.SwipeVertical
 import androidx.compose.material.icons.outlined.Vibration
 import androidx.compose.material.icons.outlined.Explore
@@ -104,7 +105,7 @@ class SettingsViewModel(
     fun setDecimalPlaces(places: Int) = save { updateDecimalPlaces(places) }
     fun setDecimalSeparator(separator: DecimalSeparator) = save { updateDecimalSeparator(separator) }
     fun setShowHistory(enabled: Boolean) = save { updateShowHistory(enabled) }
-    fun setShowFlickDots(enabled: Boolean) = save { updateShowFlickDots(enabled) }
+    fun setFlickHints(hints: FlickHints) = save { updateFlickHints(hints) }
     fun setHaptics(enabled: Boolean) = save { updateHapticFeedback(enabled) }
     fun setSounds(enabled: Boolean) = save { updateSoundEnabled(enabled) }
     fun setReduceMotion(enabled: Boolean) = save { updateReduceMotion(enabled) }
@@ -116,7 +117,6 @@ private val DecimalChoices = listOf(AUTO_DECIMALS, 2, 4, 6, 10)
 @Composable
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
-    onOpenConverter: () -> Unit,
     onOpenAbout: () -> Unit,
     viewModel: SettingsViewModel = viewModel { SettingsViewModel() },
 ) {
@@ -216,7 +216,20 @@ fun SettingsScreen(
                             SwitchRow(p, Icons.Outlined.History, stringResource(Res.string.settings_show_tape), stringResource(Res.string.settings_show_tape_description), prefs.showHistory, viewModel::setShowHistory)
                         },
                         { p ->
-                            SwitchRow(p, Icons.Outlined.SwipeVertical, stringResource(Res.string.settings_flick_dots), stringResource(Res.string.settings_flick_dots_description), prefs.showFlickDots, viewModel::setShowFlickDots)
+                            ChoiceRow(
+                                p, Icons.Outlined.SwipeVertical, stringResource(Res.string.settings_flick_hints),
+                                FlickHints.entries, prefs.hints,
+                                label = {
+                                    stringResource(
+                                        when (it) {
+                                            FlickHints.LABELS -> Res.string.settings_flick_labels
+                                            FlickHints.DOTS -> Res.string.settings_flick_dots_option
+                                            FlickHints.NONE -> Res.string.settings_flick_none
+                                        },
+                                    )
+                                },
+                                onSelect = viewModel::setFlickHints,
+                            )
                         },
                     ),
                 )
@@ -237,7 +250,6 @@ fun SettingsScreen(
                 SettingsSection(
                     stringResource(Res.string.settings_more),
                     listOf(
-                        { p -> ActionRow(p, Icons.Outlined.Straighten, stringResource(Res.string.menu_unit_converter), onClick = onOpenConverter) },
                         { p -> ActionRow(p, Icons.Outlined.DeleteSweep, stringResource(Res.string.settings_clear_history), destructive = true, showChevron = false, onClick = { confirmClear = true }) },
                     ),
                 )

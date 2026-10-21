@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import com.bernaferrari.calculator.domain.model.FlickHints
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -75,7 +77,6 @@ private data class Spec(
     val down: Alt? = null,
     val flips: Boolean = up != null,
     /** Prints its flicks small in the top and bottom corners, for flicks nobody would guess. */
-    val labelsFlicks: Boolean = false,
 )
 
 /**
@@ -92,7 +93,7 @@ fun MainKeypad(
     onFunctionKey: (Key) -> Unit,
     onClearAll: () -> Unit,
     modifier: Modifier = Modifier,
-    showDots: Boolean = true,
+    hints: FlickHints = FlickHints.DOTS,
     bottomInset: Dp = 0.dp,
     /** For the graph: the `%` key becomes the variable `x` (flick up for `y`), in the accent so it's easy to find. */
     variable: Boolean = false,
@@ -110,7 +111,6 @@ fun MainKeypad(
                 up = Alt("y", Key.VARIABLE_Y),
                 down = nextParameter?.let { Alt(it.toString(), parameterKey(it), "parameter $it") },
                 flips = false,
-                labelsFlicks = true,
             ) else Spec(Key.PERCENT, "%", Tone.Function, "Percent"),
             // 1/x is "1 ÷ x", and sits under × (xʸ) like its counterpart.
             Spec(Key.DIVIDE, "÷", Tone.Operator, "Divide", up = Alt("1/x", Key.RECIPROCAL, "reciprocal")),
@@ -175,8 +175,13 @@ fun MainKeypad(
                         functionLayer = functionLayer,
                         // A wave from the top-left corner when the layer flips.
                         flipDelay = r * 35L + c * 25L,
-                        // Short rows have no room for hint dots; the flicks still work.
-                        showDots = showDots && rowHeight >= 60.dp,
+                        // Names need a roomy key; shorter ones (the graph's) fall back to dots, and
+                        // the shortest show nothing. The flicks always work.
+                        hints = when {
+                            hints == FlickHints.LABELS && rowHeight >= 60.dp -> FlickHints.LABELS
+                            hints != FlickHints.NONE && rowHeight >= 44.dp -> FlickHints.DOTS
+                            else -> FlickHints.NONE
+                        },
                         onKey = onKey,
                         onFunctionKey = onFunctionKey,
                         onClearAll = onClearAll,
@@ -220,7 +225,7 @@ private fun KeypadKey(
     haptics: Haptics,
     functionLayer: Boolean,
     flipDelay: Long,
-    showDots: Boolean,
+    hints: FlickHints,
     onKey: (Key) -> Unit,
     onFunctionKey: (Key) -> Unit,
     onClearAll: () -> Unit,
@@ -266,8 +271,9 @@ private fun KeypadKey(
         },
         up = spec.up?.let { Hint(it.label, it.description, enabled = it.key !in inert) { onFunctionKey(it.key) } },
         down = spec.down?.let { Hint(it.label, it.description, enabled = it.key !in inert) { onFunctionKey(it.key) } },
-        showDots = showDots && !onLayer,
-        labelFlicks = spec.labelsFlicks,
+        // On the ƒ layer the face already names both functions.
+        showDots = hints == FlickHints.DOTS && !onLayer,
+        labelFlicks = hints == FlickHints.LABELS && !onLayer,
         onLongClick = if (isDelete) ({ haptics.heavy(); onClearAll() }) else null,
         onPressedChange = onPressedChange,
         modifier = modifier,
@@ -280,15 +286,22 @@ private fun KeypadKey(
             },
         ) {
             when {
-                onLayer -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    val upAlpha by animateFloatAsState(if (spec.up!!.key in inert) 0.35f else 1f, label = "upAlpha")
-                    val downAlpha by animateFloatAsState(if (spec.down?.key in inert) 0.25f else 0.6f, label = "downAlpha")
-                    Text(spec.up!!.label, style = LayerStyle, color = content.copy(alpha = upAlpha))
-                    spec.down?.let { Text(it.label, style = LayerInverseStyle, color = content.copy(alpha = downAlpha)) }
+                onLayer -> BoxWithConstraints(contentAlignment = Alignment.Center) {
+                    // Short keys (the graph's) have no room for the second line; its flick still works.
+                    val roomy = maxHeight >= 48.dp
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        val upAlpha by animateFloatAsState(if (spec.up!!.key in inert) 0.35f else 1f, label = "upAlpha")
+                        val downAlpha by animateFloatAsState(if (spec.down?.key in inert) 0.25f else 0.6f, label = "downAlpha")
+                        Text(spec.up!!.label, style = LayerStyle, color = content.copy(alpha = upAlpha))
+                        if (roomy) spec.down?.let { Text(it.label, style = LayerInverseStyle, color = content.copy(alpha = downAlpha)) }
+                    }
                 }
                 isDelete -> Icon(Icons.AutoMirrored.Outlined.Backspace, contentDescription = null, tint = content, modifier = Modifier.size(28.dp))
                 else -> Text(
                     spec.label,
+                    // A lowercase x is only x-height tall, so centred as text it sits low beside
+                    // digits and operators; lifted, its middle lines up with theirs.
+                    modifier = if (spec.key == Key.VARIABLE) Modifier.offset(y = (-4).dp) else Modifier,
                     style = when (spec.tone) {
                         Tone.Digit -> DigitStyle
                         Tone.Function -> FunctionStyle

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Calculator++</string>
+    <string name="app_name">Calcula</string>
     <string name="theme_system">System</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
@@ -57,8 +57,6 @@
     <string name="settings_decimal_separator">Number format</string>
     <string name="settings_show_tape">Show recent calculations</string>
     <string name="settings_show_tape_description">Keep the tape above the result</string>
-    <string name="settings_flick_dots">Show function dots</string>
-    <string name="settings_flick_dots_description">Mark keys that hide functions</string>
     <string name="settings_feedback">Feedback</string>
     <string name="settings_sounds">Key sounds</string>
     <string name="settings_sounds_description">A soft click on every press</string>
@@ -80,12 +78,12 @@
     <string name="palette_pink">Pink</string>
     <string name="palette_purple">Purple</string>
     <string name="palette_graphite">Graphite</string>
-    <string name="about_row">About Calculator++</string>
+    <string name="about_row">About Calcula</string>
     <string name="about_tagline">Flick a key. Get a function.</string>
     <string name="about_source">Source code</string>
     <string name="about_source_body">Open source on GitHub</string>
     <string name="about_feedback">Send feedback</string>
-    <string name="about_story">Calculator++ started in 2011 as Sergey Solovyev’s swipe-key calculator. This version rebuilds it from scratch: exact decimal math, a paper tape you can reuse, and keys that hide a second and third function under your thumb.</string>
+    <string name="about_story">Calcula grows out of Calculator++, the swipe-key calculator Sergey Solovyev started in 2011. It is rebuilt from scratch: exact decimal math, a paper tape you can reuse, and keys that hide a second and third function under your thumb.</string>
     <string name="about_story_author">Bernardo Ferrari</string>
     <string name="about_elsewhere">Elsewhere</string>
     <string name="about_privacy">No ads, no accounts, no tracking. Your calculations never leave this device.</string>
@@ -107,4 +105,22 @@
     <string name="settings_theme">Theme</string>
     <string name="graph_play">Play</string>
     <string name="graph_pause">Pause</string>
+    <string name="graph_library">Graphs</string>
+    <string name="graph_new">New graph</string>
+    <string name="graph_pinned">Pinned</string>
+    <string name="graph_recent">Recent</string>
+    <string name="graph_pin">Pin</string>
+    <string name="graph_unpin">Unpin</string>
+    <string name="graph_share">Share graph</string>
+    <string name="graph_library_empty">Graphs you make show up here</string>
+    <string name="graph_open_library">Recent graphs</string>
+    <string name="graph_delete">Delete</string>
+    <string name="resize_pull_history">Pull down for history</string>
+    <string name="resize_release_history">Release for history</string>
+    <string name="resize_pull_keypad">Pull up for keypad</string>
+    <string name="resize_release_keypad">Release for keypad</string>
+    <string name="settings_flick_hints">Function hints</string>
+    <string name="settings_flick_labels">Labels</string>
+    <string name="settings_flick_dots_option">Dots</string>
+    <string name="settings_flick_none">None</string>
 </resources>

@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.domain.repository
 
+import com.bernaferrari.calculator.domain.model.FlickHints
 import com.bernaferrari.calculator.domain.model.AngleUnit
 import com.bernaferrari.calculator.domain.model.AppPalette
 import com.bernaferrari.calculator.domain.model.DecimalSeparator
@@ -24,7 +25,7 @@ interface PreferencesRepository {
 
     suspend fun updateDecimalSeparator(separator: DecimalSeparator)
 
-    suspend fun updateShowFlickDots(enabled: Boolean)
+    suspend fun updateFlickHints(hints: FlickHints)
 
     suspend fun updateSoundEnabled(enabled: Boolean)
 

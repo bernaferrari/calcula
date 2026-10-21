@@ -55,8 +55,6 @@
     <string name="settings_decimal_separator">Formato numérico</string>
     <string name="settings_show_tape">Mostrar cálculos recentes</string>
     <string name="settings_show_tape_description">Manter a fita acima do resultado</string>
-    <string name="settings_flick_dots">Mostrar pontos de função</string>
-    <string name="settings_flick_dots_description">Marcar teclas com funções escondidas</string>
     <string name="settings_feedback">Resposta</string>
     <string name="settings_sounds">Sons das teclas</string>
     <string name="settings_sounds_description">Um clique suave a cada toque</string>
@@ -78,12 +76,12 @@
     <string name="palette_pink">Rosa</string>
     <string name="palette_purple">Roxo</string>
     <string name="palette_graphite">Grafite</string>
-    <string name="about_row">Sobre o Calculator++</string>
+    <string name="about_row">Sobre o Calcula</string>
     <string name="about_tagline">Deslize uma tecla. Ganhe uma função.</string>
     <string name="about_source">Código-fonte</string>
     <string name="about_source_body">Código aberto no GitHub</string>
     <string name="about_feedback">Enviar feedback</string>
-    <string name="about_story">O Calculator++ nasceu em 2011 como a calculadora de teclas deslizantes de Sergey Solovyev. Esta versão o reconstrói do zero: matemática decimal exata, uma fita de papel que você pode reutilizar e teclas que escondem uma segunda e uma terceira função sob o seu polegar.</string>
+    <string name="about_story">O Calcula nasceu do Calculator++, a calculadora de teclas deslizantes que Sergey Solovyev criou em 2011. Foi refeito do zero: matemática decimal exata, uma fita de papel que você pode reutilizar e teclas que escondem uma segunda e uma terceira função sob o seu polegar.</string>
     <string name="about_story_author">Bernardo Ferrari</string>
     <string name="about_elsewhere">Em outros lugares</string>
     <string name="about_privacy">Sem anúncios, sem contas, sem rastreamento. Seus cálculos nunca saem deste aparelho.</string>
@@ -105,4 +103,22 @@
     <string name="settings_theme">Tema</string>
     <string name="graph_play">Reproduzir</string>
     <string name="graph_pause">Pausar</string>
+    <string name="graph_library">Gráficos</string>
+    <string name="graph_new">Novo gráfico</string>
+    <string name="graph_pinned">Fixados</string>
+    <string name="graph_recent">Recentes</string>
+    <string name="graph_pin">Fixar</string>
+    <string name="graph_unpin">Desafixar</string>
+    <string name="graph_share">Compartilhar gráfico</string>
+    <string name="graph_library_empty">Os gráficos que você criar aparecem aqui</string>
+    <string name="graph_open_library">Gráficos recentes</string>
+    <string name="graph_delete">Excluir</string>
+    <string name="resize_pull_history">Puxe para o histórico</string>
+    <string name="resize_release_history">Solte para o histórico</string>
+    <string name="resize_pull_keypad">Puxe para o teclado</string>
+    <string name="resize_release_keypad">Solte para o teclado</string>
+    <string name="settings_flick_hints">Dicas de funções</string>
+    <string name="settings_flick_labels">Rótulos</string>
+    <string name="settings_flick_dots_option">Pontos</string>
+    <string name="settings_flick_none">Nenhuma</string>
 </resources>

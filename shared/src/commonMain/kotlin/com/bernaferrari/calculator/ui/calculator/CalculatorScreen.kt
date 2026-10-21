@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import com.bernaferrari.calculator.domain.model.FlickHints
 import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Spring
@@ -35,6 +36,7 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.ExpandLess
 import androidx.compose.material.icons.outlined.Calculate
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Settings
@@ -65,6 +67,7 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerInputChange
+import androidx.compose.ui.input.pointer.util.VelocityTracker
 import kotlin.math.abs
 import androidx.compose.animation.core.Animatable
 import androidx.compose.runtime.getValue
@@ -199,7 +202,7 @@ fun CalculatorScreen(
                     Row(Modifier.statusBarsPadding().fillMaxWidth().padding(4.dp)) {
                         IconButton(onClick = { haptics.tap(); historyOpen = !historyOpen }) {
                             Icon(
-                                if (historyOpen) Icons.Outlined.Calculate else Icons.Outlined.History,
+                                if (historyOpen) Icons.Rounded.ExpandLess else Icons.Outlined.History,
                                 contentDescription = stringResource(if (historyOpen) Res.string.show_keypad else Res.string.show_history),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -234,7 +237,7 @@ fun CalculatorScreen(
                     onKey = viewModel::onKey,
                     onFunctionKey = viewModel::onSwipeKey,
                     onClearAll = { viewModel.onKey(Key.CLEAR) },
-                    showDots = false,
+                    hints = FlickHints.NONE,
                     inert = state.inert,
                     bottomInset = bottomInset,
                     modifier = Modifier.weight(0.4f).fillMaxHeight().statusBarsPadding(),
@@ -252,6 +255,7 @@ fun CalculatorScreen(
             val fullKeypad = rowHeight * 5 + bottomInset
             val reveal = remember { Animatable(if (historyOpen) 0f else 1f) }
             var pulling by remember { mutableStateOf(false) }
+            var armed by remember { mutableStateOf(false) }
             LaunchedEffect(historyOpen) {
                 if (!pulling) reveal.animateTo(if (historyOpen) 0f else 1f, spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow))
             }
@@ -271,6 +275,7 @@ fun CalculatorScreen(
                     if (scale == state.keypadScale) dragRow = null else viewModel.onKeypadScale(scale)
                 },
                 onHistory = { open -> historyOpen = open },
+                onArmed = { armed = it },
             )
             // The saved size has caught up with the finger: hand the height back to it.
             LaunchedEffect(state.keypadScale) { dragRow = null }
@@ -295,9 +300,11 @@ fun CalculatorScreen(
                             percent = (rowHeight / defaultRow * 100).roundToInt(),
                             mode = when {
                                 historyOpen -> ResizeFeedback.Mode.ToKeypad
-                                shown < 0.85f -> ResizeFeedback.Mode.ToHistory
+                                // Past the smallest size, the keys start to leave: this pull is about history.
+                                shown < 0.99f -> ResizeFeedback.Mode.ToHistory
                                 else -> ResizeFeedback.Mode.Resize
                             },
+                            armed = armed,
                         )
                     },
                     // Takes over the bottom inset as the keypad leaves, in step with it.
@@ -314,7 +321,7 @@ fun CalculatorScreen(
                         if (layer == FunctionLayer.Once) layer = FunctionLayer.Off
                     },
                     onClearAll = { viewModel.onKey(Key.CLEAR) },
-                    showDots = state.showFlickDots,
+                    hints = state.flickHints,
                     inert = state.inert,
                     bottomInset = bottomInset,
                     modifier = Modifier
@@ -353,6 +360,7 @@ private fun Modifier.keypadResize(
     onDone: (Dp) -> Unit,
     onHistory: (Boolean) -> Unit,
     defaultRow: Dp,
+    onArmed: (Boolean) -> Unit,
 ): Modifier {
     // The gesture outlives recompositions; it reads today's sizes, not the first frame's.
     val currentRow by rememberUpdatedState(rowHeight)
@@ -361,7 +369,7 @@ private fun Modifier.keypadResize(
     val currentHistory by rememberUpdatedState(historyOpen)
     val currentDone by rememberUpdatedState(onDone)
     val currentDefault by rememberUpdatedState(defaultRow)
-    return keypadResizeGesture({ currentRow }, { currentLimits }, { currentFull }, { currentHistory }, reveal, onPulling, onRow, onTick, { currentDone(it) }, onHistory, defaultRow = { currentDefault })
+    return keypadResizeGesture({ currentRow }, { currentLimits }, { currentFull }, { currentHistory }, reveal, onPulling, onRow, onTick, { currentDone(it) }, onHistory, defaultRow = { currentDefault }, onArmed = onArmed)
 }
 
 private fun Modifier.keypadResizeGesture(
@@ -377,6 +385,8 @@ private fun Modifier.keypadResizeGesture(
     onHistory: (Boolean) -> Unit,
     /** The size the keypad has by default: dragging past it catches there for a moment, with a tick. */
     defaultRow: () -> Dp,
+    /** Whether letting go now would switch between keypad and history, so the pill can say so. */
+    onArmed: (Boolean) -> Unit,
 ): Modifier = pointerInput(Unit) {
     var startRow = 0f
     var offset = 0f
@@ -385,7 +395,11 @@ private fun Modifier.keypadResizeGesture(
     var atLimit = false
     var atHome = false
     var row = 0.dp
+    var over = 0f
     val threshold = 72.dp.toPx()
+    // A quick flick commits even when it's short: the speed says what the distance doesn't.
+    val flick = 1200.dp.toPx()
+    val tracker = VelocityTracker()
     coroutineScope {
         val start: () -> Unit = {
             startRow = rowHeight().toPx()
@@ -394,10 +408,14 @@ private fun Modifier.keypadResizeGesture(
             past = false
             atLimit = false
             row = rowHeight()
+            over = 0f
+            tracker.resetTracking()
+            onArmed(false)
             onPulling(true)
         }
         val drag: (PointerInputChange, Float) -> Unit = drag@{ change, dy ->
             change.consume()
+            tracker.addPosition(change.uptimeMillis, change.position)
             offset += dy
             val full = fullKeypad().toPx()
             if (fromHistory) {
@@ -405,7 +423,7 @@ private fun Modifier.keypadResizeGesture(
                 val r = (-offset / full).coerceIn(0f, 1f)
                 launch { reveal.snapTo(r) }
                 val nowPast = -offset > threshold
-                if (nowPast != past) { past = nowPast; onTick() }
+                if (nowPast != past) { past = nowPast; onArmed(past); onTick() }
                 return@drag
             }
             // The keypad's top follows the finger: five rows share the change.
@@ -431,18 +449,21 @@ private fun Modifier.keypadResizeGesture(
             if (limited && !atLimit) onTick()
             atLimit = limited
             // Past the smallest size, the pull starts sending the keypad away.
-            val over = ((min - wanted) * 5f).coerceAtLeast(0f)
+            over = ((min - wanted) * 5f).coerceAtLeast(0f)
             launch { reveal.snapTo(1f - (over / full).coerceIn(0f, 1f)) }
             val nowPast = over > threshold
-            if (nowPast != past) { past = nowPast; onTick() }
+            if (nowPast != past) { past = nowPast; onArmed(past); onTick() }
         }
         val end: () -> Unit = end@{
             onPulling(false)
+            onArmed(false)
+            val speed = tracker.calculateVelocity().y
             if (fromHistory) {
-                if (past) onHistory(false) else launch { reveal.animateTo(0f, spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow)) }
+                val commit = past || (speed < -flick && -offset > 8.dp.toPx())
+                if (commit) onHistory(false) else launch { reveal.animateTo(0f, spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow)) }
                 return@end
             }
-            if (past) {
+            if (past || (over > 0f && speed > flick)) {
                 // A pull into history isn't a vote for tiny keys: they come back at the size they had.
                 onRow(null)
                 onHistory(true)
@@ -456,6 +477,7 @@ private fun Modifier.keypadResizeGesture(
         }
         val cancel: () -> Unit = {
             onPulling(false)
+            onArmed(false)
             launch { reveal.animateTo(if (historyOpen()) 0f else 1f) }
         }
         detectVerticalDragGestures(

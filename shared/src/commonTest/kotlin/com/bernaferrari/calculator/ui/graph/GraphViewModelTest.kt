@@ -2,6 +2,7 @@ package com.bernaferrari.calculator.ui.graph
 
 import com.bernaferrari.calculator.data.GraphDocument
 import com.bernaferrari.calculator.data.GraphStore
+import com.bernaferrari.calculator.data.SavedGraph
 import com.bernaferrari.calculator.domain.input.Key
 import com.bernaferrari.calculator.domain.math.Curve
 import kotlinx.coroutines.Dispatchers
@@ -16,14 +17,63 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 private class MemoryStore(var document: GraphDocument? = null) : GraphStore {
+    var recent: List<SavedGraph> = emptyList()
     override fun load() = document
     override fun save(document: GraphDocument) { this.document = document }
+    override fun loadRecent() = recent
+    override fun saveRecent(graphs: List<SavedGraph>) { recent = graphs }
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class GraphViewModelTest {
     @BeforeTest fun setUp() = Dispatchers.setMain(UnconfinedTestDispatcher())
     @AfterTest fun tearDown() = Dispatchers.resetMain()
+
+    @Test fun aNewGraphKeepsTheOldOneInRecent() {
+        val store = MemoryStore()
+        val vm = GraphViewModel(store)
+        vm.onExample("x²")
+        vm.onNewGraph()
+        assertEquals(listOf(""), vm.state.value.functions.map { it.text })
+        assertEquals(listOf(listOf("x²")), vm.recent.value.map { it.document.functions })
+        assertEquals(store.recent, vm.recent.value)
+        // An empty graph isn't worth keeping.
+        vm.onNewGraph()
+        assertEquals(1, vm.recent.value.size)
+    }
+
+    @Test fun restoringSwapsAndTheSameGraphIsKeptOnce() {
+        val vm = GraphViewModel(MemoryStore())
+        vm.onExample("x²")
+        vm.onParameter('a', 2.0)
+        vm.onNewGraph()
+        vm.onExample("sin(x)")
+        val squared = vm.recent.value.single()
+        vm.onRestore(squared.id)
+        assertEquals(listOf("x²"), vm.state.value.functions.map { it.text })
+        // sin(x) went to recent; x² is current, so it isn't listed twice.
+        assertEquals(listOf(listOf("sin(x)")), vm.visibleRecent().map { it.document.functions })
+        vm.onNewGraph()
+        assertEquals(2, vm.recent.value.size)
+        vm.onExample("x²")
+        vm.onNewGraph()
+        assertEquals(2, vm.recent.value.size)
+    }
+
+    @Test fun pinnedGraphsStayAndOthersRollOff() {
+        val vm = GraphViewModel(MemoryStore())
+        vm.onExample("x+0")
+        vm.onNewGraph()
+        vm.onTogglePin(vm.recent.value.single().id)
+        repeat(RECENT_LIMIT + 5) { i ->
+            vm.onExample("x+${i + 1}")
+            vm.onNewGraph()
+        }
+        assertEquals(RECENT_LIMIT + 1, vm.recent.value.size)
+        assertTrue(vm.recent.value.any { it.pinned && it.document.functions == listOf("x+0") })
+        vm.onDelete(vm.recent.value.first { it.pinned }.id)
+        assertTrue(vm.recent.value.none { it.pinned })
+    }
 
     @Test fun parametersGetSlidersAndTheNextLetter() {
         val vm = GraphViewModel(MemoryStore())
