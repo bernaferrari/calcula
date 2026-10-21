@@ -8,6 +8,7 @@ import com.bernaferrari.calculator.domain.input.Calculator
 import com.bernaferrari.calculator.domain.input.Editor
 import com.bernaferrari.calculator.domain.input.ExpressionEditor
 import com.bernaferrari.calculator.domain.input.Key
+import com.bernaferrari.calculator.domain.input.Span
 import com.bernaferrari.calculator.domain.input.Outcome
 import com.bernaferrari.calculator.domain.math.CalcError
 import com.bernaferrari.calculator.domain.model.AngleUnit
@@ -51,6 +52,10 @@ data class CalculatorUiState(
     val decimalSeparator: DecimalSeparator = DecimalSeparator.AUTO,
     /** Bumps on every `=` and clear, so the display can animate the hand-off. */
     val generation: Int = 0,
+    /** Keys that would do nothing to the expression right now; the keypad dims its functions. */
+    val inert: Set<Key> = emptySet(),
+    /** Text picked in the display, in raw offsets; the next key acts on it. */
+    val selection: Span? = null,
 ) {
     val openParentheses: Int get() = ExpressionEditor.openParentheses(text).coerceAtLeast(0)
 }
@@ -97,6 +102,8 @@ class CalculatorViewModel(
             keypadScale = prefs.keypadScale,
             decimalSeparator = prefs.decimalSeparator,
             generation = generation,
+            inert = Calculator.inertKeys(calc),
+            selection = calc.selection,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), CalculatorUiState(text = calc.value.editor.text))
 
@@ -130,7 +137,14 @@ class CalculatorViewModel(
     fun onSwipeKey(key: Key) = onKey(key)
 
     fun onCursorMoved(position: Int) {
-        calc.update { it.copy(editor = ExpressionEditor.moveCursor(it.editor, position), resultShown = false) }
+        calc.update { it.copy(editor = ExpressionEditor.moveCursor(it.editor, position), resultShown = false, selection = null) }
+    }
+
+    fun onSelect(selection: Span?) = calc.update { it.copy(selection = selection) }
+
+    /** Cut and paste: [start, end) of the expression becomes [text]. */
+    fun onReplace(start: Int, end: Int, text: String) {
+        setState(calc.value.copy(editor = ExpressionEditor.replaceRange(calc.value.editor, start, end, text), resultShown = false, error = null, selection = null))
     }
 
     /** Tapping an entry on the tape drops its result where the cursor is. */

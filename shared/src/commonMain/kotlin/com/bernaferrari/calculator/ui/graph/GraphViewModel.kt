@@ -75,7 +75,8 @@ data class GraphState(
     }
 }
 
-const val MAX_FUNCTIONS = 3
+/** One per curve color; past six the plot turns to spaghetti. */
+const val MAX_FUNCTIONS = 6
 const val PARAMETERS = "abcd"
 
 /**

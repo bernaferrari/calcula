@@ -138,6 +138,12 @@ object ExpressionEditor {
         return i
     }
 
+    /** Replaces [start, end) with [s], as cut and paste do; the cursor lands after it. */
+    fun replaceRange(e: Editor, start: Int, end: Int, s: String): Editor {
+        val from = start.coerceIn(0, e.text.length)
+        return replace(e, from, end.coerceIn(from, e.text.length), s)
+    }
+
     private fun insert(e: Editor, s: String): Editor = replace(e, e.cursor, e.cursor, s)
 
     private fun replace(e: Editor, start: Int, end: Int, s: String): Editor =

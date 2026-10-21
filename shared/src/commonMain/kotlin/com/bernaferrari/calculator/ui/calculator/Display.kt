@@ -67,6 +67,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalTextToolbar
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.platform.LocalDensity
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -84,6 +93,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bernaferrari.calculator.resources.*
 import com.bernaferrari.calculator.domain.input.Outcome
+import com.bernaferrari.calculator.domain.input.Span
 import com.bernaferrari.calculator.domain.math.CalcError
 import com.bernaferrari.calculator.domain.model.CalculationHistory
 import kotlinx.coroutines.delay
@@ -103,6 +113,7 @@ private data class Entry(
     val openParentheses: Int,
     val generation: Int,
     val angleUnit: AngleUnit,
+    val selection: Span?,
 )
 
 /**
@@ -116,6 +127,8 @@ fun CalculatorDisplay(
     haptics: Haptics,
     events: Flow<Outcome>,
     onCursorMoved: (Int) -> Unit,
+    onReplace: (start: Int, end: Int, text: String) -> Unit,
+    onSelect: (Span?) -> Unit,
     onToggleAngle: () -> Unit,
     onCopy: (String) -> Unit,
     onUseResult: (CalculationHistory) -> Unit,
@@ -171,7 +184,7 @@ fun CalculatorDisplay(
                 modifier = Modifier.weight(1f).fillMaxWidth(),
             )
             val entry = Entry(
-                state.text, state.cursor, state.resultShown, state.preview, state.error, state.openParentheses, state.generation, state.angleUnit,
+                state.text, state.cursor, state.resultShown, state.preview, state.error, state.openParentheses, state.generation, state.angleUnit, state.selection,
             )
             // History mode is about the past: the live entry steps aside until the keypad returns.
             AnimatedVisibility(
@@ -210,6 +223,8 @@ fun CalculatorDisplay(
                     formatter = formatter,
                     maxFontSize = entryMaxFontSize,
                     onCursorMoved = onCursorMoved,
+                    onReplace = onReplace,
+                    onSelect = onSelect,
                     onCursorTick = haptics::tick,
                     onToggleAngle = { haptics.tap(); onToggleAngle() },
                     onCopy = { haptics.heavy(); onCopy(it) },
@@ -227,6 +242,8 @@ private fun LiveEntry(
     formatter: DisplayFormatter,
     maxFontSize: TextUnit,
     onCursorMoved: (Int) -> Unit,
+    onReplace: (start: Int, end: Int, text: String) -> Unit,
+    onSelect: (Span?) -> Unit,
     onCursorTick: () -> Unit,
     onToggleAngle: () -> Unit,
     onCopy: (String) -> Unit,
@@ -237,8 +254,45 @@ private fun LiveEntry(
     val formatted = remember(entry.text, entry.openParentheses, formatColors) {
         formatter.format(entry.text, if (entry.resultShown) 0 else entry.openParentheses, formatColors)
     }
-    val density = LocalDensity.current
-        val copyText = entry.preview ?: entry.text
+    // Like any Android text field: double-tap selects a number or function, hold selects it all,
+    // and the system bar offers copy, cut, paste and select all. The selection lives in the
+    // calculator (keys act on it); here it's turned into display offsets. Empty = paste only.
+    val raw = { offset: Int -> formatted.displayToRaw[offset.coerceIn(0, formatted.displayToRaw.lastIndex)] }
+    val display = { offset: Int -> formatted.rawToDisplay[offset.coerceIn(0, entry.text.length)] }
+    val selection = entry.selection?.let { TextRange(display(it.start), display(it.end)) }
+    val currentOnSelect by rememberUpdatedState(onSelect)
+    val select = { range: TextRange? ->
+        currentOnSelect(range?.let { if (entry.text.isEmpty()) Span(0, 0) else Span(raw(it.min), raw(it.max)) })
+    }
+    var anchor by remember { mutableStateOf<Rect?>(null) }
+    val toolbar = LocalTextToolbar.current
+    val clipboard = LocalClipboardManager.current
+    val currentOnReplace by rememberUpdatedState(onReplace)
+    val currentOnCopy by rememberUpdatedState(onCopy)
+    LaunchedEffect(entry.selection, entry.text, anchor) {
+        val sel = entry.selection
+        val rect = anchor
+        if (sel == null || rect == null) {
+            toolbar.hide()
+            return@LaunchedEffect
+        }
+        val start = sel.start.coerceIn(0, entry.text.length)
+        val end = sel.end.coerceIn(start, entry.text.length)
+        val picked = entry.text.substring(start, end)
+        toolbar.showMenu(
+            rect = rect,
+            onCopyRequested = if (picked.isEmpty()) null else ({ currentOnCopy(picked); select(null) }),
+            onPasteRequested = if (clipboard.hasText()) ({
+                val pasted = clipboard.getText()?.text?.let { pastable(it, formatter.decimal) }.orEmpty()
+                select(null)
+                if (pasted.isNotEmpty()) currentOnReplace(start, end, pasted)
+            }) else null,
+            onCutRequested = if (picked.isEmpty()) null else ({ currentOnCopy(picked); select(null); currentOnReplace(start, end, "") }),
+            onSelectAllRequested = if (entry.text.isEmpty() || (start == 0 && end == entry.text.length)) null
+            else ({ currentOnSelect(Span(0, entry.text.length)) }),
+        )
+    }
+    DisposableEffect(Unit) { onDispose { toolbar.hide() } }
 
     Column(
         horizontalAlignment = Alignment.End,
@@ -251,7 +305,11 @@ private fun LiveEntry(
                 "0",
                 style = entryStyle(maxFontSize, GoogleSansFlex),
                 color = colors.onSurfaceVariant.copy(alpha = 0.45f),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onGloballyPositioned { anchor = it.boundsInRoot() }
+                    // Nothing to select yet, but holding still offers paste.
+                    .pointerInput(Unit) { detectTapGestures(onLongPress = { select(TextRange(0)) }) },
             )
         } else {
             ExpressionText(
@@ -261,12 +319,15 @@ private fun LiveEntry(
                 color = colors.onSurface,
                 onTap = { displayOffset ->
                     val raw = formatted.displayToRaw[displayOffset.coerceIn(0, formatted.displayToRaw.lastIndex)]
+                    if (entry.selection != null) select(null)
                     if (raw != entry.cursor || entry.resultShown) {
                         onCursorTick()
                         onCursorMoved(raw)
                     }
                 },
-                onLongPress = { onCopy(copyText) },
+                selection = selection,
+                onSelect = { select(it) },
+                onAnchor = { anchor = it },
             )
         }
         val error = entry.error
@@ -352,7 +413,10 @@ private fun ExpressionText(
     maxFontSize: TextUnit,
     color: Color,
     onTap: (Int) -> Unit,
-    onLongPress: () -> Unit,
+    selection: TextRange?,
+    onSelect: (TextRange) -> Unit,
+    /** Where the selection sits on screen, for the copy/paste bar. */
+    onAnchor: (Rect) -> Unit,
 ) {
     val measurer = rememberTextMeasurer()
     val cursorColor = MaterialTheme.colorScheme.primary
@@ -381,7 +445,17 @@ private fun ExpressionText(
         }
         var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
         val currentOnTap by rememberUpdatedState(onTap)
-        val currentOnLongPress by rememberUpdatedState(onLongPress)
+        val currentOnSelect by rememberUpdatedState(onSelect)
+        var coordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
+        val selectionColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.28f)
+        LaunchedEffect(selection, layout, coordinates) {
+            val l = layout ?: return@LaunchedEffect
+            val c = coordinates ?: return@LaunchedEffect
+            if (selection == null) return@LaunchedEffect
+            val bounds = if (selection.collapsed) l.getCursorRect(selection.start.coerceAtMost(l.layoutInput.text.length))
+            else l.getPathForRange(selection.min, selection.max).getBounds()
+            onAnchor(bounds.translate(c.positionInRoot()))
+        }
         Text(
             text = text,
             style = entryStyle(fontSize, GoogleSansFlex),
@@ -389,10 +463,12 @@ private fun ExpressionText(
             onTextLayout = { layout = it },
             modifier = Modifier
                 .fillMaxWidth()
+                .onGloballyPositioned { coordinates = it }
                 .pointerInput(Unit) {
                     detectTapGestures(
                         onTap = { position -> layout?.let { currentOnTap(it.getOffsetForPosition(position)) } },
-                        onLongPress = { currentOnLongPress() },
+                        onDoubleTap = { position -> layout?.let { currentOnSelect(it.wordAt(position)) } },
+                        onLongPress = { layout?.let { currentOnSelect(TextRange(0, it.layoutInput.text.length)) } },
                     )
                 }
                 .pointerInput(Unit) {
@@ -406,8 +482,12 @@ private fun ExpressionText(
                     )
                 }
                 .drawWithContent {
+                    val l = layout
+                    if (l != null && selection != null && !selection.collapsed) {
+                        drawPath(l.getPathForRange(selection.min, selection.max), selectionColor)
+                    }
                     drawContent()
-                    val l = layout ?: return@drawWithContent
+                    if (l == null || selection != null) return@drawWithContent
                     if (cursor == null || cursor > l.layoutInput.text.length) return@drawWithContent
                     val rect = l.getCursorRect(cursor)
                     val w = 2.5.dp.toPx()
@@ -419,4 +499,38 @@ private fun ExpressionText(
                 },
         )
     }
+}
+
+/** The number or function name under [position], or the single symbol there. */
+private fun TextLayoutResult.wordAt(position: Offset): TextRange {
+    val text = layoutInput.text.text
+    if (text.isEmpty()) return TextRange(0)
+    val at = getOffsetForPosition(position).coerceIn(0, text.length - 1)
+    fun numeric(c: Char) = c.isDigit() || c == '.' || c == ',' || c == '\u00A0' || c == '\u202F' || c == ' '
+    fun named(c: Char) = c.isLetter() || c == '⁻' || c == '¹'
+    val kind: ((Char) -> Boolean)? = when {
+        numeric(text[at]) -> ::numeric
+        named(text[at]) -> ::named
+        else -> null
+    }
+    if (kind == null) return TextRange(at, at + 1)
+    var start = at
+    while (start > 0 && kind(text[start - 1])) start--
+    var end = at + 1
+    while (end < text.length && kind(text[end])) end++
+    return TextRange(start, end)
+}
+
+/** Clipboard text as the calculator writes it: its own symbols, no grouping, `.` for decimals. */
+private fun pastable(text: String, decimal: Char): String {
+    var s = text.trim().filterNot { it.isWhitespace() || it == '\u00A0' || it == '\u202F' }
+    s = if (decimal == ',' && ',' in s) s.replace(".", "").replace(',', '.') else s.replace(",", "")
+    return s.map {
+        when (it) {
+            '*' -> '×'
+            '/', ':' -> '÷'
+            '-', '–' -> '−'
+            else -> it
+        }
+    }.joinToString("")
 }

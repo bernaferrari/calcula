@@ -13,6 +13,7 @@
     <string name="tape_delete">删除</string>
     <string name="copied">已复制</string>
     <string name="menu_settings">设置</string>
+    <string name="more_options">更多选项</string>
     <string name="menu_unit_converter">单位换算</string>
     <string name="angle_toggle_description">角度单位，点按切换</string>
     <string name="settings_appearance">外观</string>

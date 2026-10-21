@@ -71,7 +71,7 @@ import kotlin.math.min
 enum class Swipe { Up, Down }
 
 /** A secondary function reachable by flicking a key up or down. */
-data class Hint(val label: String, val description: String = label, val action: () -> Unit)
+data class Hint(val label: String, val description: String = label, val enabled: Boolean = true, val action: () -> Unit)
 
 
 /**
@@ -124,8 +124,8 @@ fun KeyCell(
                 onClick { currentOnClick(); true }
                 if (onLongClick != null) onLongClick { currentOnLongClick?.invoke(); true }
                 val actions = listOfNotNull(
-                    up?.let { CustomAccessibilityAction(it.description) { it.action(); true } },
-                    down?.let { CustomAccessibilityAction(it.description) { it.action(); true } },
+                    up?.takeIf { it.enabled }?.let { CustomAccessibilityAction(it.description) { it.action(); true } },
+                    down?.takeIf { it.enabled }?.let { CustomAccessibilityAction(it.description) { it.action(); true } },
                 )
                 if (actions.isNotEmpty()) customActions = actions
             }
@@ -228,8 +228,9 @@ fun KeyCell(
                     val inside = last.x in -margin..size.width + margin && last.y in -margin..size.height + margin
                     when {
                         cancelled || longPressed -> Unit
-                        current == Swipe.Up -> currentUp?.action?.invoke()
-                        current == Swipe.Down -> currentDown?.action?.invoke()
+                        // A function that would do nothing here is shown dimmed and picks nothing.
+                        current == Swipe.Up -> currentUp?.takeIf { it.enabled }?.action?.invoke()
+                        current == Swipe.Down -> currentDown?.takeIf { it.enabled }?.action?.invoke()
                         // Revealed the options but chose neither: that's a cancel, not the digit.
                         wasRevealed -> Unit
                         inside -> currentOnClick()
@@ -265,8 +266,8 @@ fun KeyCell(
             Box(Modifier.graphicsLayer { alpha = mainAlpha }) { label() }
             if (labelFlicks) {
                 val small = androidx.compose.ui.text.TextStyle(fontSize = 13.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Medium, fontFamily = com.bernaferrari.calculator.ui.theme.GoogleSansFlex)
-                up?.let { Text(it.label, style = small, color = content.copy(alpha = if (selection == Swipe.Up) 1f else 0.55f), modifier = Modifier.align(Alignment.TopEnd).padding(end = 12.dp)) }
-                down?.let { Text(it.label, style = small, color = content.copy(alpha = if (selection == Swipe.Down) 1f else 0.55f), modifier = Modifier.align(Alignment.BottomEnd).padding(end = 12.dp)) }
+                up?.let { Text(it.label, style = small, color = content.copy(alpha = if (!it.enabled) 0.25f else if (selection == Swipe.Up) 1f else 0.55f), modifier = Modifier.align(Alignment.TopEnd).padding(end = 12.dp)) }
+                down?.let { Text(it.label, style = small, color = content.copy(alpha = if (!it.enabled) 0.25f else if (selection == Swipe.Down) 1f else 0.55f), modifier = Modifier.align(Alignment.BottomEnd).padding(end = 12.dp)) }
             }
             if (showDots && !labelFlicks) {
                 if (up != null) FlickDot(selection == Swipe.Up, content, Modifier.align(Alignment.TopCenter).padding(top = 3.dp))
@@ -313,8 +314,8 @@ private fun FunctionOptions(
         ) {
             with(density) {
                 Box(Modifier.size(width = keyWidth.toDp().coerceAtLeast(pill), height = keyHeight.toDp() + (pill + gap) * 2)) {
-                    if (up != null) OptionPill(up.label, selection == Swipe.Up, Modifier.align(Alignment.TopCenter))
-                    if (down != null) OptionPill(down.label, selection == Swipe.Down, Modifier.align(Alignment.BottomCenter))
+                    if (up != null) OptionPill(up.label, selection == Swipe.Up, up.enabled, Modifier.align(Alignment.TopCenter))
+                    if (down != null) OptionPill(down.label, selection == Swipe.Down, down.enabled, Modifier.align(Alignment.BottomCenter))
                 }
             }
         }
@@ -322,8 +323,10 @@ private fun FunctionOptions(
 }
 
 @Composable
-private fun OptionPill(label: String, selected: Boolean, modifier: Modifier) {
+private fun OptionPill(label: String, selected: Boolean, enabled: Boolean, modifier: Modifier) {
     val colors = MaterialTheme.colorScheme
+    // A function with nothing to act on never lights up: it stays a quiet, faded pill.
+    @Suppress("NAME_SHADOWING") val selected = selected && enabled
     val scale by animateFloatAsState(if (selected) 1.12f else 1f, spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium), label = "pill")
     val container by androidx.compose.animation.animateColorAsState(if (selected) colors.primary else colors.secondaryContainer, label = "pillColor")
     val content = if (selected) colors.onPrimary else colors.onSecondaryContainer
@@ -338,12 +341,13 @@ private fun OptionPill(label: String, selected: Boolean, modifier: Modifier) {
                 clip = true
             }
             .background(container)
+            .graphicsLayer { alpha = if (enabled) 1f else 0.45f }
             .size(height = 52.dp, width = 84.dp),
     ) {
         Text(
             label,
             style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 22.sp, fontWeight = FontWeight.Medium),
-            color = content,
+            color = if (enabled) content else content.copy(alpha = 0.6f),
             maxLines = 1,
         )
     }

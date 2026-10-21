@@ -98,6 +98,8 @@ fun MainKeypad(
     variable: Boolean = false,
     /** For the graph: the slider parameter a flick down on `x` types, or null when none is left. */
     nextParameter: Char? = null,
+    /** Functions that would do nothing right now (`1/x` with nothing typed): shown dimmed, and inert. */
+    inert: Set<Key> = emptySet(),
 ) {
     val rows = listOf(
         listOf(
@@ -110,13 +112,14 @@ fun MainKeypad(
                 flips = false,
                 labelsFlicks = true,
             ) else Spec(Key.PERCENT, "%", Tone.Function, "Percent"),
-            Spec(Key.DIVIDE, "÷", Tone.Operator, "Divide"),
+            // 1/x is "1 ÷ x", and sits under × (xʸ) like its counterpart.
+            Spec(Key.DIVIDE, "÷", Tone.Operator, "Divide", up = Alt("1/x", Key.RECIPROCAL, "reciprocal")),
         ),
         listOf(
             Spec(Key.D7, "7", Tone.Digit, up = Alt("sin", Key.SIN), down = Alt("sin⁻¹", Key.ASIN, "arcsine")),
             Spec(Key.D8, "8", Tone.Digit, up = Alt("cos", Key.COS), down = Alt("cos⁻¹", Key.ACOS, "arccosine")),
             Spec(Key.D9, "9", Tone.Digit, up = Alt("tan", Key.TAN), down = Alt("tan⁻¹", Key.ATAN, "arctangent")),
-            Spec(Key.TIMES, "×", Tone.Operator, "Multiply", up = Alt("xʸ", Key.POWER, "power")),
+            Spec(Key.TIMES, "×", Tone.Operator, "Multiply", up = Alt("xʸ", Key.POWER, "power"), down = Alt("ʸ√x", Key.ROOT, "root")),
         ),
         listOf(
             Spec(Key.D4, "4", Tone.Digit, up = Alt("ln", Key.LN, "natural log"), down = Alt("eˣ", Key.EXP, "e to the power")),
@@ -127,7 +130,7 @@ fun MainKeypad(
         ),
         listOf(
             // Each number carries its own power and root: 1 over x, x², √ on 2, x³, ∛ on 3.
-            Spec(Key.D1, "1", Tone.Digit, up = Alt("1/x", Key.RECIPROCAL, "reciprocal"), down = Alt("x!", Key.FACTORIAL, "factorial")),
+            Spec(Key.D1, "1", Tone.Digit, up = Alt("x!", Key.FACTORIAL, "factorial"), down = Alt("|x|", Key.ABS, "absolute value")),
             Spec(Key.D2, "2", Tone.Digit, up = Alt("x²", Key.SQUARE, "squared"), down = Alt("√", Key.SQRT, "square root")),
             Spec(Key.D3, "3", Tone.Digit, up = Alt("x³", Key.CUBE, "cubed"), down = Alt("∛", Key.CBRT, "cube root")),
             Spec(Key.PLUS, "+", Tone.Operator, "Plus"),
@@ -179,6 +182,7 @@ fun MainKeypad(
                         onClearAll = onClearAll,
                         onPressedChange = { down -> pressedIndex = if (down) c else if (pressedIndex == c) -1 else pressedIndex },
                         modifier = Modifier.weight(weight).fillMaxHeight(),
+                        inert = inert,
                     )
                 }
             }
@@ -222,6 +226,7 @@ private fun KeypadKey(
     onClearAll: () -> Unit,
     onPressedChange: (Boolean) -> Unit,
     modifier: Modifier,
+    inert: Set<Key> = emptySet(),
 ) {
     val wantsLayer = functionLayer && spec.flips && spec.up != null
     // The face flips over its horizontal axis: out to 90°, swap the label, then spring back in.
@@ -251,9 +256,16 @@ private fun KeypadKey(
         haptics = haptics,
         // `=` answers with its own confirm/reject haptic once the result is known.
         pressHaptic = spec.key != Key.EQUALS,
-        onClick = { if (onLayer) onFunctionKey(spec.up!!.key) else onKey(spec.key) },
-        up = spec.up?.let { Hint(it.label, it.description) { onFunctionKey(it.key) } },
-        down = spec.down?.let { Hint(it.label, it.description) { onFunctionKey(it.key) } },
+        onClick = {
+            when {
+                // A dimmed function does nothing, and doesn't use up a one-shot ƒ either.
+                onLayer && spec.up!!.key in inert -> Unit
+                onLayer -> onFunctionKey(spec.up!!.key)
+                else -> onKey(spec.key)
+            }
+        },
+        up = spec.up?.let { Hint(it.label, it.description, enabled = it.key !in inert) { onFunctionKey(it.key) } },
+        down = spec.down?.let { Hint(it.label, it.description, enabled = it.key !in inert) { onFunctionKey(it.key) } },
         showDots = showDots && !onLayer,
         labelFlicks = spec.labelsFlicks,
         onLongClick = if (isDelete) ({ haptics.heavy(); onClearAll() }) else null,
@@ -269,8 +281,10 @@ private fun KeypadKey(
         ) {
             when {
                 onLayer -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(spec.up!!.label, style = LayerStyle, color = content)
-                    spec.down?.let { Text(it.label, style = LayerInverseStyle, color = content.copy(alpha = 0.6f)) }
+                    val upAlpha by animateFloatAsState(if (spec.up!!.key in inert) 0.35f else 1f, label = "upAlpha")
+                    val downAlpha by animateFloatAsState(if (spec.down?.key in inert) 0.25f else 0.6f, label = "downAlpha")
+                    Text(spec.up!!.label, style = LayerStyle, color = content.copy(alpha = upAlpha))
+                    spec.down?.let { Text(it.label, style = LayerInverseStyle, color = content.copy(alpha = downAlpha)) }
                 }
                 isDelete -> Icon(Icons.AutoMirrored.Outlined.Backspace, contentDescription = null, tint = content, modifier = Modifier.size(28.dp))
                 else -> Text(

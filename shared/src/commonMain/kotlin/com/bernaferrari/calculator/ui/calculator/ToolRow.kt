@@ -1,13 +1,30 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material.icons.rounded.UnfoldMore
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
+import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -25,14 +42,20 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Dialpad
 import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Straighten
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.material.icons.outlined.ShowChart
 import androidx.compose.ui.Modifier
@@ -53,12 +76,26 @@ import com.bernaferrari.calculator.ui.theme.GoogleSansFlex
 /** Off shows digits; Once flips back after one function, like Shift; Locked stays, like Caps Lock. */
 enum class FunctionLayer { Off, Once, Locked }
 
-private val SegmentWidth = 60.dp
+private val SegmentWidth = 48.dp
 private val SegmentStyle @Composable get() = TextStyle(fontFamily = GoogleSansFlex, fontSize = 16.sp, fontWeight = FontWeight.Medium)
 
+/** What a drag on the bar is doing right now, for the pill that stands in for the bar meanwhile. */
+data class ResizeFeedback(
+    /** Where the keypad's size sits between its smallest (0) and tallest (1). */
+    val fraction: Float,
+    /** Where the default size sits on that same scale, marked on the track. */
+    val defaultFraction: Float,
+    /** The size relative to the default, in percent. */
+    val percent: Int,
+    val mode: Mode,
+) {
+    enum class Mode { Resize, ToHistory, ToKeypad }
+}
+
 /**
- * The row between display and keypad: history on the left, the 123/ƒ switch in the middle and
- * settings on the right. Everything that isn't a key lives here, in one predictable place.
+ * The row between display and keypad: the 123/ƒ switch on the left, by the keys it changes;
+ * graph and converter on the right, with history and settings in the overflow. Drag the bar up
+ * or down to resize the keypad (a pill shows the size meanwhile); keep pulling down for history.
  */
 @Composable
 fun ToolRow(
@@ -70,47 +107,138 @@ fun ToolRow(
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
     onOpenGraph: () -> Unit = {},
-    /** Shows a grab handle on top: the bar can be dragged to resize the keypad. */
-    handle: Boolean = false,
+    /** Set while the bar is being dragged: the controls step back and a pill shows the size. */
+    resize: ResizeFeedback? = null,
 ) {
     val quiet = MaterialTheme.colorScheme.onSurfaceVariant
-    Box(modifier.fillMaxWidth().height(if (handle) 60.dp else 52.dp).padding(horizontal = 8.dp).padding(top = if (handle) 8.dp else 0.dp)) {
-        if (handle) {
-            Box(
-                Modifier
-                    .align(Alignment.TopCenter)
-                    .offset(y = (-6).dp)
-                    .size(width = 32.dp, height = 4.dp)
-                    .background(quiet.copy(alpha = 0.35f), CircleShape),
-            )
-        }
-        Row(Modifier.align(Alignment.CenterStart)) {
-            IconButton(onClick = onToggleHistory) {
-                Icon(
-                    if (historyOpen) Icons.Outlined.Dialpad else Icons.Outlined.History,
-                    contentDescription = stringResource(if (historyOpen) Res.string.show_keypad else Res.string.show_history),
-                    tint = quiet,
-                )
+    val dragging = resize != null
+    val step by animateFloatAsState(if (dragging) 1f else 0f, spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMedium), label = "step")
+    Box(modifier.fillMaxWidth().height(52.dp).padding(horizontal = 8.dp)) {
+        Box(
+            Modifier.matchParentSize().graphicsLayer {
+                alpha = 1f - step
+                scaleX = 1f - 0.08f * step
+                scaleY = 1f - 0.08f * step
+            },
+        ) {
+        // Functions mean nothing while browsing history, so the switch becomes the way back.
+        AnimatedContent(
+            historyOpen,
+            transitionSpec = { (fadeIn() + scaleIn(initialScale = 0.9f)) togetherWith (fadeOut() + scaleOut(targetScale = 0.9f)) },
+            contentAlignment = Alignment.CenterStart,
+            modifier = Modifier.align(Alignment.CenterStart).padding(start = 4.dp),
+            label = "left",
+        ) { open ->
+            if (open) {
+                IconButton(onClick = onToggleHistory) {
+                    Icon(Icons.Outlined.Dialpad, contentDescription = stringResource(Res.string.show_keypad), tint = quiet)
+                }
+            } else {
+                LayerSwitch(layer, onLayer)
             }
+        }
+        Row(Modifier.align(Alignment.CenterEnd)) {
             IconButton(onClick = onOpenGraph, modifier = Modifier.containerTransform("graph")) {
                 Icon(Icons.Outlined.ShowChart, contentDescription = stringResource(Res.string.graph_title), tint = quiet)
             }
-        }
-        // Functions mean nothing while browsing history, so the switch steps out of the way.
-        AnimatedVisibility(
-            !historyOpen,
-            enter = fadeIn() + scaleIn(initialScale = 0.9f),
-            exit = fadeOut() + scaleOut(targetScale = 0.9f),
-            modifier = Modifier.align(Alignment.Center),
-        ) {
-            LayerSwitch(layer, onLayer)
-        }
-        Row(Modifier.align(Alignment.CenterEnd)) {
             IconButton(onClick = onOpenConverter, modifier = Modifier.containerTransform("converter")) {
                 Icon(Icons.Outlined.Straighten, contentDescription = stringResource(Res.string.menu_unit_converter), tint = quiet)
             }
-            IconButton(onClick = onOpenSettings, modifier = Modifier.containerTransform("settings")) {
-                Icon(Icons.Outlined.Settings, contentDescription = stringResource(Res.string.menu_settings), tint = quiet)
+            var menu by remember { mutableStateOf(false) }
+            // Settings grows out of the overflow button, so its container transform starts here.
+            Box(Modifier.containerTransform("settings")) {
+                IconButton(onClick = { menu = true }) {
+                    Icon(Icons.Outlined.MoreVert, contentDescription = stringResource(Res.string.more_options), tint = quiet)
+                }
+                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                    if (!historyOpen) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(Res.string.settings_history)) },
+                            leadingIcon = { Icon(Icons.Outlined.History, contentDescription = null) },
+                            onClick = { menu = false; onToggleHistory() },
+                        )
+                    }
+                    DropdownMenuItem(
+                        text = { Text(stringResource(Res.string.menu_settings)) },
+                        leadingIcon = { Icon(Icons.Outlined.Settings, contentDescription = null) },
+                        onClick = { menu = false; onOpenSettings() },
+                    )
+                }
+            }
+        }
+        }
+        ResizePill(resize, Modifier.align(Alignment.Center))
+    }
+}
+
+/**
+ * Stands in for the bar while it's dragged: an arrow, the size in percent and a small track with
+ * the default marked. Pulled past the smallest size it says where the pull is going instead.
+ */
+@Composable
+private fun ResizePill(feedback: ResizeFeedback?, modifier: Modifier) {
+    val colors = MaterialTheme.colorScheme
+    // Keeps showing the last reading while the pill animates away.
+    var last by remember { mutableStateOf(feedback) }
+    if (feedback != null) last = feedback
+    AnimatedVisibility(
+        feedback != null,
+        enter = fadeIn(tween(90)) + scaleIn(spring(dampingRatio = 0.55f, stiffness = Spring.StiffnessMedium), initialScale = 0.6f),
+        exit = fadeOut(tween(140)) + scaleOut(tween(160), targetScale = 0.85f),
+        modifier = modifier,
+    ) {
+        val f = last ?: return@AnimatedVisibility
+        val fill by animateFloatAsState(f.fraction, spring(stiffness = Spring.StiffnessHigh), label = "fill")
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .height(40.dp)
+                .clip(CircleShape)
+                .background(colors.primaryContainer)
+                .animateContentSize(spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMedium))
+                .padding(horizontal = 16.dp),
+        ) {
+            AnimatedContent(
+                f.mode,
+                transitionSpec = { (fadeIn() + scaleIn(initialScale = 0.6f)) togetherWith (fadeOut() + scaleOut(targetScale = 0.6f)) },
+                label = "pillMode",
+            ) { mode ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        when (mode) {
+                            ResizeFeedback.Mode.Resize -> Icons.Rounded.UnfoldMore
+                            ResizeFeedback.Mode.ToHistory -> Icons.Outlined.History
+                            ResizeFeedback.Mode.ToKeypad -> Icons.Outlined.Dialpad
+                        },
+                        contentDescription = null,
+                        tint = colors.onPrimaryContainer,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    when (mode) {
+                        ResizeFeedback.Mode.Resize -> {
+                            Text(
+                                "${f.percent}%",
+                                style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 15.sp, fontWeight = FontWeight.Medium, fontFeatureSettings = "tnum"),
+                                color = colors.onPrimaryContainer,
+                                modifier = Modifier.widthIn(min = 44.dp),
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            // The track: how far between smallest and tallest, with a notch at the default.
+                            Box(Modifier.size(width = 72.dp, height = 6.dp).clip(CircleShape).background(colors.onPrimaryContainer.copy(alpha = 0.18f))) {
+                                Box(Modifier.fillMaxHeight().fillMaxWidth(fill.coerceIn(0f, 1f)).clip(CircleShape).background(colors.primary))
+                                Box(
+                                    Modifier
+                                        .offset(x = 72.dp * f.defaultFraction.coerceIn(0f, 1f) - 1.dp)
+                                        .size(width = 2.dp, height = 6.dp)
+                                        .background(colors.onPrimaryContainer.copy(alpha = 0.7f)),
+                                )
+                            }
+                        }
+                        ResizeFeedback.Mode.ToHistory -> Text(stringResource(Res.string.settings_history), style = MaterialTheme.typography.labelLarge, color = colors.onPrimaryContainer)
+                        ResizeFeedback.Mode.ToKeypad -> Text(stringResource(Res.string.show_keypad), style = MaterialTheme.typography.labelLarge, color = colors.onPrimaryContainer)
+                    }
+                }
             }
         }
     }
@@ -121,11 +249,14 @@ private fun LayerSwitch(layer: FunctionLayer, onLayer: (FunctionLayer) -> Unit) 
     val colors = MaterialTheme.colorScheme
     val on = layer != FunctionLayer.Off
     val locked = layer == FunctionLayer.Locked
-    val indicatorOffset by animateDpAsState(
-        if (on) SegmentWidth else 0.dp,
-        spring(dampingRatio = 0.62f, stiffness = Spring.StiffnessMediumLow),
-        label = "indicator",
-    )
+    val segment = with(LocalDensity.current) { SegmentWidth.toPx() }
+    // The indicator is also a thumb: slide it between 123 and ƒ, like an iOS segmented control.
+    val indicator = remember { Animatable(if (on) segment else 0f) }
+    var dragging by remember { mutableStateOf(false) }
+    val settle = spring<Float>(dampingRatio = 0.62f, stiffness = Spring.StiffnessMediumLow)
+    LaunchedEffect(on) { if (!dragging) indicator.animateTo(if (on) segment else 0f, settle) }
+    val scope = rememberCoroutineScope()
+    val currentLayer by rememberUpdatedState(layer)
     val indicatorColor by animateColorAsState(
         when {
             locked -> colors.primary
@@ -140,11 +271,35 @@ private fun LayerSwitch(layer: FunctionLayer, onLayer: (FunctionLayer) -> Unit) 
             .height(40.dp)
             .width(SegmentWidth * 2)
             .clip(CircleShape)
-            .background(colors.surfaceContainer),
+            .background(colors.surfaceContainer)
+            .pointerInput(segment) {
+                detectHorizontalDragGestures(
+                    onDragStart = { dragging = true },
+                    onHorizontalDrag = { change, dx ->
+                        change.consume()
+                        scope.launch { indicator.snapTo((indicator.value + dx).coerceIn(0f, segment)) }
+                    },
+                    onDragEnd = {
+                        dragging = false
+                        val toFunctions = indicator.value > segment / 2
+                        scope.launch { indicator.animateTo(if (toFunctions) segment else 0f, settle) }
+                        val next = when {
+                            !toFunctions -> FunctionLayer.Off
+                            currentLayer == FunctionLayer.Off -> FunctionLayer.Once
+                            else -> currentLayer
+                        }
+                        if (next != currentLayer) onLayer(next)
+                    },
+                    onDragCancel = {
+                        dragging = false
+                        scope.launch { indicator.animateTo(if (currentLayer != FunctionLayer.Off) segment else 0f, settle) }
+                    },
+                )
+            },
     ) {
         Box(
             Modifier
-                .offset(x = indicatorOffset)
+                .offset { IntOffset(indicator.value.roundToInt(), 0) }
                 .width(SegmentWidth)
                 .fillMaxHeight()
                 .padding(3.dp)

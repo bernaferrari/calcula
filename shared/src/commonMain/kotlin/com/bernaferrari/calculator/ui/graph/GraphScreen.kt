@@ -33,6 +33,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -172,6 +183,7 @@ fun GraphScreen(
                     colors = colors,
                     formatter = formatter,
                     onActivate = { haptics.tap(); viewModel.onActivate(it) },
+                    onCursor = { index, position -> haptics.tick(); viewModel.onActivate(index); viewModel.onCursorMoved(position) },
                     onRemove = { haptics.heavy(); viewModel.onRemove(it) },
                     onAdd = { haptics.tap(); viewModel.onAdd() },
                     onExample = { haptics.tap(); viewModel.onExample(it) },
@@ -212,12 +224,39 @@ fun GraphScreen(
                     }
                 }
             } else {
-                val rowHeight = (maxHeight * 0.36f / 5).coerceIn(52.dp, 72.dp)
+                val rowHeight = (maxHeight * 0.34f / 5).coerceIn(50.dp, 68.dp)
+                val keypad = rowHeight * 5 + bottomInset
+                val top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 56.dp
+                // The plot is the point: it always keeps a good share of the screen. The functions and
+                // sliders get what's left and scroll beyond that, instead of squeezing the plot to a strip.
+                val minPlot = maxOf(200.dp, maxHeight * 0.3f)
+                val panel = (maxHeight - top - keypad - minPlot).coerceAtLeast(96.dp)
                 Column(Modifier.fillMaxSize()) {
                     header()
                     plot(Modifier.weight(1f).fillMaxWidth())
-                    functions()
-                    keys(Modifier.fillMaxWidth().height(rowHeight * 5 + bottomInset))
+                    val scroll = rememberScrollState()
+                    Column(
+                        Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = panel)
+                            // When more is below (examples, sliders), the edge fades to say so.
+                            .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+                            .drawWithContent {
+                                drawContent()
+                                if (scroll.canScrollForward) {
+                                    val fade = 28.dp.toPx()
+                                    drawRect(
+                                        Brush.verticalGradient(listOf(Color.Black, Color.Transparent), startY = size.height - fade, endY = size.height),
+                                        topLeft = Offset(0f, size.height - fade),
+                                        blendMode = BlendMode.DstIn,
+                                    )
+                                }
+                            }
+                            .verticalScroll(scroll),
+                    ) {
+                        functions()
+                    }
+                    keys(Modifier.fillMaxWidth().height(keypad))
                 }
             }
         }
@@ -225,7 +264,7 @@ fun GraphScreen(
 }
 
 /**
- * One color per function: the theme's accent first, then orange and green, chosen to stay apart
+ * One color per function: the theme's accent first, then orange, green, blue, purple and teal, chosen to stay apart
  * from every palette and from each other, lighter on dark backgrounds.
  */
 @Composable
@@ -235,6 +274,9 @@ private fun curveColors(): List<Color> {
         MaterialTheme.colorScheme.primary,
         if (dark) Color(0xFFFFB06B) else Color(0xFFD9640B),
         if (dark) Color(0xFF7FD99A) else Color(0xFF1E8E3E),
+        if (dark) Color(0xFF8AB4F8) else Color(0xFF1A73E8),
+        if (dark) Color(0xFFD7AEFB) else Color(0xFF9334E6),
+        if (dark) Color(0xFF78D9EC) else Color(0xFF007B83),
     )
 }
 
@@ -244,21 +286,28 @@ private fun FunctionList(
     colors: List<Color>,
     formatter: DisplayFormatter,
     onActivate: (Int) -> Unit,
+    /** A tap inside a function's text: make it active and put the cursor there (a raw offset). */
+    onCursor: (index: Int, position: Int) -> Unit,
     onRemove: (Int) -> Unit,
     onAdd: () -> Unit,
     onExample: (String) -> Unit,
 ) {
     val scheme = MaterialTheme.colorScheme
-    Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         state.functions.forEachIndexed { index, function ->
             val active = index == state.active
             val field by animateColorAsState(if (active) scheme.surfaceContainerHigh else Color.Transparent, label = "field")
             val invalid = function.text.isNotBlank() && state.curves[index] == null && !state.pending(index)
+            // The row being typed into stays on screen when the list scrolls.
+            val inView = remember { BringIntoViewRequester() }
+            LaunchedEffect(active, function.text) { if (active) inView.bringIntoView() }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
+                    .bringIntoViewRequester(inView)
                     .fillMaxWidth()
-                    .heightIn(min = 48.dp)
+                    // Only the row being edited needs to be big; the others are a compact legend.
+                    .heightIn(min = if (active) 48.dp else 36.dp)
                     .clip(RoundedCornerShape(16.dp))
                     .background(field)
                     .clickable { onActivate(index) }
@@ -266,6 +315,12 @@ private fun FunctionList(
             ) {
                 Box(Modifier.size(10.dp).clip(CircleShape).background(colors[index % colors.size]))
                 Spacer(Modifier.width(12.dp))
+                val plain = remember(function.text) { formatter.format(function.text, 0, null) }
+                val prefix = if (function.isEquation) 0 else "y = ".length
+                val caret = if (active && function.text.isNotEmpty()) plain.rawToDisplay[function.editor.cursor.coerceIn(0, function.text.length)] else -1
+                var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
+                val currentCaret by rememberUpdatedState(caret)
+                val currentPlain by rememberUpdatedState(plain)
                 Text(
                     buildAnnotatedString {
                         if (!function.isEquation) withStyle(SpanStyle(color = scheme.onSurfaceVariant)) { append("y = ") }
@@ -284,13 +339,30 @@ private fun FunctionList(
                             }
                         }
                     },
-                    style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 22.sp),
+                    style = TextStyle(fontFamily = GoogleSansFlex, fontSize = if (active) 22.sp else 18.sp),
                     color = if (invalid) scheme.error else scheme.onSurface,
                     maxLines = 1,
-                    modifier = Modifier.weight(1f),
+                    onTextLayout = { layout = it },
+                    modifier = Modifier
+                        .weight(1f)
+                        // Tap in the text to put the cursor there, like the calculator's own display.
+                        .pointerInput(index) {
+                            detectTapGestures { position ->
+                                val l = layout
+                                val map = currentPlain.displayToRaw
+                                if (l == null || map.isEmpty() || function.text.isEmpty()) {
+                                    onActivate(index)
+                                    return@detectTapGestures
+                                }
+                                var offset = l.getOffsetForPosition(position) - prefix
+                                // The drawn caret is a character of its own; skip over it.
+                                if (currentCaret >= 0 && offset > currentCaret) offset--
+                                onCursor(index, map[offset.coerceIn(0, map.lastIndex)])
+                            }
+                        },
                 )
                 if (state.functions.size > 1 || function.text.isNotEmpty()) {
-                    IconButton(onClick = { onRemove(index) }) {
+                    IconButton(onClick = { onRemove(index) }, modifier = Modifier.size(if (active) 48.dp else 36.dp)) {
                         Icon(Icons.Rounded.Close, contentDescription = stringResource(Res.string.graph_remove), tint = scheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
                     }
                 }
@@ -348,7 +420,7 @@ private fun ParameterSliders(
                         last = now
                     }
                 }
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().height(48.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().height(44.dp)) {
                     Surface(
                         onClick = { onInsert(name) },
                         shape = CircleShape,

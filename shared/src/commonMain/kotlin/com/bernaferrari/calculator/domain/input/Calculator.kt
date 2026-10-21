@@ -18,7 +18,9 @@ enum class Key {
     CLEAR, DELETE, EQUALS,
     SQRT, PI, E, POWER, FACTORIAL, SQUARE,
     SIN, COS, TAN, LN, LOG,
-    ASIN, ACOS, ATAN, EXP, POW10, CBRT, CUBE, RECIPROCAL,
+    ASIN, ACOS, ATAN, EXP, POW10, CBRT, CUBE, RECIPROCAL, ABS,
+    /** The y-th root of what's before it: `8`, ʸ√x, `3` is `8^(1÷3)`. */
+    ROOT,
     DOUBLE_ZERO, TRIPLE_ZERO,
     INVERSE,
     /** The graph's variables `x` and `y`, and the `=` of an equation. */
@@ -32,8 +34,15 @@ enum class Key {
     PARAM_D,
 }
 
+/** A selected stretch of the expression, [start, end) in its raw text; empty when only a spot is picked. */
+data class Span(val start: Int, val end: Int) {
+    val isEmpty: Boolean get() = start == end
+}
+
 data class CalcState(
     val editor: Editor = Editor(),
+    /** Text picked in the display (double-tap, hold): the next key acts on it, like in any text field. */
+    val selection: Span? = null,
     /** The editor holds the result of the last `=`; typing a digit starts over, an operator continues. */
     val resultShown: Boolean = false,
     val inverse: Boolean = false,
@@ -55,6 +64,7 @@ sealed interface Outcome {
 /** The calculator's state machine: a key press in, the next state (and what happened) out. */
 object Calculator {
     fun press(state: CalcState, key: Key): Pair<CalcState, Outcome> {
+        state.selection?.let { return pressOnSelection(state.copy(selection = null), key, it) }
         if (key == Key.EQUALS) return evaluate(state)
         if (key == Key.CLEAR) return state.copy(editor = Editor(), resultShown = false, error = null) to Outcome.Cleared
         if (key == Key.INVERSE) return state.copy(inverse = !state.inverse) to Outcome.None
@@ -72,6 +82,64 @@ object Calculator {
         val edited = edit(editor, key, state.inverse)
         return state.copy(editor = edited, resultShown = false, error = null) to Outcome.None
     }
+
+    /**
+     * A key with text selected does what it would in a text field, made calculator-shaped: `( )`
+     * and functions wrap it, powers and postfixes apply to it as a whole, ⌫ deletes it, and
+     * anything else types over it.
+     */
+    private fun pressOnSelection(state: CalcState, key: Key, selection: Span): Pair<CalcState, Outcome> {
+        val text = state.editor.text
+        val start = selection.start.coerceIn(0, text.length)
+        val end = selection.end.coerceIn(start, text.length)
+        val inner = text.substring(start, end)
+        if (inner.isEmpty() || key in SELECTION_IGNORED) return press(state, key)
+        fun put(replacement: String) =
+            state.copy(editor = ExpressionEditor.replaceRange(state.editor, start, end, replacement), resultShown = false, error = null) to Outcome.None
+        return when (key) {
+            Key.PARENS, Key.LPAREN, Key.RPAREN -> put("($inner)")
+            Key.DELETE -> put("")
+            in WRAP_PREFIX -> {
+                val name = edit(Editor(), key, state.inverse).text
+                put((if (name.endsWith("(")) name else "$name(") + inner + ")")
+            }
+            in WRAP_POSTFIX -> {
+                val suffix = edit(Editor("1"), key, state.inverse).text.removePrefix("1")
+                put((if (isPlainNumber(inner) || isWrapped(inner)) inner else "($inner)") + suffix)
+            }
+            else -> press(state.copy(editor = ExpressionEditor.replaceRange(state.editor, start, end, ""), resultShown = false), key)
+        }
+    }
+
+    /** True for `(…)` where the first parenthesis closes at the very end. */
+    private fun isWrapped(text: String): Boolean {
+        if (!text.startsWith("(") || !text.endsWith(")")) return false
+        var depth = 0
+        text.forEachIndexed { i, c ->
+            if (c == '(') depth++
+            if (c == ')') depth--
+            if (depth == 0 && i < text.lastIndex) return false
+        }
+        return true
+    }
+
+    private val SELECTION_IGNORED = setOf(Key.EQUALS, Key.CLEAR, Key.INVERSE)
+    private val WRAP_PREFIX = setOf(
+        Key.SIN, Key.COS, Key.TAN, Key.ASIN, Key.ACOS, Key.ATAN, Key.LN, Key.LOG, Key.ABS,
+        Key.SQRT, Key.CBRT, Key.EXP, Key.POW10,
+    )
+    private val WRAP_POSTFIX = setOf(Key.SQUARE, Key.CUBE, Key.FACTORIAL, Key.RECIPROCAL, Key.PERCENT, Key.POWER, Key.ROOT)
+
+    /**
+     * Keys that would leave the expression as it is right now, like `1/x` with nothing to invert.
+     * Asking the editor itself keeps this exact: it is the same rule that ignores the key.
+     */
+    fun inertKeys(state: CalcState): Set<Key> =
+        Key.entries.filterTo(mutableSetOf()) { key ->
+            key !in NEVER_INERT && press(state, key).first.editor == state.editor
+        }
+
+    private val NEVER_INERT = setOf(Key.EQUALS, Key.CLEAR, Key.INVERSE)
 
     /** Puts a number (a previous result) at the cursor, replacing a just-shown result. */
     fun insertNumber(state: CalcState, number: String): CalcState {
@@ -100,7 +168,7 @@ object Calculator {
 
     private val CONTINUING_KEYS = setOf(
         Key.PLUS, Key.MINUS, Key.TIMES, Key.DIVIDE, Key.PERCENT, Key.POWER, Key.FACTORIAL, Key.SQUARE, Key.RPAREN,
-        Key.CUBE, Key.RECIPROCAL,
+        Key.CUBE, Key.RECIPROCAL, Key.ROOT,
     )
 
     private fun evaluate(state: CalcState): Pair<CalcState, Outcome> {
@@ -187,6 +255,9 @@ object Calculator {
             Key.CBRT -> insertRaw(e, "∛")
             Key.CUBE -> insertPostfix(e, "³")
             Key.RECIPROCAL -> insertPostfix(e, "⁻¹")
+            Key.ABS -> insertFunction(e, "abs")
+            // Written as the power it is; the open parenthesis closes itself at `=`.
+            Key.ROOT -> if (endsOperand(e.left) && e.left != '.') insertRaw(e, "^(1÷") else e
             Key.DOUBLE_ZERO -> insertDigit(insertDigit(e, '0'), '0')
             Key.TRIPLE_ZERO -> insertDigit(insertDigit(insertDigit(e, '0'), '0'), '0')
             Key.EQUALS, Key.CLEAR, Key.INVERSE -> e
