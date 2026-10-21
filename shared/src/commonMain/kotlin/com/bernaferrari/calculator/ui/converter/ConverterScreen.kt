@@ -17,6 +17,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -129,7 +130,8 @@ fun ConverterScreen(
 
     Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.containerTransform("converter", isScreen = true).fillMaxSize()) {
     BoxWithConstraints(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal))) {
-        val landscape = maxWidth > maxHeight && maxHeight < 600.dp
+        // Side by side on phones held sideways, and on any wide window (tablets, unfolded foldables).
+        val landscape = maxWidth > maxHeight && (maxHeight < 600.dp || maxWidth >= 840.dp)
         val header: @Composable () -> Unit = {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.statusBarsPadding().padding(horizontal = 4.dp).height(56.dp)) {
                     IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null) }
@@ -244,11 +246,14 @@ fun ConverterScreen(
                 keys(Modifier.weight(0.45f).fillMaxHeight().statusBarsPadding().padding(top = 8.dp, bottom = bottomInset + 8.dp))
             }
         } else {
-            Column(Modifier.fillMaxSize()) {
-                header()
-                categories()
-                card(Modifier.weight(1f).fillMaxWidth())
-                keys(Modifier.fillMaxWidth().height(300.dp + bottomInset).padding(bottom = bottomInset))
+            // A tall tablet keeps the converter at a phone's width, centred, rather than stretched.
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+                Column(Modifier.widthIn(max = 560.dp).fillMaxSize()) {
+                    header()
+                    categories()
+                    card(Modifier.weight(1f).fillMaxWidth())
+                    keys(Modifier.fillMaxWidth().height(300.dp + bottomInset).padding(bottom = bottomInset))
+                }
             }
         }
     }

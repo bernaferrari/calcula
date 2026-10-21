@@ -1,5 +1,9 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import androidx.compose.material3.VerticalDivider
+import androidx.compose.foundation.layout.width
+import androidx.compose.runtime.SideEffect
+import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import com.bernaferrari.calculator.domain.model.FlickHints
 import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.animation.AnimatedContent
@@ -157,9 +161,10 @@ fun CalculatorScreen(
         if (!systemConfirmsCopy) scope.launch { snackbar.currentSnackbarData?.dismiss(); snackbar.showSnackbar(copied) }
     }
 
-    val display: @Composable (Modifier, Boolean) -> Unit = { modifier, compact ->
+    val display: @Composable (Modifier, Boolean, Boolean) -> Unit = { modifier, compact, tape ->
         CalculatorDisplay(
-            state = state,
+            // Beside a history pane the tape above the result would only repeat it.
+            state = if (tape) state else state.copy(showHistory = false),
             formatter = formatter,
             haptics = haptics,
             events = viewModel.events,
@@ -178,18 +183,142 @@ fun CalculatorScreen(
             modifier = modifier,
         )
     }
+    // The whole history, open for good: the left pane of a split window.
+    val historyPane: @Composable (Modifier) -> Unit = { modifier ->
+        CalculatorDisplay(
+            state = state,
+            formatter = formatter,
+            haptics = haptics,
+            events = viewModel.events,
+            onCursorMoved = viewModel::onCursorMoved,
+            onReplace = viewModel::onReplace,
+            onSelect = viewModel::onSelect,
+            onToggleAngle = viewModel::onToggleAngleUnit,
+            onCopy = copy,
+            onUseResult = { viewModel.onUseResult(it) },
+            onEditExpression = { viewModel.onEditExpression(it) },
+            onDeleteEntry = viewModel::onDeleteEntry,
+            onClearHistory = viewModel::onClearHistory,
+            historyOpen = true,
+            modifier = modifier,
+        )
+    }
 
     val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
+    // The phone layout: display over tool row over keypad. In a split window it's the right pane.
+    val phone: @Composable BoxWithConstraintsScope.(split: Boolean) -> Unit = { split ->
+        // Rows grow with the screen but never get cramped or comically tall; dragging the bar
+        // above the keys scales them within those limits, and the tape takes what's left.
+        val defaultRow = (maxHeight * 0.47f / 5).coerceIn(60.dp, 92.dp)
+        val minRow = 56.dp
+        val maxRow = max(defaultRow, min(maxHeight * 0.66f / 5, 120.dp))
+        var dragRow by remember { mutableStateOf<Dp?>(null) }
+        val rowHeight = dragRow ?: (defaultRow * state.keypadScale).coerceIn(minRow, maxRow)
+        // History mode slides the keypad down and away, whole, and gives the screen to the tape.
+        val fullKeypad = rowHeight * 5 + bottomInset
+        val reveal = remember { Animatable(if (historyOpen) 0f else 1f) }
+        var pulling by remember { mutableStateOf(false) }
+        var armed by remember { mutableStateOf(false) }
+        LaunchedEffect(historyOpen) {
+            if (!pulling) reveal.animateTo(if (historyOpen) 0f else 1f, spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow))
+        }
+        val shown = reveal.value
+        val resize = Modifier.keypadResize(
+            rowHeight = rowHeight,
+            limits = minRow..maxRow,
+            fullKeypad = fullKeypad,
+            historyOpen = historyOpen,
+            reveal = reveal,
+            onPulling = { pulling = it },
+            onRow = { dragRow = it },
+            onTick = haptics::tick,
+            defaultRow = defaultRow,
+            onDone = { row ->
+                val scale = row / defaultRow
+                if (scale == state.keypadScale) dragRow = null else viewModel.onKeypadScale(scale)
+            },
+            onHistory = { open -> if (!split) historyOpen = open },
+            onArmed = { armed = it },
+        )
+        // The saved size has caught up with the finger: hand the height back to it.
+        LaunchedEffect(state.keypadScale) { dragRow = null }
+        Column(Modifier.fillMaxSize()) {
+            Box(Modifier.weight(1f).fillMaxWidth()) {
+                display(Modifier.fillMaxSize().statusBarsPadding(), false, !split)
+                SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter))
+            }
+            ToolRow(
+                historyOpen = historyOpen,
+                layer = layer,
+                onToggleHistory = { haptics.tap(); historyOpen = !historyOpen },
+                // Beside a history pane there's no history to open.
+                showHistoryEntry = !split,
+                onLayer = { next -> haptics.tap(); layer = next; historyOpen = false },
+                onOpenConverter = { onOpenConverter(currentNumber) },
+                onOpenGraph = onOpenGraph,
+                onOpenSettings = onOpenSettings,
+                resize = if (!pulling) null else {
+                    val span = (maxRow - minRow).value.coerceAtLeast(1f)
+                    ResizeFeedback(
+                        fraction = (rowHeight - minRow).value / span,
+                        defaultFraction = (defaultRow - minRow).value / span,
+                        percent = (rowHeight / defaultRow * 100).roundToInt(),
+                        mode = when {
+                            historyOpen -> ResizeFeedback.Mode.ToKeypad
+                            // Past the smallest size, the keys start to leave: this pull is about history.
+                            shown < 0.99f -> ResizeFeedback.Mode.ToHistory
+                            else -> ResizeFeedback.Mode.Resize
+                        },
+                        armed = armed,
+                    )
+                },
+                // Takes over the bottom inset as the keypad leaves, in step with it.
+                modifier = resize.padding(bottom = bottomInset * (1f - shown)),
+            )
+            MainKeypad(
+                decimal = formatter.decimal,
+                haptics = haptics,
+                functionLayer = layer != FunctionLayer.Off,
+                onKey = viewModel::onKey,
+                onFunctionKey = { key ->
+                    viewModel.onSwipeKey(key)
+                    // Like Shift: one function, then back to digits (unless locked).
+                    if (layer == FunctionLayer.Once) layer = FunctionLayer.Off
+                },
+                onClearAll = { viewModel.onKey(Key.CLEAR) },
+                hints = state.flickHints,
+                inert = state.inert,
+                bottomInset = bottomInset,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clipToBounds()
+                    // Laid out at full size, revealed through a shrinking slot: keys never squash.
+                    .layout { measurable, constraints ->
+                        val full = fullKeypad.roundToPx()
+                        val placeable = measurable.measure(constraints.copy(minHeight = full, maxHeight = full))
+                        layout(placeable.width, (full * shown).roundToInt()) { placeable.place(0, 0) }
+                    }
+                    .graphicsLayer { alpha = (shown * 1.6f).coerceIn(0f, 1f) },
+            )
+        }
+    }
+
     CompositionLocalProvider(LocalReduceMotion provides state.reduceMotion) {
     val currentHistoryOpen by rememberUpdatedState(historyOpen)
+    var splitWindow by remember { mutableStateOf(false) }
     BoxWithConstraints(
         Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface)
-            .twoFingerHistory({ currentHistoryOpen }) { open -> haptics.tap(); historyOpen = open },
+            .twoFingerHistory({ currentHistoryOpen }) { open -> if (!splitWindow) { haptics.tap(); historyOpen = open } },
     ) {
         val landscape = maxWidth > maxHeight && maxHeight < 600.dp
+        val split = !landscape && maxWidth >= 600.dp && maxHeight >= 480.dp
+        SideEffect { splitWindow = split }
+        val paneWidth = min(max(maxWidth * 0.45f, 360.dp), 480.dp)
+        // History has its own pane in a split window; the keypad never slides away there.
+        LaunchedEffect(split) { if (split) historyOpen = false }
         if (landscape) {
             Row(
                 Modifier
@@ -197,7 +326,7 @@ fun CalculatorScreen(
                     .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal)),
             ) {
                 Box(Modifier.weight(0.42f).fillMaxHeight().padding(bottom = bottomInset)) {
-                    display(Modifier.fillMaxSize().statusBarsPadding().padding(top = 44.dp), true)
+                    display(Modifier.fillMaxSize().statusBarsPadding().padding(top = 44.dp), true, true)
                     // Landscape has no tool row; its non-key controls sit quietly at the top.
                     Row(Modifier.statusBarsPadding().fillMaxWidth().padding(4.dp)) {
                         IconButton(onClick = { haptics.tap(); historyOpen = !historyOpen }) {
@@ -243,99 +372,30 @@ fun CalculatorScreen(
                     modifier = Modifier.weight(0.4f).fillMaxHeight().statusBarsPadding(),
                 )
             }
-        } else {
-            // Rows grow with the screen but never get cramped or comically tall; dragging the bar
-            // above the keys scales them within those limits, and the tape takes what's left.
-            val defaultRow = (maxHeight * 0.47f / 5).coerceIn(60.dp, 92.dp)
-            val minRow = 56.dp
-            val maxRow = max(defaultRow, min(maxHeight * 0.66f / 5, 120.dp))
-            var dragRow by remember { mutableStateOf<Dp?>(null) }
-            val rowHeight = dragRow ?: (defaultRow * state.keypadScale).coerceIn(minRow, maxRow)
-            // History mode slides the keypad down and away, whole, and gives the screen to the tape.
-            val fullKeypad = rowHeight * 5 + bottomInset
-            val reveal = remember { Animatable(if (historyOpen) 0f else 1f) }
-            var pulling by remember { mutableStateOf(false) }
-            var armed by remember { mutableStateOf(false) }
-            LaunchedEffect(historyOpen) {
-                if (!pulling) reveal.animateTo(if (historyOpen) 0f else 1f, spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow))
-            }
-            val shown = reveal.value
-            val resize = Modifier.keypadResize(
-                rowHeight = rowHeight,
-                limits = minRow..maxRow,
-                fullKeypad = fullKeypad,
-                historyOpen = historyOpen,
-                reveal = reveal,
-                onPulling = { pulling = it },
-                onRow = { dragRow = it },
-                onTick = haptics::tick,
-                defaultRow = defaultRow,
-                onDone = { row ->
-                    val scale = row / defaultRow
-                    if (scale == state.keypadScale) dragRow = null else viewModel.onKeypadScale(scale)
-                },
-                onHistory = { open -> historyOpen = open },
-                onArmed = { armed = it },
-            )
-            // The saved size has caught up with the finger: hand the height back to it.
-            LaunchedEffect(state.keypadScale) { dragRow = null }
-            Column(Modifier.fillMaxSize()) {
-                Box(Modifier.weight(1f).fillMaxWidth()) {
-                    display(Modifier.fillMaxSize().statusBarsPadding(), false)
-                    SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter))
+        } else if (split) {
+            // A wide window (tablet, unfolded foldable, desktop): history stays open on the left
+            // and the calculator sits on the right at a phone's comfortable width.
+            Row(Modifier.fillMaxSize()) {
+                Box(
+                    Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Start + WindowInsetsSides.Bottom)),
+                ) {
+                    historyPane(Modifier.fillMaxSize().statusBarsPadding())
                 }
-                ToolRow(
-                    historyOpen = historyOpen,
-                    layer = layer,
-                    onToggleHistory = { haptics.tap(); historyOpen = !historyOpen },
-                    onLayer = { next -> haptics.tap(); layer = next; historyOpen = false },
-                    onOpenConverter = { onOpenConverter(currentNumber) },
-                    onOpenGraph = onOpenGraph,
-                    onOpenSettings = onOpenSettings,
-                    resize = if (!pulling) null else {
-                        val span = (maxRow - minRow).value.coerceAtLeast(1f)
-                        ResizeFeedback(
-                            fraction = (rowHeight - minRow).value / span,
-                            defaultFraction = (defaultRow - minRow).value / span,
-                            percent = (rowHeight / defaultRow * 100).roundToInt(),
-                            mode = when {
-                                historyOpen -> ResizeFeedback.Mode.ToKeypad
-                                // Past the smallest size, the keys start to leave: this pull is about history.
-                                shown < 0.99f -> ResizeFeedback.Mode.ToHistory
-                                else -> ResizeFeedback.Mode.Resize
-                            },
-                            armed = armed,
-                        )
-                    },
-                    // Takes over the bottom inset as the keypad leaves, in step with it.
-                    modifier = resize.padding(bottom = bottomInset * (1f - shown)),
-                )
-                MainKeypad(
-                    decimal = formatter.decimal,
-                    haptics = haptics,
-                    functionLayer = layer != FunctionLayer.Off,
-                    onKey = viewModel::onKey,
-                    onFunctionKey = { key ->
-                        viewModel.onSwipeKey(key)
-                        // Like Shift: one function, then back to digits (unless locked).
-                        if (layer == FunctionLayer.Once) layer = FunctionLayer.Off
-                    },
-                    onClearAll = { viewModel.onKey(Key.CLEAR) },
-                    hints = state.flickHints,
-                    inert = state.inert,
-                    bottomInset = bottomInset,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clipToBounds()
-                        // Laid out at full size, revealed through a shrinking slot: keys never squash.
-                        .layout { measurable, constraints ->
-                            val full = fullKeypad.roundToPx()
-                            val placeable = measurable.measure(constraints.copy(minHeight = full, maxHeight = full))
-                            layout(placeable.width, (full * shown).roundToInt()) { placeable.place(0, 0) }
-                        }
-                        .graphicsLayer { alpha = (shown * 1.6f).coerceIn(0f, 1f) },
-                )
+                // A hairline between the panes; the history rows share the page's own color.
+                VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
+                BoxWithConstraints(
+                    Modifier
+                        .width(paneWidth)
+                        .fillMaxHeight()
+                        .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.End)),
+                ) { phone(true) }
             }
+        } else {
+            phone(false)
+
         }
     }
     }

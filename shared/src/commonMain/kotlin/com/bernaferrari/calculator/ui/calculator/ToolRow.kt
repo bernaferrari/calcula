@@ -112,6 +112,8 @@ fun ToolRow(
     onOpenGraph: () -> Unit = {},
     /** Set while the bar is being dragged: the controls step back and a pill shows the size. */
     resize: ResizeFeedback? = null,
+    /** False when history already has a pane of its own, so the menu doesn't offer it. */
+    showHistoryEntry: Boolean = true,
 ) {
     val quiet = MaterialTheme.colorScheme.onSurfaceVariant
     val dragging = resize != null
@@ -167,7 +169,7 @@ fun ToolRow(
                         onClick = { menu = false; onOpenConverter() },
                     )
                     HorizontalDivider()
-                    if (!historyOpen) {
+                    if (!historyOpen && showHistoryEntry) {
                         DropdownMenuItem(
                             text = { Text(stringResource(Res.string.settings_history)) },
                             leadingIcon = { Icon(Icons.Outlined.History, contentDescription = null) },

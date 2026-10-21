@@ -175,7 +175,8 @@ fun GraphScreen(
 
     Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.containerTransform("graph", isScreen = true).fillMaxSize()) {
         BoxWithConstraints(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal))) {
-            val landscape = maxWidth > maxHeight && maxHeight < 600.dp
+            // Side by side on phones held sideways, and on any wide window (tablets, unfolded foldables).
+            val landscape = maxWidth > maxHeight && (maxHeight < 600.dp || maxWidth >= 840.dp)
             val header: @Composable () -> Unit = {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 4.dp).height(56.dp)) {
                     IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null) }
