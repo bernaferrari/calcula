@@ -1,71 +1,59 @@
-# Calcula
+<p align="center">
+  <img src="branding/calcula-icon.svg" width="96" alt="Calcula">
+</p>
 
-A scientific calculator for Android, iOS and the web, built with Compose Multiplatform and Material 3 Expressive. A modern rebuild of Calculator++ ([serso/android-calculatorpp](https://github.com/serso/android-calculatorpp)).
+<h1 align="center">Calcula</h1>
+
+<p align="center"><b>Flick a key. Get a function.</b></p>
 
 <p align="center">
-  <img src="docs/screenshots/01-calculator.png" width="200" alt="The calculator: a tape of past results above a live entry and its result">
-  <img src="docs/screenshots/02-functions-dark.png" width="200" alt="The ƒ layer in dark purple: keys turned into functions, the ones that would do nothing dimmed">
+  A calm, exact calculator. Every key hides two more functions: flick it up or down to reach them.<br>
+  No menus to dig through, no second screen of buttons.
+</p>
+
+<p align="center">
+  <img src="docs/demo.webp" width="300" alt="Flick the 7 up for sin, tap ƒ to turn the keys into functions, flick the 2 down for √">
+</p>
+
+<p align="center">
+  <a href="https://github.com/bernaferrari/android-calculatorpp/releases"><b>Download</b></a>
+</p>
+
+## Why people like it
+
+- **Functions under your thumb.** sin, log, √, x², π and more live on the digits. Flick up for one, down for the other, hold to see both.
+- **Or flip the whole keypad.** Tap **ƒ** and the keys turn into functions for one press, or hold it to keep them. Functions that would do nothing yet are dimmed.
+- **Exact answers.** 0.1 + 0.2 is 0.3. Smart percent: 200 + 10% is 220.
+- **A history you'll actually use.** Past results stay above the keys. Tap one to reuse it, pull down to see them all.
+- **Graphs that teach.** Up to six functions, sliders for a, b, c, d, roots and turns you can tap. Recent graphs are kept, and any one shares as an image.
+- **A unit converter, one tap away.** Length, mass, temperature, data and more, with exact factors.
+- **Edits like text.** Double-tap to select, then wrap it in parentheses or √ with one key. Copy and paste work like everywhere else.
+- **Yours to shape.** Light or dark, ten color families or your wallpaper's, and key hints as labels, dots or nothing.
+- **Big screens too.** On tablets and foldables, your history gets its own pane beside the keys.
+
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/01-calculator.png" width="200" alt="The calculator: a history of past results above a live entry">
+  <img src="docs/screenshots/02-functions-dark.png" width="200" alt="The ƒ layer in dark purple, with the functions that need a number first dimmed">
   <img src="docs/screenshots/03-flick.png" width="200" alt="Holding the 7: sin above it, sin⁻¹ below">
-  <img src="docs/screenshots/04-labels-dark.png" width="200" alt="Function hints as labels: each key names what a flick up or down types">
+  <img src="docs/screenshots/04-labels-dark.png" width="200" alt="Key hints as labels: every key names its flicks">
 </p>
 <p align="center">
-  <img src="docs/screenshots/05-graph.png" width="200" alt="The graph: sin(x), a·sin(b·x) with sliders, and a circle, with key points">
+  <img src="docs/screenshots/05-graph.png" width="200" alt="Graphing sin(x), a·sin(b·x) and a circle, with key points">
   <img src="docs/screenshots/06-graph-library-dark.png" width="200" alt="Recent graphs with thumbnails, one pinned">
   <img src="docs/screenshots/07-converter.png" width="200" alt="Unit converter: 22 °C is 71.6 °F">
-  <img src="docs/screenshots/08-settings-dark.png" width="200" alt="Settings: theme, color family, angle unit and more">
 </p>
 <p align="center">
-  <img src="docs/screenshots/09-tablet.png" width="820" alt="On a tablet: history in its own pane beside the calculator">
+  <img src="docs/screenshots/08-tablet.png" width="820" alt="On a tablet: history in its own pane beside the calculator">
 </p>
 
-## What makes it Calcula
+## Private by design
 
-- **Flick keys.** Swipe a key up or down for its second and third functions (sin, cos, √, x², …); hold a key to see both. Small dots mark the keys that have them.
-- **123 / ƒ.** One tap flips the keypad to a full function layer, once or locked.
-- **Paper tape.** Past calculations sit above the live entry; open history for days, swipe to delete, tap to reuse.
-- **Exact arithmetic.** A 40-digit decimal engine: `0.1 + 0.2 = 0.3`, smart percent (`200 + 10%` = 220), implicit multiplication, auto-closed parentheses.
-- **Unit converter.** Exact definitions across ten categories. It opens with the calculator's current number, and **Use** sends the converted value back.
-- **Graphs.** Up to six functions or equations in x and y, sliders for a–d, tap-to-read key points and a trace. Recent graphs are kept (pin the ones you want), and any graph shares as an image.
-- **Edits like text.** Double-tap to select, hold for all; copy, cut and paste. A selection wraps in `( )`, √ or any function with one key.
-- **Hints your way.** Keys show their flick functions as labels, dots or nothing; functions that would do nothing right now are dimmed.
-- **Any screen.** On tablets, foldables and wide browser windows, history gets its own pane beside the calculator.
+No ads, no accounts, no tracking. Your calculations never leave your device.
 
-## Modules
+## Where it comes from
 
-- `shared`: everything: engine, input rules, UI, storage. Targets Android, iOS (arm64 and simulator) and wasmJs.
-- `androidApp`: Android host (`com.bernaferrari.calcula`).
-- `iosApp`: Xcode host project.
-- `webApp`: browser host (Kotlin/Wasm).
+Calcula grows out of [Calculator++](https://github.com/serso/android-calculatorpp), the swipe-key calculator Sergey Solovyev started in 2011. Its best idea, that a key can hold more than one thing, is still at the heart of it; everything else is rebuilt from scratch, for Android, iOS and the web.
 
-## Build and run
-
-Android:
-
-```bash
-./gradlew :androidApp:installDebug
-```
-
-Web: build, then serve `webApp/build/dist/wasmJs/productionExecutable` with any static server:
-
-```bash
-./gradlew :webApp:wasmJsBrowserDistribution
-```
-
-Or a live development server:
-
-```bash
-./gradlew :webApp:wasmJsBrowserDevelopmentRun
-```
-
-iOS: open `iosApp/iosApp.xcodeproj` and run the `iosApp` scheme. The Xcode build phase calls `:shared:embedAndSignAppleFrameworkForXcode`.
-
-Tests (shared code, on the JVM and the iOS simulator):
-
-```bash
-./gradlew :shared:testAndroidHostTest :shared:iosSimulatorArm64Test
-```
-
-## Git remotes
-
-- `origin`: your fork (`bernaferrari/android-calculatorpp`)
-- `upstream`: original repo (`serso/android-calculatorpp`)
+Found a bug or have an idea? [Open an issue](https://github.com/bernaferrari/android-calculatorpp/issues).

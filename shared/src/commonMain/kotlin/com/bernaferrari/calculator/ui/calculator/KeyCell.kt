@@ -274,13 +274,16 @@ fun KeyCell(
                 up?.let { Text(it.label, style = small, maxLines = 1, color = content.copy(alpha = if (!it.enabled) 0.25f else if (selection == Swipe.Up) 1f else 0.55f), modifier = Modifier.align(Alignment.TopCenter).offset(y = (-5).dp)) }
                 down?.let { Text(it.label, style = small, maxLines = 1, color = content.copy(alpha = if (!it.enabled) 0.25f else if (selection == Swipe.Down) 1f else 0.55f), modifier = Modifier.align(Alignment.BottomCenter).offset(y = 5.dp)) }
             }
-            if (showDots && !labelFlicks) {
-                // The gap from the key's edge grows with the key: 9% of its height, 4 to 9dp. Short graph
-                // keys keep the dots clear of the label; tall tablet keys don't crowd them into the corner.
-                // (The face is already inset by FaceInset, so the offset is measured from there.)
-                val edge = with(density) { (keyHeight * 0.09f).toDp() }.coerceIn(4.dp, 9.dp)
-                if (up != null) FlickDot(selection == Swipe.Up, content, Modifier.align(Alignment.TopCenter).offset(y = edge - FaceInset))
-                if (down != null) FlickDot(selection == Swipe.Down, content, Modifier.align(Alignment.BottomCenter).offset(y = FaceInset - edge))
+        }
+        if (showDots && !labelFlicks) {
+            // The dots belong to the key, not the face: they stay put while the face follows the
+            // finger, so they never slide past the key's edge. Their gap from the edge grows with
+            // the key, 9% of its height, 4 to 8dp: clear of the label on the graph's short keys,
+            // not crowded into the corner on tall ones.
+            val edge = with(density) { (keyHeight * 0.09f).toDp() }.coerceIn(4.dp, 8.dp)
+            Box(Modifier.matchParentSize()) {
+                if (up != null) FlickDot(selection == Swipe.Up, up.enabled, content, Modifier.align(Alignment.TopCenter).offset(y = edge))
+                if (down != null) FlickDot(selection == Swipe.Down, down.enabled, content, Modifier.align(Alignment.BottomCenter).offset(y = -edge))
             }
         }
 
@@ -337,8 +340,10 @@ private fun OptionPill(label: String, selected: Boolean, enabled: Boolean, modif
     // A function with nothing to act on never lights up: it stays a quiet, faded pill.
     @Suppress("NAME_SHADOWING") val selected = selected && enabled
     val scale by animateFloatAsState(if (selected) 1.12f else 1f, spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium), label = "pill")
-    val container by androidx.compose.animation.animateColorAsState(if (selected) colors.primary else colors.secondaryContainer, label = "pillColor")
-    val content = if (selected) colors.onPrimary else colors.onSecondaryContainer
+    // Waiting options read like tooltips (dark on a light theme, light on a dark one), so they stand
+    // out from the pale keys they float over; the one the finger is heading to takes the accent.
+    val container by androidx.compose.animation.animateColorAsState(if (selected) colors.primary else colors.onSurface, label = "pillColor")
+    val content by androidx.compose.animation.animateColorAsState(if (selected) colors.onPrimary else colors.surface, label = "pillContent")
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
@@ -364,7 +369,7 @@ private fun OptionPill(label: String, selected: Boolean, enabled: Boolean, modif
 
 /** A hint that the key hides a function in that direction; it swells when that function is picked. */
 @Composable
-private fun FlickDot(selected: Boolean, color: Color, modifier: Modifier) {
+private fun FlickDot(selected: Boolean, enabled: Boolean, color: Color, modifier: Modifier) {
     val size by animateFloatAsState(
         if (selected) 7f else 3.5f,
         spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium),
@@ -373,6 +378,7 @@ private fun FlickDot(selected: Boolean, color: Color, modifier: Modifier) {
     Box(
         modifier
             .size(size.dp)
-            .background(color.copy(alpha = if (selected) 1f else 0.35f), androidx.compose.foundation.shape.CircleShape),
+            // A flick that would do nothing right now (1/x with nothing typed) barely shows its dot.
+            .background(color.copy(alpha = if (!enabled) 0.1f else if (selected) 1f else 0.35f), androidx.compose.foundation.shape.CircleShape),
     )
 }
