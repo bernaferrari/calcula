@@ -71,6 +71,9 @@ import kotlin.math.min
 
 enum class Swipe { Up, Down }
 
+/** How far the key's face (label and hints) sits in from its top and bottom edges. */
+private val FaceInset = 7.dp
+
 /** A secondary function reachable by flicking a key up or down. */
 data class Hint(val label: String, val description: String = label, val enabled: Boolean = true, val action: () -> Unit)
 
@@ -254,7 +257,7 @@ fun KeyCell(
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .matchParentSize()
-                .padding(vertical = 7.dp)
+                .padding(vertical = FaceInset)
                 .graphicsLayer {
                     val s = 1f - 0.06f * pressed.value.coerceIn(0f, 1f)
                     scaleX = s
@@ -272,9 +275,12 @@ fun KeyCell(
                 down?.let { Text(it.label, style = small, maxLines = 1, color = content.copy(alpha = if (!it.enabled) 0.25f else if (selection == Swipe.Down) 1f else 0.55f), modifier = Modifier.align(Alignment.BottomCenter).offset(y = 5.dp)) }
             }
             if (showDots && !labelFlicks) {
-                // Close to the key's edges, clear of the label on every key size, the graph's short ones too.
-                if (up != null) FlickDot(selection == Swipe.Up, content, Modifier.align(Alignment.TopCenter).offset(y = (-3).dp))
-                if (down != null) FlickDot(selection == Swipe.Down, content, Modifier.align(Alignment.BottomCenter).offset(y = 3.dp))
+                // The gap from the key's edge grows with the key: 9% of its height, 4 to 9dp. Short graph
+                // keys keep the dots clear of the label; tall tablet keys don't crowd them into the corner.
+                // (The face is already inset by FaceInset, so the offset is measured from there.)
+                val edge = with(density) { (keyHeight * 0.09f).toDp() }.coerceIn(4.dp, 9.dp)
+                if (up != null) FlickDot(selection == Swipe.Up, content, Modifier.align(Alignment.TopCenter).offset(y = edge - FaceInset))
+                if (down != null) FlickDot(selection == Swipe.Down, content, Modifier.align(Alignment.BottomCenter).offset(y = FaceInset - edge))
             }
         }
 
