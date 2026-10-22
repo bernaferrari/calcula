@@ -31,22 +31,12 @@
 - **Yours to shape.** Light or dark, ten color families or your wallpaper's, and key hints as labels, dots or nothing.
 - **Big screens too.** On tablets and foldables, your history gets its own pane beside the keys.
 
-## Screenshots
+## Beyond the keypad
 
-<p align="center">
-  <img src="docs/screenshots/01-calculator.png" width="200" alt="The calculator: a history of past results above a live entry">
-  <img src="docs/screenshots/02-functions-dark.png" width="200" alt="The ƒ layer in dark purple, with the functions that need a number first dimmed">
-  <img src="docs/screenshots/03-flick.png" width="200" alt="Holding the 7: sin above it, sin⁻¹ below">
-  <img src="docs/screenshots/04-labels-dark.png" width="200" alt="Key hints as labels: every key names its flicks">
-</p>
-<p align="center">
-  <img src="docs/screenshots/05-graph.png" width="200" alt="Graphing sin(x), a·sin(b·x) and a circle, with key points">
-  <img src="docs/screenshots/06-graph-library-dark.png" width="200" alt="Recent graphs with thumbnails, one pinned">
-  <img src="docs/screenshots/07-converter.png" width="200" alt="Unit converter: 22 °C is 71.6 °F">
-</p>
-<p align="center">
-  <img src="docs/screenshots/08-tablet.png" width="820" alt="On a tablet: history in its own pane beside the calculator">
-</p>
+| Explore functions | Convert units |
+| :---: | :---: |
+| <img src="docs/screenshots/05-graph.png" width="260" alt="Three plotted functions with interactive key points"> | <img src="docs/screenshots/07-converter.png" width="260" alt="Temperature conversion from 22 degrees Celsius to 71.6 degrees Fahrenheit"> |
+| Plot functions and inspect roots and turning points. | Convert temperatures, lengths, masses, and more. |
 
 ## Private by design
 
