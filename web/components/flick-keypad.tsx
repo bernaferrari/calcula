@@ -7,7 +7,7 @@ type Alt = { label: string; insert: string };
 type Spec = {
   label: string;
   insert: string;
-  tone: "digit" | "fn" | "op" | "eq";
+  tone: "digit" | "fn" | "clear" | "op" | "eq";
   up?: Alt;
   down?: Alt;
 };
@@ -15,7 +15,7 @@ type Spec = {
 // The app's keypad and its flicks, key for key.
 const ROWS: Spec[][] = [
   [
-    { label: "AC", insert: "AC", tone: "fn" },
+    { label: "C", insert: "AC", tone: "clear" },
     { label: "( )", insert: "()", tone: "fn", up: { label: "(", insert: "(" }, down: { label: ")", insert: ")" } },
     { label: "%", insert: "%", tone: "fn" },
     { label: "÷", insert: "÷", tone: "op", up: { label: "1/x", insert: "⁻¹" } },
@@ -137,7 +137,9 @@ function Key({ spec, onPress, isInert }: { spec: Spec; onPress: (insert: string)
   const tone = {
     digit: "bg-key text-foreground",
     fn: "bg-surface-high text-muted",
-    op: "bg-key-op text-primary",
+    // Like the app: C is marked by its ink, the operators carry the family's secondary tint.
+    clear: "bg-surface-high text-tertiary",
+    op: "bg-key-op text-on-primary-soft",
     eq: "bg-primary text-on-primary",
   }[spec.tone];
 
@@ -192,7 +194,8 @@ function Pill({ label, show, picked, dim, side }: { label: string; show: boolean
       className={`pointer-events-none absolute left-1/2 z-10 flex h-11 min-w-16 items-center justify-center rounded-full px-3 text-[19px] shadow-lg transition-[opacity,transform,background-color] duration-200 ease-[var(--ease-out)] ${
         side === "up" ? "bottom-[calc(100%+6px)] origin-bottom" : "top-[calc(100%+6px)] origin-top"
       } -translate-x-1/2 ${!show ? "scale-90 opacity-0" : picked && !dim ? "scale-110 opacity-100" : dim ? "scale-100 opacity-50" : "scale-100 opacity-100"} ${
-        picked && !dim ? "bg-primary text-on-primary" : "bg-primary-soft text-on-primary-soft"
+        // Waiting options read like tooltips, as in the app; the one the finger heads to takes the accent.
+        picked && !dim ? "bg-primary text-on-primary" : "bg-foreground text-background"
       }`}
     >
       {label}

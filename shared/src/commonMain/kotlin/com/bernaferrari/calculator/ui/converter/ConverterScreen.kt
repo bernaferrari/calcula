@@ -391,9 +391,10 @@ private fun ConverterKeypad(
             Row(horizontalArrangement = Arrangement.spacedBy(gap), modifier = Modifier.weight(1f)) {
                 digits.forEach { d -> TextKey(d.toString(), colors.surfaceContainerHigh, colors.onSurface, haptics, { onDigit(d) }) }
                 when (index) {
-                    0 -> IconKey(colors.surfaceContainerHighest, colors.onSurfaceVariant, haptics, onDelete, onLongClick = onClear)
-                    1 -> TextKey("AC", colors.surfaceContainerHighest, colors.primary, haptics, onClear)
-                    else -> TextKey("±", colors.surfaceContainerHighest, colors.onSurfaceVariant, haptics, onNegate)
+                    // The same tones as the calculator: its side column tinted, C marked by its ink.
+                    0 -> IconKey(colors.secondaryContainer, colors.onSecondaryContainer, haptics, onDelete, onLongClick = onClear)
+                    1 -> TextKey("C", colors.surfaceContainerHighest, colors.tertiary, haptics, onClear)
+                    else -> TextKey("±", colors.secondaryContainer, colors.onSecondaryContainer, haptics, onNegate)
                 }
             }
         }

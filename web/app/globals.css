@@ -17,6 +17,7 @@
   --color-on-primary: var(--on-primary);
   --color-on-primary-soft: var(--on-primary-soft);
   --color-outline: var(--outline);
+  --color-tertiary: var(--tertiary);
   --color-curve-2: var(--curve-2);
   --color-curve-3: var(--curve-3);
 }
@@ -34,6 +35,7 @@
   --on-primary: #ffffff;
   --on-primary-soft: #1d1873;
   --outline: #d6d3e6;
+  --tertiary: #7d5260;
   --curve-2: #d9640b;
   --curve-3: #1e8e3e;
 
@@ -54,6 +56,7 @@
   --on-primary: #1d1873;
   --on-primary-soft: #e1dfff;
   --outline: #34343f;
+  --tertiary: #efb8c8;
   --curve-2: #ffb06b;
   --curve-3: #7fd99a;
 }

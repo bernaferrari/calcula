@@ -104,7 +104,7 @@ fun MainKeypad(
 ) {
     val rows = listOf(
         listOf(
-            Spec(Key.CLEAR, "AC", Tone.Function, "Clear"),
+            Spec(Key.CLEAR, "C", Tone.Function, "Clear"),
             Spec(Key.PARENS, "( )", Tone.Function, "Parentheses", up = Alt("(", Key.LPAREN, "open parenthesis"), down = Alt(")", Key.RPAREN, "close parenthesis"), flips = false),
             if (variable) Spec(
                 Key.VARIABLE, "x", Tone.Operator, "x",
@@ -201,9 +201,11 @@ fun MainKeypad(
 private fun Spec.containerColor(onLayer: Boolean): Color = with(MaterialTheme.colorScheme) {
     when {
         onLayer -> primaryContainer
-        // One accent only: `=` is the single solid color; everything else is a calm neutral.
+        // Emphasis by tone: digits neutral, the top row a step up, the operators in the family's
+        // secondary tint, and `=` the one solid color. C stands apart by its ink alone.
         tone == Tone.Digit -> surfaceContainerHigh
         tone == Tone.Equals -> primary
+        tone == Tone.Operator -> secondaryContainer
         else -> surfaceContainerHighest
     }
 }
@@ -213,8 +215,8 @@ private fun Spec.contentColor(onLayer: Boolean): Color = with(MaterialTheme.colo
     when {
         onLayer -> onPrimaryContainer
         tone == Tone.Digit -> onSurface
-        tone == Tone.Function -> if (key == Key.CLEAR) primary else onSurfaceVariant
-        tone == Tone.Operator -> primary
+        tone == Tone.Function -> if (key == Key.CLEAR) tertiary else onSurfaceVariant
+        tone == Tone.Operator -> onSecondaryContainer
         else -> onPrimary
     }
 }
