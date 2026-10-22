@@ -119,4 +119,9 @@
     <string name="settings_flick_labels">標籤</string>
     <string name="settings_flick_dots_option">圓點</string>
     <string name="settings_flick_none">無</string>
+    <string name="style_balanced">均衡</string>
+    <string name="style_muted">柔和</string>
+    <string name="style_vivid">鮮豔</string>
+    <string name="style_playful">活潑</string>
+    <string name="style_rainbow">彩虹</string>
 </resources>

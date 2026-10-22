@@ -1,5 +1,7 @@
 package com.bernaferrari.calculator.ui.settings
 
+import com.bernaferrari.calculator.ui.theme.hasStyles
+import com.bernaferrari.calculator.domain.model.ColorStyle
 import com.bernaferrari.calculator.domain.model.hints
 import com.bernaferrari.calculator.domain.model.FlickHints
 import androidx.compose.foundation.layout.Box
@@ -100,6 +102,7 @@ class SettingsViewModel(
 
     fun setTheme(mode: ThemeMode) = save { updateThemeMode(mode) }
     fun setPalette(palette: AppPalette) = save { updatePalette(palette) }
+    fun setColorStyle(style: ColorStyle) = save { updateColorStyle(style) }
     fun setHighContrast(enabled: Boolean) = save { updateHighContrast(enabled) }
     fun setAngleUnit(unit: AngleUnit) = save { updateAngleUnit(unit) }
     fun setDecimalPlaces(places: Int) = save { updateDecimalPlaces(places) }
@@ -165,6 +168,9 @@ fun SettingsScreen(
                             )
                         },
                         { p -> PaletteRow(p, palette, label = { stringResource(it.title()) }, onSelect = viewModel::setPalette) },
+                        if (!palette.hasStyles()) null else { p ->
+                            StyleRow(p, palette, prefs.colorStyle, label = { stringResource(it.title()) }, onSelect = viewModel::setColorStyle)
+                        },
                         { p ->
                             SwitchRow(p, Icons.Outlined.Contrast, stringResource(Res.string.settings_high_contrast), stringResource(Res.string.settings_high_contrast_description), prefs.highContrast, viewModel::setHighContrast)
                         },
@@ -288,6 +294,15 @@ fun SettingsScreen(
             dismissButton = { TextButton(onClick = { confirmClear = false }) { Text(stringResource(Res.string.cancel)) } },
         )
     }
+}
+
+/** What a style looks like, for screen readers; the screen itself shows only the swatches. */
+private fun ColorStyle.title(): StringResource = when (this) {
+    ColorStyle.TONAL_SPOT -> Res.string.style_balanced
+    ColorStyle.NEUTRAL -> Res.string.style_muted
+    ColorStyle.VIBRANT -> Res.string.style_vivid
+    ColorStyle.EXPRESSIVE -> Res.string.style_playful
+    ColorStyle.RAINBOW -> Res.string.style_rainbow
 }
 
 /** A palette's name in the person's language. */

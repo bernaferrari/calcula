@@ -121,4 +121,9 @@
     <string name="settings_flick_labels">Rótulos</string>
     <string name="settings_flick_dots_option">Pontos</string>
     <string name="settings_flick_none">Nenhuma</string>
+    <string name="style_balanced">Equilibrado</string>
+    <string name="style_muted">Suave</string>
+    <string name="style_vivid">Vibrante</string>
+    <string name="style_playful">Divertido</string>
+    <string name="style_rainbow">Arco-íris</string>
 </resources>

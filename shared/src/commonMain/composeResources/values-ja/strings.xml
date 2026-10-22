@@ -119,4 +119,9 @@
     <string name="settings_flick_labels">ラベル</string>
     <string name="settings_flick_dots_option">ドット</string>
     <string name="settings_flick_none">なし</string>
+    <string name="style_balanced">バランス</string>
+    <string name="style_muted">落ち着き</string>
+    <string name="style_vivid">鮮やか</string>
+    <string name="style_playful">遊び心</string>
+    <string name="style_rainbow">虹色</string>
 </resources>

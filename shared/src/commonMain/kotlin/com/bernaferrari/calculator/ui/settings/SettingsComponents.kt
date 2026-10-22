@@ -2,6 +2,8 @@
 
 package com.bernaferrari.calculator.ui.settings
 
+import androidx.compose.foundation.layout.fillMaxHeight
+import com.bernaferrari.calculator.domain.model.ColorStyle
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Canvas
@@ -276,6 +278,60 @@ fun PaletteRow(position: SegmentPosition, selected: AppPalette, label: @Composab
                         // Sparkles: colors picked for you, from the wallpaper.
                         icon = if (wallpaper != null) Icons.Rounded.AutoAwesome else null,
                     )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * The same family, five ways: each option is a tiny keypad (a function key, an operator, the third
+ * accent and `=`) in that Material Kolor style and the current light or dark, so people pick the
+ * look they like without ever meeting the style's name. The keys stay separate solid tones, so
+ * nothing blends and none of it reads as just another color.
+ */
+@Composable
+fun StyleRow(position: SegmentPosition, palette: AppPalette, selected: ColorStyle, label: @Composable (ColorStyle) -> String, onSelect: (ColorStyle) -> Unit) {
+    val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    RowSurface(position) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+            modifier = Modifier.fillMaxWidth().selectableGroup().padding(12.dp),
+        ) {
+            ColorStyle.entries.forEach { style ->
+                StyleKeys(paletteColorScheme(palette, dark, style), style == selected, label(style)) { onSelect(style) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StyleKeys(scheme: ColorScheme, selected: Boolean, description: String, onClick: () -> Unit) {
+    val haptics = LocalHapticFeedback.current
+    val ring by animateDpAsState(if (selected) 2.5.dp else 0.dp, spring(dampingRatio = Spring.DampingRatioMediumBouncy), label = "ring")
+    val scale by animateFloatAsState(if (selected) 1f else 0.92f, spring(dampingRatio = Spring.DampingRatioMediumBouncy), label = "scale")
+    Box(
+        Modifier
+            .size(54.dp)
+            .graphicsLayer { scaleX = scale; scaleY = scale }
+            .semantics { contentDescription = description }
+            .selectable(selected = selected, role = Role.RadioButton, interactionSource = remember { MutableInteractionSource() }, indication = null) {
+                if (!selected) {
+                    haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                    onClick()
+                }
+            }
+            // Fades in with its width, so an unselected keypad has no hairline left over.
+            .border(ring, MaterialTheme.colorScheme.primary.copy(alpha = (ring / 2.5.dp).coerceIn(0f, 1f)), RoundedCornerShape(16.dp))
+            .padding(ring + 2.dp)
+            .clip(RoundedCornerShape(13.dp))
+            .background(scheme.surface)
+            .padding(5.dp),
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            listOf(listOf(scheme.primaryContainer, scheme.secondaryContainer), listOf(scheme.tertiaryContainer, scheme.primary)).forEach { row ->
+                Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                    row.forEach { color -> Box(Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(6.dp)).background(color)) }
                 }
             }
         }

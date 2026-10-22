@@ -119,4 +119,9 @@
     <string name="settings_flick_labels">Libellés</string>
     <string name="settings_flick_dots_option">Points</string>
     <string name="settings_flick_none">Aucun</string>
+    <string name="style_balanced">Équilibré</string>
+    <string name="style_muted">Atténué</string>
+    <string name="style_vivid">Vif</string>
+    <string name="style_playful">Ludique</string>
+    <string name="style_rainbow">Arc-en-ciel</string>
 </resources>

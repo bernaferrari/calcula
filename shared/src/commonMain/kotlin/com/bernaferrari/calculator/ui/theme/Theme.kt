@@ -10,15 +10,17 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import com.bernaferrari.calculator.platform.SystemBarsAppearance
 import com.bernaferrari.calculator.domain.model.AppPalette
+import com.bernaferrari.calculator.domain.model.ColorStyle
 
 @Composable
 fun CalculatorTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     palette: AppPalette = AppPalette.INDIGO,
+    colorStyle: ColorStyle = ColorStyle.TONAL_SPOT,
     highContrast: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    val baseScheme = paletteColorScheme(palette, darkTheme)
+    val baseScheme = paletteColorScheme(palette, darkTheme, colorStyle)
     // High contrast: true black or white backgrounds and full-strength secondary text.
     val colorScheme = when {
         !highContrast -> baseScheme

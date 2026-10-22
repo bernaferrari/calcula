@@ -119,4 +119,9 @@
     <string name="settings_flick_labels">Etiquetas</string>
     <string name="settings_flick_dots_option">Puntos</string>
     <string name="settings_flick_none">Ninguna</string>
+    <string name="style_balanced">Equilibrado</string>
+    <string name="style_muted">Suave</string>
+    <string name="style_vivid">Vivo</string>
+    <string name="style_playful">Divertido</string>
+    <string name="style_rainbow">Arcoíris</string>
 </resources>

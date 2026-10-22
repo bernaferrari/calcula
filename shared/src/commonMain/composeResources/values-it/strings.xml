@@ -119,4 +119,9 @@
     <string name="settings_flick_labels">Etichette</string>
     <string name="settings_flick_dots_option">Punti</string>
     <string name="settings_flick_none">Nessuno</string>
+    <string name="style_balanced">Equilibrato</string>
+    <string name="style_muted">Tenue</string>
+    <string name="style_vivid">Vivace</string>
+    <string name="style_playful">Giocoso</string>
+    <string name="style_rainbow">Arcobaleno</string>
 </resources>

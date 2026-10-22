@@ -119,4 +119,9 @@
     <string name="settings_flick_labels">Beschriftung</string>
     <string name="settings_flick_dots_option">Punkte</string>
     <string name="settings_flick_none">Keine</string>
+    <string name="style_balanced">Ausgewogen</string>
+    <string name="style_muted">Gedämpft</string>
+    <string name="style_vivid">Kräftig</string>
+    <string name="style_playful">Verspielt</string>
+    <string name="style_rainbow">Regenbogen</string>
 </resources>

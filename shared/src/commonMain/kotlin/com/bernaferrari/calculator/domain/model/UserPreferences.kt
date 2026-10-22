@@ -7,6 +7,8 @@ data class UserPreferences(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     /** The accent family; null means the platform default (wallpaper where available). */
     val palette: AppPalette? = null,
+    /** How the family is spread across the scheme: calm, muted, vivid, playful or rainbow. */
+    val colorStyle: ColorStyle = ColorStyle.TONAL_SPOT,
     val showHistory: Boolean = true,
     val angleUnit: AngleUnit = AngleUnit.DEGREES,
     /** Fixed number of decimals for results, or [AUTO_DECIMALS] for up to 15 significant digits. */
@@ -31,6 +33,13 @@ val UserPreferences.hints: FlickHints get() = flickHints ?: if (showFlickDots) F
 
 /** How a key shows its flick functions: their names above and below, two dots, or nothing. */
 enum class FlickHints { LABELS, DOTS, NONE }
+
+/**
+ * Material Kolor's ways of turning one seed into a whole scheme. People choose by look, not by
+ * name: tonal spot keeps everything in the seed's family, neutral quiets it, vibrant turns it up,
+ * expressive and rainbow bring in neighbouring hues.
+ */
+enum class ColorStyle { TONAL_SPOT, NEUTRAL, VIBRANT, EXPRESSIVE, RAINBOW }
 
 const val AUTO_DECIMALS = -1
 

@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.data
 
+import com.bernaferrari.calculator.domain.model.ColorStyle
 import com.bernaferrari.calculator.domain.model.FlickHints
 import com.bernaferrari.calculator.domain.model.AngleUnit
 import com.bernaferrari.calculator.domain.model.AppPalette
@@ -37,6 +38,7 @@ class StoredPreferencesRepository(private val store: KeyValueStore) : Preference
 
     override suspend fun updateThemeMode(themeMode: ThemeMode) = edit { it.copy(themeMode = themeMode) }
     override suspend fun updatePalette(palette: AppPalette) = edit { it.copy(palette = palette) }
+    override suspend fun updateColorStyle(style: ColorStyle) = edit { it.copy(colorStyle = style) }
     override suspend fun updateAngleUnit(angleUnit: AngleUnit) = edit { it.copy(angleUnit = angleUnit) }
     override suspend fun updateDecimalPlaces(decimalPlaces: Int) = edit { it.copy(decimalPlaces = decimalPlaces) }
     override suspend fun updateHapticFeedback(enabled: Boolean) = edit { it.copy(hapticFeedback = enabled) }

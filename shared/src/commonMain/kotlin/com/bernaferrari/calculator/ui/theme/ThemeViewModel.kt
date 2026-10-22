@@ -2,6 +2,7 @@ package com.bernaferrari.calculator.ui.theme
 
 import com.bernaferrari.calculator.AppGraph
 import com.bernaferrari.calculator.domain.model.AppPalette
+import com.bernaferrari.calculator.domain.model.ColorStyle
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -23,6 +24,7 @@ class ThemeViewModel(
         val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
         private val palette = MutableStateFlow<AppPalette?>(null)
         private val highContrast = MutableStateFlow(false)
+        private val colorStyle = MutableStateFlow(ColorStyle.TONAL_SPOT)
 
         init {
             observeThemePreferences()
@@ -37,6 +39,7 @@ class ThemeViewModel(
                         _themeMode.value = preferences.themeMode
                         palette.value = preferences.palette
                         highContrast.value = preferences.highContrast
+                        colorStyle.value = preferences.colorStyle
                     }
             }
         }
@@ -58,6 +61,12 @@ class ThemeViewModel(
         fun palette(): AppPalette {
             val chosen by palette.collectAsState()
             return chosen.orDefault()
+        }
+
+        @Composable
+        fun colorStyle(): ColorStyle {
+            val style by colorStyle.collectAsState()
+            return style
         }
 
         @Composable

@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.domain.repository
 
+import com.bernaferrari.calculator.domain.model.ColorStyle
 import com.bernaferrari.calculator.domain.model.FlickHints
 import com.bernaferrari.calculator.domain.model.AngleUnit
 import com.bernaferrari.calculator.domain.model.AppPalette
@@ -14,6 +15,7 @@ interface PreferencesRepository {
     suspend fun updateThemeMode(themeMode: ThemeMode)
 
     suspend fun updatePalette(palette: AppPalette)
+    suspend fun updateColorStyle(style: ColorStyle)
 
     suspend fun updateAngleUnit(angleUnit: AngleUnit)
 

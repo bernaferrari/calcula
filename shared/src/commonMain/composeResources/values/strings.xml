@@ -123,4 +123,9 @@
     <string name="settings_flick_labels">Labels</string>
     <string name="settings_flick_dots_option">Dots</string>
     <string name="settings_flick_none">None</string>
+    <string name="style_balanced">Balanced</string>
+    <string name="style_muted">Muted</string>
+    <string name="style_vivid">Vivid</string>
+    <string name="style_playful">Playful</string>
+    <string name="style_rainbow">Rainbow</string>
 </resources>
