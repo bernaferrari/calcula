@@ -25,7 +25,6 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.outlined.Animation
 import androidx.compose.material.icons.outlined.BrightnessAuto
 import androidx.compose.material.icons.outlined.BrightnessMedium
-import androidx.compose.material.icons.outlined.Contrast
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.DeleteSweep
@@ -103,7 +102,6 @@ class SettingsViewModel(
     fun setTheme(mode: ThemeMode) = save { updateThemeMode(mode) }
     fun setPalette(palette: AppPalette) = save { updatePalette(palette) }
     fun setColorStyle(style: ColorStyle) = save { updateColorStyle(style) }
-    fun setHighContrast(enabled: Boolean) = save { updateHighContrast(enabled) }
     fun setAngleUnit(unit: AngleUnit) = save { updateAngleUnit(unit) }
     fun setDecimalPlaces(places: Int) = save { updateDecimalPlaces(places) }
     fun setDecimalSeparator(separator: DecimalSeparator) = save { updateDecimalSeparator(separator) }
@@ -170,9 +168,6 @@ fun SettingsScreen(
                         { p -> PaletteRow(p, palette, label = { stringResource(it.title()) }, onSelect = viewModel::setPalette) },
                         if (!palette.hasStyles()) null else { p ->
                             StyleRow(p, palette, prefs.colorStyle, label = { stringResource(it.title()) }, onSelect = viewModel::setColorStyle)
-                        },
-                        { p ->
-                            SwitchRow(p, Icons.Outlined.Contrast, stringResource(Res.string.settings_high_contrast), stringResource(Res.string.settings_high_contrast_description), prefs.highContrast, viewModel::setHighContrast)
                         },
                     ),
                 )
@@ -302,7 +297,6 @@ private fun ColorStyle.title(): StringResource = when (this) {
     ColorStyle.NEUTRAL -> Res.string.style_muted
     ColorStyle.VIBRANT -> Res.string.style_vivid
     ColorStyle.EXPRESSIVE -> Res.string.style_playful
-    ColorStyle.RAINBOW -> Res.string.style_rainbow
 }
 
 /** A palette's name in the person's language. */

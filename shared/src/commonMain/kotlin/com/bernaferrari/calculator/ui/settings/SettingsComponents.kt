@@ -285,7 +285,7 @@ fun PaletteRow(position: SegmentPosition, selected: AppPalette, label: @Composab
 }
 
 /**
- * The same family, five ways: each option is a tiny keypad (a function key, an operator, the third
+ * The same family, four ways: each option is a tiny keypad (a function key, an operator, the third
  * accent and `=`) in that Material Kolor style and the current light or dark, so people pick the
  * look they like without ever meeting the style's name. The keys stay separate solid tones, so
  * nothing blends and none of it reads as just another color.

@@ -23,7 +23,6 @@ class ThemeViewModel(
         private val _themeMode = MutableStateFlow(ThemeMode.SYSTEM)
         val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
         private val palette = MutableStateFlow<AppPalette?>(null)
-        private val highContrast = MutableStateFlow(false)
         private val colorStyle = MutableStateFlow(ColorStyle.TONAL_SPOT)
 
         init {
@@ -38,7 +37,6 @@ class ThemeViewModel(
                     .collect { preferences ->
                         _themeMode.value = preferences.themeMode
                         palette.value = preferences.palette
-                        highContrast.value = preferences.highContrast
                         colorStyle.value = preferences.colorStyle
                     }
             }
@@ -69,11 +67,6 @@ class ThemeViewModel(
             return style
         }
 
-        @Composable
-        fun shouldUseHighContrast(): Boolean {
-            val enabled by highContrast.collectAsState()
-            return enabled
-        }
 
         fun updateThemeMode(themeMode: ThemeMode) {
             viewModelScope.launch {

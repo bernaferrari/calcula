@@ -53,5 +53,4 @@ private fun ColorStyle.toKolor(): PaletteStyle = when (this) {
     ColorStyle.NEUTRAL -> PaletteStyle.Neutral
     ColorStyle.VIBRANT -> PaletteStyle.Vibrant
     ColorStyle.EXPRESSIVE -> PaletteStyle.Expressive
-    ColorStyle.RAINBOW -> PaletteStyle.Rainbow
 }

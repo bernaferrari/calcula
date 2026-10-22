@@ -33,7 +33,6 @@ interface PreferencesRepository {
 
     suspend fun updateReduceMotion(enabled: Boolean)
 
-    suspend fun updateHighContrast(enabled: Boolean)
 
     suspend fun markSwipeHintSeen()
 

@@ -18,7 +18,6 @@ fun App() {
         darkTheme = theme.shouldUseDarkTheme(),
         palette = theme.palette(),
         colorStyle = theme.colorStyle(),
-        highContrast = theme.shouldUseHighContrast(),
     ) {
         // Every screen lays itself out for the window it gets: phone, phone on its side, tablet,
         // unfolded foldable or desktop browser.

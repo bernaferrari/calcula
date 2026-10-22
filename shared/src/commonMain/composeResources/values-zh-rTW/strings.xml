@@ -44,8 +44,6 @@
     <string name="unit_data">資料</string>
     <string name="unit_energy">能量</string>
     <string name="unit_pressure">壓力</string>
-    <string name="settings_high_contrast">高對比</string>
-    <string name="settings_high_contrast_description">純色背景，文字更醒目</string>
     <string name="settings_calculator">計算機</string>
     <string name="settings_angle_unit">角度單位</string>
     <string name="settings_degrees">角度</string>
@@ -123,5 +121,4 @@
     <string name="style_muted">柔和</string>
     <string name="style_vivid">鮮豔</string>
     <string name="style_playful">活潑</string>
-    <string name="style_rainbow">彩虹</string>
 </resources>

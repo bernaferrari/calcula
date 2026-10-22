@@ -20,13 +20,20 @@ import kotlinx.serialization.json.Json
 
 private val json = Json {
     ignoreUnknownKeys = true
+    // A value this version no longer knows (a retired style, say) falls back to its default
+    // instead of failing the whole document.
+    coerceInputValues = true
     encodeDefaults = false
 }
+
+/** Saved settings, or the defaults if the document can't be read at all. */
+internal fun decodePreferences(text: String): UserPreferences =
+    runCatching { json.decodeFromString<UserPreferences>(text) }.getOrElse { UserPreferences() }
 
 /** Settings as one JSON document; unknown or missing fields fall back to defaults. */
 class StoredPreferencesRepository(private val store: KeyValueStore) : PreferencesRepository {
     private val state = MutableStateFlow(
-        store.get(KEY)?.let { runCatching { json.decodeFromString<UserPreferences>(it) }.getOrNull() } ?: UserPreferences(),
+        store.get(KEY)?.let(::decodePreferences) ?: UserPreferences(),
     )
 
     override fun getUserPreferences(): Flow<UserPreferences> = state
@@ -47,7 +54,6 @@ class StoredPreferencesRepository(private val store: KeyValueStore) : Preference
     override suspend fun updateFlickHints(hints: FlickHints) = edit { it.copy(flickHints = hints) }
     override suspend fun updateSoundEnabled(enabled: Boolean) = edit { it.copy(soundEnabled = enabled) }
     override suspend fun updateReduceMotion(enabled: Boolean) = edit { it.copy(reduceMotion = enabled) }
-    override suspend fun updateHighContrast(enabled: Boolean) = edit { it.copy(highContrast = enabled) }
     override suspend fun markSwipeHintSeen() = edit { it.copy(swipeHintSeen = true) }
     override suspend fun updateKeypadScale(scale: Float) = edit { it.copy(keypadScale = scale) }
 

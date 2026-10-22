@@ -44,8 +44,6 @@
     <string name="unit_data">Données</string>
     <string name="unit_energy">Énergie</string>
     <string name="unit_pressure">Pression</string>
-    <string name="settings_high_contrast">Contraste élevé</string>
-    <string name="settings_high_contrast_description">Fonds purs et texte plus marqué</string>
     <string name="settings_calculator">Calculatrice</string>
     <string name="settings_angle_unit">Unité d’angle</string>
     <string name="settings_degrees">Degrés</string>
@@ -123,5 +121,4 @@
     <string name="style_muted">Atténué</string>
     <string name="style_vivid">Vif</string>
     <string name="style_playful">Ludique</string>
-    <string name="style_rainbow">Arc-en-ciel</string>
 </resources>

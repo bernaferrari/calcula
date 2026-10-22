@@ -44,8 +44,6 @@
     <string name="unit_data">Daten</string>
     <string name="unit_energy">Energie</string>
     <string name="unit_pressure">Druck</string>
-    <string name="settings_high_contrast">Hoher Kontrast</string>
-    <string name="settings_high_contrast_description">Reine Hintergründe und kräftigerer Text</string>
     <string name="settings_calculator">Rechner</string>
     <string name="settings_angle_unit">Winkeleinheit</string>
     <string name="settings_degrees">Grad</string>
@@ -123,5 +121,4 @@
     <string name="style_muted">Gedämpft</string>
     <string name="style_vivid">Kräftig</string>
     <string name="style_playful">Verspielt</string>
-    <string name="style_rainbow">Regenbogen</string>
 </resources>

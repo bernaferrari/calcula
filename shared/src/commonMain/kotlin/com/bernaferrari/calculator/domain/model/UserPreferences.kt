@@ -7,7 +7,7 @@ data class UserPreferences(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     /** The accent family; null means the platform default (wallpaper where available). */
     val palette: AppPalette? = null,
-    /** How the family is spread across the scheme: calm, muted, vivid, playful or rainbow. */
+    /** How the family is spread across the scheme: calm, muted, vivid or playful. */
     val colorStyle: ColorStyle = ColorStyle.TONAL_SPOT,
     val showHistory: Boolean = true,
     val angleUnit: AngleUnit = AngleUnit.DEGREES,
@@ -21,7 +21,6 @@ data class UserPreferences(
     /** How keys show the functions a flick reaches; null until chosen, see [hints]. */
     val flickHints: FlickHints? = null,
     val reduceMotion: Boolean = false,
-    val highContrast: Boolean = false,
     /** Whether the person has already flicked a key, so the swipe tip can go away for good. */
     val swipeHintSeen: Boolean = false,
     /** The keypad's height relative to the default, set by dragging the bar above it. */
@@ -37,9 +36,9 @@ enum class FlickHints { LABELS, DOTS, NONE }
 /**
  * Material Kolor's ways of turning one seed into a whole scheme. People choose by look, not by
  * name: tonal spot keeps everything in the seed's family, neutral quiets it, vibrant turns it up,
- * expressive and rainbow bring in neighbouring hues.
+ * expressive brings in neighbouring hues.
  */
-enum class ColorStyle { TONAL_SPOT, NEUTRAL, VIBRANT, EXPRESSIVE, RAINBOW }
+enum class ColorStyle { TONAL_SPOT, NEUTRAL, VIBRANT, EXPRESSIVE }
 
 const val AUTO_DECIMALS = -1
 
