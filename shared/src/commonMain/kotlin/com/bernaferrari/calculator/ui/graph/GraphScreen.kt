@@ -1,5 +1,14 @@
 package com.bernaferrari.calculator.ui.graph
 
+import com.bernaferrari.calculator.ui.calculator.ResizePill
+import com.bernaferrari.calculator.ui.calculator.ResizeFeedback
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.ui.unit.max
+import androidx.compose.ui.unit.min
+import androidx.compose.ui.unit.Dp
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import com.bernaferrari.calculator.domain.model.hints
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
@@ -246,17 +255,30 @@ fun GraphScreen(
             }
             // The calculator's own 123|ƒ switch, so every function is a tap away here too, and the
             // way to add another function, always in reach above the keys.
-            val bar: @Composable () -> Unit = {
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().height(GraphBarHeight).padding(horizontal = 12.dp)) {
-                    LayerSwitch(layer) { haptics.tap(); layer = it }
-                    Spacer(Modifier.weight(1f))
-                    if (state.canAdd) {
-                        TextButton(onClick = { haptics.tap(); viewModel.onAdd() }) {
-                            Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text(stringResource(Res.string.graph_add))
+            // Like the calculator's bar, it's also a handle: drag it to size the keys (portrait only).
+            // While dragging, its controls step back for the same pill that shows the size.
+            val bar: @Composable (Modifier, ResizeFeedback?) -> Unit = { handle, resize ->
+                val step by animateFloatAsState(if (resize != null) 1f else 0f, spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMedium), label = "step")
+                Box(handle.fillMaxWidth().height(GraphBarHeight)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.matchParentSize().padding(horizontal = 12.dp).graphicsLayer {
+                            alpha = 1f - step
+                            scaleX = 1f - 0.08f * step
+                            scaleY = 1f - 0.08f * step
+                        },
+                    ) {
+                        LayerSwitch(layer) { haptics.tap(); layer = it }
+                        Spacer(Modifier.weight(1f))
+                        if (state.canAdd) {
+                            TextButton(onClick = { haptics.tap(); viewModel.onAdd() }) {
+                                Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text(stringResource(Res.string.graph_add))
+                            }
                         }
                     }
+                    ResizePill(resize, Modifier.align(Alignment.Center))
                 }
             }
             if (landscape) {
@@ -267,12 +289,41 @@ fun GraphScreen(
                     }
                     Column(Modifier.weight(0.45f).fillMaxHeight().statusBarsPadding()) {
                         functions()
-                        bar()
+                        bar(Modifier, null)
                         keys(Modifier.weight(1f).fillMaxWidth())
                     }
                 }
             } else {
-                val rowHeight = (maxHeight * 0.34f / 5).coerceIn(50.dp, 68.dp)
+                val defaultRow = (maxHeight * 0.34f / 5).coerceIn(50.dp, 68.dp)
+                val minRow = 50.dp
+                val maxRow = max(defaultRow, min(maxHeight * 0.5f / 5, 88.dp))
+                var dragRow by remember { mutableStateOf<Dp?>(null) }
+                var dragging by remember { mutableStateOf(false) }
+                val rowHeight = dragRow ?: (defaultRow * prefs.graphKeypadScale).coerceIn(minRow, maxRow)
+                // The saved size has caught up with the finger: hand the height back to it.
+                LaunchedEffect(prefs.graphKeypadScale) { dragRow = null }
+                val handle = Modifier.keypadResize(
+                    rowHeight = { rowHeight },
+                    limits = { minRow..maxRow },
+                    defaultRow = { defaultRow },
+                    onRow = { dragRow = it },
+                    onDragging = { dragging = it },
+                    onTick = haptics::tick,
+                    onDone = { row ->
+                        val scale = row / defaultRow
+                        // Unchanged (say, back on the default), nothing will come back to clear it.
+                        if (scale == prefs.graphKeypadScale) dragRow = null else settings.setGraphKeypadScale(scale)
+                    },
+                )
+                val resize = if (!dragging) null else {
+                    val span = (maxRow - minRow).value.coerceAtLeast(1f)
+                    ResizeFeedback(
+                        fraction = (rowHeight - minRow).value / span,
+                        defaultFraction = (defaultRow - minRow).value / span,
+                        percent = (rowHeight / defaultRow * 100).roundToInt(),
+                        mode = ResizeFeedback.Mode.Resize,
+                    )
+                }
                 val keypad = rowHeight * 5 + bottomInset
                 val top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 56.dp
                 // The plot is the point: it always keeps a good share of the screen. The functions and
@@ -304,7 +355,7 @@ fun GraphScreen(
                     ) {
                         functions()
                     }
-                    bar()
+                    bar(handle, resize)
                     keys(Modifier.fillMaxWidth().height(keypad))
                 }
             }
@@ -325,6 +376,78 @@ fun GraphScreen(
 }
 
 private val GraphBarHeight = 48.dp
+
+/**
+ * Dragging the graph's bar sizes its keypad: the top of the keys follows the finger (five rows
+ * share the change), with a little give past the limits, a tick at each limit and a soft catch at
+ * the default size. Unlike the calculator there's no history to pull into, so that's all it does.
+ */
+@Composable
+private fun Modifier.keypadResize(
+    rowHeight: () -> Dp,
+    limits: () -> ClosedRange<Dp>,
+    defaultRow: () -> Dp,
+    onRow: (Dp?) -> Unit,
+    onDragging: (Boolean) -> Unit,
+    onTick: () -> Unit,
+    onDone: (Dp) -> Unit,
+): Modifier {
+    val row by rememberUpdatedState(rowHeight)
+    val range by rememberUpdatedState(limits)
+    val home by rememberUpdatedState(defaultRow)
+    val done by rememberUpdatedState(onDone)
+    return pointerInput(Unit) {
+        var start = 0f
+        var offset = 0f
+        var current = 0.dp
+        var atLimit = false
+        var atHome = false
+        detectVerticalDragGestures(
+            onDragStart = {
+                start = row().toPx()
+                offset = 0f
+                current = row()
+                atLimit = false
+                atHome = false
+                onDragging(true)
+            },
+            onVerticalDrag = { change, dy ->
+                change.consume()
+                offset += dy
+                val r = range()
+                val min = r.start.toPx()
+                val max = r.endInclusive.toPx()
+                val wanted = start - offset / 5f
+                val target = home().toPx()
+                val nearHome = abs(wanted - target) < 3.dp.toPx()
+                if (nearHome && !atHome) onTick()
+                atHome = nearHome
+                val clamped = when {
+                    nearHome -> target
+                    wanted < min -> min - (min - wanted) * 0.15f
+                    wanted > max -> max + (wanted - max) * 0.15f
+                    else -> wanted
+                }
+                current = clamped.toDp()
+                onRow(current)
+                val limited = wanted <= min || wanted >= max
+                if (limited && !atLimit) onTick()
+                atLimit = limited
+            },
+            onDragEnd = {
+                onDragging(false)
+                val r = range()
+                val settled = current.coerceIn(r.start, r.endInclusive)
+                onRow(settled)
+                done(settled)
+            },
+            onDragCancel = {
+                onDragging(false)
+                onRow(null)
+            },
+        )
+    }
+}
 
 /**
  * One color per function: the theme's accent first, then orange, green, blue, purple and teal, chosen to stay apart

@@ -45,7 +45,7 @@ class StoredPreferencesRepository(private val store: KeyValueStore) : Preference
     override suspend fun updateHapticFeedback(enabled: Boolean) = edit { it.copy(hapticFeedback = enabled) }
     override suspend fun updateShowHistory(enabled: Boolean) = edit { it.copy(showHistory = enabled) }
     override suspend fun updateDecimalSeparator(separator: DecimalSeparator) = edit { it.copy(decimalSeparator = separator) }
-    override suspend fun updateFlickHints(hints: FlickHints) = edit { it.copy(flickHints = hints) }
+    override suspend fun updateFlickHints(hints: FlickHints?) = edit { it.copy(flickHints = hints) }
     override suspend fun countFlick() {
         val now = state.value
         // Nothing left to learn once a style is chosen or the gesture is known: no more writes.
@@ -56,6 +56,7 @@ class StoredPreferencesRepository(private val store: KeyValueStore) : Preference
     override suspend fun updateReduceMotion(enabled: Boolean) = edit { it.copy(reduceMotion = enabled) }
     override suspend fun markSwipeHintSeen() = edit { it.copy(swipeHintSeen = true) }
     override suspend fun updateKeypadScale(scale: Float) = edit { it.copy(keypadScale = scale) }
+    override suspend fun updateGraphKeypadScale(scale: Float) = edit { it.copy(graphKeypadScale = scale) }
 
     private companion object {
         const val KEY = "preferences"

@@ -148,7 +148,7 @@ fun MainKeypad(
     val rowHeight = (maxHeight - KeyGap * 7 - bottomInset) / 5
     val density = LocalDensity.current
     // Gentler than the keys themselves: text follows about 60% of the change.
-    val scale = (0.4f + 0.6f * (rowHeight / 82.dp)).coerceIn(0.78f, 1.12f)
+    val scale = (0.4f + 0.6f * (rowHeight / 82.dp)).coerceIn(0.68f, 1.12f)
     CompositionLocalProvider(LocalDensity provides Density(density.density, density.fontScale * scale)) {
     Column(
         verticalArrangement = Arrangement.spacedBy(KeyGap),

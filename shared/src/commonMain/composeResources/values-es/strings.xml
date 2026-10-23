@@ -121,4 +121,7 @@
     <string name="style_muted">Suave</string>
     <string name="style_vivid">Vivo</string>
     <string name="style_playful">Divertido</string>
+    <string name="settings_flick_auto_learning">Nombres por ahora, puntos cuando conozcas los gestos</string>
+    <string name="settings_flick_auto_learned">Puntos, ahora que conoces los gestos</string>
+    <string name="settings_flick_auto">Auto</string>
 </resources>

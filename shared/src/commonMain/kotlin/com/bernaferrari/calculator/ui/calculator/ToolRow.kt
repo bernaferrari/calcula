@@ -196,7 +196,7 @@ fun ToolRow(
  * the default marked. Pulled past the smallest size it says where the pull is going instead.
  */
 @Composable
-private fun ResizePill(feedback: ResizeFeedback?, modifier: Modifier) {
+internal fun ResizePill(feedback: ResizeFeedback?, modifier: Modifier) {
     val colors = MaterialTheme.colorScheme
     // Keeps showing the last reading while the pill animates away.
     var last by remember { mutableStateOf(feedback) }

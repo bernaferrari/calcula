@@ -121,4 +121,7 @@
     <string name="style_muted">落ち着き</string>
     <string name="style_vivid">鮮やか</string>
     <string name="style_playful">遊び心</string>
+    <string name="settings_flick_auto_learning">覚えるまでは名前、覚えたらドット</string>
+    <string name="settings_flick_auto_learned">フリックを覚えたのでドット表示</string>
+    <string name="settings_flick_auto">自動</string>
 </resources>

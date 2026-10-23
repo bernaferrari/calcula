@@ -27,7 +27,8 @@ interface PreferencesRepository {
 
     suspend fun updateDecimalSeparator(separator: DecimalSeparator)
 
-    suspend fun updateFlickHints(hints: FlickHints)
+    /** A hint style for good, or null for automatic (names first, dots once the flicks are known). */
+    suspend fun updateFlickHints(hints: FlickHints?)
     /** One more function picked by flick; only counts while the hint style is still automatic. */
     suspend fun countFlick()
 
@@ -39,4 +40,5 @@ interface PreferencesRepository {
     suspend fun markSwipeHintSeen()
 
     suspend fun updateKeypadScale(scale: Float)
+    suspend fun updateGraphKeypadScale(scale: Float)
 }

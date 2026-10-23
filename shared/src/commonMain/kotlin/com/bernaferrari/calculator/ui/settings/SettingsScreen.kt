@@ -102,11 +102,12 @@ class SettingsViewModel(
     fun setTheme(mode: ThemeMode) = save { updateThemeMode(mode) }
     fun setPalette(palette: AppPalette) = save { updatePalette(palette) }
     fun setColorStyle(style: ColorStyle) = save { updateColorStyle(style) }
+    fun setGraphKeypadScale(scale: Float) = save { updateGraphKeypadScale(scale) }
     fun setAngleUnit(unit: AngleUnit) = save { updateAngleUnit(unit) }
     fun setDecimalPlaces(places: Int) = save { updateDecimalPlaces(places) }
     fun setDecimalSeparator(separator: DecimalSeparator) = save { updateDecimalSeparator(separator) }
     fun setShowHistory(enabled: Boolean) = save { updateShowHistory(enabled) }
-    fun setFlickHints(hints: FlickHints) = save { updateFlickHints(hints) }
+    fun setFlickHints(hints: FlickHints?) = save { updateFlickHints(hints) }
     fun setHaptics(enabled: Boolean) = save { updateHapticFeedback(enabled) }
     fun setSounds(enabled: Boolean) = save { updateSoundEnabled(enabled) }
     fun setReduceMotion(enabled: Boolean) = save { updateReduceMotion(enabled) }
@@ -219,10 +220,13 @@ fun SettingsScreen(
                         { p ->
                             ChoiceRow(
                                 p, Icons.Outlined.SwipeVertical, stringResource(Res.string.settings_flick_hints),
-                                FlickHints.entries, prefs.hints,
+                                // Auto (null) is a choice of its own, so Labels can be picked for good
+                                // even while Auto is still showing labels.
+                                listOf<FlickHints?>(null) + FlickHints.entries, prefs.flickHints,
                                 label = {
                                     stringResource(
                                         when (it) {
+                                            null -> Res.string.settings_flick_auto
                                             FlickHints.LABELS -> Res.string.settings_flick_labels
                                             FlickHints.DOTS -> Res.string.settings_flick_dots_option
                                             FlickHints.NONE -> Res.string.settings_flick_none
@@ -230,6 +234,10 @@ fun SettingsScreen(
                                     )
                                 },
                                 onSelect = viewModel::setFlickHints,
+                                // Auto says what it's doing right now.
+                                subtitle = if (prefs.flickHints != null) null else stringResource(
+                                    if (prefs.hints == FlickHints.LABELS) Res.string.settings_flick_auto_learning else Res.string.settings_flick_auto_learned,
+                                ),
                             )
                         },
                     ),

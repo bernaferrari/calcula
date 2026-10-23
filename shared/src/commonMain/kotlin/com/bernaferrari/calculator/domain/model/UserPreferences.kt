@@ -25,6 +25,8 @@ data class UserPreferences(
     val swipeHintSeen: Boolean = false,
     /** The keypad's height relative to the default, set by dragging the bar above it. */
     val keypadScale: Float = 1f,
+    /** The graph keypad's height relative to its default; separate, since the graph wants its plot. */
+    val graphKeypadScale: Float = 1f,
 )
 
 /**

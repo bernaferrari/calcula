@@ -121,4 +121,7 @@
     <string name="style_muted">Tenue</string>
     <string name="style_vivid">Vivace</string>
     <string name="style_playful">Giocoso</string>
+    <string name="settings_flick_auto_learning">Nomi per ora, punti quando conoscerai i gesti</string>
+    <string name="settings_flick_auto_learned">Punti, ora che conosci i gesti</string>
+    <string name="settings_flick_auto">Auto</string>
 </resources>

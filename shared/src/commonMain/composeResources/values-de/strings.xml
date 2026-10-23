@@ -121,4 +121,7 @@
     <string name="style_muted">Gedämpft</string>
     <string name="style_vivid">Kräftig</string>
     <string name="style_playful">Verspielt</string>
+    <string name="settings_flick_auto_learning">Erst Namen, Punkte, sobald du die Wischgesten kennst</string>
+    <string name="settings_flick_auto_learned">Punkte, jetzt wo du die Wischgesten kennst</string>
+    <string name="settings_flick_auto">Auto</string>
 </resources>

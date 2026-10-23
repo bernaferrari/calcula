@@ -121,4 +121,7 @@
     <string name="style_muted">柔和</string>
     <string name="style_vivid">鮮豔</string>
     <string name="style_playful">活潑</string>
+    <string name="settings_flick_auto_learning">先顯示名稱，熟悉滑動後改為圓點</string>
+    <string name="settings_flick_auto_learned">已熟悉滑動，顯示圓點</string>
+    <string name="settings_flick_auto">自動</string>
 </resources>
