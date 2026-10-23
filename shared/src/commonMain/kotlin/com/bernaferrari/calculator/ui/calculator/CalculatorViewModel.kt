@@ -136,7 +136,11 @@ class CalculatorViewModel(
     }
 
     /** A function picked by a flick or from the ƒ layer. */
-    fun onSwipeKey(key: Key) = onKey(key)
+    fun onSwipeKey(key: Key) {
+        onKey(key)
+        // Counts toward the keypad trading its function names for dots once the gesture is known.
+        viewModelScope.launch { preferences.countFlick() }
+    }
 
     fun onCursorMoved(position: Int) {
         calc.update { it.copy(editor = ExpressionEditor.moveCursor(it.editor, position), resultShown = false, selection = null) }

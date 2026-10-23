@@ -4,10 +4,14 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class UserPreferencesTest {
-    @Test fun theOldDotsSwitchCarriesOverToFlickHints() {
-        assertEquals(FlickHints.DOTS, UserPreferences().hints)
-        assertEquals(FlickHints.NONE, UserPreferences(showFlickDots = false).hints)
-        // Once chosen, the new setting wins over the old switch.
-        assertEquals(FlickHints.LABELS, UserPreferences(showFlickDots = false, flickHints = FlickHints.LABELS).hints)
+    @Test fun labelsUntilTheGestureIsKnownThenDots() {
+        assertEquals(FlickHints.LABELS, UserPreferences().hints)
+        assertEquals(FlickHints.LABELS, UserPreferences(flicksUsed = FLICKS_LEARNED - 1).hints)
+        assertEquals(FlickHints.DOTS, UserPreferences(flicksUsed = FLICKS_LEARNED).hints)
+    }
+
+    @Test fun aChosenStyleAlwaysWins() {
+        assertEquals(FlickHints.LABELS, UserPreferences(flickHints = FlickHints.LABELS, flicksUsed = 50).hints)
+        assertEquals(FlickHints.NONE, UserPreferences(flickHints = FlickHints.NONE).hints)
     }
 }

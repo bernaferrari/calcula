@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.data
 
+import com.bernaferrari.calculator.domain.model.FLICKS_LEARNED
 import com.bernaferrari.calculator.domain.model.ColorStyle
 import com.bernaferrari.calculator.domain.model.FlickHints
 import com.bernaferrari.calculator.domain.model.AngleUnit
@@ -45,6 +46,12 @@ class StoredPreferencesRepository(private val store: KeyValueStore) : Preference
     override suspend fun updateShowHistory(enabled: Boolean) = edit { it.copy(showHistory = enabled) }
     override suspend fun updateDecimalSeparator(separator: DecimalSeparator) = edit { it.copy(decimalSeparator = separator) }
     override suspend fun updateFlickHints(hints: FlickHints) = edit { it.copy(flickHints = hints) }
+    override suspend fun countFlick() {
+        val now = state.value
+        // Nothing left to learn once a style is chosen or the gesture is known: no more writes.
+        if (now.flickHints != null || now.flicksUsed >= FLICKS_LEARNED) return
+        edit { it.copy(flicksUsed = it.flicksUsed + 1) }
+    }
     override suspend fun updateSoundEnabled(enabled: Boolean) = edit { it.copy(soundEnabled = enabled) }
     override suspend fun updateReduceMotion(enabled: Boolean) = edit { it.copy(reduceMotion = enabled) }
     override suspend fun markSwipeHintSeen() = edit { it.copy(swipeHintSeen = true) }

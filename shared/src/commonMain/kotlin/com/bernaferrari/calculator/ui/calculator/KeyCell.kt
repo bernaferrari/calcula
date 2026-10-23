@@ -71,6 +71,9 @@ import kotlin.math.min
 
 enum class Swipe { Up, Down }
 
+/** Extra width (each side) of the options popup, so a refusing bubble can shake without clipping. */
+private val ShakeRoom = 40.dp
+
 /** How far the key's face (label and hints) sits in from its top and bottom edges. */
 private val FaceInset = 7.dp
 
@@ -201,7 +204,10 @@ fun KeyCell(
                         if (next != current) {
                             current = next
                             selection = next
-                            if (next != null) haptics.tick()
+                            // Heading for a function that can't act yet (1/x with nothing typed) says no
+                            // the way a wrong entry does: the error buzz, while its bubble shakes.
+                            val hint = if (next == Swipe.Up) currentUp else if (next == Swipe.Down) currentDown else null
+                            if (hint != null) { if (hint.enabled) haptics.tick() else haptics.reject() }
                         }
                         scope.launch { drag.snapTo(dy) }
                         change.consume()
@@ -268,6 +274,10 @@ fun KeyCell(
         ) {
             val mainAlpha by animateFloatAsState(if (selection != null) 0.3f else 1f, label = "main")
             Box(Modifier.graphicsLayer { alpha = mainAlpha }) { label() }
+        }
+        // Like the dots, the names belong to the key, not the face: they stay put while the face
+        // follows the finger.
+        Box(Modifier.matchParentSize().padding(vertical = FaceInset)) {
             if (labelFlicks) {
                 val small = androidx.compose.ui.text.TextStyle(fontSize = 11.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Medium, fontFamily = com.bernaferrari.calculator.ui.theme.GoogleSansFlex)
                 // The functions by name, small, above and below the label: what a flick that way types.
@@ -325,7 +335,9 @@ private fun FunctionOptions(
             exit = fadeOut(tween(120)) + scaleOut(tween(120), targetScale = 0.9f),
         ) {
             with(density) {
-                Box(Modifier.size(width = keyWidth.toDp().coerceAtLeast(pill), height = keyHeight.toDp() + (pill + gap) * 2)) {
+                // The popup is its own window and clips to its size: leave room around the key so a
+                // shaking bubble and its shadow never get cut, even on the edge keys.
+                Box(Modifier.size(width = keyWidth.toDp().coerceAtLeast(pill) + ShakeRoom * 2, height = keyHeight.toDp() + (pill + gap) * 2)) {
                     if (up != null) OptionPill(up.label, selection == Swipe.Up, up.enabled, Modifier.align(Alignment.TopCenter))
                     if (down != null) OptionPill(down.label, selection == Swipe.Down, down.enabled, Modifier.align(Alignment.BottomCenter))
                 }
@@ -337,7 +349,13 @@ private fun FunctionOptions(
 @Composable
 private fun OptionPill(label: String, selected: Boolean, enabled: Boolean, modifier: Modifier) {
     val colors = MaterialTheme.colorScheme
-    // A function with nothing to act on never lights up: it stays a quiet, faded pill.
+    // A function with nothing to act on never lights up: it stays a quiet, faded pill, and shakes
+    // its head when the finger reaches it.
+    val refused = selected && !enabled
+    val shake = remember { Animatable(0f) }
+    LaunchedEffect(refused) {
+        if (refused) shake.animateTo(0f, spring(dampingRatio = 0.2f, stiffness = 900f), initialVelocity = -1600f)
+    }
     @Suppress("NAME_SHADOWING") val selected = selected && enabled
     val scale by animateFloatAsState(if (selected) 1.12f else 1f, spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium), label = "pill")
     // Waiting options read like tooltips (dark on a light theme, light on a dark one), so they stand
@@ -350,6 +368,7 @@ private fun OptionPill(label: String, selected: Boolean, enabled: Boolean, modif
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
+                translationX = shake.value
                 shadowElevation = 6.dp.toPx()
                 shape = RoundedCornerShape(26.dp)
                 clip = true

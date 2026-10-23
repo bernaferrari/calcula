@@ -16,10 +16,10 @@ data class UserPreferences(
     val decimalSeparator: DecimalSeparator = DecimalSeparator.AUTO,
     val hapticFeedback: Boolean = true,
     val soundEnabled: Boolean = false,
-    /** The old on/off for hint dots; read only to carry the choice over to [flickHints]. */
-    val showFlickDots: Boolean = true,
-    /** How keys show the functions a flick reaches; null until chosen, see [hints]. */
+    /** How keys show the functions a flick reaches, once chosen in Settings; see [hints]. */
     val flickHints: FlickHints? = null,
+    /** Functions picked by flick so far, counted until [FLICKS_LEARNED]; see [hints]. */
+    val flicksUsed: Int = 0,
     val reduceMotion: Boolean = false,
     /** Whether the person has already flicked a key, so the swipe tip can go away for good. */
     val swipeHintSeen: Boolean = false,
@@ -27,8 +27,15 @@ data class UserPreferences(
     val keypadScale: Float = 1f,
 )
 
-/** The hint style in effect: the chosen one, or what the old dots switch said. */
-val UserPreferences.hints: FlickHints get() = flickHints ?: if (showFlickDots) FlickHints.DOTS else FlickHints.NONE
+/**
+ * The hint style in effect: the one chosen in Settings, if any. Otherwise new people see every
+ * function named on its key, and once they've flicked [FLICKS_LEARNED] times they know the
+ * gesture, so the keypad quiets down to dots.
+ */
+val UserPreferences.hints: FlickHints get() = flickHints ?: if (flicksUsed < FLICKS_LEARNED) FlickHints.LABELS else FlickHints.DOTS
+
+/** Flicks after which the names on the keys give way to dots, unless a style was chosen. */
+const val FLICKS_LEARNED = 10
 
 /** How a key shows its flick functions: their names above and below, two dots, or nothing. */
 enum class FlickHints { LABELS, DOTS, NONE }
