@@ -181,7 +181,7 @@ fun CalculatorScreen(
             onDeleteEntry = viewModel::onDeleteEntry,
             onClearHistory = viewModel::onClearHistory,
             historyOpen = historyOpen,
-            entryMaxFontSize = if (compact) 52.sp else 72.sp,
+            entryMaxFontSize = if (compact) 48.sp else 64.sp,
             modifier = modifier,
         )
     }

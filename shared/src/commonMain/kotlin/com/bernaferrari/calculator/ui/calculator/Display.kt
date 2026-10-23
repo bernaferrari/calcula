@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.TextAutoSize
@@ -137,7 +138,7 @@ fun CalculatorDisplay(
     onClearHistory: () -> Unit,
     modifier: Modifier = Modifier,
     historyOpen: Boolean = false,
-    entryMaxFontSize: TextUnit = 72.sp,
+    entryMaxFontSize: TextUnit = 64.sp,
 ) {
     val shake = remember { Animatable(0f) }
     val reduceMotion = LocalReduceMotion.current
@@ -402,8 +403,10 @@ private fun entryStyle(size: TextUnit, family: FontFamily) = TextStyle(
     textAlign = TextAlign.End,
 )
 
+private val EntrySteps = listOf(1f, 0.78f, 0.62f, 0.5f)
+
 /**
- * The expression in the largest size that fits on one line, shrinking down to a minimum and
+ * The expression in the largest size that fits on one line, stepping down to a minimum and
  * wrapping beyond that. Draws its own blinking cursor; tap to move it.
  */
 @Composable
@@ -432,17 +435,17 @@ private fun ExpressionText(
     }
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val width = constraints.maxWidth
-        val minFontSize = (maxFontSize.value * 0.5f).sp
         val family = GoogleSansFlex
-        val fontSize = remember(text, width, maxFontSize, family) {
-            var size = maxFontSize.value
-            while (size > minFontSize.value) {
-                val result = measurer.measure(text, entryStyle(size.sp, family), maxLines = 1, softWrap = false, constraints = Constraints())
-                if (result.size.width <= width) break
-                size -= 2f
-            }
-            size.coerceAtLeast(minFontSize.value).sp
+        // A few steady sizes rather than a shrink on every key: the number holds still while you
+        // type and only steps down when a step is needed, then wraps past the smallest.
+        val target = remember(text, width, maxFontSize, family) {
+            val steps = EntrySteps.map { maxFontSize.value * it }
+            steps.firstOrNull { size ->
+                measurer.measure(text, entryStyle(size.sp, family), maxLines = 1, softWrap = false, constraints = Constraints()).size.width <= width
+            } ?: steps.last()
         }
+        val animated by animateFloatAsState(target, tween(160), label = "entrySize")
+        val fontSize = (if (LocalReduceMotion.current) target else animated).sp
         var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
         val currentOnTap by rememberUpdatedState(onTap)
         val currentOnSelect by rememberUpdatedState(onSelect)
