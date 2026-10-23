@@ -114,6 +114,8 @@ fun ToolRow(
     resize: ResizeFeedback? = null,
     /** False when history already has a pane of its own, so the menu doesn't offer it. */
     showHistoryEntry: Boolean = true,
+    /** False when every key already names its functions (Labels), so 123|ƒ would add nothing. */
+    showLayerSwitch: Boolean = true,
 ) {
     val quiet = MaterialTheme.colorScheme.onSurfaceVariant
     val dragging = resize != null
@@ -139,7 +141,7 @@ fun ToolRow(
                     // The keys come back up from below: a chevron says so better than a dial pad.
                     Icon(Icons.Rounded.ExpandLess, contentDescription = stringResource(Res.string.show_keypad), tint = quiet)
                 }
-            } else {
+            } else if (showLayerSwitch) {
                 LayerSwitch(layer, onLayer)
             }
         }

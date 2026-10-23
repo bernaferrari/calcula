@@ -138,6 +138,8 @@ fun CalculatorScreen(
     val scope = rememberCoroutineScope()
 
     var layer by rememberSaveable { mutableStateOf(FunctionLayer.Off) }
+    // Labels hide the 123|ƒ switch, so the keys mustn't be left on the function layer without it.
+    LaunchedEffect(state.flickHints) { if (state.flickHints == FlickHints.LABELS) layer = FunctionLayer.Off }
     var historyOpen by rememberSaveable { mutableStateOf(false) }
     // Back closes history mode before leaving the app.
     @OptIn(ExperimentalComposeUiApi::class)
@@ -251,6 +253,8 @@ fun CalculatorScreen(
             ToolRow(
                 historyOpen = historyOpen,
                 layer = layer,
+                // With every function named on its key, the ƒ layer has nothing left to reveal.
+                showLayerSwitch = state.flickHints != FlickHints.LABELS,
                 onToggleHistory = { haptics.tap(); historyOpen = !historyOpen },
                 // Beside a history pane there's no history to open.
                 showHistoryEntry = !split,

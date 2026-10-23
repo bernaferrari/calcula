@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/demo.webp" width="320" alt="Every key names its functions. Flick the 7 up for sin, tap ƒ to turn the keys into functions, flick the 2 down for √">
+  <img src="docs/demo.webp" width="320" alt="Every key names its functions. Flick the 7 up for sin, the 2 up for x², the 2 down for √">
 </p>
 
 <p align="center">
@@ -22,7 +22,6 @@
 ## Why people like it
 
 - **Functions under your thumb.** sin, log, √, x², π and more live on the digits, each named on its key. Flick up for one, down for the other, hold to see both. Reach for one that can't apply yet and it shakes its head.
-- **Or flip the whole keypad.** Tap **ƒ** and the keys turn into functions for one press, or hold it to keep them. Functions that would do nothing yet are dimmed.
 - **Exact answers.** 0.1 + 0.2 is 0.3. Smart percent: 200 + 10% is 220.
 - **A history you'll actually use.** Past results stay above the keys. Tap one to reuse it, pull down to see them all.
 - **Graphs that teach.** Up to six functions, sliders for a, b, c, d, roots and turns you can tap. Recent graphs are kept, and any one shares as an image.
@@ -41,10 +40,10 @@
 
 ## Once you know your way around
 
-After a few flicks the keypad trades its names for two small dots on each key, the same gestures with less to read.
+After a few flicks the keypad trades its names for two small dots on each key, the same gestures with less to read. And when you want to see every function at once, **ƒ** turns the keys into them for one press, or hold it to keep them; functions that would do nothing yet are dimmed.
 
 <p align="center">
-  <img src="docs/demo-dots.webp" width="260" alt="The same flicks with dot hints: hold a key and both of its functions appear">
+  <img src="docs/demo-dots.webp" width="260" alt="With dot hints: flick the 7 for sin, tap ƒ to turn the keys into functions, flick the 2 down for √">
 </p>
 
 ## Private by design
