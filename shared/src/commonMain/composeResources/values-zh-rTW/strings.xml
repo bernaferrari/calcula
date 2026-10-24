@@ -217,13 +217,19 @@
     <string name="stats_clear">清除</string>
     <string name="stats_empty">輸入數字後輕觸「新增」。輕觸任一結果即可在計算機中使用。</string>
     <string name="menu_usage">你的 Calcula</string>
-    <string name="usage_calculations">次計算</string>
-    <string name="usage_flicks">次滑動</string>
-    <string name="usage_days">天</string>
     <string name="usage_favorite">最愛</string>
     <string name="usage_since">自 %1$s</string>
     <string name="usage_share">分享你的卡片</string>
     <string name="usage_tagline">滑一下按鍵，得到一個函數。</string>
     <string name="usage_empty">先算一會兒，再回來看看你的鍵盤亮起來。</string>
     <string name="usage_private">只在本機統計。除非你分享卡片，否則不會離開裝置。</string>
+    <plurals name="usage_calculations">
+        <item quantity="other">次計算</item>
+    </plurals>
+    <plurals name="usage_flicks">
+        <item quantity="other">次滑動</item>
+    </plurals>
+    <plurals name="usage_days">
+        <item quantity="other">天</item>
+    </plurals>
 </resources>

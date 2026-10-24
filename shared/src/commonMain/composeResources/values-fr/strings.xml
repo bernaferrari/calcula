@@ -217,13 +217,22 @@
     <string name="stats_clear">Effacer</string>
     <string name="stats_empty">Tapez un nombre puis Ajouter. Touchez un résultat pour l'utiliser dans la calculatrice.</string>
     <string name="menu_usage">Ton Calcula</string>
-    <string name="usage_calculations">calculs</string>
-    <string name="usage_flicks">glissements</string>
-    <string name="usage_days">jours</string>
     <string name="usage_favorite">préférée</string>
     <string name="usage_since">depuis %1$s</string>
     <string name="usage_share">Partager ta carte</string>
     <string name="usage_tagline">Glisse une touche. Obtiens une fonction.</string>
     <string name="usage_empty">Calcule un peu, puis reviens voir ton clavier s'illuminer.</string>
     <string name="usage_private">Compté uniquement sur cet appareil. Rien n'en sort, sauf si tu partages la carte.</string>
+    <plurals name="usage_calculations">
+        <item quantity="one">calcul</item>
+        <item quantity="other">calculs</item>
+    </plurals>
+    <plurals name="usage_flicks">
+        <item quantity="one">glissement</item>
+        <item quantity="other">glissements</item>
+    </plurals>
+    <plurals name="usage_days">
+        <item quantity="one">jour</item>
+        <item quantity="other">jours</item>
+    </plurals>
 </resources>

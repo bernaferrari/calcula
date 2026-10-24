@@ -68,6 +68,7 @@ import com.bernaferrari.calculator.ui.containerTransform
 import com.bernaferrari.calculator.ui.settings.SettingsViewModel
 import com.bernaferrari.calculator.ui.theme.GoogleSansFlex
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -178,7 +179,7 @@ private fun UsageCard(usage: Usage, formatter: DisplayFormatter, decimal: Char) 
         }
         Spacer(Modifier.height(18.dp))
         Text(number(usage.calculations), style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 64.sp, lineHeight = 64.sp), color = colors.onPrimaryContainer)
-        Text(stringResource(Res.string.usage_calculations), style = MaterialTheme.typography.titleMedium, color = colors.onPrimaryContainer.copy(alpha = 0.8f))
+        Text(pluralStringResource(Res.plurals.usage_calculations, usage.calculations), style = MaterialTheme.typography.titleMedium, color = colors.onPrimaryContainer.copy(alpha = 0.8f))
         Spacer(Modifier.height(18.dp))
         // The keypad, each key lit by how often it's pressed (taps and flicks to its functions).
         Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
@@ -206,8 +207,8 @@ private fun UsageCard(usage: Usage, formatter: DisplayFormatter, decimal: Char) 
         }
         Spacer(Modifier.height(18.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Fact(number(usage.flicks), stringResource(Res.string.usage_flicks))
-            Fact(number(usage.days), stringResource(Res.string.usage_days))
+            Fact(number(usage.flicks), pluralStringResource(Res.plurals.usage_flicks, usage.flicks))
+            Fact(number(usage.days), pluralStringResource(Res.plurals.usage_days, usage.days))
             Fact(favourite?.let { labels[it.key] } ?: "—", stringResource(Res.string.usage_favorite))
         }
         Spacer(Modifier.height(16.dp))
