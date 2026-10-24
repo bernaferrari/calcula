@@ -204,4 +204,16 @@
     <string name="tape_note_edit">编辑备注</string>
     <string name="tape_note_hint">房租分摊、买菜……</string>
     <string name="history_share">分享</string>
+    <string name="menu_statistics">统计</string>
+    <string name="stats_count">个数</string>
+    <string name="stats_sum">总和</string>
+    <string name="stats_mean">平均值</string>
+    <string name="stats_median">中位数</string>
+    <string name="stats_sd_population">σ 总体</string>
+    <string name="stats_sd_sample">s 样本</string>
+    <string name="stats_min">最小值</string>
+    <string name="stats_max">最大值</string>
+    <string name="stats_add">添加</string>
+    <string name="stats_clear">清除</string>
+    <string name="stats_empty">输入数字后点按“添加”。点按任一结果即可在计算器中使用。</string>
 </resources>

@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.AutoStories
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -126,6 +127,7 @@ fun ToolRow(
     onOpenGraph: () -> Unit = {},
     onOpenProgrammer: () -> Unit = {},
     onOpenLibrary: () -> Unit = {},
+    onOpenStatistics: () -> Unit = {},
     /** Set while the bar is being dragged: the controls step back and a pill shows the size. */
     resize: ResizeFeedback? = null,
     /** False when history already has a pane of its own, so the menu doesn't offer it. */
@@ -211,6 +213,11 @@ fun ToolRow(
                         text = { Text(stringResource(Res.string.menu_library)) },
                         leadingIcon = { Icon(Icons.Outlined.AutoStories, contentDescription = null) },
                         onClick = { menu = false; onOpenLibrary() },
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(Res.string.menu_statistics)) },
+                        leadingIcon = { Icon(Icons.Outlined.BarChart, contentDescription = null) },
+                        onClick = { menu = false; onOpenStatistics() },
                     )
                     HorizontalDivider()
                     if (!historyOpen && showHistoryEntry) {

@@ -204,4 +204,16 @@
     <string name="tape_note_edit">メモを編集</string>
     <string name="tape_note_hint">家賃の割り勘、買い物…</string>
     <string name="history_share">共有</string>
+    <string name="menu_statistics">統計</string>
+    <string name="stats_count">個数</string>
+    <string name="stats_sum">合計</string>
+    <string name="stats_mean">平均</string>
+    <string name="stats_median">中央値</string>
+    <string name="stats_sd_population">σ 母集団</string>
+    <string name="stats_sd_sample">s 標本</string>
+    <string name="stats_min">最小</string>
+    <string name="stats_max">最大</string>
+    <string name="stats_add">追加</string>
+    <string name="stats_clear">クリア</string>
+    <string name="stats_empty">数値を入力して「追加」をタップ。結果をタップすると電卓で使えます。</string>
 </resources>

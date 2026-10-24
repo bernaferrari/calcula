@@ -204,4 +204,16 @@
     <string name="tape_note_edit">Editar nota</string>
     <string name="tape_note_hint">Alquiler a medias, súper…</string>
     <string name="history_share">Compartir</string>
+    <string name="menu_statistics">Estadística</string>
+    <string name="stats_count">Cantidad</string>
+    <string name="stats_sum">Suma</string>
+    <string name="stats_mean">Media</string>
+    <string name="stats_median">Mediana</string>
+    <string name="stats_sd_population">σ población</string>
+    <string name="stats_sd_sample">s muestra</string>
+    <string name="stats_min">Mín.</string>
+    <string name="stats_max">Máx.</string>
+    <string name="stats_add">Añadir</string>
+    <string name="stats_clear">Borrar</string>
+    <string name="stats_empty">Escribe un número y toca Añadir. Toca un resultado para usarlo en la calculadora.</string>
 </resources>

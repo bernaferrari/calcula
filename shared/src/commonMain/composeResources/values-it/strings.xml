@@ -204,4 +204,16 @@
     <string name="tape_note_edit">Modifica nota</string>
     <string name="tape_note_hint">Affitto diviso, spesa…</string>
     <string name="history_share">Condividi</string>
+    <string name="menu_statistics">Statistica</string>
+    <string name="stats_count">Numero</string>
+    <string name="stats_sum">Somma</string>
+    <string name="stats_mean">Media</string>
+    <string name="stats_median">Mediana</string>
+    <string name="stats_sd_population">σ popolazione</string>
+    <string name="stats_sd_sample">s campione</string>
+    <string name="stats_min">Min.</string>
+    <string name="stats_max">Max.</string>
+    <string name="stats_add">Aggiungi</string>
+    <string name="stats_clear">Cancella</string>
+    <string name="stats_empty">Scrivi un numero e tocca Aggiungi. Tocca un risultato per usarlo nella calcolatrice.</string>
 </resources>

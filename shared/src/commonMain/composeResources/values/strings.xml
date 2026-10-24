@@ -208,4 +208,16 @@
     <string name="tape_note_edit">Edit note</string>
     <string name="tape_note_hint">Rent split, groceries…</string>
     <string name="history_share">Share</string>
+    <string name="menu_statistics">Statistics</string>
+    <string name="stats_count">Count</string>
+    <string name="stats_sum">Sum</string>
+    <string name="stats_mean">Mean</string>
+    <string name="stats_median">Median</string>
+    <string name="stats_sd_population">σ population</string>
+    <string name="stats_sd_sample">s sample</string>
+    <string name="stats_min">Min</string>
+    <string name="stats_max">Max</string>
+    <string name="stats_add">Add</string>
+    <string name="stats_clear">Clear</string>
+    <string name="stats_empty">Type a number and tap Add. Tap any result to use it in the calculator.</string>
 </resources>

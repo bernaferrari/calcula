@@ -119,6 +119,7 @@ fun CalculatorScreen(
     onOpenConverter: (seed: String?) -> Unit,
     onOpenGraph: () -> Unit = {},
     onOpenProgrammer: () -> Unit = {},
+    onOpenStatistics: () -> Unit = {},
     pendingInsert: String? = null,
     onInsertConsumed: () -> Unit = {},
     viewModel: CalculatorViewModel = viewModel { CalculatorViewModel(savedState = createSavedStateHandle()) },
@@ -309,6 +310,7 @@ fun CalculatorScreen(
                 onOpenGraph = onOpenGraph,
                 onOpenProgrammer = onOpenProgrammer,
                 onOpenLibrary = { library = LibraryTab.CONSTANTS },
+                onOpenStatistics = onOpenStatistics,
                 onOpenSettings = onOpenSettings,
                 resize = if (!pulling) null else {
                     val span = (maxRow - minRow).value.coerceAtLeast(1f)

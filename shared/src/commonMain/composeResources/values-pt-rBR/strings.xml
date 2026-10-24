@@ -206,4 +206,16 @@
     <string name="tape_note_edit">Editar nota</string>
     <string name="tape_note_hint">Aluguel dividido, mercado…</string>
     <string name="history_share">Compartilhar</string>
+    <string name="menu_statistics">Estatística</string>
+    <string name="stats_count">Quantidade</string>
+    <string name="stats_sum">Soma</string>
+    <string name="stats_mean">Média</string>
+    <string name="stats_median">Mediana</string>
+    <string name="stats_sd_population">σ população</string>
+    <string name="stats_sd_sample">s amostra</string>
+    <string name="stats_min">Mín.</string>
+    <string name="stats_max">Máx.</string>
+    <string name="stats_add">Adicionar</string>
+    <string name="stats_clear">Limpar</string>
+    <string name="stats_empty">Digite um número e toque em Adicionar. Toque em um resultado para usá-lo na calculadora.</string>
 </resources>

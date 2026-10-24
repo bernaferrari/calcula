@@ -204,4 +204,16 @@
     <string name="tape_note_edit">Notiz bearbeiten</string>
     <string name="tape_note_hint">Miete geteilt, Einkauf…</string>
     <string name="history_share">Teilen</string>
+    <string name="menu_statistics">Statistik</string>
+    <string name="stats_count">Anzahl</string>
+    <string name="stats_sum">Summe</string>
+    <string name="stats_mean">Mittelwert</string>
+    <string name="stats_median">Median</string>
+    <string name="stats_sd_population">σ Grundgesamtheit</string>
+    <string name="stats_sd_sample">s Stichprobe</string>
+    <string name="stats_min">Min.</string>
+    <string name="stats_max">Max.</string>
+    <string name="stats_add">Hinzufügen</string>
+    <string name="stats_clear">Leeren</string>
+    <string name="stats_empty">Gib eine Zahl ein und tippe auf Hinzufügen. Tippe auf ein Ergebnis, um es im Rechner zu verwenden.</string>
 </resources>

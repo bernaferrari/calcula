@@ -204,4 +204,16 @@
     <string name="tape_note_edit">Modifier la note</string>
     <string name="tape_note_hint">Loyer partagé, courses…</string>
     <string name="history_share">Partager</string>
+    <string name="menu_statistics">Statistiques</string>
+    <string name="stats_count">Nombre</string>
+    <string name="stats_sum">Somme</string>
+    <string name="stats_mean">Moyenne</string>
+    <string name="stats_median">Médiane</string>
+    <string name="stats_sd_population">σ population</string>
+    <string name="stats_sd_sample">s échantillon</string>
+    <string name="stats_min">Min.</string>
+    <string name="stats_max">Max.</string>
+    <string name="stats_add">Ajouter</string>
+    <string name="stats_clear">Effacer</string>
+    <string name="stats_empty">Tapez un nombre puis Ajouter. Touchez un résultat pour l'utiliser dans la calculatrice.</string>
 </resources>

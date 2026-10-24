@@ -204,4 +204,16 @@
     <string name="tape_note_edit">編輯備註</string>
     <string name="tape_note_hint">房租分攤、買菜……</string>
     <string name="history_share">分享</string>
+    <string name="menu_statistics">統計</string>
+    <string name="stats_count">個數</string>
+    <string name="stats_sum">總和</string>
+    <string name="stats_mean">平均值</string>
+    <string name="stats_median">中位數</string>
+    <string name="stats_sd_population">σ 母體</string>
+    <string name="stats_sd_sample">s 樣本</string>
+    <string name="stats_min">最小值</string>
+    <string name="stats_max">最大值</string>
+    <string name="stats_add">新增</string>
+    <string name="stats_clear">清除</string>
+    <string name="stats_empty">輸入數字後輕觸「新增」。輕觸任一結果即可在計算機中使用。</string>
 </resources>

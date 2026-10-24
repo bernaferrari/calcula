@@ -44,6 +44,8 @@ data class UserPreferences(
     val programmerWord: WordSize = WordSize.QWORD,
     /** How results are written: as is, or scientific (`1.23E6`) or engineering (`12.3E3`). */
     val notation: Notation = Notation.NORMAL,
+    /** The numbers on the statistics screen, kept between visits. */
+    val statsData: List<String> = emptyList(),
 )
 
 /**
