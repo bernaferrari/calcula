@@ -414,15 +414,11 @@ fun CalculatorScreen(
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
-                        IconButton(onClick = onOpenGraph, modifier = Modifier.containerTransform("graph")) {
-                            Icon(Icons.Outlined.ShowChart, contentDescription = stringResource(Res.string.graph_title), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
                         Spacer(Modifier.weight(1f))
-                        IconButton(onClick = { onOpenConverter(currentNumber) }, modifier = Modifier.containerTransform("converter")) {
-                            Icon(Icons.Outlined.Straighten, contentDescription = stringResource(Res.string.menu_unit_converter), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        OverflowMenu(
+                        ToolActions(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            onOpenGraph = onOpenGraph,
+                            onOpenConverter = { onOpenConverter(currentNumber) },
                             onOpenProgrammer = onOpenProgrammer,
                             onOpenLibrary = { library = LibraryTab.CONSTANTS },
                             onOpenStatistics = onOpenStatistics,

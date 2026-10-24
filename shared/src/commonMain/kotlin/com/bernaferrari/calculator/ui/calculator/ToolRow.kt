@@ -1,5 +1,8 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import androidx.compose.material3.AppBarRowScope
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.AppBarRow
 import com.bernaferrari.calculator.ui.MenuShape
 import com.bernaferrari.calculator.ui.flushMenu
 import androidx.compose.material.icons.outlined.BarChart
@@ -180,22 +183,17 @@ fun ToolRow(
                 }
             }
         }
-        Row(Modifier.align(Alignment.CenterEnd)) {
-            IconButton(onClick = onOpenGraph, modifier = Modifier.containerTransform("graph")) {
-                Icon(Icons.Outlined.ShowChart, contentDescription = stringResource(Res.string.graph_title), tint = quiet)
-            }
-            IconButton(onClick = onOpenConverter, modifier = Modifier.containerTransform("converter")) {
-                Icon(Icons.Outlined.Straighten, contentDescription = stringResource(Res.string.menu_unit_converter), tint = quiet)
-            }
-            OverflowMenu(
-                tint = quiet,
-                onOpenProgrammer = onOpenProgrammer,
-                onOpenLibrary = onOpenLibrary,
-                onOpenStatistics = onOpenStatistics,
-                onOpenHistory = if (!historyOpen && showHistoryEntry) onToggleHistory else null,
-                onOpenSettings = onOpenSettings,
-            )
-        }
+        ToolActions(
+            tint = quiet,
+            onOpenGraph = onOpenGraph,
+            onOpenConverter = onOpenConverter,
+            onOpenProgrammer = onOpenProgrammer,
+            onOpenLibrary = onOpenLibrary,
+            onOpenStatistics = onOpenStatistics,
+            onOpenHistory = if (!historyOpen && showHistoryEntry) onToggleHistory else null,
+            onOpenSettings = onOpenSettings,
+            modifier = Modifier.align(Alignment.CenterEnd),
+        )
         }
         ResizePill(resize, Modifier.align(Alignment.Center))
     }
@@ -254,54 +252,76 @@ private fun Modifier.pullProgress(progress: Float, color: Color): Modifier = dra
 }
 
 /**
- * ⋮: what has no icon of its own. Graph and the converter sit right beside it, so they aren't
- * repeated here. Settings grows out of this button, so its container transform starts here.
+ * The tools, Material's way: an [AppBarRow] shows graph and the converter as icons while there's
+ * room and folds them into ⋮ when there isn't; the rest (programmer, library, statistics, history,
+ * settings) always live in ⋮. Settings grows out of the ⋮ button.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun OverflowMenu(
+fun ToolActions(
     tint: Color,
+    onOpenGraph: () -> Unit,
+    onOpenConverter: () -> Unit,
     onOpenProgrammer: () -> Unit,
     onOpenLibrary: () -> Unit,
     onOpenStatistics: () -> Unit,
     onOpenHistory: (() -> Unit)?,
     onOpenSettings: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    var menu by remember { mutableStateOf(false) }
-    Box(Modifier.containerTransform("settings")) {
-        IconButton(onClick = { menu = true }) {
-            Icon(Icons.Outlined.MoreVert, contentDescription = stringResource(Res.string.more_options), tint = tint)
-        }
-        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, shape = MenuShape, modifier = Modifier.flushMenu()) {
-            DropdownMenuItem(
-                text = { Text(stringResource(Res.string.menu_programmer)) },
-                leadingIcon = { Icon(Icons.Outlined.Code, contentDescription = null) },
-                onClick = { menu = false; onOpenProgrammer() },
-            )
-            DropdownMenuItem(
-                text = { Text(stringResource(Res.string.menu_library)) },
-                leadingIcon = { Icon(Icons.Outlined.AutoStories, contentDescription = null) },
-                onClick = { menu = false; onOpenLibrary() },
-            )
-            DropdownMenuItem(
-                text = { Text(stringResource(Res.string.menu_statistics)) },
-                leadingIcon = { Icon(Icons.Outlined.BarChart, contentDescription = null) },
-                onClick = { menu = false; onOpenStatistics() },
-            )
-            HorizontalDivider()
-            if (onOpenHistory != null) {
-                DropdownMenuItem(
-                    text = { Text(stringResource(Res.string.settings_history)) },
-                    leadingIcon = { Icon(Icons.Outlined.History, contentDescription = null) },
-                    onClick = { menu = false; onOpenHistory() },
-                )
+    val graph = stringResource(Res.string.graph_title)
+    val converter = stringResource(Res.string.menu_unit_converter)
+    val programmer = stringResource(Res.string.menu_programmer)
+    val library = stringResource(Res.string.menu_library)
+    val statistics = stringResource(Res.string.menu_statistics)
+    val history = stringResource(Res.string.settings_history)
+    val settings = stringResource(Res.string.menu_settings)
+    val more = stringResource(Res.string.more_options)
+    AppBarRow(
+        modifier = modifier,
+        // Two icons and ⋮: everything past the first two goes in the menu.
+        maxItemCount = 3,
+        overflowIndicator = { state ->
+            Box(Modifier.containerTransform("settings")) {
+                IconButton(onClick = { if (state.isShowing) state.dismiss() else state.show() }) {
+                    Icon(Icons.Outlined.MoreVert, contentDescription = more, tint = tint)
+                }
             }
-            DropdownMenuItem(
-                text = { Text(stringResource(Res.string.menu_settings)) },
-                leadingIcon = { Icon(Icons.Outlined.Settings, contentDescription = null) },
-                onClick = { menu = false; onOpenSettings() },
-            )
-        }
+        },
+    ) {
+        customItem(
+            appbarContent = {
+                IconButton(onClick = onOpenGraph, modifier = Modifier.containerTransform("graph")) {
+                    Icon(Icons.Outlined.ShowChart, contentDescription = graph, tint = tint)
+                }
+            },
+            menuContent = { state -> MenuEntry(graph, Icons.Outlined.ShowChart) { state.dismiss(); onOpenGraph() } },
+        )
+        customItem(
+            appbarContent = {
+                IconButton(onClick = onOpenConverter, modifier = Modifier.containerTransform("converter")) {
+                    Icon(Icons.Outlined.Straighten, contentDescription = converter, tint = tint)
+                }
+            },
+            menuContent = { state -> MenuEntry(converter, Icons.Outlined.Straighten) { state.dismiss(); onOpenConverter() } },
+        )
+        tool(programmer, Icons.Outlined.Code, tint, onOpenProgrammer)
+        tool(library, Icons.Outlined.AutoStories, tint, onOpenLibrary)
+        tool(statistics, Icons.Outlined.BarChart, tint, onOpenStatistics)
+        if (onOpenHistory != null) tool(history, Icons.Outlined.History, tint, onOpenHistory)
+        tool(settings, Icons.Outlined.Settings, tint, onOpenSettings)
     }
+}
+
+/** An action that is an icon in the row when it fits, and an icon and a name in ⋮ when it doesn't. */
+private fun AppBarRowScope.tool(label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, tint: Color, onClick: () -> Unit) = customItem(
+    appbarContent = { IconButton(onClick = onClick) { Icon(icon, contentDescription = label, tint = tint) } },
+    menuContent = { state -> MenuEntry(label, icon) { state.dismiss(); onClick() } },
+)
+
+@Composable
+private fun MenuEntry(label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
+    DropdownMenuItem(text = { Text(label) }, leadingIcon = { Icon(icon, contentDescription = null) }, onClick = onClick)
 }
 
 /**
