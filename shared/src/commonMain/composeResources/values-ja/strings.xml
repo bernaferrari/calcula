@@ -200,4 +200,8 @@
     <string name="customize_builtin">組み込み</string>
     <string name="customize_flick_up">%1$s を上にフリック</string>
     <string name="customize_flick_down">%1$s を下にフリック</string>
+    <string name="tape_note_add">メモを追加</string>
+    <string name="tape_note_edit">メモを編集</string>
+    <string name="tape_note_hint">家賃の割り勘、買い物…</string>
+    <string name="history_share">共有</string>
 </resources>

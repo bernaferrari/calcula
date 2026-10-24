@@ -55,6 +55,13 @@ actual fun ImageBitmap.encodePng(): ByteArray =
 private fun download(url: String, name: String): Unit =
     js("{ const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); }")
 
+/** The browser's share sheet where there is one (phones), else the text goes to the clipboard. */
+private fun shareText(text: String): Unit =
+    js("{ if (navigator.share) { navigator.share({ text: text }).catch(() => {}); } else if (navigator.clipboard) { navigator.clipboard.writeText(text); } }")
+
+@Composable
+actual fun rememberTextSharer(): (text: String) -> Unit = remember { { text -> shareText(text) } }
+
 /** Browsers have no share sheet for files everywhere, so the image downloads. */
 @OptIn(ExperimentalEncodingApi::class)
 @Composable

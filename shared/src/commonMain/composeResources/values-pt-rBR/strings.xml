@@ -202,4 +202,8 @@
     <string name="customize_builtin">Do app</string>
     <string name="customize_flick_up">Deslizar para cima no %1$s</string>
     <string name="customize_flick_down">Deslizar para baixo no %1$s</string>
+    <string name="tape_note_add">Adicionar nota</string>
+    <string name="tape_note_edit">Editar nota</string>
+    <string name="tape_note_hint">Aluguel dividido, mercado…</string>
+    <string name="history_share">Compartilhar</string>
 </resources>

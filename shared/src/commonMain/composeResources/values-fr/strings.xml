@@ -200,4 +200,8 @@
     <string name="customize_builtin">Intégrées</string>
     <string name="customize_flick_up">Glisser vers le haut sur %1$s</string>
     <string name="customize_flick_down">Glisser vers le bas sur %1$s</string>
+    <string name="tape_note_add">Ajouter une note</string>
+    <string name="tape_note_edit">Modifier la note</string>
+    <string name="tape_note_hint">Loyer partagé, courses…</string>
+    <string name="history_share">Partager</string>
 </resources>

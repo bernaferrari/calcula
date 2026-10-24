@@ -200,4 +200,8 @@
     <string name="customize_builtin">Eingebaut</string>
     <string name="customize_flick_up">Nach oben auf %1$s</string>
     <string name="customize_flick_down">Nach unten auf %1$s</string>
+    <string name="tape_note_add">Notiz hinzufügen</string>
+    <string name="tape_note_edit">Notiz bearbeiten</string>
+    <string name="tape_note_hint">Miete geteilt, Einkauf…</string>
+    <string name="history_share">Teilen</string>
 </resources>

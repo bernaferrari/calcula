@@ -9,6 +9,8 @@ data class CalculationHistory(
     val expression: String,
     val result: String,
     val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
+    /** A few words the person added ("rent split"), shown above the calculation. */
+    val note: String? = null,
 )
 
 enum class AngleUnit {

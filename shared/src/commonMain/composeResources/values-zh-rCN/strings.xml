@@ -200,4 +200,8 @@
     <string name="customize_builtin">内置</string>
     <string name="customize_flick_up">在 %1$s 上向上滑</string>
     <string name="customize_flick_down">在 %1$s 上向下滑</string>
+    <string name="tape_note_add">添加备注</string>
+    <string name="tape_note_edit">编辑备注</string>
+    <string name="tape_note_hint">房租分摊、买菜……</string>
+    <string name="history_share">分享</string>
 </resources>

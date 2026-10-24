@@ -337,6 +337,10 @@ class CalculatorViewModel(
         viewModelScope.launch { preferences.updateKeypadScale(scale) }
     }
 
+    fun onNote(entry: CalculationHistory, note: String) {
+        viewModelScope.launch { historyRepository.insertCalculation(entry.copy(note = note.trim().ifEmpty { null })) }
+    }
+
     fun onDeleteEntry(entry: CalculationHistory) {
         viewModelScope.launch {
             historyRepository.deleteCalculation(entry)

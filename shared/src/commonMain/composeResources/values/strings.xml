@@ -204,4 +204,8 @@
     <string name="customize_builtin">Built in</string>
     <string name="customize_flick_up">Flick up on %1$s</string>
     <string name="customize_flick_down">Flick down on %1$s</string>
+    <string name="tape_note_add">Add note</string>
+    <string name="tape_note_edit">Edit note</string>
+    <string name="tape_note_hint">Rent split, groceries…</string>
+    <string name="history_share">Share</string>
 </resources>

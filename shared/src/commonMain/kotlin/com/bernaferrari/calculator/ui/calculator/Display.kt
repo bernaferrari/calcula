@@ -155,6 +155,8 @@ fun CalculatorDisplay(
     historyOpen: Boolean = false,
     entryMaxFontSize: TextUnit = 64.sp,
     onRecallMemory: () -> Unit = {},
+    onNote: (CalculationHistory, String) -> Unit = { _, _ -> },
+    onShareHistory: () -> Unit = {},
     /** Holding the memory chip opens the memories. */
     onOpenMemory: () -> Unit = {},
     /** Tapping the preview (`= 52`) takes it, like pressing `=`. */
@@ -201,6 +203,8 @@ fun CalculatorDisplay(
                 onClearAll = onClearHistory,
                 onCopy = onCopy,
                 expanded = historyOpen,
+                onNote = onNote,
+                onShare = onShareHistory,
                 // Right after `=`, the big number below *is* the newest answer; don't say it twice.
                 hideNewestResult = state.resultShown && !historyOpen,
                 modifier = Modifier.weight(1f).fillMaxWidth(),

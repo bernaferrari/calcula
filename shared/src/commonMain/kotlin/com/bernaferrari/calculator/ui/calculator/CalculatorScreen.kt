@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import com.bernaferrari.calculator.platform.rememberTextSharer
 import com.bernaferrari.calculator.ui.library.LibraryTab
 import com.bernaferrari.calculator.ui.library.LibrarySheet
 import androidx.compose.runtime.mutableFloatStateOf
@@ -178,6 +179,16 @@ fun CalculatorScreen(
         }
     }
 
+    val shareText = rememberTextSharer()
+    // The whole history as plain text, oldest first, notes above their calculations.
+    val shareHistory: () -> Unit = {
+        shareText(
+            state.history.reversed().joinToString("\n\n") { entry ->
+                listOfNotNull(entry.note, formatter.format(entry.expression, 0, null).text.text + " = " + formatter.number(entry.result)).joinToString("\n")
+            },
+        )
+    }
+
     val copy: (String) -> Unit = { raw ->
         val text = if (Calculator.isPlainNumber(raw)) raw.replace('.', formatter.decimal).replace('−', '-') else raw
         clipboard.setText(AnnotatedString(text))
@@ -201,6 +212,8 @@ fun CalculatorScreen(
             onEditExpression = { viewModel.onEditExpression(it); historyOpen = false },
             onDeleteEntry = viewModel::onDeleteEntry,
             onClearHistory = viewModel::onClearHistory,
+            onNote = viewModel::onNote,
+            onShareHistory = shareHistory,
             historyOpen = historyOpen,
             entryMaxFontSize = if (compact) 48.sp else 64.sp,
             onRecallMemory = { viewModel.onMemory(MemoryOp.RECALL) },
@@ -225,6 +238,8 @@ fun CalculatorScreen(
             onEditExpression = { viewModel.onEditExpression(it) },
             onDeleteEntry = viewModel::onDeleteEntry,
             onClearHistory = viewModel::onClearHistory,
+            onNote = viewModel::onNote,
+            onShareHistory = shareHistory,
             historyOpen = true,
             modifier = modifier,
         )

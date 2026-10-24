@@ -200,4 +200,8 @@
     <string name="customize_builtin">Integradas</string>
     <string name="customize_flick_up">Deslizar hacia arriba en %1$s</string>
     <string name="customize_flick_down">Deslizar hacia abajo en %1$s</string>
+    <string name="tape_note_add">Añadir nota</string>
+    <string name="tape_note_edit">Editar nota</string>
+    <string name="tape_note_hint">Alquiler a medias, súper…</string>
+    <string name="history_share">Compartir</string>
 </resources>

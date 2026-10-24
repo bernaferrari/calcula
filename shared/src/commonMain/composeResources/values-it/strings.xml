@@ -200,4 +200,8 @@
     <string name="customize_builtin">Integrate</string>
     <string name="customize_flick_up">Su sul %1$s</string>
     <string name="customize_flick_down">Giù sul %1$s</string>
+    <string name="tape_note_add">Aggiungi nota</string>
+    <string name="tape_note_edit">Modifica nota</string>
+    <string name="tape_note_hint">Affitto diviso, spesa…</string>
+    <string name="history_share">Condividi</string>
 </resources>

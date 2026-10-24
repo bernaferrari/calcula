@@ -78,6 +78,19 @@ actual val systemConfirmsCopy: Boolean = false
 actual fun ImageBitmap.encodePng(): ByteArray =
     Image.makeFromBitmap(asSkiaBitmap()).encodeToData(EncodedImageFormat.PNG)?.bytes ?: ByteArray(0)
 
+@Composable
+actual fun rememberTextSharer(): (text: String) -> Unit = remember {
+    { text ->
+        var top = UIApplication.sharedApplication.keyWindow?.rootViewController
+        while (top?.presentedViewController != null) top = top.presentedViewController
+        if (top != null) {
+            val sheet = UIActivityViewController(listOf(text), null)
+            sheet.popoverPresentationController?.sourceView = top.view
+            top.presentViewController(sheet, animated = true, completion = null)
+        }
+    }
+}
+
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 @Composable
 actual fun rememberImageSharer(): (png: ByteArray, fileName: String) -> Unit = remember {

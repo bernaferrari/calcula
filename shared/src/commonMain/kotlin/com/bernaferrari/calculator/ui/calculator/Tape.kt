@@ -1,5 +1,9 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -106,6 +110,10 @@ fun Tape(
     onClearAll: () -> Unit,
     onCopy: (String) -> Unit,
     modifier: Modifier = Modifier,
+    /** A note on an entry ("rent split"); an empty one removes it. */
+    onNote: (CalculationHistory, String) -> Unit = { _, _ -> },
+    /** Shares the whole history as text, from history mode. */
+    onShare: () -> Unit = {},
 ) {
     val colors = MaterialTheme.colorScheme
     val formatColors = DisplayFormatter.Colors(operator = colors.primary.copy(alpha = 0.8f), function = colors.onSurfaceVariant, ghost = colors.outline)
@@ -128,7 +136,10 @@ fun Tape(
                     color = colors.onSurface,
                     modifier = Modifier.weight(1f),
                 )
-                if (history.isNotEmpty()) TextButton(onClick = onClearAll) { Text(stringResource(Res.string.history_clear)) }
+                if (history.isNotEmpty()) {
+                    IconButton(onClick = onShare) { Icon(Icons.Outlined.Share, contentDescription = stringResource(Res.string.history_share), tint = colors.onSurfaceVariant) }
+                    TextButton(onClick = onClearAll) { Text(stringResource(Res.string.history_clear)) }
+                }
             }
         }
         if (expanded && history.isEmpty()) {
@@ -136,7 +147,7 @@ fun Tape(
                 Text(stringResource(Res.string.history_empty), style = MaterialTheme.typography.bodyLarge, color = colors.onSurfaceVariant)
             }
         } else {
-            TapeList(rows, state, expanded, hideNewestResult, formatter, formatColors, onUseResult, onEditExpression, onDeleteEntry, onCopy, Modifier.weight(1f).fillMaxWidth())
+            TapeList(rows, state, expanded, hideNewestResult, formatter, formatColors, onUseResult, onEditExpression, onDeleteEntry, onCopy, onNote, Modifier.weight(1f).fillMaxWidth())
         }
     }
 }
@@ -153,6 +164,7 @@ private fun TapeList(
     onEditExpression: (CalculationHistory) -> Unit,
     onDeleteEntry: (CalculationHistory) -> Unit,
     onCopy: (String) -> Unit,
+    onNote: (CalculationHistory, String) -> Unit,
     modifier: Modifier,
 ) {
     val colors = MaterialTheme.colorScheme
@@ -192,6 +204,7 @@ private fun TapeList(
                     onEditExpression = onEditExpression,
                     onDeleteEntry = onDeleteEntry,
                     onCopy = onCopy,
+                    onNote = onNote,
                     modifier = Modifier.animateItem(fadeInSpec = tween(220, delayMillis = 140)),
                 )
             }
@@ -210,10 +223,12 @@ private fun TapeEntry(
     onEditExpression: (CalculationHistory) -> Unit,
     onDeleteEntry: (CalculationHistory) -> Unit,
     onCopy: (String) -> Unit,
+    onNote: (CalculationHistory, String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.colorScheme
     var menu by remember { mutableStateOf(false) }
+    var noting by remember { mutableStateOf(false) }
     val dismiss = rememberSwipeToDismissBoxState()
     SwipeToDismissBox(
         state = dismiss,
@@ -230,7 +245,18 @@ private fun TapeEntry(
         },
         modifier = modifier,
     ) {
-        Box(Modifier.background(colors.surface)) {
+        Column(Modifier.background(colors.surface)) {
+            // The person's note sits just above its calculation, in the accent, like a label on a receipt.
+            entry.note?.let {
+                Text(
+                    it,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = colors.primary,
+                    textAlign = TextAlign.End,
+                    modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 8.dp),
+                )
+            }
+        Box {
             // One line per calculation, "12+7×3 = 33": the question quiet, the answer full strength.
             // A long one wraps, keeping "= 33" together on the last line.
             FlowRow(
@@ -269,10 +295,32 @@ private fun TapeEntry(
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                     DropdownMenuItem(text = { Text(stringResource(Res.string.tape_copy_result)) }, onClick = { menu = false; onCopy(entry.result) })
                     DropdownMenuItem(text = { Text(stringResource(Res.string.tape_edit)) }, onClick = { menu = false; onEditExpression(entry) })
+                    DropdownMenuItem(
+                        text = { Text(stringResource(if (entry.note == null) Res.string.tape_note_add else Res.string.tape_note_edit)) },
+                        onClick = { menu = false; noting = true },
+                    )
                     DropdownMenuItem(text = { Text(stringResource(Res.string.tape_delete)) }, onClick = { menu = false; onDeleteEntry(entry) })
                 }
             }
         }
+        }
+    }
+    if (noting) {
+        var note by remember { mutableStateOf(entry.note.orEmpty()) }
+        AlertDialog(
+            onDismissRequest = { noting = false },
+            title = { Text(stringResource(if (entry.note == null) Res.string.tape_note_add else Res.string.tape_note_edit)) },
+            text = {
+                OutlinedTextField(
+                    value = note,
+                    onValueChange = { note = it.take(40) },
+                    singleLine = true,
+                    placeholder = { Text(stringResource(Res.string.tape_note_hint)) },
+                )
+            },
+            confirmButton = { TextButton(onClick = { onNote(entry, note); noting = false }) { Text(stringResource(Res.string.function_save)) } },
+            dismissButton = { TextButton(onClick = { noting = false }) { Text(stringResource(Res.string.function_cancel)) } },
+        )
     }
 }
 

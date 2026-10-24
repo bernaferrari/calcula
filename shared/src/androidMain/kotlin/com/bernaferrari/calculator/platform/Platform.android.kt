@@ -101,6 +101,20 @@ actual fun ImageBitmap.encodePng(): ByteArray =
     ByteArrayOutputStream().also { asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it) }.toByteArray()
 
 @Composable
+actual fun rememberTextSharer(): (text: String) -> Unit {
+    val context = LocalContext.current
+    return remember(context) {
+        { text ->
+            val send = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, text)
+            }
+            context.startActivity(Intent.createChooser(send, null))
+        }
+    }
+}
+
+@Composable
 actual fun rememberImageSharer(): (png: ByteArray, fileName: String) -> Unit {
     val context = LocalContext.current
     return remember(context) {

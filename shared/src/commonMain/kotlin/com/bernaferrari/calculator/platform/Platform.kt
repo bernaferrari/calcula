@@ -47,3 +47,7 @@ expect fun ImageBitmap.encodePng(): ByteArray
  */
 @Composable
 expect fun rememberImageSharer(): (png: ByteArray, fileName: String) -> Unit
+
+/** Offers text to the system's share sheet; on the web, the browser's, or a download without one. */
+@Composable
+expect fun rememberTextSharer(): (text: String) -> Unit
