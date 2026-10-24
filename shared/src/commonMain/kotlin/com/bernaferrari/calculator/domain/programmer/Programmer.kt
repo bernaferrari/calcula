@@ -114,6 +114,13 @@ object Programmer {
         error = null,
     )
 
+    /** Flips one bit of the current value; the expression becomes that number, ready to go on with. */
+    fun flipBit(state: ProgState, bit: Int): ProgState {
+        val value = value(state) ?: 0L
+        val flipped = wrap(value xor (1L shl bit), state.word)
+        return state.copy(tokens = tokensFor(flipped, state.base, state.word), resultShown = false, error = null)
+    }
+
     /** Changes the word size: numbers are cut down to fit, as the hardware would. */
     fun withWord(state: ProgState, word: WordSize): ProgState = state.copy(
         word = word,

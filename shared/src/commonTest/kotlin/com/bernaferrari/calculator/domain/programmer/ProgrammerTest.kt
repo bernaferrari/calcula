@@ -49,4 +49,12 @@ class ProgrammerTest {
         assertEquals(ProgError.DIVIDE_BY_ZERO, s.error)
         assertNull(type(ProgKey.D1, from = s).error)
     }
+
+    @Test fun bitsFlip() {
+        val five = type(ProgKey.D5)
+        assertEquals(7L, Programmer.value(Programmer.flipBit(five, 1)))
+        assertEquals(4L, Programmer.value(Programmer.flipBit(five, 0)))
+        // The sign bit of a byte makes it negative.
+        assertEquals(-128L, Programmer.value(Programmer.flipBit(ProgState(word = WordSize.BYTE), 7)))
+    }
 }

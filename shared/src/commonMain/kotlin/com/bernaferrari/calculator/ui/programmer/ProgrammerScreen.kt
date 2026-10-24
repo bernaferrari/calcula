@@ -106,6 +106,8 @@ class ProgrammerViewModel(private val preferences: PreferencesRepository = AppGr
         viewModelScope.launch { preferences.update { it.copy(programmerBase = base) } }
     }
 
+    fun onFlipBit(bit: Int) { _state.value = Programmer.flipBit(_state.value, bit) }
+
     fun onWord(word: WordSize) {
         _state.value = Programmer.withWord(_state.value, word)
         viewModelScope.launch { preferences.update { it.copy(programmerWord = word) } }
@@ -178,6 +180,7 @@ fun ProgrammerScreen(
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).height(32.dp),
                     )
+                    BitGrid(value ?: 0L, state.word) { haptics.tick(); viewModel.onFlipBit(it) }
                     Spacer(Modifier.height(8.dp))
                     BaseSelector(state.base) { haptics.tap(); viewModel.onBase(it) }
                 }
@@ -201,6 +204,50 @@ fun ProgrammerScreen(
                         keys(Modifier.fillMaxWidth().height(keypadHeight + bottomInset).padding(top = 8.dp, bottom = bottomInset))
                     }
                 }
+            }
+        }
+    }
+}
+
+/**
+ * The value's bits, most significant first, sixteen to a row in groups of four, numbered at each
+ * row's ends. Tap one to flip it.
+ */
+@Composable
+private fun BitGrid(value: Long, word: WordSize, onFlip: (Int) -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    val rows = (word.bits + 15) / 16
+    Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        for (r in 0 until rows) {
+            val high = word.bits - 1 - r * 16
+            val count = minOf(16, word.bits - r * 16)
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                Text("$high", style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 10.sp), color = colors.outline, modifier = Modifier.width(20.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.weight(1f)) {
+                    for (g in 0 until 4) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(2.dp), modifier = Modifier.weight(1f)) {
+                            for (i in 0 until 4) {
+                                val index = g * 4 + i
+                                if (index >= count) { Spacer(Modifier.weight(1f)); continue }
+                                val bit = high - index
+                                val on = (value ushr bit) and 1L == 1L
+                                val fill by animateColorAsState(if (on) colors.primary else colors.surfaceContainerHigh, label = "bit")
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(22.dp)
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(fill)
+                                        .clickable { onFlip(bit) },
+                                ) {
+                                    Text(if (on) "1" else "0", style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 11.sp), color = if (on) colors.onPrimary else colors.onSurfaceVariant)
+                                }
+                            }
+                        }
+                    }
+                }
+                Text("${high - count + 1}", style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 10.sp, textAlign = TextAlign.End), color = colors.outline, modifier = Modifier.width(20.dp))
             }
         }
     }
