@@ -191,4 +191,13 @@
     <string name="memory_name">名稱</string>
     <string name="library_delete">刪除</string>
     <string name="library_rename">重新命名</string>
+    <string name="settings_customize_keys">自訂按鍵</string>
+    <string name="settings_customize_keys_summary">選擇每個滑動的功能</string>
+    <string name="customize_hint">輕觸按鍵上方或下方的標籤，選擇該滑動的功能。</string>
+    <string name="customize_reset">重設</string>
+    <string name="customize_none">無</string>
+    <string name="customize_default">預設：%1$s</string>
+    <string name="customize_builtin">內建</string>
+    <string name="customize_flick_up">在 %1$s 上向上滑</string>
+    <string name="customize_flick_down">在 %1$s 上向下滑</string>
 </resources>

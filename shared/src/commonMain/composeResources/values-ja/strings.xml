@@ -191,4 +191,13 @@
     <string name="memory_name">名前</string>
     <string name="library_delete">削除</string>
     <string name="library_rename">名前を変更</string>
+    <string name="settings_customize_keys">キーをカスタマイズ</string>
+    <string name="settings_customize_keys_summary">各フリックの動作を選べます</string>
+    <string name="customize_hint">キーの上や下のラベルをタップして、そのフリックの動作を選びます。</string>
+    <string name="customize_reset">リセット</string>
+    <string name="customize_none">なし</string>
+    <string name="customize_default">標準: %1$s</string>
+    <string name="customize_builtin">組み込み</string>
+    <string name="customize_flick_up">%1$s を上にフリック</string>
+    <string name="customize_flick_down">%1$s を下にフリック</string>
 </resources>

@@ -191,4 +191,13 @@
     <string name="memory_name">Nom</string>
     <string name="library_delete">Supprimer</string>
     <string name="library_rename">Renommer</string>
+    <string name="settings_customize_keys">Personnaliser les touches</string>
+    <string name="settings_customize_keys_summary">Choisissez l'effet de chaque glissement</string>
+    <string name="customize_hint">Touchez une étiquette au-dessus ou au-dessous d'une touche pour choisir ce que fait ce glissement.</string>
+    <string name="customize_reset">Réinitialiser</string>
+    <string name="customize_none">Rien</string>
+    <string name="customize_default">Par défaut : %1$s</string>
+    <string name="customize_builtin">Intégrées</string>
+    <string name="customize_flick_up">Glisser vers le haut sur %1$s</string>
+    <string name="customize_flick_down">Glisser vers le bas sur %1$s</string>
 </resources>

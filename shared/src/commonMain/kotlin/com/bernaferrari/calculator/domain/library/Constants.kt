@@ -1,7 +1,14 @@
 package com.bernaferrari.calculator.domain.library
 
-/** A named value worth having at hand. [value] is in the expression language; names live in resources. */
-data class Constant(val id: String, val symbol: String, val value: String, val unit: String, val group: ConstantGroup)
+/**
+ * A named value worth having at hand. [value] is in the expression language; names live in
+ * resources. In [symbol], what follows `_` is a subscript (`m_e`), drawn small rather than with
+ * subscript characters, which not every font has.
+ */
+data class Constant(val id: String, val symbol: String, val value: String, val unit: String, val group: ConstantGroup) {
+    /** The symbol on one line, for a key: `me`, `ε0`. */
+    val plainSymbol: String get() = symbol.replace("_", "")
+}
 
 enum class ConstantGroup { MATH, PHYSICS, CHEMISTRY, ASTRONOMY }
 
@@ -18,13 +25,13 @@ val CONSTANTS = listOf(
     Constant("h", "h", "6.62607015E−34", "J·s", ConstantGroup.PHYSICS),
     Constant("hbar", "ħ", "1.054571817E−34", "J·s", ConstantGroup.PHYSICS),
     Constant("qe", "e", "1.602176634E−19", "C", ConstantGroup.PHYSICS),
-    Constant("me", "mₑ", "9.1093837015E−31", "kg", ConstantGroup.PHYSICS),
-    Constant("mp", "mₚ", "1.67262192369E−27", "kg", ConstantGroup.PHYSICS),
+    Constant("me", "m_e", "9.1093837015E−31", "kg", ConstantGroup.PHYSICS),
+    Constant("mp", "m_p", "1.67262192369E−27", "kg", ConstantGroup.PHYSICS),
     Constant("kb", "k", "1.380649E−23", "J/K", ConstantGroup.PHYSICS),
-    Constant("eps0", "ε₀", "8.8541878128E−12", "F/m", ConstantGroup.PHYSICS),
-    Constant("mu0", "μ₀", "1.25663706212E−6", "N/A²", ConstantGroup.PHYSICS),
+    Constant("eps0", "ε_0", "8.8541878128E−12", "F/m", ConstantGroup.PHYSICS),
+    Constant("mu0", "μ_0", "1.25663706212E−6", "N/A²", ConstantGroup.PHYSICS),
     Constant("sigma", "σ", "5.670374419E−8", "W/(m²·K⁴)", ConstantGroup.PHYSICS),
-    Constant("na", "Nₐ", "6.02214076E23", "1/mol", ConstantGroup.CHEMISTRY),
+    Constant("na", "N_A", "6.02214076E23", "1/mol", ConstantGroup.CHEMISTRY),
     Constant("r", "R", "8.314462618", "J/(mol·K)", ConstantGroup.CHEMISTRY),
     Constant("f", "F", "96485.33212", "C/mol", ConstantGroup.CHEMISTRY),
     Constant("u", "u", "1.66053906660E−27", "kg", ConstantGroup.CHEMISTRY),

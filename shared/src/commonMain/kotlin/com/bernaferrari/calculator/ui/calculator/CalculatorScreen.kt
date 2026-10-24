@@ -330,6 +330,8 @@ fun CalculatorScreen(
                 rpn = state.rpn,
                 onMemory = if (state.memoryKeys) viewModel::onMemory else null,
                 memoryFull = state.memory != null,
+                flicks = state.flicks,
+                onInsertText = { viewModel.onInsertText(it); if (layer == FunctionLayer.Once) layer = FunctionLayer.Off },
                 bottomInset = bottomInset,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -430,6 +432,8 @@ fun CalculatorScreen(
                     rpn = state.rpn,
                     onMemory = if (state.memoryKeys) viewModel::onMemory else null,
                     memoryFull = state.memory != null,
+                    flicks = state.flicks,
+                    onInsertText = viewModel::onInsertText,
                     bottomInset = bottomInset,
                     modifier = Modifier.weight(0.4f).fillMaxHeight().statusBarsPadding(),
                 )

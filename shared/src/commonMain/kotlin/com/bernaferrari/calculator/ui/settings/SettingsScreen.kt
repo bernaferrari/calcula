@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.ui.settings
 
+import androidx.compose.material.icons.outlined.Keyboard
 import com.bernaferrari.calculator.domain.model.Notation
 import androidx.compose.material.icons.outlined.Science
 import androidx.compose.material.icons.outlined.Layers
@@ -118,6 +119,9 @@ class SettingsViewModel(
     fun setMemoryKeys(enabled: Boolean) = save { update { it.copy(memoryKeys = enabled) } }
     fun setRpn(enabled: Boolean) = save { update { it.copy(rpn = enabled) } }
     fun setNotation(notation: Notation) = save { update { it.copy(notation = notation) } }
+    /** [id] from [com.bernaferrari.calculator.ui.calculator.FlickCatalog], or null for the shipped flick. */
+    fun setFlick(slot: String, id: String?) = save { update { p -> p.copy(flicks = if (id == null) p.flicks - slot else p.flicks + (slot to id)) } }
+    fun resetFlicks() = save { update { it.copy(flicks = emptyMap()) } }
     fun clearHistory() = viewModelScope.launch { history.clearAllHistory() }
 }
 
@@ -127,6 +131,7 @@ private val DecimalChoices = listOf(AUTO_DECIMALS, 2, 4, 6, 10)
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
     onOpenAbout: () -> Unit,
+    onOpenCustomizeKeys: () -> Unit = {},
     viewModel: SettingsViewModel = viewModel { SettingsViewModel() },
 ) {
     val prefs by viewModel.prefs.collectAsStateWithLifecycle()
@@ -266,6 +271,9 @@ fun SettingsScreen(
                                     if (prefs.hints == FlickHints.LABELS) Res.string.settings_flick_auto_learning else Res.string.settings_flick_auto_learned,
                                 ),
                             )
+                        },
+                        { p ->
+                            ActionRow(p, Icons.Outlined.Keyboard, stringResource(Res.string.settings_customize_keys), stringResource(Res.string.settings_customize_keys_summary), onClick = onOpenCustomizeKeys)
                         },
                         { p ->
                             SwitchRow(p, Icons.Outlined.Memory, stringResource(Res.string.settings_memory_keys), stringResource(Res.string.settings_memory_keys_summary), prefs.memoryKeys, viewModel::setMemoryKeys)

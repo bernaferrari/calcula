@@ -191,4 +191,13 @@
     <string name="memory_name">Name</string>
     <string name="library_delete">Löschen</string>
     <string name="library_rename">Umbenennen</string>
+    <string name="settings_customize_keys">Tasten anpassen</string>
+    <string name="settings_customize_keys_summary">Wähle, was jedes Wischen tut</string>
+    <string name="customize_hint">Tippe auf ein Schild über oder unter einer Taste, um festzulegen, was dieses Wischen tut.</string>
+    <string name="customize_reset">Zurücksetzen</string>
+    <string name="customize_none">Nichts</string>
+    <string name="customize_default">Standard: %1$s</string>
+    <string name="customize_builtin">Eingebaut</string>
+    <string name="customize_flick_up">Nach oben auf %1$s</string>
+    <string name="customize_flick_down">Nach unten auf %1$s</string>
 </resources>

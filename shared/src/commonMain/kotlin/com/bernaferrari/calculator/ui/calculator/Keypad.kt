@@ -67,15 +67,25 @@ private val ScientificStyle @Composable get() = TextStyle(fontFamily = GoogleSan
 private val KeyGap = 6.dp
 private val MemoryStyle @Composable get() = TextStyle(fontFamily = GoogleSansFlex, fontSize = 17.sp, fontWeight = FontWeight.Medium)
 
-private enum class Tone { Digit, Function, Operator, Equals }
+internal enum class Tone { Digit, Function, Operator, Equals }
 
 /**
  * A secondary function: what the key shows, and the key it types. [named] spells a flick-down
  * function out below the key in Labels mode; the rest (mostly inverses) get a dot there.
  */
-private data class Alt(val label: String, val key: Key, val description: String = label, val named: Boolean = false)
+internal data class Alt(
+    val label: String,
+    val key: Key,
+    val description: String = label,
+    val named: Boolean = false,
+    /** Typed as is instead of [key]: a constant's value, a function of the person's own. */
+    val insert: String? = null,
+) {
+    /** Text never has nothing to act on; a function key might (1/x with nothing typed). */
+    fun isInert(inert: Set<Key>) = insert == null && key in inert
+}
 
-private data class Spec(
+internal data class Spec(
     val key: Key,
     val label: String,
     val tone: Tone,
@@ -97,35 +107,9 @@ private val MemoryRowHeight = 40.dp
 /** How much taller the keypad gets with the memory row. */
 val MemoryRowExtra = MemoryRowHeight + KeyGap
 
-/**
- * The 4×5 keypad. Every key shows one label. The ƒ layer flips the digits into their functions
- * (7 8 9 → trigonometry, 4 5 6 → logs and roots, 1 2 3 → constants and powers); the same functions
- * are always one flick away, up for the function and down for its inverse.
- */
-@Composable
-fun MainKeypad(
-    decimal: Char,
-    haptics: Haptics,
-    functionLayer: Boolean,
-    onKey: (Key) -> Unit,
-    onFunctionKey: (Key) -> Unit,
-    onClearAll: () -> Unit,
-    modifier: Modifier = Modifier,
-    hints: FlickHints = FlickHints.DOTS,
-    bottomInset: Dp = 0.dp,
-    /** For the graph: the `%` key becomes the variable `x` (flick up for `y`), in the accent so it's easy to find. */
-    variable: Boolean = false,
-    /** For the graph: the slider parameter a flick down on `x` types, or null when none is left. */
-    nextParameter: Char? = null,
-    /** Functions that would do nothing right now (`1/x` with nothing typed): shown dimmed, and inert. */
-    inert: Set<Key> = emptySet(),
-    /** Reverse Polish: `=` is ↵, `( )` swaps x and y (flicks roll the stack), `−` flicks down to ±. */
-    rpn: Boolean = false,
-    /** Shows MC M+ M− MR above the keys; [memoryFull] lights up the ones that need something stored. */
-    onMemory: ((MemoryOp) -> Unit)? = null,
-    memoryFull: Boolean = false,
-) {
-    val rows = listOf(
+/** The keypad's keys and their flicks, as shipped; [withFlicks] lays the person's choices over them. */
+internal fun keypadRows(decimal: Char, rpn: Boolean = false, variable: Boolean = false, nextParameter: Char? = null): List<List<Spec>> =
+    listOf(
         listOf(
             Spec(Key.CLEAR, "C", Tone.Function, "Clear"),
             if (variable) Spec(
@@ -169,6 +153,64 @@ fun MainKeypad(
             else Spec(Key.EQUALS, "=", Tone.Equals, "Equals"),
         ),
     )
+
+/** The flicks the person may reassign: every key's except C, ⌫, ( ) and =. */
+internal val Spec.customizable: Boolean get() = key !in setOf(Key.CLEAR, Key.DELETE, Key.PARENS, Key.EQUALS)
+
+/** "D7.up" and "D7.down": how a flick slot is named in settings. */
+internal fun Spec.slot(up: Boolean) = "${key.name}.${if (up) "up" else "down"}"
+
+/** A flick the person chose: a built-in function, or text to insert (a constant's value, `tip(`). Null removes the flick. */
+data class CustomFlick(val label: String, val key: Key? = null, val insert: String? = null)
+
+internal fun CustomFlick.toAlt() = Alt(label, key ?: Key.EQUALS, label, named = true, insert = insert)
+
+internal fun List<List<Spec>>.withFlicks(flicks: Map<String, CustomFlick?>): List<List<Spec>> =
+    if (flicks.isEmpty()) this else map { row ->
+        row.map { spec ->
+            if (!spec.customizable) return@map spec
+            val upSlot = spec.slot(true)
+            val downSlot = spec.slot(false)
+            val up = if (upSlot in flicks) flicks[upSlot]?.toAlt() else spec.up
+            val down = if (downSlot in flicks) flicks[downSlot]?.toAlt() else spec.down
+            // Digits flip to their up function on the ƒ layer; that holds for a chosen one too.
+            spec.copy(up = up, down = down, flips = up != null && (spec.flips || spec.tone == Tone.Digit && spec.key != Key.D0))
+        }
+    }
+
+/**
+ * The 4×5 keypad. Every key shows one label. The ƒ layer flips the digits into their functions
+ * (7 8 9 → trigonometry, 4 5 6 → logs and roots, 1 2 3 → constants and powers); the same functions
+ * are always one flick away, up for the function and down for its inverse.
+ */
+@Composable
+fun MainKeypad(
+    decimal: Char,
+    haptics: Haptics,
+    functionLayer: Boolean,
+    onKey: (Key) -> Unit,
+    onFunctionKey: (Key) -> Unit,
+    onClearAll: () -> Unit,
+    modifier: Modifier = Modifier,
+    hints: FlickHints = FlickHints.DOTS,
+    bottomInset: Dp = 0.dp,
+    /** For the graph: the `%` key becomes the variable `x` (flick up for `y`), in the accent so it's easy to find. */
+    variable: Boolean = false,
+    /** For the graph: the slider parameter a flick down on `x` types, or null when none is left. */
+    nextParameter: Char? = null,
+    /** Functions that would do nothing right now (`1/x` with nothing typed): shown dimmed, and inert. */
+    inert: Set<Key> = emptySet(),
+    /** Reverse Polish: `=` is ↵, `( )` swaps x and y (flicks roll the stack), `−` flicks down to ±. */
+    rpn: Boolean = false,
+    /** Shows MC M+ M− MR above the keys; [memoryFull] lights up the ones that need something stored. */
+    onMemory: ((MemoryOp) -> Unit)? = null,
+    memoryFull: Boolean = false,
+    /** Flicks the person reassigned, by slot ("D7.up"); a null value takes that flick away. */
+    flicks: Map<String, CustomFlick?> = emptyMap(),
+    /** Where a chosen flick that types text sends it. */
+    onInsertText: (String) -> Unit = {},
+) {
+    val rows = keypadRows(decimal, rpn, variable, nextParameter).withFlicks(flicks)
     val reduceMotion = LocalReduceMotion.current
     BoxWithConstraints(modifier) {
     // Labels follow the keys' size, so a keypad dragged short or tall keeps its proportions.
@@ -217,6 +259,7 @@ fun MainKeypad(
                         onPressedChange = { down -> pressedIndex = if (down) c else if (pressedIndex == c) -1 else pressedIndex },
                         modifier = Modifier.weight(weight).fillMaxHeight(),
                         inert = inert,
+                        onInsertText = onInsertText,
                     )
                 }
             }
@@ -286,7 +329,9 @@ private fun KeypadKey(
     onPressedChange: (Boolean) -> Unit,
     modifier: Modifier,
     inert: Set<Key> = emptySet(),
+    onInsertText: (String) -> Unit = {},
 ) {
+    val fire: (Alt) -> Unit = { alt -> if (alt.insert != null) onInsertText(alt.insert) else onFunctionKey(alt.key) }
     val wantsLayer = functionLayer && spec.flips && spec.up != null
     // The face flips over its horizontal axis: out to 90°, swap the label, then spring back in.
     val rotation = remember { Animatable(0f) }
@@ -318,13 +363,13 @@ private fun KeypadKey(
         onClick = {
             when {
                 // A dimmed function does nothing, and doesn't use up a one-shot ƒ either.
-                onLayer && spec.up!!.key in inert -> Unit
-                onLayer -> onFunctionKey(spec.up!!.key)
+                onLayer && spec.up!!.isInert(inert) -> Unit
+                onLayer -> fire(spec.up!!)
                 else -> onKey(spec.key)
             }
         },
-        up = spec.up?.let { Hint(it.label, it.description, enabled = it.key !in inert) { onFunctionKey(it.key) } },
-        down = spec.down?.let { Hint(it.label, it.description, enabled = it.key !in inert, named = it.named) { onFunctionKey(it.key) } },
+        up = spec.up?.let { Hint(it.label, it.description, enabled = !it.isInert(inert)) { fire(it) } },
+        down = spec.down?.let { Hint(it.label, it.description, enabled = !it.isInert(inert), named = it.named) { fire(it) } },
         // On the ƒ layer the face already names both functions.
         showDots = hints == FlickHints.DOTS && !onLayer,
         labelFlicks = hints == FlickHints.LABELS && !onLayer,
@@ -344,8 +389,8 @@ private fun KeypadKey(
                     // Short keys (the graph's) have no room for the second line; its flick still works.
                     val roomy = maxHeight >= 48.dp
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        val upAlpha by animateFloatAsState(if (spec.up!!.key in inert) 0.35f else 1f, label = "upAlpha")
-                        val downAlpha by animateFloatAsState(if (spec.down?.key in inert) 0.25f else 0.6f, label = "downAlpha")
+                        val upAlpha by animateFloatAsState(if (spec.up!!.isInert(inert)) 0.35f else 1f, label = "upAlpha")
+                        val downAlpha by animateFloatAsState(if (spec.down?.isInert(inert) == true) 0.25f else 0.6f, label = "downAlpha")
                         Text(spec.up!!.label, style = LayerStyle, color = content.copy(alpha = upAlpha))
                         if (roomy) spec.down?.let { Text(it.label, style = LayerInverseStyle, color = content.copy(alpha = downAlpha)) }
                     }

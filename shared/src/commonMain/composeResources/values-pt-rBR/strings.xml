@@ -193,4 +193,13 @@
     <string name="memory_name">Nome</string>
     <string name="library_delete">Excluir</string>
     <string name="library_rename">Renomear</string>
+    <string name="settings_customize_keys">Personalizar teclas</string>
+    <string name="settings_customize_keys_summary">Escolha o que cada deslize faz</string>
+    <string name="customize_hint">Toque numa etiqueta acima ou abaixo de uma tecla para escolher o que aquele deslize faz.</string>
+    <string name="customize_reset">Redefinir</string>
+    <string name="customize_none">Nada</string>
+    <string name="customize_default">Padrão: %1$s</string>
+    <string name="customize_builtin">Do app</string>
+    <string name="customize_flick_up">Deslizar para cima no %1$s</string>
+    <string name="customize_flick_down">Deslizar para baixo no %1$s</string>
 </resources>

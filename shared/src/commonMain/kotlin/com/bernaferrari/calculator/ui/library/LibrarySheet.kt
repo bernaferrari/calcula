@@ -2,6 +2,12 @@
 
 package com.bernaferrari.calculator.ui.library
 
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.text.style.BaselineShift
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -384,12 +390,19 @@ private fun Symbol(text: String) {
         modifier = Modifier.size(44.dp).clip(CircleShape).background(MaterialTheme.colorScheme.secondaryContainer),
     ) {
         Text(
-            text,
-            style = TextStyle(fontFamily = GoogleSansFlex, fontSize = if (text.length > 2) 13.sp else 18.sp),
+            symbolText(text),
+            style = TextStyle(fontFamily = GoogleSansFlex, fontSize = if (text.replace("_", "").length > 2) 13.sp else 18.sp),
             color = MaterialTheme.colorScheme.onSecondaryContainer,
             maxLines = 1,
         )
     }
+}
+
+/** `m_e` as m with a small, lowered e. */
+fun symbolText(symbol: String): AnnotatedString = buildAnnotatedString {
+    val base = symbol.substringBefore('_')
+    append(base)
+    if ('_' in symbol) withStyle(SpanStyle(fontSize = 0.7.em, baselineShift = BaselineShift.Subscript)) { append(symbol.substringAfter('_')) }
 }
 
 private fun ConstantGroup.title(): StringResource = when (this) {

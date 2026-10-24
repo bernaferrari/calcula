@@ -191,4 +191,13 @@
     <string name="memory_name">Nombre</string>
     <string name="library_delete">Eliminar</string>
     <string name="library_rename">Renombrar</string>
+    <string name="settings_customize_keys">Personalizar teclas</string>
+    <string name="settings_customize_keys_summary">Elige qué hace cada deslizamiento</string>
+    <string name="customize_hint">Toca una etiqueta encima o debajo de una tecla para elegir qué hace ese deslizamiento.</string>
+    <string name="customize_reset">Restablecer</string>
+    <string name="customize_none">Nada</string>
+    <string name="customize_default">Predeterminado: %1$s</string>
+    <string name="customize_builtin">Integradas</string>
+    <string name="customize_flick_up">Deslizar hacia arriba en %1$s</string>
+    <string name="customize_flick_down">Deslizar hacia abajo en %1$s</string>
 </resources>

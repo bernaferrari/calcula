@@ -191,4 +191,13 @@
     <string name="memory_name">Nome</string>
     <string name="library_delete">Elimina</string>
     <string name="library_rename">Rinomina</string>
+    <string name="settings_customize_keys">Personalizza tasti</string>
+    <string name="settings_customize_keys_summary">Scegli cosa fa ogni scorrimento</string>
+    <string name="customize_hint">Tocca un'etichetta sopra o sotto un tasto per scegliere cosa fa quello scorrimento.</string>
+    <string name="customize_reset">Ripristina</string>
+    <string name="customize_none">Niente</string>
+    <string name="customize_default">Predefinito: %1$s</string>
+    <string name="customize_builtin">Integrate</string>
+    <string name="customize_flick_up">Su sul %1$s</string>
+    <string name="customize_flick_down">Giù sul %1$s</string>
 </resources>

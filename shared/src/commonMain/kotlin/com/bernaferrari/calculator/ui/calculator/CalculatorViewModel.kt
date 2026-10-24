@@ -76,6 +76,8 @@ data class CalculatorUiState(
     val memory: String? = null,
     val memories: List<Memory> = emptyList(),
     val functions: List<UserFunction> = emptyList(),
+    /** Flicks the person reassigned, resolved to what they do. */
+    val flicks: Map<String, CustomFlick?> = emptyMap(),
     /** Reverse Polish entry; [stack] then holds X, Y, Z… as numbers, X as typed while typing. */
     val rpn: Boolean = false,
     val stack: List<String> = emptyList(),
@@ -135,6 +137,7 @@ class CalculatorViewModel(
             memory = prefs.memories.firstOrNull()?.value,
             memories = prefs.memories,
             functions = prefs.functions,
+            flicks = FlickCatalog.resolve(prefs.flicks, prefs.functions),
             rpn = prefs.rpn,
             stack = rpn.stack.mapIndexed { i, v -> if (i == 0 && rpn.entry != null) rpn.entry else NumberFormatter.format(v) },
             entering = rpn.entry != null,

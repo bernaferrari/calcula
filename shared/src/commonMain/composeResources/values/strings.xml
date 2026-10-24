@@ -195,4 +195,13 @@
     <string name="memory_name">Name</string>
     <string name="library_delete">Delete</string>
     <string name="library_rename">Rename</string>
+    <string name="settings_customize_keys">Customize keys</string>
+    <string name="settings_customize_keys_summary">Choose what each flick does</string>
+    <string name="customize_hint">Tap a tag above or below a key to choose what that flick does.</string>
+    <string name="customize_reset">Reset</string>
+    <string name="customize_none">Nothing</string>
+    <string name="customize_default">Default: %1$s</string>
+    <string name="customize_builtin">Built in</string>
+    <string name="customize_flick_up">Flick up on %1$s</string>
+    <string name="customize_flick_down">Flick down on %1$s</string>
 </resources>
