@@ -237,4 +237,5 @@
         <item quantity="one">day</item>
         <item quantity="other">days</item>
     </plurals>
+    <string name="usage_settings_summary">How you calculate, as a card to share</string>
 </resources>

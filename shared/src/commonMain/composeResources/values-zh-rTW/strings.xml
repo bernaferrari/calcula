@@ -230,4 +230,5 @@
     <plurals name="usage_days">
         <item quantity="other">天</item>
     </plurals>
+    <string name="usage_settings_summary">你的計算習慣，做成可分享的卡片</string>
 </resources>

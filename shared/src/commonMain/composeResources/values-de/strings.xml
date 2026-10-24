@@ -233,4 +233,5 @@
         <item quantity="one">Tag</item>
         <item quantity="other">Tage</item>
     </plurals>
+    <string name="usage_settings_summary">Wie du rechnest, als Karte zum Teilen</string>
 </resources>

@@ -75,7 +75,6 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                             onOpenGraph = { open(Screen.Graph) },
                             onOpenProgrammer = { open(Screen.Programmer) },
                             onOpenStatistics = { open(Screen.Statistics) },
-                            onOpenUsage = { open(Screen.Usage) },
                             pendingInsert = pendingInsert,
                             onInsertConsumed = { pendingInsert = null },
                         )
@@ -85,6 +84,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                             onNavigateBack = back,
                             onOpenAbout = { open(Screen.About) },
                             onOpenCustomizeKeys = { open(Screen.CustomizeKeys) },
+                            onOpenUsage = { open(Screen.Usage) },
                         )
                     }
                     entry<Screen>(Screen.Graph) {

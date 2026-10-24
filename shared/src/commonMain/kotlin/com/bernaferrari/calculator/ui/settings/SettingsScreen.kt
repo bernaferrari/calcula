@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.ui.settings
 
+import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.outlined.Keyboard
 import com.bernaferrari.calculator.domain.model.Notation
 import androidx.compose.material.icons.outlined.Science
@@ -132,6 +133,7 @@ fun SettingsScreen(
     onNavigateBack: () -> Unit,
     onOpenAbout: () -> Unit,
     onOpenCustomizeKeys: () -> Unit = {},
+    onOpenUsage: () -> Unit = {},
     viewModel: SettingsViewModel = viewModel { SettingsViewModel() },
 ) {
     val prefs by viewModel.prefs.collectAsStateWithLifecycle()
@@ -306,6 +308,7 @@ fun SettingsScreen(
                 SettingsSection(
                     stringResource(Res.string.settings_more),
                     listOf(
+                        { p -> ActionRow(p, Icons.Outlined.Insights, stringResource(Res.string.menu_usage), stringResource(Res.string.usage_settings_summary), onClick = onOpenUsage) },
                         { p -> ActionRow(p, Icons.Outlined.DeleteSweep, stringResource(Res.string.settings_clear_history), destructive = true, showChevron = false, onClick = { confirmClear = true }) },
                     ),
                 )

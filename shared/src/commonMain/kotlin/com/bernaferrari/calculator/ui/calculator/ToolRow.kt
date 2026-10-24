@@ -1,6 +1,5 @@
 package com.bernaferrari.calculator.ui.calculator
 
-import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material3.AppBarRowScope
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.AppBarRow
@@ -132,7 +131,6 @@ fun ToolRow(
     onOpenProgrammer: () -> Unit = {},
     onOpenLibrary: () -> Unit = {},
     onOpenStatistics: () -> Unit = {},
-    onOpenUsage: () -> Unit = {},
     /** Set while the bar is being dragged: the controls step back and a pill shows the size. */
     resize: ResizeFeedback? = null,
     /** False when history already has a pane of its own, so the menu doesn't offer it. */
@@ -190,8 +188,9 @@ fun ToolRow(
             onOpenProgrammer = onOpenProgrammer,
             onOpenLibrary = onOpenLibrary,
             onOpenStatistics = onOpenStatistics,
-            onOpenUsage = onOpenUsage,
-            onOpenHistory = if (!historyOpen && showHistoryEntry) onToggleHistory else null,
+            // The same items whether history is open or not: AppBarRow can't take its list changing
+            // under an open menu (picking History used to crash it). In history mode it goes back.
+            onOpenHistory = if (showHistoryEntry) onToggleHistory else null,
             onOpenSettings = onOpenSettings,
             modifier = Modifier.align(Alignment.CenterEnd),
         )
@@ -266,7 +265,6 @@ fun ToolActions(
     onOpenProgrammer: () -> Unit,
     onOpenLibrary: () -> Unit,
     onOpenStatistics: () -> Unit,
-    onOpenUsage: () -> Unit,
     onOpenHistory: (() -> Unit)?,
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
@@ -276,7 +274,6 @@ fun ToolActions(
     val programmer = stringResource(Res.string.menu_programmer)
     val library = stringResource(Res.string.menu_library)
     val statistics = stringResource(Res.string.menu_statistics)
-    val usage = stringResource(Res.string.menu_usage)
     val history = stringResource(Res.string.settings_history)
     val settings = stringResource(Res.string.menu_settings)
     val more = stringResource(Res.string.more_options)
@@ -311,7 +308,6 @@ fun ToolActions(
         tool(programmer, Icons.Outlined.Code, tint, onOpenProgrammer)
         tool(library, Icons.Outlined.AutoStories, tint, onOpenLibrary)
         tool(statistics, Icons.Outlined.BarChart, tint, onOpenStatistics)
-        tool(usage, Icons.Outlined.Insights, tint, onOpenUsage)
         if (onOpenHistory != null) tool(history, Icons.Outlined.History, tint, onOpenHistory)
         tool(settings, Icons.Outlined.Settings, tint, onOpenSettings)
     }
