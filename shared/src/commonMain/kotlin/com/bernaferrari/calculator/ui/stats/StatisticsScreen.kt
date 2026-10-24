@@ -186,7 +186,7 @@ fun StatisticsScreen(
                             tiles.chunked(2).forEach { pair ->
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     pair.forEachIndexed { i, (label, value) ->
-                                        StatTile(label, value?.let { NumberFormatter.format(it, 12) }, formatter, emphasized = label == Res.string.stats_mean) {
+                                        StatTile(label, value?.let { NumberFormatter.format(it, 10) }, formatter, emphasized = label == Res.string.stats_mean) {
                                             haptics.confirm(); onUse(it)
                                         }
                                     }

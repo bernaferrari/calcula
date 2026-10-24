@@ -7,12 +7,12 @@
 <p align="center"><b>Flick a key. Get a function.</b></p>
 
 <p align="center">
-  A calm, exact calculator. Every key carries two more functions, named right on it: flick up or down to reach them.<br>
-  No menus to dig through, no second screen of buttons.
+  A calm, exact calculator for Android, iOS and the web. Every digit carries more: flick up for sin, log, x², π; flick down for their partners.<br>
+  The functions are named right on the keys, so there's no second screen of buttons and nothing to dig for.
 </p>
 
 <p align="center">
-  <img src="docs/demo.webp" width="320" alt="Every key names its functions. Flick the 7 up for sin, the 2 up for x², the 2 down for √">
+  <img src="docs/demo.webp" width="320" alt="Flick the 7 up for sin, the 2 up for x², the 2 down for √">
 </p>
 
 <p align="center">
@@ -21,43 +21,50 @@
 
 ## Why people like it
 
-- **Functions under your thumb.** sin, log, √, x², π and more live on the digits, each named on its key. Flick up for one, down for the other, hold to see both. Reach for one that can't apply yet and it shakes its head.
-- **Exact answers.** 0.1 + 0.2 is 0.3. Smart percent: 200 + 10% is 220. A result that's a simple fraction says so too: 0.375 is also 3/8.
-- **A history you'll actually use.** Past results stay above the keys. Tap one to reuse it, pull down to see them all.
-- **Graphs that teach.** Up to six functions, sliders for a, b, c, d, roots and turns you can tap. Recent graphs are kept, and any one shares as an image.
-- **A unit converter, one tap away.** Length, mass, temperature, data and more, with exact factors.
-- **Edits like text.** Double-tap to select, then wrap it in parentheses or √ with one key. Copy and paste work like everywhere else.
-- **Quiets down as you learn.** Once you've flicked a few times, the names on the keys give way to small dots. Prefer the names, the dots or nothing at all? It's one setting.
-- **Yours to shape.** Light or dark, ten color families or your wallpaper's, each in four moods from muted to playful.
-- **Big screens too.** On tablets and foldables, your history gets its own pane beside the keys.
+- **Functions under your thumb.** sin, cos, tan, ln, log, π, x², √ and more live on the digits. Each key names the function a flick up gives you; hold it to see both. Reach for one that can't apply yet and the key shakes its head.
+- **Exact answers.** 0.1 + 0.2 is 0.3, not 0.30000000000000004. Smart percent: 200 + 10% is 220. When a result is a simple fraction it says so too: 0.375 is also 3/8.
+- **A keypad you already know.** 0 under 2 like a phone's dial pad, backspace up top by the operators, parentheses in the corner. Tap the preview (= 52) to take it, like pressing =.
+- **A history you'll actually use.** Past results stay above the keys. Tap one to reuse it, pull the bar down to see them all, add a note to any of them, share the lot as text.
+- **Edits like text.** Double-tap to select, then wrap it in parentheses or √ with one key. Drag along the expression, or use ‹ ›, to move the cursor. Cleared something by mistake? Undo.
+- **Quiets down as you learn.** After a few flicks the names step back to small dots. Prefer the names, the dots or nothing at all? One setting.
+- **Yours to shape.** Light or dark, ten color families or your wallpaper's, each in four styles, previewed as the keypad itself. Drag the bar above the keys to make them bigger or smaller.
+- **Big screens too.** On tablets and foldables your history gets its own pane beside the keys.
 
 ## Beyond the keypad
 
-| Explore functions | Convert units |
-| :---: | :---: |
-| <img src="docs/screenshots/05-graph.png" width="260" alt="Three plotted functions with interactive key points"> | <img src="docs/screenshots/07-converter.png" width="260" alt="Temperature conversion from 22 degrees Celsius to 71.6 degrees Fahrenheit"> |
-| Plot functions and inspect roots and turning points. | Convert temperatures, lengths, masses, and more. |
+| Graph | Convert | Remember |
+| :---: | :---: | :---: |
+| <img src="docs/screenshots/graph.png" width="240" alt="sin(x), a·sin(b·x) and a circle plotted, with roots and turning points marked and a slider for a"> | <img src="docs/screenshots/converter.png" width="240" alt="22 degrees Celsius converted to 71.6 degrees Fahrenheit"> | <img src="docs/screenshots/history.png" width="240" alt="History grouped by day, one calculation labelled Laptop with tax"> |
+| Up to six functions and equations, sliders for a, b, c, d, roots and turns you can tap. Graphs are kept and share as images. | Length, mass, temperature, data and more, with exact factors. The number on screen comes along, and the answer goes back. | Every calculation by day. Notes on the ones that matter, and the whole list shares as text. |
 
 ## Once you know your way around
 
-After a few flicks the keypad trades its names for two small dots on each key, the same gestures with less to read. And when you want to see every function at once, **ƒ** turns the keys into them for one press, or hold it to keep them; functions that would do nothing yet are dimmed.
+The names give way to two small dots per key: the same flicks, less to read. When you want every function in view, **ƒ** turns the digits into them for one press, or hold it to keep them; the ones that would do nothing yet are dimmed.
 
 <p align="center">
-  <img src="docs/demo-dots.webp" width="260" alt="With dot hints: flick the 7 for sin, tap ƒ to turn the keys into functions, flick the 2 down for √">
+  <img src="docs/demo-dots.webp" width="260" alt="With dots: flick the 7 for sin, tap ƒ to turn the keys into functions, flick the 2 down for √">
 </p>
 
 ## For the ones who want more
 
-Off by default, one switch away, and out of everyone else's way:
+Everything here is off by default or tucked in the ⋮ menu, so the calculator stays simple until you go looking.
 
-- **Memory keys.** MC, M+, M− and MR in a slim row above the keypad; what's stored shows in the display, tap it to recall.
-- **RPN.** Reverse Polish entry with an open-ended stack: ↵ pushes, operators act at once, x⇄y and roll on the parentheses key.
-- **Programmer.** Hex, decimal, octal and binary, AND, OR, XOR, NOT and shifts, in 8, 16, 32 or 64 bits, with every bit on screen to tap and flip. From the ⋮ menu.
-- **A library.** 28 constants of science (c, h, Nₐ, G…), functions you write yourself (`tip(x) = x×0.18`, then use `tip(` like `sin`, in the graph too), and as many named memories as you like.
-- **Your own keys.** Any flick can do anything: a built-in function, a constant, one of your functions, or nothing at all.
-- **Scientific and engineering notation**, and **statistics** (mean, median, σ and s, min, max) for a list of numbers.
-- **A history worth keeping.** Add a note to any calculation and share the whole history as text.
-- **A home screen widget** on Android: the calculator itself, and its answers land in the app's history.
+| Library | Your own keys | Programmer |
+| :---: | :---: | :---: |
+| <img src="docs/screenshots/library.png" width="240" alt="Library sheet with constants grouped by field, each with its symbol and value"> | <img src="docs/screenshots/customize-keys.png" width="240" alt="Keypad diagram with every flick as a tag; changed ones highlighted"> | <img src="docs/screenshots/programmer.png" width="240" alt="C0FFEE in hex, 12,648,430 in decimal, and its bits"> |
+| 28 constants of science (c, h, Nₐ, G…), functions you write yourself, and named memories. | Any flick can do anything: a built-in function, a constant, one of your functions, or nothing. | Hex, decimal, octal and binary, bitwise operators and shifts, 8 to 64 bits, every bit tappable. |
+
+| Statistics | Styles | On your home screen |
+| :---: | :---: | :---: |
+| <img src="docs/screenshots/statistics.png" width="240" alt="A list of eight scores with mean, median, standard deviations, min and max"> | <img src="docs/screenshots/appearance-dark.png" width="240" alt="Appearance settings in dark mode: color families and four styles shown as tiny calculators"> | <img src="docs/screenshots/ios-widget.png" width="240" alt="iOS home screen widget showing 15%×80+3² = 21"> |
+| Type a list, get mean, median, σ and s, min and max. Tap any to use it. | Color families and four styles, each shown as the keypad it gives you. | Widgets on Android (the whole calculator) and iOS (your latest answer). |
+
+And a few more:
+
+- **Write your own functions.** `tip(x) = x×0.18`, then type `tip(` like `sin(`. They work in previews, in RPN and in the graph, and they can call each other.
+- **Memory keys and RPN.** A slim MC · M+ · M− · MR row if you want it, and Reverse Polish entry with an open-ended stack: ↵ pushes, operators act at once, x⇄y and roll on the parentheses key.
+- **Scientific and engineering notation.** 1.23×10⁶ or 12.3×10³, with the decimals you choose.
+- **Siri and Shortcuts on iOS.** "Calculate with Calcula", then say it the way you'd say it: "15% of 80 plus 3 squared". The answer is spoken back and kept in your history.
 
 ## Private by design
 
@@ -65,6 +72,6 @@ No ads, no accounts, no tracking. Your calculations never leave your device.
 
 ## Where it comes from
 
-Calcula grows out of [Calculator++](https://github.com/serso/android-calculatorpp), the swipe-key calculator Sergey Solovyev started in 2011. Its best idea, that a key can hold more than one thing, is still at the heart of it; everything else is rebuilt from scratch, for Android, iOS and the web.
+Calcula grows out of [Calculator++](https://github.com/serso/android-calculatorpp), the swipe-key calculator Sergey Solovyev started in 2011. Its best idea, that a key can hold more than one thing, is still at the heart of it; everything else is rebuilt from scratch in Kotlin Multiplatform and Compose, for Android, iOS and the web.
 
 Found a bug or have an idea? [Open an issue](https://github.com/bernaferrari/android-calculatorpp/issues).
