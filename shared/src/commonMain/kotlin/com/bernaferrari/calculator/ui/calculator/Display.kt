@@ -253,7 +253,7 @@ private fun LiveEntry(
     val colors = MaterialTheme.colorScheme
     val formatColors = DisplayFormatter.Colors(operator = colors.primary, function = colors.onSurfaceVariant, ghost = colors.outlineVariant)
     val formatted = remember(entry.text, entry.openParentheses, formatColors) {
-        formatter.format(entry.text, if (entry.resultShown) 0 else entry.openParentheses, formatColors)
+        formatter.format(entry.text, if (entry.resultShown) 0 else entry.openParentheses, formatColors, breakable = true)
     }
     // Like any Android text field: double-tap selects a number or function, hold selects it all,
     // and the system bar offers copy, cut, paste and select all. The selection lives in the

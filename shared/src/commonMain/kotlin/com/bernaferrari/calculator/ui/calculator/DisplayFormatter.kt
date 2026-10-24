@@ -30,7 +30,12 @@ class DisplayFormatter(separators: Separators = systemSeparators()) {
     /** Formats a plain number, e.g. a result on the tape. */
     fun number(raw: String): String = format(raw, ghostParens = 0, colors = null).text.text
 
-    fun format(raw: String, ghostParens: Int, colors: Colors?): Formatted {
+    /**
+     * [breakable] lets a long number wrap between its digit groups (`123,456,|789`) instead of
+     * anywhere, through an invisible break after each separator. Only for the big display: the
+     * break would ride along into copied text elsewhere.
+     */
+    fun format(raw: String, ghostParens: Int, colors: Colors?, breakable: Boolean = false): Formatted {
         val rawToDisplay = IntArray(raw.length + 1)
         val displayToRaw = ArrayList<Int>(raw.length * 2)
         val text = buildAnnotatedString {
@@ -53,7 +58,10 @@ class DisplayFormatter(separators: Separators = systemSeparators()) {
                         for (j in i until end) {
                             rawToDisplay[j] = length
                             val digitsLeft = dot - j
-                            if (groupable && j in (i + 1) until dot && digitsLeft % 3 == 0) emit(j, grouping.toString())
+                            if (groupable && j in (i + 1) until dot && digitsLeft % 3 == 0) {
+                                emit(j, grouping.toString())
+                                if (breakable) emit(j, "\u200B")
+                            }
                             emit(j, if (raw[j] == '.') decimal.toString() else raw[j].toString())
                         }
                         i = end
