@@ -235,4 +235,5 @@
         <item quantity="one">dia</item>
         <item quantity="other">dias</item>
     </plurals>
+    <string name="usage_settings_summary">Como você calcula, num cartão para compartilhar</string>
 </resources>

@@ -233,4 +233,5 @@
         <item quantity="one">jour</item>
         <item quantity="other">jours</item>
     </plurals>
+    <string name="usage_settings_summary">Ta façon de calculer, en carte à partager</string>
 </resources>

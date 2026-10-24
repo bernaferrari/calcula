@@ -157,7 +157,10 @@ private fun UsageCard(usage: Usage, formatter: DisplayFormatter, decimal: Char) 
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(32.dp))
-            .background(Brush.linearGradient(listOf(colors.primaryContainer, colors.tertiaryContainer)))
+            // Built on the theme's surfaces, where text contrast is guaranteed on every palette, with
+            // only a wash of the accent: two container colors could turn out one light, one dark.
+            .background(colors.surfaceContainerHigh)
+            .background(Brush.linearGradient(listOf(colors.primary.copy(alpha = 0.20f), colors.tertiary.copy(alpha = 0.06f))))
             .padding(22.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -166,15 +169,15 @@ private fun UsageCard(usage: Usage, formatter: DisplayFormatter, decimal: Char) 
                 Icon(painterResource(Res.drawable.calcula_mark), contentDescription = null, tint = colors.onPrimary, modifier = Modifier.size(24.dp))
             }
             Spacer(Modifier.width(8.dp))
-            Text("Calcula", style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 18.sp, fontWeight = FontWeight.Medium), color = colors.onPrimaryContainer)
+            Text("Calcula", style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 18.sp, fontWeight = FontWeight.Medium), color = colors.onSurface)
             Spacer(Modifier.weight(1f))
             if (usage.since > 0) {
-                Text(stringResource(Res.string.usage_since, formatDate(usage.since)), style = MaterialTheme.typography.labelMedium, color = colors.onPrimaryContainer.copy(alpha = 0.7f))
+                Text(stringResource(Res.string.usage_since, formatDate(usage.since)), style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant)
             }
         }
         Spacer(Modifier.height(18.dp))
-        Text(number(usage.calculations), style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 64.sp, lineHeight = 64.sp), color = colors.onPrimaryContainer)
-        Text(pluralStringResource(Res.plurals.usage_calculations, usage.calculations), style = MaterialTheme.typography.titleMedium, color = colors.onPrimaryContainer.copy(alpha = 0.8f))
+        Text(number(usage.calculations), style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 64.sp, lineHeight = 64.sp), color = colors.primary)
+        Text(pluralStringResource(Res.plurals.usage_calculations, usage.calculations), style = MaterialTheme.typography.titleMedium, color = colors.onSurfaceVariant)
         Spacer(Modifier.height(18.dp))
         // The keypad, each key lit by how often it's pressed (taps and flicks to its functions).
         Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
@@ -184,8 +187,9 @@ private fun UsageCard(usage: Usage, formatter: DisplayFormatter, decimal: Char) 
                         val presses = (usage.keys[spec.key.name] ?: 0) + listOfNotNull(spec.up, spec.down).sumOf { usage.keys[it.key.name] ?: 0 }
                         // Proportional: your busiest keys stand out from the ones you rarely touch.
                         val heat = (presses.toFloat() / max).coerceIn(0f, 1f)
-                        val fill = lerp(colors.surface.copy(alpha = 0.55f), colors.primary, heat)
-                        val ink = if (fill.luminance() > 0.3f) Color(0xFF1B1B21) else Color.White
+                        val fill = lerp(colors.surfaceContainerHighest, colors.primary, heat)
+                        // Whichever of the theme's two inks reads better on this shade.
+                        val ink = if (contrast(fill, colors.onSurface) >= contrast(fill, colors.onPrimary)) colors.onSurface else colors.onPrimary
                         Box(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier
@@ -193,7 +197,7 @@ private fun UsageCard(usage: Usage, formatter: DisplayFormatter, decimal: Char) 
                                 .aspectRatio(1.45f)
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(fill)
-                                .then(if (spec.key.name == topKey?.key) Modifier.border(2.dp, colors.onPrimaryContainer, RoundedCornerShape(12.dp)) else Modifier),
+                                .then(if (spec.key.name == topKey?.key) Modifier.border(2.dp, colors.onSurface, RoundedCornerShape(12.dp)) else Modifier),
                         ) {
                             Text(spec.label, style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 17.sp), color = ink)
                         }
@@ -217,10 +221,17 @@ private fun androidx.compose.foundation.layout.RowScope.Fact(value: String, labe
         Modifier
             .weight(1f)
             // Outlined, not filled: facts about the keys, not more keys.
-            .border(1.5.dp, colors.onPrimaryContainer.copy(alpha = 0.3f), RoundedCornerShape(18.dp))
+            .border(1.5.dp, colors.outlineVariant, RoundedCornerShape(18.dp))
             .padding(horizontal = 12.dp, vertical = 10.dp),
     ) {
-        Text(value, style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 24.sp, fontWeight = FontWeight.Medium), color = colors.onPrimaryContainer, maxLines = 1)
-        Text(label, style = MaterialTheme.typography.labelMedium, color = colors.onPrimaryContainer.copy(alpha = 0.75f), maxLines = 1)
+        Text(value, style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 24.sp, fontWeight = FontWeight.Medium), color = colors.onSurface, maxLines = 1)
+        Text(label, style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant, maxLines = 1)
     }
+}
+
+/** WCAG contrast ratio between two colors, 1 to 21. */
+private fun contrast(a: Color, b: Color): Float {
+    val la = a.luminance() + 0.05f
+    val lb = b.luminance() + 0.05f
+    return if (la > lb) la / lb else lb / la
 }
