@@ -138,4 +138,5 @@
     <string name="cursor_left">Cursor nach links</string>
     <string name="cursor_right">Cursor nach rechts</string>
     <string name="take_result">Ergebnis übernehmen</string>
+    <string name="expression_cleared">Gelöscht</string>
 </resources>

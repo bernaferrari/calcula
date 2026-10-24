@@ -138,4 +138,5 @@
     <string name="cursor_left">游標左移</string>
     <string name="cursor_right">游標右移</string>
     <string name="take_result">使用結果</string>
+    <string name="expression_cleared">已清除</string>
 </resources>

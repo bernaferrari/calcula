@@ -143,7 +143,35 @@ class CalculatorViewModel(
         }
     }
 
+    private val _cleared = MutableSharedFlow<Unit>(extraBufferCapacity = 4)
+
+    /** An expression (or the stack) was just cleared, so the screen can offer to undo it. */
+    val cleared: SharedFlow<Unit> = _cleared
+
+    /** What C or a held ⌫ threw away, until something new is typed. */
+    private var beforeClear: Pair<CalcState, RpnState>? = null
+
+    /** Brings back what was just cleared, as long as nothing has been typed since. */
+    fun onUndoClear() {
+        val (c, r) = beforeClear ?: return
+        beforeClear = null
+        if (settings.value.rpn) {
+            if (rpn.value.stack.isEmpty()) rpn.value = r
+        } else if (calc.value.editor.isEmpty) {
+            setState(c)
+        }
+    }
+
     fun onKey(key: Key) {
+        if (key == Key.CLEAR) {
+            val empty = if (settings.value.rpn) rpn.value.stack.isEmpty() else calc.value.editor.isEmpty
+            if (!empty) {
+                beforeClear = calc.value to rpn.value
+                _cleared.tryEmit(Unit)
+            }
+        } else {
+            beforeClear = null
+        }
         if (settings.value.rpn) return onRpnKey(key)
         if (key == Key.CLEAR && calc.value.editor.isEmpty) return
         val (next, outcome) = Calculator.press(calc.value, key)

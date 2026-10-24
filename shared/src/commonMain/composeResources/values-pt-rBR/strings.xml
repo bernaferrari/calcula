@@ -140,4 +140,5 @@
     <string name="cursor_left">Mover cursor para a esquerda</string>
     <string name="cursor_right">Mover cursor para a direita</string>
     <string name="take_result">Usar resultado</string>
+    <string name="expression_cleared">Apagado</string>
 </resources>
