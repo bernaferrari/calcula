@@ -222,7 +222,6 @@
     <string name="usage_share">Compartir tu tarjeta</string>
     <string name="usage_tagline">Desliza una tecla. Obtén una función.</string>
     <string name="usage_empty">Haz unos cálculos y vuelve para ver tu teclado iluminarse.</string>
-    <string name="usage_private">Se cuenta solo en este dispositivo. Nada sale de él salvo que compartas la tarjeta.</string>
     <plurals name="usage_calculations">
         <item quantity="one">cálculo</item>
         <item quantity="other">cálculos</item>

@@ -222,7 +222,6 @@
     <string name="usage_share">カードを共有</string>
     <string name="usage_tagline">キーをフリック、関数をひとつ。</string>
     <string name="usage_empty">少し計算してから戻ってくると、キーが光ります。</string>
-    <string name="usage_private">この端末の中だけで数えています。カードを共有しない限り外には出ません。</string>
     <plurals name="usage_calculations">
         <item quantity="other">回の計算</item>
     </plurals>

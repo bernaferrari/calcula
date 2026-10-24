@@ -222,7 +222,6 @@
     <string name="usage_share">Karte teilen</string>
     <string name="usage_tagline">Taste wischen. Funktion bekommen.</string>
     <string name="usage_empty">Rechne ein wenig und komm zurück, um deine Tastatur leuchten zu sehen.</string>
-    <string name="usage_private">Nur auf diesem Gerät gezählt. Nichts verlässt es, außer du teilst die Karte.</string>
     <plurals name="usage_calculations">
         <item quantity="one">Rechnung</item>
         <item quantity="other">Rechnungen</item>

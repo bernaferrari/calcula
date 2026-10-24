@@ -222,7 +222,6 @@
     <string name="usage_share">分享你的卡片</string>
     <string name="usage_tagline">滑一下按鍵，得到一個函數。</string>
     <string name="usage_empty">先算一會兒，再回來看看你的鍵盤亮起來。</string>
-    <string name="usage_private">只在本機統計。除非你分享卡片，否則不會離開裝置。</string>
     <plurals name="usage_calculations">
         <item quantity="other">次計算</item>
     </plurals>

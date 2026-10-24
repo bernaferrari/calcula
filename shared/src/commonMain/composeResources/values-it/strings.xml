@@ -222,7 +222,6 @@
     <string name="usage_share">Condividi la tua scheda</string>
     <string name="usage_tagline">Scorri un tasto. Ottieni una funzione.</string>
     <string name="usage_empty">Fai qualche calcolo, poi torna a vedere la tastiera illuminarsi.</string>
-    <string name="usage_private">Contato solo su questo dispositivo. Non esce nulla, a meno che tu non condivida la scheda.</string>
     <plurals name="usage_calculations">
         <item quantity="one">calcolo</item>
         <item quantity="other">calcoli</item>

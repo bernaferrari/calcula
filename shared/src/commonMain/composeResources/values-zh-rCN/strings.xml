@@ -222,7 +222,6 @@
     <string name="usage_share">分享你的卡片</string>
     <string name="usage_tagline">滑一下按键，得到一个函数。</string>
     <string name="usage_empty">先算一会儿，再回来看看你的键盘亮起来。</string>
-    <string name="usage_private">只在本机统计。除非你分享卡片，否则不会离开设备。</string>
     <plurals name="usage_calculations">
         <item quantity="other">次计算</item>
     </plurals>

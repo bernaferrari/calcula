@@ -226,7 +226,6 @@
     <string name="usage_share">Share your card</string>
     <string name="usage_tagline">Flick a key. Get a function.</string>
     <string name="usage_empty">Calculate a little, then come back to see your keypad light up.</string>
-    <string name="usage_private">Counted only on this device. Nothing leaves it unless you share the card.</string>
     <plurals name="usage_calculations">
         <item quantity="one">calculation</item>
         <item quantity="other">calculations</item>

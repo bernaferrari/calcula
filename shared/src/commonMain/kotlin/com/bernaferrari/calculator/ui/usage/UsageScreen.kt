@@ -68,13 +68,13 @@ import com.bernaferrari.calculator.ui.containerTransform
 import com.bernaferrari.calculator.ui.settings.SettingsViewModel
 import com.bernaferrari.calculator.ui.theme.GoogleSansFlex
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
  * "Your Calcula": how you use the calculator, as a card worth sharing. The keypad glows where
- * your thumb goes most; around it, the counts that make it yours. Counting stays on the device;
- * nothing leaves it unless you share the card.
+ * your thumb goes most; around it, the counts that make it yours.
  */
 @Composable
 fun UsageScreen(onNavigateBack: () -> Unit) {
@@ -129,13 +129,6 @@ fun UsageScreen(onNavigateBack: () -> Unit) {
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(Res.string.usage_share))
                 }
-                Text(
-                    stringResource(Res.string.usage_private),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(16.dp),
-                )
             }
         }
     }
@@ -168,8 +161,10 @@ private fun UsageCard(usage: Usage, formatter: DisplayFormatter, decimal: Char) 
             .padding(22.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("C", style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 18.sp, fontWeight = FontWeight.Bold), color = colors.onPrimary, textAlign = TextAlign.Center,
-                modifier = Modifier.size(28.dp).clip(RoundedCornerShape(9.dp)).background(colors.primary).padding(top = 1.dp))
+            // The app's monochrome icon: the c and its flick dots.
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.size(28.dp).clip(RoundedCornerShape(9.dp)).background(colors.primary)) {
+                Icon(painterResource(Res.drawable.calcula_mark), contentDescription = null, tint = colors.onPrimary, modifier = Modifier.size(24.dp))
+            }
             Spacer(Modifier.width(8.dp))
             Text("Calcula", style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 18.sp, fontWeight = FontWeight.Medium), color = colors.onPrimaryContainer)
             Spacer(Modifier.weight(1f))
