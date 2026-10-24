@@ -139,4 +139,8 @@
     <string name="cursor_right">Sposta il cursore a destra</string>
     <string name="take_result">Usa risultato</string>
     <string name="expression_cleared">Cancellato</string>
+    <string name="settings_notation">Notazione</string>
+    <string name="settings_notation_normal">Normale</string>
+    <string name="settings_notation_sci">Sci.</string>
+    <string name="settings_notation_eng">Ing.</string>
 </resources>

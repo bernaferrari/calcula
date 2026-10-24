@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import com.bernaferrari.calculator.domain.model.Notation
 import com.bernaferrari.calculator.domain.model.hints
 import com.bernaferrari.calculator.domain.model.FlickHints
 import androidx.lifecycle.SavedStateHandle
@@ -95,9 +96,9 @@ class CalculatorViewModel(
     val events: SharedFlow<Outcome> = _events
 
     private val preview = calc
-        .map { Triple(it.editor.text, it.angleUnit, it.decimalPlaces) }
+        .map { listOf(it.editor.text, it.angleUnit, it.decimalPlaces, it.notation) }
         .distinctUntilChanged()
-        .mapLatest { (text, angle, decimals) -> Calculator.preview(text, angle, decimals) }
+        .mapLatest { (text, angle, decimals, notation) -> Calculator.preview(text as String, angle as AngleUnit, decimals as Int, notation as Notation) }
         .flowOn(Dispatchers.Default)
 
     private val prefs = preferences.getUserPreferences()
@@ -140,6 +141,9 @@ class CalculatorViewModel(
         }
         viewModelScope.launch {
             prefs.map { it.decimalPlaces }.distinctUntilChanged().collect { places -> calc.update { it.copy(decimalPlaces = places) } }
+        }
+        viewModelScope.launch {
+            prefs.map { it.notation }.distinctUntilChanged().collect { n -> calc.update { it.copy(notation = n) } }
         }
     }
 
@@ -190,7 +194,7 @@ class CalculatorViewModel(
     }
 
     private fun onRpnKey(key: Key) {
-        val current = rpn.value.copy(angleUnit = calc.value.angleUnit, decimalPlaces = calc.value.decimalPlaces)
+        val current = rpn.value.copy(angleUnit = calc.value.angleUnit, decimalPlaces = calc.value.decimalPlaces, notation = calc.value.notation)
         if (key == Key.CLEAR && current.stack.isEmpty()) return
         val (next, outcome) = Rpn.press(current, key)
         rpn.value = next

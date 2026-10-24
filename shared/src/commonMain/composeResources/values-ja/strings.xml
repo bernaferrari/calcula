@@ -139,4 +139,8 @@
     <string name="cursor_right">カーソルを右へ</string>
     <string name="take_result">結果を確定</string>
     <string name="expression_cleared">クリアしました</string>
+    <string name="settings_notation">表記</string>
+    <string name="settings_notation_normal">標準</string>
+    <string name="settings_notation_sci">指数</string>
+    <string name="settings_notation_eng">工学</string>
 </resources>

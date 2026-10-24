@@ -139,4 +139,8 @@
     <string name="cursor_right">游標右移</string>
     <string name="take_result">使用結果</string>
     <string name="expression_cleared">已清除</string>
+    <string name="settings_notation">記數法</string>
+    <string name="settings_notation_normal">一般</string>
+    <string name="settings_notation_sci">科學</string>
+    <string name="settings_notation_eng">工程</string>
 </resources>

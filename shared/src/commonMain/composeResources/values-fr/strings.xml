@@ -139,4 +139,8 @@
     <string name="cursor_right">Déplacer le curseur à droite</string>
     <string name="take_result">Utiliser le résultat</string>
     <string name="expression_cleared">Effacé</string>
+    <string name="settings_notation">Notation</string>
+    <string name="settings_notation_normal">Normale</string>
+    <string name="settings_notation_sci">Sci.</string>
+    <string name="settings_notation_eng">Ingé.</string>
 </resources>

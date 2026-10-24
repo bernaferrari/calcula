@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.domain.input
 
+import com.bernaferrari.calculator.domain.model.Notation
 import com.bernaferrari.calculator.domain.math.CalcEngine
 import com.bernaferrari.calculator.domain.math.CalcError
 import com.bernaferrari.calculator.domain.math.CalcException
@@ -21,6 +22,7 @@ data class RpnState(
     val error: CalcError? = null,
     val angleUnit: AngleUnit = AngleUnit.DEGREES,
     val decimalPlaces: Int = AUTO_DECIMALS,
+    val notation: Notation = Notation.NORMAL,
 )
 
 sealed interface RpnOutcome {
@@ -137,7 +139,7 @@ object Rpn {
     /** Evaluates [expression] and replaces the [consumed] top values with its result. */
     private fun run(c: RpnState, expression: String, consumed: Int): Pair<RpnState, RpnOutcome> = try {
         val value = CalcEngine.evaluate(expression, c.angleUnit)
-        val result = Calculator.formatResult(value, c.decimalPlaces)
+        val result = Calculator.formatResult(value, c.decimalPlaces, c.notation)
         val shown = CalcEngine.evaluate(result)
         c.copy(stack = listOf(shown) + c.stack.drop(consumed), lift = true) to RpnOutcome.Evaluated(expression, result)
     } catch (e: CalcException) {

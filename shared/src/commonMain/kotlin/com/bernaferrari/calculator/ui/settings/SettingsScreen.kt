@@ -1,5 +1,7 @@
 package com.bernaferrari.calculator.ui.settings
 
+import com.bernaferrari.calculator.domain.model.Notation
+import androidx.compose.material.icons.outlined.Science
 import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material.icons.outlined.Memory
 import com.bernaferrari.calculator.ui.theme.hasStyles
@@ -115,6 +117,7 @@ class SettingsViewModel(
     fun setReduceMotion(enabled: Boolean) = save { updateReduceMotion(enabled) }
     fun setMemoryKeys(enabled: Boolean) = save { update { it.copy(memoryKeys = enabled) } }
     fun setRpn(enabled: Boolean) = save { update { it.copy(rpn = enabled) } }
+    fun setNotation(notation: Notation) = save { update { it.copy(notation = notation) } }
     fun clearHistory() = viewModelScope.launch { history.clearAllHistory() }
 }
 
@@ -198,6 +201,26 @@ fun SettingsScreen(
                                 onSelect = viewModel::setDecimalPlaces,
                                 // A live example says more than "Auto" ever could.
                                 subtitle = decimalsExample(prefs.decimalPlaces, prefs.decimalSeparator),
+                            )
+                        },
+                        { p ->
+                            ChoiceRow(
+                                p, Icons.Outlined.Science, stringResource(Res.string.settings_notation),
+                                Notation.entries.toList(), prefs.notation,
+                                label = {
+                                    stringResource(
+                                        when (it) {
+                                            Notation.NORMAL -> Res.string.settings_notation_normal
+                                            Notation.SCIENTIFIC -> Res.string.settings_notation_sci
+                                            Notation.ENGINEERING -> Res.string.settings_notation_eng
+                                        },
+                                    )
+                                },
+                                onSelect = viewModel::setNotation,
+                                // The same number each way says it best.
+                                subtitle = "1234567.8 → " + DisplayFormatter(prefs.decimalSeparator.separators()).number(
+                                    Calculator.formatResult(Decimal("1234567.8"), prefs.decimalPlaces, prefs.notation),
+                                ),
                             )
                         },
                         { p ->

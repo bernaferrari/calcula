@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.domain.input
 
+import com.bernaferrari.calculator.domain.model.Notation
 import com.bernaferrari.calculator.domain.math.Decimal
 import com.bernaferrari.calculator.domain.math.RoundingMode
 
@@ -57,6 +58,7 @@ data class CalcState(
     val decimalPlaces: Int = AUTO_DECIMALS,
     /** The last result as a simple fraction (`³⁄₈`), when it is one; shown while [resultShown]. */
     val fraction: String? = null,
+    val notation: Notation = Notation.NORMAL,
 )
 
 sealed interface Outcome {
@@ -153,7 +155,7 @@ object Calculator {
     }
 
     /** The value shown under the expression while typing, or null when it would add nothing. */
-    fun preview(text: String, angleUnit: AngleUnit, decimalPlaces: Int = AUTO_DECIMALS): String? {
+    fun preview(text: String, angleUnit: AngleUnit, decimalPlaces: Int = AUTO_DECIMALS, notation: Notation = Notation.NORMAL): String? {
         if (isPlainNumber(text)) return null
         var candidate = text
         // While an operator is dangling ("5+3×"), preview what's complete so far.
@@ -162,7 +164,7 @@ object Calculator {
         }
         if (candidate.isEmpty() || isPlainNumber(candidate)) return null
         val value = CalcEngine.evaluateOrNull(candidate, angleUnit) ?: return null
-        return formatResult(value, decimalPlaces)
+        return formatResult(value, decimalPlaces, notation)
     }
 
     fun isPlainNumber(text: String): Boolean {
@@ -185,7 +187,7 @@ object Calculator {
         val closed = text + ")".repeat(ExpressionEditor.openParentheses(text).coerceAtLeast(0))
         return try {
             val value = CalcEngine.evaluate(closed, state.angleUnit)
-            val result = formatResult(value, state.decimalPlaces)
+            val result = formatResult(value, state.decimalPlaces, state.notation)
             val fraction = Fractions.worthShowing(value)?.let(Fractions::format)
             state.copy(editor = Editor(result), resultShown = true, error = null, repeatTail = repeatTail(closed), fraction = fraction) to
                 Outcome.Evaluated(closed, result)
@@ -197,7 +199,8 @@ object Calculator {
     }
 
     /** Rounds to the chosen number of decimals (keeping very large/small values in E notation). */
-    fun formatResult(value: Decimal, decimalPlaces: Int): String {
+    fun formatResult(value: Decimal, decimalPlaces: Int, notation: Notation = Notation.NORMAL): String {
+        if (notation != Notation.NORMAL) return NumberFormatter.scientific(value, notation == Notation.ENGINEERING, decimalPlaces)
         if (decimalPlaces < 0 || value.signum() == 0) return NumberFormatter.format(value)
         val magnitude = value.precision() - value.scale() - 1
         if (magnitude >= 16 || magnitude <= -10) return NumberFormatter.format(value)

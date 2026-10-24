@@ -37,6 +37,8 @@ data class UserPreferences(
     val rpn: Boolean = false,
     val programmerBase: Base = Base.DEC,
     val programmerWord: WordSize = WordSize.QWORD,
+    /** How results are written: as is, or scientific (`1.23E6`) or engineering (`12.3E3`). */
+    val notation: Notation = Notation.NORMAL,
 )
 
 /**
@@ -60,6 +62,8 @@ enum class FlickHints { LABELS, DOTS, NONE }
 enum class ColorStyle { TONAL_SPOT, NEUTRAL, VIBRANT, EXPRESSIVE }
 
 const val AUTO_DECIMALS = -1
+
+enum class Notation { NORMAL, SCIENTIFIC, ENGINEERING }
 
 /** AUTO follows the locale; DOT and COMMA force `1,234.5` or `1.234,5`. */
 enum class DecimalSeparator { AUTO, DOT, COMMA }

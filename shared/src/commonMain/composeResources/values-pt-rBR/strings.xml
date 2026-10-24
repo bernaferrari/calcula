@@ -141,4 +141,8 @@
     <string name="cursor_right">Mover cursor para a direita</string>
     <string name="take_result">Usar resultado</string>
     <string name="expression_cleared">Apagado</string>
+    <string name="settings_notation">Notação</string>
+    <string name="settings_notation_normal">Normal</string>
+    <string name="settings_notation_sci">Cient.</string>
+    <string name="settings_notation_eng">Eng.</string>
 </resources>
