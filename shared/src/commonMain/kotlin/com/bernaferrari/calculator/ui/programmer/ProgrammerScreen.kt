@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.ui.programmer
 
+import com.bernaferrari.calculator.ui.flushMenu
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.ToggleButton
@@ -287,7 +288,7 @@ private fun WordPicker(word: WordSize, onPick: (WordSize) -> Unit) {
             Text(stringResource(Res.string.programmer_bits, word.bits))
             Icon(Icons.Rounded.ArrowDropDown, contentDescription = stringResource(Res.string.programmer_word_size), modifier = Modifier.size(20.dp))
         }
-        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }, modifier = Modifier.flushMenu()) {
             WordSize.entries.forEach {
                 DropdownMenuItem(text = { Text(stringResource(Res.string.programmer_bits, it.bits)) }, onClick = { open = false; onPick(it) })
             }

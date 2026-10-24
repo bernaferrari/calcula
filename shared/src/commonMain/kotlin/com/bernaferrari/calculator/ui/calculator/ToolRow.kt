@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import com.bernaferrari.calculator.ui.flushMenu
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.AutoStories
 import androidx.compose.ui.geometry.Rect
@@ -191,7 +192,7 @@ fun ToolRow(
                 IconButton(onClick = { menu = true }) {
                     Icon(Icons.Outlined.MoreVert, contentDescription = stringResource(Res.string.more_options), tint = quiet)
                 }
-                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, modifier = Modifier.flushMenu()) {
                     // The tools by name too: the menu is where people look, and it teaches the icons.
                     DropdownMenuItem(
                         text = { Text(stringResource(Res.string.graph_title)) },
