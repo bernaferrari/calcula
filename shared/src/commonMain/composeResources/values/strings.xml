@@ -224,7 +224,6 @@
     <string name="usage_favorite">favorite</string>
     <string name="usage_since">since %1$s</string>
     <string name="usage_share">Share your card</string>
-    <string name="usage_tagline">Flick a key. Get a function.</string>
     <string name="usage_empty">Calculate a little, then come back to see your keypad light up.</string>
     <plurals name="usage_calculations">
         <item quantity="one">calculation</item>

@@ -220,7 +220,6 @@
     <string name="usage_favorite">préférée</string>
     <string name="usage_since">depuis %1$s</string>
     <string name="usage_share">Partager ta carte</string>
-    <string name="usage_tagline">Glisse une touche. Obtiens une fonction.</string>
     <string name="usage_empty">Calcule un peu, puis reviens voir ton clavier s'illuminer.</string>
     <plurals name="usage_calculations">
         <item quantity="one">calcul</item>

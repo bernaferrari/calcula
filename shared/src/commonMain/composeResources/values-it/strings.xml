@@ -220,7 +220,6 @@
     <string name="usage_favorite">preferita</string>
     <string name="usage_since">dal %1$s</string>
     <string name="usage_share">Condividi la tua scheda</string>
-    <string name="usage_tagline">Scorri un tasto. Ottieni una funzione.</string>
     <string name="usage_empty">Fai qualche calcolo, poi torna a vedere la tastiera illuminarsi.</string>
     <plurals name="usage_calculations">
         <item quantity="one">calcolo</item>

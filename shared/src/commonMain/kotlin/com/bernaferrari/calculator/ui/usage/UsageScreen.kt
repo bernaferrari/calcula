@@ -134,7 +134,7 @@ fun UsageScreen(onNavigateBack: () -> Unit) {
     }
 }
 
-/** The card itself: brand, the big count, a keypad heatmap and three small facts. */
+/** The card itself: the app's mark and name, the big count, a keypad heatmap and three small facts. */
 @Composable
 private fun UsageCard(usage: Usage, formatter: DisplayFormatter, decimal: Char) {
     val colors = MaterialTheme.colorScheme
@@ -206,15 +206,6 @@ private fun UsageCard(usage: Usage, formatter: DisplayFormatter, decimal: Char) 
             Fact(number(usage.days), pluralStringResource(Res.plurals.usage_days, usage.days))
             Fact(favourite?.let { labels[it.key] } ?: "—", stringResource(Res.string.usage_favorite))
         }
-        Spacer(Modifier.height(16.dp))
-        // The line that makes a shared card an invitation.
-        Text(
-            stringResource(Res.string.usage_tagline),
-            style = MaterialTheme.typography.labelLarge,
-            color = colors.onPrimaryContainer.copy(alpha = 0.75f),
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(),
-        )
     }
 }
 

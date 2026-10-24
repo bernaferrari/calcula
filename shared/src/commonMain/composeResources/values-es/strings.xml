@@ -220,7 +220,6 @@
     <string name="usage_favorite">favorita</string>
     <string name="usage_since">desde %1$s</string>
     <string name="usage_share">Compartir tu tarjeta</string>
-    <string name="usage_tagline">Desliza una tecla. Obtén una función.</string>
     <string name="usage_empty">Haz unos cálculos y vuelve para ver tu teclado iluminarse.</string>
     <plurals name="usage_calculations">
         <item quantity="one">cálculo</item>

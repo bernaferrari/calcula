@@ -220,7 +220,6 @@
     <string name="usage_favorite">Liebling</string>
     <string name="usage_since">seit %1$s</string>
     <string name="usage_share">Karte teilen</string>
-    <string name="usage_tagline">Taste wischen. Funktion bekommen.</string>
     <string name="usage_empty">Rechne ein wenig und komm zurück, um deine Tastatur leuchten zu sehen.</string>
     <plurals name="usage_calculations">
         <item quantity="one">Rechnung</item>

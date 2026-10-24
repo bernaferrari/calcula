@@ -220,7 +220,6 @@
     <string name="usage_favorite">お気に入り</string>
     <string name="usage_since">%1$s から</string>
     <string name="usage_share">カードを共有</string>
-    <string name="usage_tagline">キーをフリック、関数をひとつ。</string>
     <string name="usage_empty">少し計算してから戻ってくると、キーが光ります。</string>
     <plurals name="usage_calculations">
         <item quantity="other">回の計算</item>
