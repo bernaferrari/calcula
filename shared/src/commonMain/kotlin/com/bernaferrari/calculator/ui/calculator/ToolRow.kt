@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import com.bernaferrari.calculator.ui.MenuShape
 import com.bernaferrari.calculator.ui.flushMenu
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.AutoStories
@@ -186,55 +187,14 @@ fun ToolRow(
             IconButton(onClick = onOpenConverter, modifier = Modifier.containerTransform("converter")) {
                 Icon(Icons.Outlined.Straighten, contentDescription = stringResource(Res.string.menu_unit_converter), tint = quiet)
             }
-            var menu by remember { mutableStateOf(false) }
-            // Settings grows out of the overflow button, so its container transform starts here.
-            Box(Modifier.containerTransform("settings")) {
-                IconButton(onClick = { menu = true }) {
-                    Icon(Icons.Outlined.MoreVert, contentDescription = stringResource(Res.string.more_options), tint = quiet)
-                }
-                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, modifier = Modifier.flushMenu()) {
-                    // The tools by name too: the menu is where people look, and it teaches the icons.
-                    DropdownMenuItem(
-                        text = { Text(stringResource(Res.string.graph_title)) },
-                        leadingIcon = { Icon(Icons.Outlined.ShowChart, contentDescription = null) },
-                        onClick = { menu = false; onOpenGraph() },
-                    )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(Res.string.menu_unit_converter)) },
-                        leadingIcon = { Icon(Icons.Outlined.Straighten, contentDescription = null) },
-                        onClick = { menu = false; onOpenConverter() },
-                    )
-                    // Only in the menu: hex and bits are for the few, so they get no icon in the row.
-                    DropdownMenuItem(
-                        text = { Text(stringResource(Res.string.menu_programmer)) },
-                        leadingIcon = { Icon(Icons.Outlined.Code, contentDescription = null) },
-                        onClick = { menu = false; onOpenProgrammer() },
-                    )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(Res.string.menu_library)) },
-                        leadingIcon = { Icon(Icons.Outlined.AutoStories, contentDescription = null) },
-                        onClick = { menu = false; onOpenLibrary() },
-                    )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(Res.string.menu_statistics)) },
-                        leadingIcon = { Icon(Icons.Outlined.BarChart, contentDescription = null) },
-                        onClick = { menu = false; onOpenStatistics() },
-                    )
-                    HorizontalDivider()
-                    if (!historyOpen && showHistoryEntry) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(Res.string.settings_history)) },
-                            leadingIcon = { Icon(Icons.Outlined.History, contentDescription = null) },
-                            onClick = { menu = false; onToggleHistory() },
-                        )
-                    }
-                    DropdownMenuItem(
-                        text = { Text(stringResource(Res.string.menu_settings)) },
-                        leadingIcon = { Icon(Icons.Outlined.Settings, contentDescription = null) },
-                        onClick = { menu = false; onOpenSettings() },
-                    )
-                }
-            }
+            OverflowMenu(
+                tint = quiet,
+                onOpenProgrammer = onOpenProgrammer,
+                onOpenLibrary = onOpenLibrary,
+                onOpenStatistics = onOpenStatistics,
+                onOpenHistory = if (!historyOpen && showHistoryEntry) onToggleHistory else null,
+                onOpenSettings = onOpenSettings,
+            )
         }
         }
         ResizePill(resize, Modifier.align(Alignment.Center))
@@ -291,6 +251,57 @@ private fun Modifier.pullProgress(progress: Float, color: Color): Modifier = dra
     val traced = Path()
     measure.getSegment(0f, measure.length * progress.coerceIn(0f, 1f), traced, true)
     drawPath(traced, color, style = Stroke(width = stroke, cap = StrokeCap.Round))
+}
+
+/**
+ * ⋮: what has no icon of its own. Graph and the converter sit right beside it, so they aren't
+ * repeated here. Settings grows out of this button, so its container transform starts here.
+ */
+@Composable
+fun OverflowMenu(
+    tint: Color,
+    onOpenProgrammer: () -> Unit,
+    onOpenLibrary: () -> Unit,
+    onOpenStatistics: () -> Unit,
+    onOpenHistory: (() -> Unit)?,
+    onOpenSettings: () -> Unit,
+) {
+    var menu by remember { mutableStateOf(false) }
+    Box(Modifier.containerTransform("settings")) {
+        IconButton(onClick = { menu = true }) {
+            Icon(Icons.Outlined.MoreVert, contentDescription = stringResource(Res.string.more_options), tint = tint)
+        }
+        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, shape = MenuShape, modifier = Modifier.flushMenu()) {
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.menu_programmer)) },
+                leadingIcon = { Icon(Icons.Outlined.Code, contentDescription = null) },
+                onClick = { menu = false; onOpenProgrammer() },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.menu_library)) },
+                leadingIcon = { Icon(Icons.Outlined.AutoStories, contentDescription = null) },
+                onClick = { menu = false; onOpenLibrary() },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.menu_statistics)) },
+                leadingIcon = { Icon(Icons.Outlined.BarChart, contentDescription = null) },
+                onClick = { menu = false; onOpenStatistics() },
+            )
+            HorizontalDivider()
+            if (onOpenHistory != null) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(Res.string.settings_history)) },
+                    leadingIcon = { Icon(Icons.Outlined.History, contentDescription = null) },
+                    onClick = { menu = false; onOpenHistory() },
+                )
+            }
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.menu_settings)) },
+                leadingIcon = { Icon(Icons.Outlined.Settings, contentDescription = null) },
+                onClick = { menu = false; onOpenSettings() },
+            )
+        }
+    }
 }
 
 /**

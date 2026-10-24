@@ -421,9 +421,15 @@ fun CalculatorScreen(
                         IconButton(onClick = { onOpenConverter(currentNumber) }, modifier = Modifier.containerTransform("converter")) {
                             Icon(Icons.Outlined.Straighten, contentDescription = stringResource(Res.string.menu_unit_converter), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                        IconButton(onClick = onOpenSettings, modifier = Modifier.containerTransform("settings")) {
-                            Icon(Icons.Outlined.Settings, contentDescription = stringResource(Res.string.menu_settings), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
+                        OverflowMenu(
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            onOpenProgrammer = onOpenProgrammer,
+                            onOpenLibrary = { library = LibraryTab.CONSTANTS },
+                            onOpenStatistics = onOpenStatistics,
+                            // History has its own button in this row.
+                            onOpenHistory = null,
+                            onOpenSettings = onOpenSettings,
+                        )
                     }
                 }
                 Column(Modifier.weight(0.3f).fillMaxHeight()) {
