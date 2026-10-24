@@ -218,4 +218,14 @@
     <string name="stats_add">Adicionar</string>
     <string name="stats_clear">Limpar</string>
     <string name="stats_empty">Digite um número e toque em Adicionar. Toque em um resultado para usá-lo na calculadora.</string>
+    <string name="menu_usage">Seu Calcula</string>
+    <string name="usage_calculations">cálculos</string>
+    <string name="usage_flicks">deslizes</string>
+    <string name="usage_days">dias</string>
+    <string name="usage_favorite">favorita</string>
+    <string name="usage_since">desde %1$s</string>
+    <string name="usage_share">Compartilhar seu cartão</string>
+    <string name="usage_tagline">Deslize uma tecla. Ganhe uma função.</string>
+    <string name="usage_empty">Faça umas contas e volte para ver seu teclado acender.</string>
+    <string name="usage_private">Contado só neste aparelho. Nada sai dele, a não ser que você compartilhe o cartão.</string>
 </resources>

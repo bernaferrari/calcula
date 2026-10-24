@@ -216,4 +216,14 @@
     <string name="stats_add">Hinzufügen</string>
     <string name="stats_clear">Leeren</string>
     <string name="stats_empty">Gib eine Zahl ein und tippe auf Hinzufügen. Tippe auf ein Ergebnis, um es im Rechner zu verwenden.</string>
+    <string name="menu_usage">Dein Calcula</string>
+    <string name="usage_calculations">Rechnungen</string>
+    <string name="usage_flicks">Wischer</string>
+    <string name="usage_days">Tage</string>
+    <string name="usage_favorite">Liebling</string>
+    <string name="usage_since">seit %1$s</string>
+    <string name="usage_share">Karte teilen</string>
+    <string name="usage_tagline">Taste wischen. Funktion bekommen.</string>
+    <string name="usage_empty">Rechne ein wenig und komm zurück, um deine Tastatur leuchten zu sehen.</string>
+    <string name="usage_private">Nur auf diesem Gerät gezählt. Nichts verlässt es, außer du teilst die Karte.</string>
 </resources>

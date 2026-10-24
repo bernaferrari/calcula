@@ -216,4 +216,14 @@
     <string name="stats_add">Aggiungi</string>
     <string name="stats_clear">Cancella</string>
     <string name="stats_empty">Scrivi un numero e tocca Aggiungi. Tocca un risultato per usarlo nella calcolatrice.</string>
+    <string name="menu_usage">Il tuo Calcula</string>
+    <string name="usage_calculations">calcoli</string>
+    <string name="usage_flicks">scorrimenti</string>
+    <string name="usage_days">giorni</string>
+    <string name="usage_favorite">preferita</string>
+    <string name="usage_since">dal %1$s</string>
+    <string name="usage_share">Condividi la tua scheda</string>
+    <string name="usage_tagline">Scorri un tasto. Ottieni una funzione.</string>
+    <string name="usage_empty">Fai qualche calcolo, poi torna a vedere la tastiera illuminarsi.</string>
+    <string name="usage_private">Contato solo su questo dispositivo. Non esce nulla, a meno che tu non condivida la scheda.</string>
 </resources>

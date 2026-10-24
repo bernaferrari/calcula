@@ -46,6 +46,8 @@ data class UserPreferences(
     val notation: Notation = Notation.NORMAL,
     /** The numbers on the statistics screen, kept between visits. */
     val statsData: List<String> = emptyList(),
+    /** How the calculator gets used, for the "Your Calcula" card. Never leaves the device. */
+    val usage: Usage = Usage(),
 )
 
 /**
@@ -71,6 +73,29 @@ enum class ColorStyle { TONAL_SPOT, NEUTRAL, VIBRANT, EXPRESSIVE }
 const val AUTO_DECIMALS = -1
 
 enum class Notation { NORMAL, SCIENTIFIC, ENGINEERING }
+
+/** Key presses by key (taps and flicks alike), flicks, finished calculations and days used. */
+@Serializable
+data class Usage(
+    val keys: Map<String, Int> = emptyMap(),
+    val flicks: Int = 0,
+    val calculations: Int = 0,
+    val days: Int = 0,
+    /** The last day it was used, as days since 1970, to count each day once. */
+    val lastDay: Long = 0,
+    /** When counting started, in epoch millis. */
+    val since: Long = 0,
+) {
+    /** These counts added in, on [day] at [now]. */
+    fun plus(keys: Map<String, Int>, flicks: Int, calculations: Int, day: Long, now: Long) = copy(
+        keys = (this.keys.keys + keys.keys).associateWith { (this.keys[it] ?: 0) + (keys[it] ?: 0) },
+        flicks = this.flicks + flicks,
+        calculations = this.calculations + calculations,
+        days = if (day != lastDay) days + 1 else days,
+        lastDay = day,
+        since = if (since == 0L) now else since,
+    )
+}
 
 /** One stored value, as a number in the expression language, with an optional name. */
 @Serializable

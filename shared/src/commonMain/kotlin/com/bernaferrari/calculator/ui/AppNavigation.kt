@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.ui
 
+import com.bernaferrari.calculator.ui.usage.UsageScreen
 import com.bernaferrari.calculator.ui.stats.StatisticsScreen
 import com.bernaferrari.calculator.ui.settings.CustomizeKeysScreen
 import com.bernaferrari.calculator.ui.programmer.ProgrammerScreen
@@ -32,7 +33,7 @@ import com.bernaferrari.calculator.ui.converter.ConverterScreen
 import com.bernaferrari.calculator.ui.settings.SettingsScreen
 
 /** The app's places. The calculator is always at the bottom of the stack. */
-enum class Screen { Calculator, Settings, Converter, About, Graph, Programmer, CustomizeKeys, Statistics }
+enum class Screen { Calculator, Settings, Converter, About, Graph, Programmer, CustomizeKeys, Statistics, Usage }
 
 /**
  * Navigation 3 with a shared-transition scope, so the tool row's icons can grow into the screens
@@ -74,6 +75,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                             onOpenGraph = { open(Screen.Graph) },
                             onOpenProgrammer = { open(Screen.Programmer) },
                             onOpenStatistics = { open(Screen.Statistics) },
+                            onOpenUsage = { open(Screen.Usage) },
                             pendingInsert = pendingInsert,
                             onInsertConsumed = { pendingInsert = null },
                         )
@@ -87,6 +89,9 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                     }
                     entry<Screen>(Screen.Graph) {
                         GraphScreen(onNavigateBack = back)
+                    }
+                    entry<Screen>(Screen.Usage) {
+                        UsageScreen(onNavigateBack = back)
                     }
                     entry<Screen>(Screen.Statistics) {
                         StatisticsScreen(onNavigateBack = back, onUse = { value -> pendingInsert = value; back() })

@@ -216,4 +216,14 @@
     <string name="stats_add">追加</string>
     <string name="stats_clear">クリア</string>
     <string name="stats_empty">数値を入力して「追加」をタップ。結果をタップすると電卓で使えます。</string>
+    <string name="menu_usage">あなたのCalcula</string>
+    <string name="usage_calculations">回の計算</string>
+    <string name="usage_flicks">回のフリック</string>
+    <string name="usage_days">日</string>
+    <string name="usage_favorite">お気に入り</string>
+    <string name="usage_since">%1$s から</string>
+    <string name="usage_share">カードを共有</string>
+    <string name="usage_tagline">キーをフリック、関数をひとつ。</string>
+    <string name="usage_empty">少し計算してから戻ってくると、キーが光ります。</string>
+    <string name="usage_private">この端末の中だけで数えています。カードを共有しない限り外には出ません。</string>
 </resources>

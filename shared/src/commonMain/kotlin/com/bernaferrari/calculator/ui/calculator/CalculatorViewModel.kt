@@ -175,7 +175,30 @@ class CalculatorViewModel(
         }
     }
 
+    // Usage is counted here and saved after each calculation (and when the screen goes), not on
+    // every key press.
+    private val pendingKeys = mutableMapOf<String, Int>()
+    private var pendingFlicks = 0
+    private var pendingCalculations = 0
+
+    private fun count(key: Key) { pendingKeys[key.name] = (pendingKeys[key.name] ?: 0) + 1 }
+
+    private fun saveUsage() {
+        if (pendingKeys.isEmpty() && pendingFlicks == 0 && pendingCalculations == 0) return
+        val keys = pendingKeys.toMap(); val flicks = pendingFlicks; val calculations = pendingCalculations
+        pendingKeys.clear(); pendingFlicks = 0; pendingCalculations = 0
+        val now = kotlin.time.Clock.System.now().toEpochMilliseconds()
+        val day = now / 86_400_000L
+        viewModelScope.launch { preferences.update { it.copy(usage = it.usage.plus(keys, flicks, calculations, day, now)) } }
+    }
+
+    override fun onCleared() {
+        saveUsage()
+        super.onCleared()
+    }
+
     fun onKey(key: Key) {
+        count(key)
         if (key == Key.CLEAR) {
             val empty = if (settings.value.rpn) rpn.value.stack.isEmpty() else calc.value.editor.isEmpty
             if (!empty) {
@@ -191,6 +214,8 @@ class CalculatorViewModel(
         setState(next)
         when (outcome) {
             is Outcome.Evaluated -> {
+                pendingCalculations++
+                saveUsage()
                 generation.update { it + 1 }
                 viewModelScope.launch {
                     historyRepository.insertCalculation(CalculationHistory(expression = outcome.expression, result = outcome.result))
@@ -209,6 +234,8 @@ class CalculatorViewModel(
         rpn.value = next
         when (outcome) {
             is RpnOutcome.Evaluated -> viewModelScope.launch {
+                pendingCalculations++
+                saveUsage()
                 historyRepository.insertCalculation(CalculationHistory(expression = outcome.expression, result = outcome.result))
             }
             is RpnOutcome.Failed -> _events.tryEmit(Outcome.Failed(outcome.error))
@@ -286,6 +313,7 @@ class CalculatorViewModel(
 
     /** A function picked by a flick or from the ƒ layer. */
     fun onSwipeKey(key: Key) {
+        pendingFlicks++
         onKey(key)
         // Counts toward the keypad trading its function names for dots once the gesture is known.
         viewModelScope.launch { preferences.countFlick() }

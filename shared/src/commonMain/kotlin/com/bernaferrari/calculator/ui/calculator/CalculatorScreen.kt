@@ -120,6 +120,7 @@ fun CalculatorScreen(
     onOpenGraph: () -> Unit = {},
     onOpenProgrammer: () -> Unit = {},
     onOpenStatistics: () -> Unit = {},
+    onOpenUsage: () -> Unit = {},
     pendingInsert: String? = null,
     onInsertConsumed: () -> Unit = {},
     viewModel: CalculatorViewModel = viewModel { CalculatorViewModel(savedState = createSavedStateHandle()) },
@@ -311,6 +312,7 @@ fun CalculatorScreen(
                 onOpenProgrammer = onOpenProgrammer,
                 onOpenLibrary = { library = LibraryTab.CONSTANTS },
                 onOpenStatistics = onOpenStatistics,
+                onOpenUsage = onOpenUsage,
                 onOpenSettings = onOpenSettings,
                 resize = if (!pulling) null else {
                     val span = (maxRow - minRow).value.coerceAtLeast(1f)
@@ -422,6 +424,7 @@ fun CalculatorScreen(
                             onOpenProgrammer = onOpenProgrammer,
                             onOpenLibrary = { library = LibraryTab.CONSTANTS },
                             onOpenStatistics = onOpenStatistics,
+                            onOpenUsage = onOpenUsage,
                             // History has its own button in this row.
                             onOpenHistory = null,
                             onOpenSettings = onOpenSettings,

@@ -220,4 +220,14 @@
     <string name="stats_add">Add</string>
     <string name="stats_clear">Clear</string>
     <string name="stats_empty">Type a number and tap Add. Tap any result to use it in the calculator.</string>
+    <string name="menu_usage">Your Calcula</string>
+    <string name="usage_calculations">calculations</string>
+    <string name="usage_flicks">flicks</string>
+    <string name="usage_days">days</string>
+    <string name="usage_favorite">favorite</string>
+    <string name="usage_since">since %1$s</string>
+    <string name="usage_share">Share your card</string>
+    <string name="usage_tagline">Flick a key. Get a function.</string>
+    <string name="usage_empty">Calculate a little, then come back to see your keypad light up.</string>
+    <string name="usage_private">Counted only on this device. Nothing leaves it unless you share the card.</string>
 </resources>

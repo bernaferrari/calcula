@@ -216,4 +216,14 @@
     <string name="stats_add">添加</string>
     <string name="stats_clear">清除</string>
     <string name="stats_empty">输入数字后点按“添加”。点按任一结果即可在计算器中使用。</string>
+    <string name="menu_usage">你的 Calcula</string>
+    <string name="usage_calculations">次计算</string>
+    <string name="usage_flicks">次滑动</string>
+    <string name="usage_days">天</string>
+    <string name="usage_favorite">最爱</string>
+    <string name="usage_since">自 %1$s</string>
+    <string name="usage_share">分享你的卡片</string>
+    <string name="usage_tagline">滑一下按键，得到一个函数。</string>
+    <string name="usage_empty">先算一会儿，再回来看看你的键盘亮起来。</string>
+    <string name="usage_private">只在本机统计。除非你分享卡片，否则不会离开设备。</string>
 </resources>
