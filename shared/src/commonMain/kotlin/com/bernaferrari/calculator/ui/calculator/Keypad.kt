@@ -99,6 +99,12 @@ internal data class Spec(
     val flips: Boolean = up != null,
     /** Drawn instead of [label]. */
     val icon: ImageVector? = null,
+    /** Where the key sits, for settings: stays the same when the person changes what it does. */
+    val id: String = key.name,
+    /** Typed as is when tapped instead of [key]: a constant's value, `tip(`. */
+    val insert: String? = null,
+    /** The person cleared this key: it shows nothing and does nothing when tapped. */
+    val blank: Boolean = false,
 )
 
 /** The memory keys' row, when it's turned on. */
@@ -164,11 +170,11 @@ internal fun keypadRows(
         ),
     )
 
-/** The flicks the person may reassign: every key's except C, ⌫, ( ) and =. */
-internal val Spec.customizable: Boolean get() = key !in setOf(Key.CLEAR, Key.DELETE, Key.PARENS, Key.EQUALS)
-
 /** "D7.up" and "D7.down": how a flick slot is named in settings. */
-internal fun Spec.slot(up: Boolean) = "${key.name}.${if (up) "up" else "down"}"
+internal fun Spec.slot(up: Boolean) = "$id.${if (up) "up" else "down"}"
+
+/** "PERCENT.tap": what tapping the key in that spot does. */
+internal val Spec.tapSlot: String get() = "$id.tap"
 
 /** A flick the person chose: a built-in function, or text to insert (a constant's value, `tip(`). Null removes the flick. */
 data class CustomFlick(val label: String, val key: Key? = null, val insert: String? = null)
@@ -176,16 +182,26 @@ data class CustomFlick(val label: String, val key: Key? = null, val insert: Stri
 internal fun CustomFlick.toAlt() = Alt(label, key ?: Key.EQUALS, label, named = true, insert = insert)
 
 internal fun List<List<Spec>>.withFlicks(flicks: Map<String, CustomFlick?>): List<List<Spec>> =
-    if (flicks.isEmpty()) this else map { row ->
+    if (flicks.isEmpty()) this else {
+    val point = flatten().firstOrNull { it.key == Key.DOT }?.label ?: "."
+    map { row ->
         row.map { spec ->
-            if (!spec.customizable) return@map spec
             val upSlot = spec.slot(true)
             val downSlot = spec.slot(false)
             val up = if (upSlot in flicks) flicks[upSlot]?.toAlt() else spec.up
             val down = if (downSlot in flicks) flicks[downSlot]?.toAlt() else spec.down
             // Digits flip to their up function on the ƒ layer; that holds for a chosen one too.
-            spec.copy(up = up, down = down, flips = up != null && (spec.flips || spec.tone == Tone.Digit && spec.key != Key.D0))
+            val flicked = spec.copy(up = up, down = down, flips = up != null && (spec.flips || spec.tone == Tone.Digit && spec.key != Key.D0))
+            if (spec.tapSlot !in flicks) return@map flicked
+            val tap = flicks[spec.tapSlot]
+            when {
+                tap == null -> flicked.copy(blank = true, label = "", icon = null, description = "")
+                // The point follows the locale, as the shipped key does.
+                tap.key == Key.DOT -> flicked.copy(key = Key.DOT, label = point, description = "Decimal point", icon = null, insert = null)
+                else -> flicked.copy(key = tap.key ?: Key.EQUALS, label = tap.label, description = tap.label, icon = null, insert = tap.insert)
+            }
         }
+    }
     }
 
 /**
@@ -372,12 +388,14 @@ private fun KeypadKey(
         description = if (onLayer) spec.up!!.description else spec.description,
         haptics = haptics,
         // `=` answers with its own confirm/reject haptic once the result is known (↵ just pushes).
-        pressHaptic = spec.key != Key.EQUALS || spec.icon != null,
+        pressHaptic = !spec.blank && (spec.key != Key.EQUALS || spec.icon != null),
         onClick = {
             when {
                 // A dimmed function does nothing, and doesn't use up a one-shot ƒ either.
                 onLayer && spec.up!!.isInert(inert) -> Unit
                 onLayer -> fire(spec.up!!)
+                spec.blank -> Unit
+                spec.insert != null -> onInsertText(spec.insert)
                 else -> onKey(spec.key)
             }
         },

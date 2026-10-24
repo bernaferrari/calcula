@@ -3,6 +3,16 @@
 package com.bernaferrari.calculator.ui.settings
 
 import androidx.compose.foundation.background
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material.icons.rounded.RestartAlt
+import androidx.compose.material.icons.rounded.Download
+import androidx.compose.material.icons.rounded.IosShare
+import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -56,7 +66,8 @@ import com.bernaferrari.calculator.resources.*
 import com.bernaferrari.calculator.ui.calculator.FlickCatalog
 import com.bernaferrari.calculator.ui.calculator.Spec
 import com.bernaferrari.calculator.ui.calculator.Tone
-import com.bernaferrari.calculator.ui.calculator.customizable
+import com.bernaferrari.calculator.ui.calculator.tapSlot
+import com.bernaferrari.calculator.platform.rememberTextSharer
 import com.bernaferrari.calculator.ui.calculator.keypadRows
 import com.bernaferrari.calculator.ui.calculator.rememberHaptics
 import com.bernaferrari.calculator.ui.calculator.separators
@@ -77,15 +88,37 @@ fun CustomizeKeysScreen(onNavigateBack: () -> Unit, viewModel: SettingsViewModel
     val decimal = prefs.decimalSeparator.separators().decimal
     val defaults = remember(decimal, prefs.rpn) { keypadRows(decimal, rpn = prefs.rpn) }
     val rows = defaults.withFlicks(FlickCatalog.resolve(prefs.flicks, prefs.functions))
-    var picking by remember { mutableStateOf<Pair<Spec, Boolean>?>(null) }
+    var picking by remember { mutableStateOf<Pair<Spec, Slot>?>(null) }
+    var menu by remember { mutableStateOf(false) }
+    var importing by remember { mutableStateOf(false) }
+    val share = rememberTextSharer()
+    val slots = remember(defaults) { defaults.flatten().flatMap { listOf(it.tapSlot, it.slot(true), it.slot(false)) }.toSet() }
 
     Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.containerTransform("settings", isScreen = true).fillMaxSize()) {
         Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars)) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.statusBarsPadding().padding(horizontal = 4.dp).height(56.dp).fillMaxWidth()) {
                 IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null) }
                 Text(stringResource(Res.string.settings_customize_keys), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
-                TextButton(onClick = { haptics.heavy(); viewModel.resetFlicks() }, enabled = prefs.flicks.isNotEmpty()) {
-                    Text(stringResource(Res.string.customize_reset))
+                Box {
+                    IconButton(onClick = { haptics.tap(); menu = true }) { Icon(Icons.Rounded.MoreVert, contentDescription = null) }
+                    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(Res.string.customize_export)) },
+                            leadingIcon = { Icon(Icons.Rounded.IosShare, contentDescription = null) },
+                            onClick = { menu = false; share(FlickCatalog.export(prefs.flicks)) },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(Res.string.customize_import)) },
+                            leadingIcon = { Icon(Icons.Rounded.Download, contentDescription = null) },
+                            onClick = { menu = false; importing = true },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(Res.string.customize_reset)) },
+                            leadingIcon = { Icon(Icons.Rounded.RestartAlt, contentDescription = null) },
+                            enabled = prefs.flicks.isNotEmpty(),
+                            onClick = { menu = false; haptics.heavy(); viewModel.resetFlicks() },
+                        )
+                    }
                 }
             }
             Text(
@@ -105,9 +138,10 @@ fun CustomizeKeysScreen(onNavigateBack: () -> Unit, viewModel: SettingsViewModel
                                 val original = defaults[r][c]
                                 KeyTile(
                                     spec = spec,
+                                    changedTap = spec.tapSlot in prefs.flicks,
                                     changedUp = spec.slot(true) in prefs.flicks,
                                     changedDown = spec.slot(false) in prefs.flicks,
-                                    onPick = { up -> haptics.tap(); picking = original to up },
+                                    onPick = { slot -> haptics.tap(); picking = original to slot },
                                     modifier = Modifier.weight(1f).fillMaxHeight(),
                                 )
                             }
@@ -118,22 +152,66 @@ fun CustomizeKeysScreen(onNavigateBack: () -> Unit, viewModel: SettingsViewModel
         }
     }
 
-    picking?.let { (spec, up) ->
-        val slot = spec.slot(up)
-        val default = if (up) spec.up else spec.down
+    picking?.let { (spec, which) ->
+        val slot = when (which) { Slot.Tap -> spec.tapSlot; Slot.Up -> spec.slot(true); Slot.Down -> spec.slot(false) }
+        val defaultLabel = when (which) { Slot.Tap -> spec.label; Slot.Up -> spec.up?.label; Slot.Down -> spec.down?.label }
         FlickPicker(
-            title = stringResource(if (up) Res.string.customize_flick_up else Res.string.customize_flick_down, spec.label),
-            defaultLabel = default?.label,
+            title = stringResource(
+                when (which) { Slot.Tap -> Res.string.customize_tap; Slot.Up -> Res.string.customize_flick_up; Slot.Down -> Res.string.customize_flick_down },
+                spec.label,
+            ),
+            defaultLabel = defaultLabel,
+            keysFirst = which == Slot.Tap,
             current = prefs.flicks[slot],
             functions = FlickCatalog.functions(prefs.functions),
             onPick = { id -> haptics.tap(); viewModel.setFlick(slot, id); picking = null },
             onDismiss = { picking = null },
         )
     }
+
+    if (importing) {
+        ImportDialog(
+            read = { FlickCatalog.import(it, slots) },
+            onImport = { haptics.confirm(); viewModel.setFlicks(it); importing = false },
+            onDismiss = { importing = false },
+        )
+    }
+}
+
+internal enum class Slot { Tap, Up, Down }
+
+/** A text field to paste an exported layout into; says so when the text isn't one. */
+@Composable
+private fun ImportDialog(read: (String) -> Map<String, String>?, onImport: (Map<String, String>) -> Unit, onDismiss: () -> Unit) {
+    var text by remember { mutableStateOf("") }
+    var failed by remember { mutableStateOf(false) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(Res.string.customize_import_title)) },
+        text = {
+            OutlinedTextField(
+                value = text,
+                onValueChange = { text = it; failed = false },
+                placeholder = { Text(stringResource(Res.string.customize_import_hint)) },
+                isError = failed,
+                supportingText = if (failed) ({ Text(stringResource(Res.string.customize_import_failed)) }) else null,
+                minLines = 3,
+                maxLines = 6,
+                textStyle = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp),
+                modifier = Modifier.fillMaxWidth(),
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { read(text)?.let(onImport) ?: run { failed = true } }, enabled = text.isNotBlank()) {
+                Text(stringResource(Res.string.customize_import))
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.function_cancel)) } },
+    )
 }
 
 @Composable
-private fun KeyTile(spec: Spec, changedUp: Boolean, changedDown: Boolean, onPick: (up: Boolean) -> Unit, modifier: Modifier) {
+private fun KeyTile(spec: Spec, changedTap: Boolean, changedUp: Boolean, changedDown: Boolean, onPick: (Slot) -> Unit, modifier: Modifier) {
     val colors = MaterialTheme.colorScheme
     val container = when (spec.tone) {
         Tone.Digit -> colors.surfaceContainerHigh
@@ -150,12 +228,25 @@ private fun KeyTile(spec: Spec, changedUp: Boolean, changedDown: Boolean, onPick
         shape = RoundedCornerShape(20.dp),
         color = container,
         contentColor = content,
-        modifier = modifier.alpha(if (spec.customizable) 1f else 0.4f),
+        // A changed tap gets the accent as a ring, so the key keeps its own color.
+        border = if (changedTap) BorderStroke(2.dp, colors.primary) else null,
+        modifier = modifier,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.SpaceBetween, modifier = Modifier.padding(4.dp)) {
-            if (spec.customizable) FlickTag(spec.up?.label, changedUp) { onPick(true) } else Box(Modifier.height(24.dp))
-            Text(spec.label, style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 24.sp))
-            if (spec.customizable) FlickTag(spec.down?.label, changedDown) { onPick(false) } else Box(Modifier.height(24.dp))
+            FlickTag(spec.up?.label, changedUp) { onPick(Slot.Up) }
+            // The face itself: tap to choose what tapping the key does.
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.weight(1f).fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { onPick(Slot.Tap) },
+            ) {
+                Text(
+                    if (spec.blank) "—" else spec.label,
+                    style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 24.sp),
+                    maxLines = 1,
+                    modifier = Modifier.alpha(if (spec.blank) 0.4f else 1f),
+                )
+            }
+            FlickTag(spec.down?.label, changedDown) { onPick(Slot.Down) }
         }
     }
 }
@@ -183,6 +274,7 @@ private fun FlickTag(label: String?, changed: Boolean, onClick: () -> Unit) {
 private fun FlickPicker(
     title: String,
     defaultLabel: String?,
+    keysFirst: Boolean,
     current: String?,
     functions: List<Pair<String, com.bernaferrari.calculator.ui.calculator.CustomFlick>>,
     onPick: (String?) -> Unit,
@@ -199,7 +291,10 @@ private fun FlickPicker(
                 )
                 FilterChip(selected = current == FlickCatalog.NONE, onClick = { onPick(FlickCatalog.NONE) }, label = { Text(stringResource(Res.string.customize_none)) })
             }
+            // A key's tap most likely wants another key; a flick, a function.
+            if (keysFirst) Section(stringResource(Res.string.customize_basics), FlickCatalog.basics, current, onPick)
             Section(stringResource(Res.string.customize_builtin), FlickCatalog.builtIn, current, onPick)
+            if (!keysFirst) Section(stringResource(Res.string.customize_basics), FlickCatalog.basics, current, onPick)
             Section(stringResource(Res.string.library_constants), FlickCatalog.constants(), current, onPick)
             if (functions.isNotEmpty()) Section(stringResource(Res.string.library_functions), functions, current, onPick)
         }
