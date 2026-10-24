@@ -42,7 +42,10 @@ import androidx.compose.material.icons.automirrored.outlined.Backspace
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.SwapVert
-import androidx.compose.material3.FilterChip
+import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -110,6 +113,7 @@ import com.bernaferrari.calculator.ui.theme.GoogleSansFlex
  * Unit conversion in the calculator's own language: two rows (tap one to type into it), a swap
  * button between them, and the same keys as the main keypad.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ConverterScreen(
     seed: String?,
@@ -145,13 +149,17 @@ fun ConverterScreen(
                     state = chips,
                     contentPadding = PaddingValues(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.selectableGroup(),
                 ) {
                     items(Category.entries) { category ->
-                        FilterChip(
-                            selected = category == state.category,
-                            onClick = { haptics.tap(); viewModel.onCategory(category) },
-                            label = { Text(stringResource(category.title())) },
-                        )
+                        ToggleButton(
+                            checked = category == state.category,
+                            onCheckedChange = { checked ->
+                                if (checked) { haptics.tap(); viewModel.onCategory(category) }
+                            },
+                        ) {
+                            Text(stringResource(category.title()))
+                        }
                     }
                 }
         }
@@ -336,24 +344,30 @@ private fun UnitRow(
     }
 }
 
-/** Every unit of the category as a tile: big symbol, small name, the current one filled. */
+/** Unit choices use the library’s resting, pressed, and checked shapes. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun UnitGrid(units: List<MeasureUnit>, selected: MeasureUnit, haptics: Haptics, onPick: (MeasureUnit) -> Unit, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     val gap = 6.dp
     val rows = units.chunked(3)
-    Column(verticalArrangement = Arrangement.spacedBy(gap), modifier = modifier.padding(horizontal = gap * 2, vertical = gap)) {
+    Column(verticalArrangement = Arrangement.spacedBy(gap), modifier = modifier.selectableGroup().padding(horizontal = gap * 2, vertical = gap)) {
         rows.forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(gap), modifier = Modifier.weight(1f)) {
                 row.forEach { unit ->
                     val isSelected = unit == selected
                     val content = if (isSelected) colors.onPrimary else colors.onSurface
-                    KeyCell(
-                        container = if (isSelected) colors.primary else colors.surfaceContainerHigh,
-                        content = content,
-                        description = unit.name,
-                        haptics = haptics,
-                        onClick = { onPick(unit) },
+                    ToggleButton(
+                        checked = isSelected,
+                        // Picking the current unit also closes the picker without clearing it.
+                        onCheckedChange = { haptics.tap(); onPick(unit) },
+                        colors = ToggleButtonDefaults.colors(
+                            checkedContainerColor = colors.primary,
+                            checkedContentColor = colors.onPrimary,
+                            containerColor = colors.surfaceContainerHigh,
+                            contentColor = colors.onSurface,
+                        ),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                         modifier = Modifier.weight(1f).fillMaxHeight(),
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
