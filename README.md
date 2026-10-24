@@ -52,7 +52,11 @@ Off by default, one switch away, and out of everyone else's way:
 
 - **Memory keys.** MC, M+, M− and MR in a slim row above the keypad; what's stored shows in the display, tap it to recall.
 - **RPN.** Reverse Polish entry with an open-ended stack: ↵ pushes, operators act at once, x⇄y and roll on the parentheses key.
-- **Programmer.** Hex, decimal, octal and binary, AND, OR, XOR, NOT and shifts, in 8, 16, 32 or 64 bits. From the ⋮ menu.
+- **Programmer.** Hex, decimal, octal and binary, AND, OR, XOR, NOT and shifts, in 8, 16, 32 or 64 bits, with every bit on screen to tap and flip. From the ⋮ menu.
+- **A library.** 28 constants of science (c, h, Nₐ, G…), functions you write yourself (`tip(x) = x×0.18`, then use `tip(` like `sin`, in the graph too), and as many named memories as you like.
+- **Your own keys.** Any flick can do anything: a built-in function, a constant, one of your functions, or nothing at all.
+- **Scientific and engineering notation**, and **statistics** (mean, median, σ and s, min, max) for a list of numbers.
+- **A history worth keeping.** Add a note to any calculation and share the whole history as text.
 - **A home screen widget** on Android: the calculator itself, and its answers land in the app's history.
 
 ## Private by design
