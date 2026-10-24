@@ -290,18 +290,28 @@ fun KeyCell(
                 // The up function by name, small, above the label: what a flick up types. Below, only
                 // the down functions people reach for are named (`)`, √, e); the inverses get a dot.
                 up?.let { Text(it.label, style = small, maxLines = 1, color = content.copy(alpha = if (!it.enabled) 0.25f else if (selection == Swipe.Up) 1f else 0.55f), modifier = Modifier.align(Alignment.TopCenter).offset(y = (-5).dp)) }
-                down?.takeIf { it.named }?.let { Text(it.label, style = small, maxLines = 1, color = content.copy(alpha = if (!it.enabled) 0.25f else if (selection == Swipe.Down) 1f else 0.55f), modifier = Modifier.align(Alignment.BottomCenter).offset(y = 5.dp)) }
+                down?.let { hint ->
+                    if (hint.named) {
+                        Text(hint.label, style = small, maxLines = 1, color = content.copy(alpha = if (!hint.enabled) 0.25f else if (selection == Swipe.Down) 1f else 0.55f), modifier = Modifier.align(Alignment.BottomCenter).offset(y = 5.dp))
+                    } else {
+                        // A dot where a name would be: same line, same ink, so names and dots read as one row.
+                        Box(Modifier.align(Alignment.BottomCenter).offset(y = 5.dp), contentAlignment = Alignment.Center) {
+                            Text("0", style = small, color = Color.Transparent)
+                            FlickDot(selection == Swipe.Down, hint.enabled, content, Modifier, restAlpha = 0.55f, disabledAlpha = 0.25f)
+                        }
+                    }
+                }
             }
         }
-        if (showDots || labelFlicks) {
+        if (showDots && !labelFlicks) {
             // The dots belong to the key, not the face: they stay put while the face follows the
             // finger, so they never slide past the key's edge. Their gap from the edge grows with
             // the key, 9% of its height, 4 to 8dp: clear of the label on the graph's short keys,
             // not crowded into the corner on tall ones.
             val edge = with(density) { (keyHeight * 0.09f).toDp() }.coerceIn(4.dp, 8.dp)
             Box(Modifier.matchParentSize()) {
-                if (up != null && !labelFlicks) FlickDot(selection == Swipe.Up, up.enabled, content, Modifier.align(Alignment.TopCenter).offset(y = edge))
-                if (down != null && !(labelFlicks && down.named)) FlickDot(selection == Swipe.Down, down.enabled, content, Modifier.align(Alignment.BottomCenter).offset(y = -edge))
+                if (up != null) FlickDot(selection == Swipe.Up, up.enabled, content, Modifier.align(Alignment.TopCenter).offset(y = edge))
+                if (down != null) FlickDot(selection == Swipe.Down, down.enabled, content, Modifier.align(Alignment.BottomCenter).offset(y = -edge))
             }
         }
 
@@ -396,7 +406,7 @@ private fun OptionPill(label: String, selected: Boolean, enabled: Boolean, modif
 
 /** A hint that the key hides a function in that direction; it swells when that function is picked. */
 @Composable
-private fun FlickDot(selected: Boolean, enabled: Boolean, color: Color, modifier: Modifier) {
+private fun FlickDot(selected: Boolean, enabled: Boolean, color: Color, modifier: Modifier, restAlpha: Float = 0.35f, disabledAlpha: Float = 0.1f) {
     val size by animateFloatAsState(
         if (selected) 7f else 3.5f,
         spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium),
@@ -406,6 +416,6 @@ private fun FlickDot(selected: Boolean, enabled: Boolean, color: Color, modifier
         modifier
             .size(size.dp)
             // A flick that would do nothing right now (1/x with nothing typed) barely shows its dot.
-            .background(color.copy(alpha = if (!enabled) 0.1f else if (selected) 1f else 0.35f), androidx.compose.foundation.shape.CircleShape),
+            .background(color.copy(alpha = if (!enabled) disabledAlpha else if (selected) 1f else restAlpha), androidx.compose.foundation.shape.CircleShape),
     )
 }
