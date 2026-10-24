@@ -123,6 +123,8 @@ class SettingsViewModel(
     /** [id] from [com.bernaferrari.calculator.ui.calculator.FlickCatalog], or null for the shipped flick. */
     fun setFlick(slot: String, id: String?) = save { update { p -> p.copy(flicks = if (id == null) p.flicks - slot else p.flicks + (slot to id)) } }
     fun resetFlicks() = save { update { it.copy(flicks = emptyMap()) } }
+    /** Replaces every key and flick choice at once, from an imported layout. */
+    fun setFlicks(ids: Map<String, String>) = save { update { it.copy(flicks = ids) } }
     fun clearHistory() = viewModelScope.launch { history.clearAllHistory() }
 }
 

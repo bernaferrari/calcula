@@ -61,7 +61,7 @@ Everything here is off by default or tucked in the ⋮ menu, so the calculator s
 | Library | Your own keys | Programmer |
 | :---: | :---: | :---: |
 | <img src="docs/screenshots/library.png" width="240" alt="Library sheet with constants grouped by field, each with its symbol and value"> | <img src="docs/screenshots/customize-keys.png" width="240" alt="Keypad diagram with every flick as a tag; changed ones highlighted"> | <img src="docs/screenshots/programmer.png" width="240" alt="C0FFEE in hex, 12,648,430 in decimal, and its bits"> |
-| 28 constants of science (c, h, Nₐ, G…), functions you write yourself, and named memories. | Any flick can do anything: a built-in function, a constant, one of your functions, or nothing. | Hex, decimal, octal and binary, bitwise operators and shifts, 8 to 64 bits, every bit tappable, and a tape of what you worked out. |
+| 28 constants of science (c, h, Nₐ, G…), functions you write yourself, and named memories. | Every key and every flick, = and ⌫ included, can do anything: another key, a function, a constant, one of yours, or nothing. Layouts export and import as text. | Hex, decimal, octal and binary, bitwise operators and shifts, 8 to 64 bits, every bit tappable, and a tape of what you worked out. |
 
 | RPN and memory | Statistics | Styles |
 | :---: | :---: | :---: |
