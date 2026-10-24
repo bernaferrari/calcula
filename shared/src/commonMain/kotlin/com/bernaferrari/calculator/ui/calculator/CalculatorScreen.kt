@@ -283,6 +283,8 @@ fun CalculatorScreen(
                 showLayerSwitch = state.flickHints != FlickHints.LABELS,
                 // Where 123|ƒ would be, Labels mode gets ‹ › while there's an expression to edit.
                 cursorArrows = !state.rpn && !state.resultShown && state.text.isNotEmpty(),
+                canStepLeft = state.cursor > 0,
+                canStepRight = state.cursor < state.text.length,
                 onCursorStep = viewModel::onCursorStep,
                 onCursorJump = viewModel::onCursorJump,
                 haptics = haptics,
