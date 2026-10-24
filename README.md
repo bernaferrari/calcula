@@ -12,7 +12,9 @@
 </p>
 
 <p align="center">
-  <img src="docs/demo.webp" width="320" alt="Flick the 7 up for sin, the 2 up for x², the 2 down for √">
+  <img src="docs/demo.webp" width="300" alt="Flick the 7 up for sin, the 2 up for x², the 2 down for √">
+  &nbsp;&nbsp;
+  <img src="docs/screenshots/calculator-dark.png" width="300" alt="The calculator in dark teal: 1,299×1.08 with its answer previewed below">
 </p>
 
 <p align="center">
@@ -27,8 +29,7 @@
 - **A history you'll actually use.** Past results stay above the keys. Tap one to reuse it, pull the bar down to see them all, add a note to any of them, share the lot as text.
 - **Edits like text.** Double-tap to select, then wrap it in parentheses or √ with one key. Drag along the expression, or use ‹ ›, to move the cursor. Cleared something by mistake? Undo.
 - **Quiets down as you learn.** After a few flicks the names step back to small dots. Prefer the names, the dots or nothing at all? One setting.
-- **Yours to shape.** Light or dark, ten color families or your wallpaper's, each in four styles, previewed as the keypad itself. Drag the bar above the keys to make them bigger or smaller.
-- **Big screens too.** On tablets and foldables your history gets its own pane beside the keys.
+- **Yours to shape.** Light or dark, ten color families or your wallpaper's, each in four styles you preview as the keypad itself. Drag the bar above the keys to make them bigger or smaller.
 
 ## Beyond the keypad
 
@@ -36,6 +37,14 @@
 | :---: | :---: | :---: |
 | <img src="docs/screenshots/graph.png" width="240" alt="sin(x), a·sin(b·x) and a circle plotted, with roots and turning points marked and a slider for a"> | <img src="docs/screenshots/converter.png" width="240" alt="22 degrees Celsius converted to 71.6 degrees Fahrenheit"> | <img src="docs/screenshots/history.png" width="240" alt="History grouped by day, one calculation labelled Laptop with tax"> |
 | Up to six functions and equations, sliders for a, b, c, d, roots and turns you can tap. Graphs are kept and share as images. | Length, mass, temperature, data and more, with exact factors. The number on screen comes along, and the answer goes back. | Every calculation by day. Notes on the ones that matter, and the whole list shares as text. |
+
+## Your Calcula
+
+<img src="docs/screenshots/your-calcula.png" width="260" align="right" alt="A card showing 4,826 calculations, the keypad lit by how often each key is used, 1,312 flicks, 213 days and √ as the favorite function">
+
+A card of how you calculate: your keypad lit up where your thumb goes most, how many calculations, flicks and days, and the function you reach for most. It fills in as you use the app, follows your colors, and shares as an image in one tap.
+
+<br clear="right">
 
 ## Once you know your way around
 
@@ -54,17 +63,26 @@ Everything here is off by default or tucked in the ⋮ menu, so the calculator s
 | <img src="docs/screenshots/library.png" width="240" alt="Library sheet with constants grouped by field, each with its symbol and value"> | <img src="docs/screenshots/customize-keys.png" width="240" alt="Keypad diagram with every flick as a tag; changed ones highlighted"> | <img src="docs/screenshots/programmer.png" width="240" alt="C0FFEE in hex, 12,648,430 in decimal, and its bits"> |
 | 28 constants of science (c, h, Nₐ, G…), functions you write yourself, and named memories. | Any flick can do anything: a built-in function, a constant, one of your functions, or nothing. | Hex, decimal, octal and binary, bitwise operators and shifts, 8 to 64 bits, every bit tappable. |
 
-| Statistics | Styles | On your home screen |
+| RPN and memory | Statistics | Styles |
 | :---: | :---: | :---: |
-| <img src="docs/screenshots/statistics.png" width="240" alt="A list of eight scores with mean, median, standard deviations, min and max"> | <img src="docs/screenshots/appearance-dark.png" width="240" alt="Appearance settings in dark mode: color families and four styles shown as tiny calculators"> | <img src="docs/screenshots/ios-widget.png" width="240" alt="iOS home screen widget showing 15%×80+3² = 21"> |
-| Type a list, get mean, median, σ and s, min and max. Tap any to use it. | Color families and four styles, each shown as the keypad it gives you. | Widgets on Android (the whole calculator) and iOS (your latest answer). |
+| <img src="docs/screenshots/rpn-memory.png" width="240" alt="RPN stack with z, y and x, the memory keys row and a stored value"> | <img src="docs/screenshots/statistics.png" width="240" alt="A list of eight scores with mean, median, standard deviations, min and max"> | <img src="docs/screenshots/appearance-dark.png" width="240" alt="Appearance settings in dark mode: color families and four styles shown as tiny calculators"> |
+| Reverse Polish entry with an open-ended stack, and MC · M+ · M− · MR in a slim row. | Type a list, get mean, median, σ and s, min and max. Tap any to use it. | Color families and four styles, each shown as the keypad it gives you. |
 
 And a few more:
 
 - **Write your own functions.** `tip(x) = x×0.18`, then type `tip(` like `sin(`. They work in previews, in RPN and in the graph, and they can call each other.
-- **Memory keys and RPN.** A slim MC · M+ · M− · MR row if you want it, and Reverse Polish entry with an open-ended stack: ↵ pushes, operators act at once, x⇄y and roll on the parentheses key.
 - **Scientific and engineering notation.** 1.23×10⁶ or 12.3×10³, with the decimals you choose.
 - **Siri and Shortcuts on iOS.** "Calculate with Calcula", then say it the way you'd say it: "15% of 80 plus 3 squared". The answer is spoken back and kept in your history.
+
+## Big screens and home screens
+
+<p align="center">
+  <img src="docs/screenshots/tablet.png" width="560" alt="On a tablet, history fills its own pane beside the calculator">
+  &nbsp;&nbsp;
+  <img src="docs/screenshots/ios-widget.png" width="200" alt="iOS home screen widget showing 15%×80+3² = 21">
+</p>
+
+On tablets and foldables your history gets its own pane beside the keys. On the home screen there's a widget: the whole calculator on Android, your latest answer on iOS.
 
 ## Private by design
 

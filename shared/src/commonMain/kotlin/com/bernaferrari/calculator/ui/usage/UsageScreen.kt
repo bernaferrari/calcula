@@ -182,7 +182,8 @@ private fun UsageCard(usage: Usage, formatter: DisplayFormatter, decimal: Char) 
                 Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                     row.forEach { spec ->
                         val presses = (usage.keys[spec.key.name] ?: 0) + listOfNotNull(spec.up, spec.down).sumOf { usage.keys[it.key.name] ?: 0 }
-                        val heat = kotlin.math.sqrt(presses.toFloat() / max).coerceIn(0f, 1f)
+                        // Proportional: your busiest keys stand out from the ones you rarely touch.
+                        val heat = (presses.toFloat() / max).coerceIn(0f, 1f)
                         val fill = lerp(colors.surface.copy(alpha = 0.55f), colors.primary, heat)
                         val ink = if (fill.luminance() > 0.3f) Color(0xFF1B1B21) else Color.White
                         Box(
