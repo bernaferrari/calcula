@@ -50,7 +50,17 @@ actual class KeyValueStore(private val defaults: NSUserDefaults) {
     }
 }
 
-actual fun keyValueStore(): KeyValueStore = KeyValueStore(NSUserDefaults.standardUserDefaults)
+/** Shared with the widget and Siri through the app group; settings from before it moved over once. */
+const val APP_GROUP = "group.com.bernaferrari.calcula"
+
+actual fun keyValueStore(): KeyValueStore {
+    val group = NSUserDefaults(suiteName = APP_GROUP)
+    val standard = NSUserDefaults.standardUserDefaults
+    for (key in listOf("preferences", "history", "graph", "graph_recent")) {
+        if (group.stringForKey(key) == null) standard.stringForKey(key)?.let { group.setObject(it, key) }
+    }
+    return KeyValueStore(group)
+}
 
 @Composable
 actual fun rememberKeySounds(): (KeySound) -> Unit = remember {

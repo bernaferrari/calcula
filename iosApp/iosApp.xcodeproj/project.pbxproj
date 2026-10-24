@@ -7,8 +7,37 @@
 	objects = {
 
 /* Begin PBXFileReference section */
+		C1A0C0DE0000000000000001 /* CalculaWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CalculaWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		6971265C0D7A62DFFFC38DC7 /* Experiment.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Experiment.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXBuildFile section */
+		C1A0C0DE000000000000000C /* CalculaWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C1A0C0DE0000000000000001 /* CalculaWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		C1A0C0DE000000000000000E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9C0AC808740F9AA00CB62B16 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C1A0C0DE0000000000000007;
+			remoteInfo = CalculaWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		C1A0C0DE000000000000000B /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				C1A0C0DE000000000000000C /* CalculaWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
 		DDB3930F8FC4E6B9B95A6653 /* Exceptions for "iosApp" folder in "iosApp" target */ = {
@@ -17,6 +46,13 @@
 				Info.plist,
 			);
 			target = 731DBDE685599661B71D1C0A /* iosApp */;
+		};
+		C1A0C0DE0000000000000003 /* Exceptions for "CalculaWidget" folder in "CalculaWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = C1A0C0DE0000000000000007 /* CalculaWidgetExtension */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -34,10 +70,25 @@
 			path = Configuration;
 			sourceTree = "<group>";
 		};
+		C1A0C0DE0000000000000002 /* CalculaWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C1A0C0DE0000000000000003 /* Exceptions for "CalculaWidget" folder in "CalculaWidgetExtension" target */,
+			);
+			path = CalculaWidget;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		0A579B15F841AC285C9ABED7 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C1A0C0DE0000000000000004 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -52,6 +103,7 @@
 			children = (
 				6201B69899862740B05BA702 /* Configuration */,
 				1C49DBEE19091748F430975C /* iosApp */,
+				C1A0C0DE0000000000000002 /* CalculaWidget */,
 				E00E567350A771ED8FFF09BE /* Products */,
 			);
 			sourceTree = "<group>";
@@ -60,6 +112,7 @@
 			isa = PBXGroup;
 			children = (
 				6971265C0D7A62DFFFC38DC7 /* Experiment.app */,
+				C1A0C0DE0000000000000001 /* CalculaWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -75,10 +128,12 @@
 				1875183EA5087BFCEC40CAF1 /* Sources */,
 				0A579B15F841AC285C9ABED7 /* Frameworks */,
 				726A83BF32C396D5AA852161 /* Resources */,
+				C1A0C0DE000000000000000B /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				C1A0C0DE000000000000000D /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				1C49DBEE19091748F430975C /* iosApp */,
@@ -89,6 +144,28 @@
 			productName = iosApp;
 			productReference = 6971265C0D7A62DFFFC38DC7 /* Experiment.app */;
 			productType = "com.apple.product-type.application";
+		};
+		C1A0C0DE0000000000000007 /* CalculaWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C1A0C0DE000000000000000A /* Build configuration list for PBXNativeTarget "CalculaWidgetExtension" */;
+			buildPhases = (
+				C1A0C0DE0000000000000005 /* Sources */,
+				C1A0C0DE0000000000000004 /* Frameworks */,
+				C1A0C0DE0000000000000006 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				C1A0C0DE0000000000000002 /* CalculaWidget */,
+			);
+			name = CalculaWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = CalculaWidgetExtension;
+			productReference = C1A0C0DE0000000000000001 /* CalculaWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -101,6 +178,9 @@
 				LastUpgradeCheck = 1620;
 				TargetAttributes = {
 					731DBDE685599661B71D1C0A = {
+						CreatedOnToolsVersion = 16.2;
+					};
+					C1A0C0DE0000000000000007 = {
 						CreatedOnToolsVersion = 16.2;
 					};
 				};
@@ -120,12 +200,20 @@
 			projectRoot = "";
 			targets = (
 				731DBDE685599661B71D1C0A /* iosApp */,
+				C1A0C0DE0000000000000007 /* CalculaWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		726A83BF32C396D5AA852161 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C1A0C0DE0000000000000006 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -164,7 +252,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C1A0C0DE0000000000000005 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		C1A0C0DE000000000000000D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C1A0C0DE0000000000000007 /* CalculaWidgetExtension */;
+			targetProxy = C1A0C0DE000000000000000E /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section *//* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
 		D06D20119BE69D176D799EA8 /* Debug */ = {
@@ -293,6 +396,7 @@
 		C43FE10B6931ED3DA4CD97BE /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Configuration/iosApp.entitlements;
 				ARCHS = arm64;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -321,6 +425,7 @@
 		5256369D6E9819C6F34E6734 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Configuration/iosApp.entitlements;
 				ARCHS = arm64;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -346,6 +451,52 @@
 			};
 			name = Release;
 		};
+		C1A0C0DE0000000000000008 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Configuration/CalculaWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "${TEAM_ID}";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CalculaWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Calcula;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.bernaferrari.calcula.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C1A0C0DE0000000000000009 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Configuration/CalculaWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "${TEAM_ID}";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CalculaWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Calcula;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.bernaferrari.calcula.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -363,6 +514,15 @@
 			buildConfigurations = (
 				C43FE10B6931ED3DA4CD97BE /* Debug */,
 				5256369D6E9819C6F34E6734 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C1A0C0DE000000000000000A /* Build configuration list for PBXNativeTarget "CalculaWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C1A0C0DE0000000000000008 /* Debug */,
+				C1A0C0DE0000000000000009 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
