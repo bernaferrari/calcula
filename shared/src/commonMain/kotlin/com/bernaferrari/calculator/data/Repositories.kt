@@ -57,6 +57,7 @@ class StoredPreferencesRepository(private val store: KeyValueStore) : Preference
     override suspend fun markSwipeHintSeen() = edit { it.copy(swipeHintSeen = true) }
     override suspend fun updateKeypadScale(scale: Float) = edit { it.copy(keypadScale = scale) }
     override suspend fun updateGraphKeypadScale(scale: Float) = edit { it.copy(graphKeypadScale = scale) }
+    override suspend fun update(change: (UserPreferences) -> UserPreferences) = edit(change)
 
     private companion object {
         const val KEY = "preferences"

@@ -128,4 +128,15 @@
     <string name="settings_flick_auto_learning">Names for now, dots once you know the flicks</string>
     <string name="settings_flick_auto_learned">Dots, now that you know the flicks</string>
     <string name="settings_flick_auto">Auto</string>
+    <string name="memory_recall_description">Recall memory</string>
+    <string name="settings_memory_keys">Memory keys</string>
+    <string name="settings_memory_keys_summary">MC, M+, M− and MR above the keypad</string>
+    <string name="settings_entry">Entry</string>
+    <string name="settings_entry_algebraic">Algebraic</string>
+    <string name="settings_entry_rpn">RPN</string>
+    <string name="settings_entry_algebraic_summary">Type it the way it's written</string>
+    <string name="settings_entry_rpn_summary">↵ pushes onto the stack; operators act at once</string>
+    <string name="menu_programmer">Programmer</string>
+    <string name="programmer_word_size">Word size</string>
+    <string name="programmer_bits">%1$d-bit</string>
 </resources>

@@ -1,5 +1,10 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Surface
+import androidx.compose.material.icons.automirrored.rounded.KeyboardReturn
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.bernaferrari.calculator.domain.model.FlickHints
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
@@ -60,6 +65,7 @@ private val LayerInverseStyle @Composable get() = TextStyle(fontFamily = GoogleS
 private val ScientificStyle @Composable get() = TextStyle(fontFamily = GoogleSansFlex, fontSize = 19.sp, fontWeight = FontWeight.Medium)
 
 private val KeyGap = 6.dp
+private val MemoryStyle @Composable get() = TextStyle(fontFamily = GoogleSansFlex, fontSize = 17.sp, fontWeight = FontWeight.Medium)
 
 private enum class Tone { Digit, Function, Operator, Equals }
 
@@ -76,8 +82,17 @@ private data class Spec(
     /** Flick down; on the ƒ layer it is shown small under the function. */
     val down: Alt? = null,
     val flips: Boolean = up != null,
-    /** Prints its flicks small in the top and bottom corners, for flicks nobody would guess. */
+    /** Drawn instead of [label]. */
+    val icon: ImageVector? = null,
 )
+
+/** The memory keys' row, when it's turned on. */
+enum class MemoryOp { CLEAR, ADD, SUBTRACT, RECALL }
+
+private val MemoryRowHeight = 40.dp
+
+/** How much taller the keypad gets with the memory row. */
+val MemoryRowExtra = MemoryRowHeight + KeyGap
 
 /**
  * The 4×5 keypad. Every key shows one label. The ƒ layer flips the digits into their functions
@@ -101,11 +116,17 @@ fun MainKeypad(
     nextParameter: Char? = null,
     /** Functions that would do nothing right now (`1/x` with nothing typed): shown dimmed, and inert. */
     inert: Set<Key> = emptySet(),
+    /** Reverse Polish: `=` is ↵, `( )` swaps x and y (flicks roll the stack), `−` flicks down to ±. */
+    rpn: Boolean = false,
+    /** Shows MC M+ M− MR above the keys; [memoryFull] lights up the ones that need something stored. */
+    onMemory: ((MemoryOp) -> Unit)? = null,
+    memoryFull: Boolean = false,
 ) {
     val rows = listOf(
         listOf(
             Spec(Key.CLEAR, "C", Tone.Function, "Clear"),
-            Spec(Key.PARENS, "( )", Tone.Function, "Parentheses", up = Alt("(", Key.LPAREN, "open parenthesis"), down = Alt(")", Key.RPAREN, "close parenthesis"), flips = false),
+            if (rpn) Spec(Key.PARENS, "x⇄y", Tone.Function, "Swap x and y", up = Alt("R↓", Key.LPAREN, "roll down"), down = Alt("R↑", Key.RPAREN, "roll up"), flips = false)
+            else Spec(Key.PARENS, "( )", Tone.Function, "Parentheses", up = Alt("(", Key.LPAREN, "open parenthesis"), down = Alt(")", Key.RPAREN, "close parenthesis"), flips = false),
             if (variable) Spec(
                 Key.VARIABLE, "x", Tone.Operator, "x",
                 up = Alt("y", Key.VARIABLE_Y),
@@ -126,7 +147,7 @@ fun MainKeypad(
             Spec(Key.D5, "5", Tone.Digit, up = Alt("log", Key.LOG, "log base 10"), down = Alt("10ˣ", Key.POW10, "10 to the power")),
             // The constants end the row.
             Spec(Key.D6, "6", Tone.Digit, up = Alt("π", Key.PI, "pi"), down = Alt("e", Key.E, "Euler's number")),
-            Spec(Key.MINUS, "−", Tone.Operator, "Minus"),
+            Spec(Key.MINUS, "−", Tone.Operator, "Minus", down = if (rpn) Alt("±", Key.NEGATE, "change sign") else null, flips = false),
         ),
         listOf(
             // Each number carries its own power and root: 1 over x, x², √ on 2, x³, ∛ on 3.
@@ -139,13 +160,15 @@ fun MainKeypad(
             Spec(Key.D0, "0", Tone.Digit, up = Alt("00", Key.DOUBLE_ZERO), down = Alt("000", Key.TRIPLE_ZERO), flips = false),
             Spec(Key.DOT, decimal.toString(), Tone.Digit, "Decimal point"),
             Spec(Key.DELETE, "⌫", Tone.Digit, "Backspace, hold to clear"),
-            Spec(Key.EQUALS, "=", Tone.Equals, "Equals"),
+            if (rpn) Spec(Key.EQUALS, "↵", Tone.Equals, "Enter", icon = Icons.AutoMirrored.Rounded.KeyboardReturn)
+            else Spec(Key.EQUALS, "=", Tone.Equals, "Equals"),
         ),
     )
     val reduceMotion = LocalReduceMotion.current
     BoxWithConstraints(modifier) {
     // Labels follow the keys' size, so a keypad dragged short or tall keeps its proportions.
-    val rowHeight = (maxHeight - KeyGap * 7 - bottomInset) / 5
+    val memoryRow = if (onMemory != null) MemoryRowExtra else 0.dp
+    val rowHeight = (maxHeight - KeyGap * 7 - bottomInset - memoryRow) / 5
     val density = LocalDensity.current
     // Gentler than the keys themselves: text follows about 60% of the change.
     val scale = (0.4f + 0.6f * (rowHeight / 82.dp)).coerceIn(0.68f, 1.12f)
@@ -154,6 +177,7 @@ fun MainKeypad(
         verticalArrangement = Arrangement.spacedBy(KeyGap),
         modifier = Modifier.fillMaxSize().padding(start = KeyGap * 2, end = KeyGap * 2, top = KeyGap, bottom = KeyGap * 2 + bottomInset),
     ) {
+        if (onMemory != null) MemoryRow(memoryFull, haptics, onMemory, Modifier.fillMaxWidth().height(MemoryRowHeight))
         rows.forEachIndexed { r, row ->
             var pressedIndex by remember { mutableIntStateOf(-1) }
             Row(horizontalArrangement = Arrangement.spacedBy(KeyGap), modifier = Modifier.weight(1f).fillMaxWidth()) {
@@ -194,6 +218,29 @@ fun MainKeypad(
         }
     }
     }
+    }
+}
+
+/** MC M+ M− MR: slim keys, quieter than the digits; the ones that need memory dim while it's empty. */
+@Composable
+private fun MemoryRow(full: Boolean, haptics: Haptics, onMemory: (MemoryOp) -> Unit, modifier: Modifier) {
+    Row(horizontalArrangement = Arrangement.spacedBy(KeyGap), modifier = modifier) {
+        listOf(MemoryOp.CLEAR to "MC", MemoryOp.ADD to "M+", MemoryOp.SUBTRACT to "M−", MemoryOp.RECALL to "MR").forEach { (op, label) ->
+            val needsValue = op == MemoryOp.CLEAR || op == MemoryOp.RECALL
+            val alpha by animateFloatAsState(if (needsValue && !full) 0.38f else 1f, label = "memory")
+            Surface(
+                onClick = { haptics.tap(); onMemory(op) },
+                enabled = !needsValue || full,
+                shape = RoundedCornerShape(50),
+                color = MaterialTheme.colorScheme.surfaceContainer,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f).fillMaxHeight(),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(label, style = MemoryStyle, modifier = Modifier.graphicsLayer { this.alpha = alpha })
+                }
+            }
+        }
     }
 }
 
@@ -261,8 +308,8 @@ private fun KeypadKey(
         content = content,
         description = if (onLayer) spec.up!!.description else spec.description,
         haptics = haptics,
-        // `=` answers with its own confirm/reject haptic once the result is known.
-        pressHaptic = spec.key != Key.EQUALS,
+        // `=` answers with its own confirm/reject haptic once the result is known (↵ just pushes).
+        pressHaptic = spec.key != Key.EQUALS || spec.icon != null,
         onClick = {
             when {
                 // A dimmed function does nothing, and doesn't use up a one-shot ƒ either.
@@ -299,6 +346,7 @@ private fun KeypadKey(
                     }
                 }
                 isDelete -> Icon(Icons.AutoMirrored.Outlined.Backspace, contentDescription = null, tint = content, modifier = Modifier.size(28.dp))
+                spec.icon != null -> Icon(spec.icon, contentDescription = null, tint = content, modifier = Modifier.size(32.dp))
                 else -> Text(
                     spec.label,
                     // A lowercase x is only x-height tall, so centred as text it sits low beside

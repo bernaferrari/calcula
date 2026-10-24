@@ -1,5 +1,14 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import androidx.compose.ui.text.style.BaselineShift
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.animation.animateContentSize
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.text.BasicText
@@ -115,6 +124,8 @@ private data class Entry(
     val generation: Int,
     val angleUnit: AngleUnit,
     val selection: Span?,
+    val fraction: String?,
+    val memory: String?,
 )
 
 /**
@@ -139,6 +150,7 @@ fun CalculatorDisplay(
     modifier: Modifier = Modifier,
     historyOpen: Boolean = false,
     entryMaxFontSize: TextUnit = 64.sp,
+    onRecallMemory: () -> Unit = {},
 ) {
     val shake = remember { Animatable(0f) }
     val reduceMotion = LocalReduceMotion.current
@@ -186,6 +198,7 @@ fun CalculatorDisplay(
             )
             val entry = Entry(
                 state.text, state.cursor, state.resultShown, state.preview, state.error, state.openParentheses, state.generation, state.angleUnit, state.selection,
+                state.fraction, state.memory,
             )
             // History mode is about the past: the live entry steps aside until the keypad returns.
             AnimatedVisibility(
@@ -193,6 +206,15 @@ fun CalculatorDisplay(
                 enter = expandVertically(spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow)) + fadeIn(tween(220, delayMillis = 80)),
                 exit = shrinkVertically(spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow)) + fadeOut(tween(120)),
             ) {
+            if (state.rpn) {
+                RpnEntry(
+                    state = state,
+                    formatter = formatter,
+                    maxFontSize = entryMaxFontSize,
+                    onRecallMemory = { haptics.tap(); onRecallMemory() },
+                    modifier = Modifier.offset { IntOffset(shake.value.roundToInt(), 0) },
+                )
+            } else
             AnimatedContent(
                 targetState = entry,
                 contentKey = { it.generation },
@@ -229,6 +251,7 @@ fun CalculatorDisplay(
                     onCursorTick = haptics::tick,
                     onToggleAngle = { haptics.tap(); onToggleAngle() },
                     onCopy = { haptics.heavy(); onCopy(it) },
+                    onRecallMemory = { haptics.tap(); onRecallMemory() },
                     modifier = Modifier.offset { IntOffset(shake.value.roundToInt(), 0) },
                 )
             }
@@ -248,6 +271,7 @@ private fun LiveEntry(
     onCursorTick: () -> Unit,
     onToggleAngle: () -> Unit,
     onCopy: (String) -> Unit,
+    onRecallMemory: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.colorScheme
@@ -333,6 +357,7 @@ private fun LiveEntry(
         }
         val error = entry.error
         Row(Modifier.fillMaxWidth().heightIn(min = 44.dp), verticalAlignment = Alignment.CenterVertically) {
+            MemoryChip(entry.memory, formatter, onRecallMemory)
             // Degrees vs radians only matters once there is trigonometry, so that's the only time it shows.
             val usesAngles = TRIG.any { it in entry.text }
             AnimatedVisibility(usesAngles, enter = scaleIn(spring(dampingRatio = 0.5f)) + fadeIn(), exit = scaleOut() + fadeOut()) {
@@ -345,6 +370,13 @@ private fun LiveEntry(
                     color = colors.error,
                     textAlign = TextAlign.End,
                     modifier = Modifier.weight(1f),
+                )
+                // A result that's a simple fraction says so, quietly: 0.375 is also ³⁄₈.
+                entry.resultShown && entry.fraction != null -> Text(
+                    fractionText(entry.fraction),
+                    style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 30.sp, color = colors.onSurfaceVariant, textAlign = TextAlign.End),
+                    maxLines = 1,
+                    modifier = Modifier.weight(1f).padding(start = 12.dp),
                 )
                 // Long answers shrink to fit rather than running off the edge.
                 entry.preview != null -> FitText(
@@ -365,6 +397,100 @@ private fun LiveEntry(
 }
 
 private val TRIG = listOf("sin", "cos", "tan")
+
+/** `2 3/8` set as a fraction: small numerator raised, a slash, small denominator on the line. */
+private fun fractionText(fraction: String): AnnotatedString = buildAnnotatedString {
+    append("= ")
+    val whole = fraction.substringBefore(' ', "")
+    val rest = fraction.substringAfter(' ')
+    if (whole.isNotEmpty()) append("$whole\u2009")
+    val (numerator, denominator) = rest.split('/').let { (if (it[0].startsWith("−")) { append("−"); it[0].drop(1) } else it[0]) to it[1] }
+    withStyle(SpanStyle(fontSize = 0.62.em, baselineShift = BaselineShift(0.42f))) { append(numerator) }
+    withStyle(SpanStyle(fontSize = 0.9.em)) { append("/") }
+    withStyle(SpanStyle(fontSize = 0.62.em)) { append(denominator) }
+}
+
+/** What memory holds, when it holds something: an "M" and the number. Tap to recall it. */
+@Composable
+private fun MemoryChip(memory: String?, formatter: DisplayFormatter, onRecall: () -> Unit) {
+    AnimatedVisibility(memory != null, enter = scaleIn(spring(dampingRatio = 0.5f)) + fadeIn(), exit = scaleOut() + fadeOut()) {
+        val shown = memory ?: return@AnimatedVisibility
+        val description = stringResource(Res.string.memory_recall_description)
+        Surface(
+            onClick = onRecall,
+            shape = RoundedCornerShape(50),
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(end = 8.dp).widthIn(max = 160.dp).semantics { contentDescription = description },
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+                Text("M", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.width(6.dp))
+                Text(formatter.number(shown), style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
+    }
+}
+
+/**
+ * Reverse Polish: the stack, X big at the bottom like any result and Y, Z, T stacked above it,
+ * smaller, with their names. X shows the number as it's typed, cursor and all.
+ */
+@Composable
+private fun RpnEntry(
+    state: CalculatorUiState,
+    formatter: DisplayFormatter,
+    maxFontSize: TextUnit,
+    onRecallMemory: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = MaterialTheme.colorScheme
+    Column(
+        horizontalAlignment = Alignment.End,
+        modifier = modifier.fillMaxWidth().animateContentSize().padding(start = 24.dp, end = 24.dp, top = 4.dp, bottom = 12.dp),
+    ) {
+        val above = state.stack.drop(1).take(3)
+        above.indices.reversed().forEach { i ->
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().height(36.dp)) {
+                Text("yzt"[i].toString(), style = MaterialTheme.typography.titleMedium, color = colors.outline)
+                FitText(
+                    formatter.number(above[i]),
+                    style = TextStyle(fontFamily = GoogleSansFlex, fontWeight = FontWeight.Normal, color = colors.onSurfaceVariant, textAlign = TextAlign.End),
+                    maxSize = 28.sp,
+                    minSize = 14.sp,
+                    modifier = Modifier.weight(1f).padding(start = 16.dp),
+                )
+            }
+        }
+        val x = state.stack.firstOrNull()
+        if (x == null) {
+            Text("0", style = entryStyle(maxFontSize, GoogleSansFlex), color = colors.onSurfaceVariant.copy(alpha = 0.45f), modifier = Modifier.fillMaxWidth())
+        } else {
+            val formatted = remember(x) { formatter.format(x, 0, null, breakable = true) }
+            ExpressionText(
+                text = formatted.text,
+                cursor = if (state.entering) formatted.text.length else null,
+                maxFontSize = maxFontSize,
+                color = colors.onSurface,
+                onTap = {},
+                selection = null,
+                onSelect = {},
+                onAnchor = {},
+            )
+        }
+        Row(Modifier.fillMaxWidth().heightIn(min = 44.dp), verticalAlignment = Alignment.CenterVertically) {
+            MemoryChip(state.memory, formatter, onRecallMemory)
+            val error = state.error
+            if (error != null) Text(
+                stringResource(error.message()),
+                style = MaterialTheme.typography.titleLarge,
+                color = colors.error,
+                textAlign = TextAlign.End,
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
 
 @Composable
 private fun AngleChip(unit: AngleUnit, onToggle: () -> Unit) {

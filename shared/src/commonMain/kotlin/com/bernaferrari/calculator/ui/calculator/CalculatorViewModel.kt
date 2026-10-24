@@ -35,6 +35,14 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.bernaferrari.calculator.AppGraph
+import com.bernaferrari.calculator.domain.input.Rpn
+import com.bernaferrari.calculator.domain.input.RpnOutcome
+import com.bernaferrari.calculator.domain.input.RpnState
+import com.bernaferrari.calculator.domain.math.CalcEngine
+import com.bernaferrari.calculator.domain.math.Decimal
+import com.bernaferrari.calculator.domain.math.NumberFormatter
+import com.bernaferrari.calculator.domain.model.AUTO_DECIMALS
+import com.bernaferrari.calculator.domain.model.UserPreferences
 
 data class CalculatorUiState(
     val text: String = "",
@@ -58,6 +66,15 @@ data class CalculatorUiState(
     val inert: Set<Key> = emptySet(),
     /** Text picked in the display, in raw offsets; the next key acts on it. */
     val selection: Span? = null,
+    /** The result as a simple fraction, when it is one. */
+    val fraction: String? = null,
+    val memoryKeys: Boolean = false,
+    /** What memory holds, or null. */
+    val memory: String? = null,
+    /** Reverse Polish entry; [stack] then holds X, Y, Z… as numbers, X as typed while typing. */
+    val rpn: Boolean = false,
+    val stack: List<String> = emptyList(),
+    val entering: Boolean = false,
 ) {
     val openParentheses: Int get() = ExpressionEditor.openParentheses(text).coerceAtLeast(0)
 }
@@ -72,6 +89,7 @@ class CalculatorViewModel(
         CalcState(editor = Editor(savedState.get<String>(KEY_TEXT).orEmpty()), resultShown = savedState[KEY_RESULT] ?: false),
     )
     private val generation = MutableStateFlow(0)
+    private val rpn = MutableStateFlow(RpnState())
 
     private val _events = MutableSharedFlow<Outcome>(extraBufferCapacity = 8)
     val events: SharedFlow<Outcome> = _events
@@ -83,10 +101,11 @@ class CalculatorViewModel(
         .flowOn(Dispatchers.Default)
 
     private val prefs = preferences.getUserPreferences()
+    private val settings = prefs.stateIn(viewModelScope, SharingStarted.Eagerly, UserPreferences())
 
     val state: StateFlow<CalculatorUiState> = combine(
-        calc, preview, historyRepository.getRecentHistory(limit = 200), prefs, generation,
-    ) { calc, preview, history, prefs, generation ->
+        combine(calc, rpn) { a, b -> a to b }, preview, historyRepository.getRecentHistory(limit = 200), prefs, generation,
+    ) { (calc, rpn), preview, history, prefs, generation ->
         CalculatorUiState(
             text = calc.editor.text,
             cursor = calc.editor.cursor,
@@ -104,9 +123,15 @@ class CalculatorViewModel(
             keypadScale = prefs.keypadScale,
             decimalSeparator = prefs.decimalSeparator,
             generation = generation,
-            inert = Calculator.inertKeys(calc),
+            inert = if (prefs.rpn) emptySet() else Calculator.inertKeys(calc),
             selection = calc.selection,
-        )
+            fraction = calc.fraction,
+            memoryKeys = prefs.memoryKeys,
+            memory = prefs.memory,
+            rpn = prefs.rpn,
+            stack = rpn.stack.mapIndexed { i, v -> if (i == 0 && rpn.entry != null) rpn.entry else NumberFormatter.format(v) },
+            entering = rpn.entry != null,
+        ).let { if (prefs.rpn) it.copy(error = rpn.error) else it }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), CalculatorUiState(text = calc.value.editor.text))
 
     init {
@@ -119,6 +144,7 @@ class CalculatorViewModel(
     }
 
     fun onKey(key: Key) {
+        if (settings.value.rpn) return onRpnKey(key)
         if (key == Key.CLEAR && calc.value.editor.isEmpty) return
         val (next, outcome) = Calculator.press(calc.value, key)
         setState(next)
@@ -133,6 +159,53 @@ class CalculatorViewModel(
             else -> Unit
         }
         if (outcome != Outcome.None) _events.tryEmit(outcome)
+    }
+
+    private fun onRpnKey(key: Key) {
+        val current = rpn.value.copy(angleUnit = calc.value.angleUnit, decimalPlaces = calc.value.decimalPlaces)
+        if (key == Key.CLEAR && current.stack.isEmpty()) return
+        val (next, outcome) = Rpn.press(current, key)
+        rpn.value = next
+        when (outcome) {
+            is RpnOutcome.Evaluated -> viewModelScope.launch {
+                historyRepository.insertCalculation(CalculationHistory(expression = outcome.expression, result = outcome.result))
+            }
+            is RpnOutcome.Failed -> _events.tryEmit(Outcome.Failed(outcome.error))
+            RpnOutcome.Cleared -> _events.tryEmit(Outcome.Cleared)
+            RpnOutcome.None -> Unit
+        }
+    }
+
+    /**
+     * The memory keys. M+ and M− finish the calculation first, like pressing `=`, then add or
+     * take away the answer; MR drops what's stored at the cursor (or onto the stack).
+     */
+    fun onMemory(op: MemoryOp) {
+        val stored = settings.value.memory
+        when (op) {
+            MemoryOp.CLEAR -> saveMemory(null)
+            MemoryOp.RECALL -> if (stored != null) insertNumber(stored)
+            MemoryOp.ADD, MemoryOp.SUBTRACT -> {
+                val value = currentValue() ?: return
+                val base = stored?.let { CalcEngine.evaluateOrNull(it) } ?: Decimal.ZERO
+                val sum = if (op == MemoryOp.ADD) base.add(value) else base.subtract(value)
+                saveMemory(Calculator.formatResult(sum, AUTO_DECIMALS))
+            }
+        }
+    }
+
+    private fun currentValue(): Decimal? {
+        if (settings.value.rpn) return Rpn.x(rpn.value)
+        val c = calc.value
+        if (!c.resultShown && !Calculator.isPlainNumber(c.editor.text)) {
+            onKey(Key.EQUALS)
+            if (!calc.value.resultShown) return null
+        }
+        return CalcEngine.evaluateOrNull(calc.value.editor.text.ifEmpty { return null })
+    }
+
+    private fun saveMemory(value: String?) {
+        viewModelScope.launch { preferences.update { it.copy(memory = value) } }
     }
 
     /** A function picked by a flick or from the ƒ layer. */
@@ -154,7 +227,7 @@ class CalculatorViewModel(
     }
 
     /** Tapping an entry on the tape drops its result where the cursor is. */
-    fun onUseResult(entry: CalculationHistory) = setState(Calculator.insertNumber(calc.value, entry.result))
+    fun onUseResult(entry: CalculationHistory) = insertNumber(entry.result)
 
     /** Brings an old calculation back for editing. */
     fun onEditExpression(entry: CalculationHistory) {
@@ -197,7 +270,10 @@ class CalculatorViewModel(
     }
 
     /** A number coming back from the converter, dropped in at the cursor. */
-    fun insertNumber(number: String) = setState(Calculator.insertNumber(calc.value, number))
+    fun insertNumber(number: String) {
+        if (settings.value.rpn) rpn.value = Rpn.pushNumber(rpn.value, number)
+        else setState(Calculator.insertNumber(calc.value, number))
+    }
 
     fun loadExpression(expression: String) {
         if (expression.isNotEmpty()) setState(CalcState(editor = Editor(expression), angleUnit = calc.value.angleUnit))

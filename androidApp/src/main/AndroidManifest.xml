@@ -22,6 +22,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- The home screen calculator. -->
+        <receiver
+            android:name=".widget.CalculatorWidgetReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/calculator_widget" />
+        </receiver>
         <!-- Shares the graph image from the cache with the app the person picks. -->
         <provider
             android:name="androidx.core.content.FileProvider"

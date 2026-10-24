@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.ui
 
+import com.bernaferrari.calculator.ui.programmer.ProgrammerScreen
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -29,7 +30,7 @@ import com.bernaferrari.calculator.ui.converter.ConverterScreen
 import com.bernaferrari.calculator.ui.settings.SettingsScreen
 
 /** The app's places. The calculator is always at the bottom of the stack. */
-enum class Screen { Calculator, Settings, Converter, About, Graph }
+enum class Screen { Calculator, Settings, Converter, About, Graph, Programmer }
 
 /**
  * Navigation 3 with a shared-transition scope, so the tool row's icons can grow into the screens
@@ -69,6 +70,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                             onOpenSettings = { open(Screen.Settings) },
                             onOpenConverter = { seed -> converterSeed = seed; open(Screen.Converter) },
                             onOpenGraph = { open(Screen.Graph) },
+                            onOpenProgrammer = { open(Screen.Programmer) },
                             pendingInsert = pendingInsert,
                             onInsertConsumed = { pendingInsert = null },
                         )
@@ -81,6 +83,9 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                     }
                     entry<Screen>(Screen.Graph) {
                         GraphScreen(onNavigateBack = back)
+                    }
+                    entry<Screen>(Screen.Programmer) {
+                        ProgrammerScreen(onNavigateBack = back)
                     }
                     entry<Screen>(Screen.About) {
                         AboutScreen(onNavigateBack = back)

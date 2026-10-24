@@ -13,7 +13,7 @@
     <string name="tape_delete">Supprimer</string>
     <string name="copied">Copié</string>
     <string name="menu_settings">Paramètres</string>
-    <string name="more_options">Plus d\'options</string>
+    <string name="more_options">Plus d'options</string>
     <string name="menu_unit_converter">Convertisseur d’unités</string>
     <string name="angle_toggle_description">Unité d’angle, touchez pour changer</string>
     <string name="settings_appearance">Apparence</string>
@@ -94,7 +94,7 @@
     <string name="graph_point_root">Racine</string>
     <string name="graph_point_max">Maximum</string>
     <string name="graph_point_min">Minimum</string>
-    <string name="graph_point_y_intercept">Ordonnée à l\'origine</string>
+    <string name="graph_point_y_intercept">Ordonnée à l'origine</string>
     <string name="graph_point_intersection">Intersection</string>
     <string name="settings_theme">Thème</string>
     <string name="graph_play">Lecture</string>
@@ -109,8 +109,8 @@
     <string name="graph_library_empty">Vos graphes apparaissent ici</string>
     <string name="graph_open_library">Graphes récents</string>
     <string name="graph_delete">Supprimer</string>
-    <string name="resize_pull_history">Tirez pour l\'historique</string>
-    <string name="resize_release_history">Relâchez pour l\'historique</string>
+    <string name="resize_pull_history">Tirez pour l'historique</string>
+    <string name="resize_release_history">Relâchez pour l'historique</string>
     <string name="resize_pull_keypad">Tirez pour le clavier</string>
     <string name="resize_release_keypad">Relâchez pour le clavier</string>
     <string name="settings_flick_hints">Indices de fonctions</string>
@@ -124,4 +124,15 @@
     <string name="settings_flick_auto_learning">Les noms pour l’instant, des points une fois les gestes appris</string>
     <string name="settings_flick_auto_learned">Des points, maintenant que vous connaissez les gestes</string>
     <string name="settings_flick_auto">Auto</string>
+    <string name="memory_recall_description">Rappeler la mémoire</string>
+    <string name="settings_memory_keys">Touches mémoire</string>
+    <string name="settings_memory_keys_summary">MC, M+, M− et MR au-dessus du clavier</string>
+    <string name="settings_entry">Saisie</string>
+    <string name="settings_entry_algebraic">Algébrique</string>
+    <string name="settings_entry_rpn">RPN</string>
+    <string name="settings_entry_algebraic_summary">Tapez comme on l'écrit</string>
+    <string name="settings_entry_rpn_summary">↵ empile ; les opérateurs agissent aussitôt</string>
+    <string name="menu_programmer">Programmeur</string>
+    <string name="programmer_word_size">Taille de mot</string>
+    <string name="programmer_bits">%1$d bits</string>
 </resources>

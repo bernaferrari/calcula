@@ -8,6 +8,7 @@ import com.bernaferrari.calculator.domain.math.CalcError
 import com.bernaferrari.calculator.domain.math.CalcException
 import com.bernaferrari.calculator.domain.math.NumberFormatter
 import com.bernaferrari.calculator.domain.math.Tokenizer
+import com.bernaferrari.calculator.domain.math.Fractions
 import com.bernaferrari.calculator.domain.model.AUTO_DECIMALS
 import com.bernaferrari.calculator.domain.model.AngleUnit
 
@@ -32,6 +33,8 @@ enum class Key {
     PARAM_B,
     PARAM_C,
     PARAM_D,
+    /** RPN's change sign (CHS); algebraic entry types a minus instead. */
+    NEGATE,
 }
 
 /** A selected stretch of the expression, [start, end) in its raw text; empty when only a spot is picked. */
@@ -52,6 +55,8 @@ data class CalcState(
     val repeatTail: String? = null,
     /** Decimals to round results to, or [AUTO_DECIMALS]. */
     val decimalPlaces: Int = AUTO_DECIMALS,
+    /** The last result as a simple fraction (`³⁄₈`), when it is one; shown while [resultShown]. */
+    val fraction: String? = null,
 )
 
 sealed interface Outcome {
@@ -179,8 +184,10 @@ object Calculator {
         if (text.isEmpty() || state.resultShown || isPlainNumber(text)) return state to Outcome.None
         val closed = text + ")".repeat(ExpressionEditor.openParentheses(text).coerceAtLeast(0))
         return try {
-            val result = formatResult(CalcEngine.evaluate(closed, state.angleUnit), state.decimalPlaces)
-            state.copy(editor = Editor(result), resultShown = true, error = null, repeatTail = repeatTail(closed)) to
+            val value = CalcEngine.evaluate(closed, state.angleUnit)
+            val result = formatResult(value, state.decimalPlaces)
+            val fraction = Fractions.worthShowing(value)?.let(Fractions::format)
+            state.copy(editor = Editor(result), resultShown = true, error = null, repeatTail = repeatTail(closed), fraction = fraction) to
                 Outcome.Evaluated(closed, result)
         } catch (e: CalcException) {
             state.copy(error = e.error) to Outcome.Failed(e.error)
@@ -260,7 +267,7 @@ object Calculator {
             Key.ROOT -> if (endsOperand(e.left) && e.left != '.') insertRaw(e, "^(1÷") else e
             Key.DOUBLE_ZERO -> insertDigit(insertDigit(e, '0'), '0')
             Key.TRIPLE_ZERO -> insertDigit(insertDigit(insertDigit(e, '0'), '0'), '0')
-            Key.EQUALS, Key.CLEAR, Key.INVERSE -> e
+            Key.EQUALS, Key.CLEAR, Key.INVERSE, Key.NEGATE -> e
         }
     }
 }

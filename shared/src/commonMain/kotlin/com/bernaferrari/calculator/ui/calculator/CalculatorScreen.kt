@@ -114,6 +114,7 @@ fun CalculatorScreen(
     onOpenSettings: () -> Unit,
     onOpenConverter: (seed: String?) -> Unit,
     onOpenGraph: () -> Unit = {},
+    onOpenProgrammer: () -> Unit = {},
     pendingInsert: String? = null,
     onInsertConsumed: () -> Unit = {},
     viewModel: CalculatorViewModel = viewModel { CalculatorViewModel(savedState = createSavedStateHandle()) },
@@ -127,7 +128,7 @@ fun CalculatorScreen(
         }
     }
     // The number on screen goes along to the converter, so "how many miles is this?" is one tap.
-    val currentNumber = (if (state.resultShown) state.text else state.preview ?: state.text)
+    val currentNumber = (if (state.rpn) state.stack.firstOrNull().orEmpty() else if (state.resultShown) state.text else state.preview ?: state.text)
         .takeIf { it.isNotEmpty() && 'E' !in it && Calculator.isPlainNumber(it) }
 
     val formatLocale = state.decimalSeparator.separators()
@@ -182,6 +183,7 @@ fun CalculatorScreen(
             onClearHistory = viewModel::onClearHistory,
             historyOpen = historyOpen,
             entryMaxFontSize = if (compact) 48.sp else 64.sp,
+            onRecallMemory = { viewModel.onMemory(MemoryOp.RECALL) },
             modifier = modifier,
         )
     }
@@ -218,7 +220,7 @@ fun CalculatorScreen(
         var dragRow by remember { mutableStateOf<Dp?>(null) }
         val rowHeight = dragRow ?: (defaultRow * state.keypadScale).coerceIn(minRow, maxRow)
         // History mode slides the keypad down and away, whole, and gives the screen to the tape.
-        val fullKeypad = rowHeight * 5 + bottomInset
+        val fullKeypad = rowHeight * 5 + bottomInset + if (state.memoryKeys) MemoryRowExtra else 0.dp
         val reveal = remember { Animatable(if (historyOpen) 0f else 1f) }
         var pulling by remember { mutableStateOf(false) }
         var armed by remember { mutableStateOf(false) }
@@ -261,6 +263,7 @@ fun CalculatorScreen(
                 onLayer = { next -> haptics.tap(); layer = next; historyOpen = false },
                 onOpenConverter = { onOpenConverter(currentNumber) },
                 onOpenGraph = onOpenGraph,
+                onOpenProgrammer = onOpenProgrammer,
                 onOpenSettings = onOpenSettings,
                 resize = if (!pulling) null else {
                     val span = (maxRow - minRow).value.coerceAtLeast(1f)
@@ -293,6 +296,9 @@ fun CalculatorScreen(
                 onClearAll = { viewModel.onKey(Key.CLEAR) },
                 hints = state.flickHints,
                 inert = state.inert,
+                rpn = state.rpn,
+                onMemory = if (state.memoryKeys) viewModel::onMemory else null,
+                memoryFull = state.memory != null,
                 bottomInset = bottomInset,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -372,6 +378,9 @@ fun CalculatorScreen(
                     onClearAll = { viewModel.onKey(Key.CLEAR) },
                     hints = FlickHints.NONE,
                     inert = state.inert,
+                    rpn = state.rpn,
+                    onMemory = if (state.memoryKeys) viewModel::onMemory else null,
+                    memoryFull = state.memory != null,
                     bottomInset = bottomInset,
                     modifier = Modifier.weight(0.4f).fillMaxHeight().statusBarsPadding(),
                 )

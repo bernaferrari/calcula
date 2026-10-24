@@ -1,5 +1,7 @@
 package com.bernaferrari.calculator.ui.settings
 
+import androidx.compose.material.icons.outlined.Layers
+import androidx.compose.material.icons.outlined.Memory
 import com.bernaferrari.calculator.ui.theme.hasStyles
 import com.bernaferrari.calculator.domain.model.ColorStyle
 import com.bernaferrari.calculator.domain.model.hints
@@ -111,6 +113,8 @@ class SettingsViewModel(
     fun setHaptics(enabled: Boolean) = save { updateHapticFeedback(enabled) }
     fun setSounds(enabled: Boolean) = save { updateSoundEnabled(enabled) }
     fun setReduceMotion(enabled: Boolean) = save { updateReduceMotion(enabled) }
+    fun setMemoryKeys(enabled: Boolean) = save { update { it.copy(memoryKeys = enabled) } }
+    fun setRpn(enabled: Boolean) = save { update { it.copy(rpn = enabled) } }
     fun clearHistory() = viewModelScope.launch { history.clearAllHistory() }
 }
 
@@ -238,6 +242,18 @@ fun SettingsScreen(
                                 subtitle = if (prefs.flickHints != null) null else stringResource(
                                     if (prefs.hints == FlickHints.LABELS) Res.string.settings_flick_auto_learning else Res.string.settings_flick_auto_learned,
                                 ),
+                            )
+                        },
+                        { p ->
+                            SwitchRow(p, Icons.Outlined.Memory, stringResource(Res.string.settings_memory_keys), stringResource(Res.string.settings_memory_keys_summary), prefs.memoryKeys, viewModel::setMemoryKeys)
+                        },
+                        { p ->
+                            ChoiceRow(
+                                p, Icons.Outlined.Layers, stringResource(Res.string.settings_entry),
+                                listOf(false, true), prefs.rpn,
+                                label = { stringResource(if (it) Res.string.settings_entry_rpn else Res.string.settings_entry_algebraic) },
+                                onSelect = viewModel::setRpn,
+                                subtitle = stringResource(if (prefs.rpn) Res.string.settings_entry_rpn_summary else Res.string.settings_entry_algebraic_summary),
                             )
                         },
                     ),

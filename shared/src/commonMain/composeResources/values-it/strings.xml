@@ -124,4 +124,15 @@
     <string name="settings_flick_auto_learning">Nomi per ora, punti quando conoscerai i gesti</string>
     <string name="settings_flick_auto_learned">Punti, ora che conosci i gesti</string>
     <string name="settings_flick_auto">Auto</string>
+    <string name="memory_recall_description">Richiama memoria</string>
+    <string name="settings_memory_keys">Tasti memoria</string>
+    <string name="settings_memory_keys_summary">MC, M+, M− e MR sopra la tastiera</string>
+    <string name="settings_entry">Inserimento</string>
+    <string name="settings_entry_algebraic">Algebrico</string>
+    <string name="settings_entry_rpn">RPN</string>
+    <string name="settings_entry_algebraic_summary">Scrivi come si scrive</string>
+    <string name="settings_entry_rpn_summary">↵ impila; gli operatori agiscono subito</string>
+    <string name="menu_programmer">Programmatore</string>
+    <string name="programmer_word_size">Dimensione parola</string>
+    <string name="programmer_bits">%1$d bit</string>
 </resources>

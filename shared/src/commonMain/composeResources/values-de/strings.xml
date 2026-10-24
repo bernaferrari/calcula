@@ -124,4 +124,15 @@
     <string name="settings_flick_auto_learning">Erst Namen, Punkte, sobald du die Wischgesten kennst</string>
     <string name="settings_flick_auto_learned">Punkte, jetzt wo du die Wischgesten kennst</string>
     <string name="settings_flick_auto">Auto</string>
+    <string name="memory_recall_description">Speicher abrufen</string>
+    <string name="settings_memory_keys">Speichertasten</string>
+    <string name="settings_memory_keys_summary">MC, M+, M− und MR über der Tastatur</string>
+    <string name="settings_entry">Eingabe</string>
+    <string name="settings_entry_algebraic">Algebraisch</string>
+    <string name="settings_entry_rpn">UPN</string>
+    <string name="settings_entry_algebraic_summary">Eingeben, wie man es schreibt</string>
+    <string name="settings_entry_rpn_summary">↵ legt auf den Stapel; Operatoren wirken sofort</string>
+    <string name="menu_programmer">Programmierer</string>
+    <string name="programmer_word_size">Wortbreite</string>
+    <string name="programmer_bits">%1$d Bit</string>
 </resources>

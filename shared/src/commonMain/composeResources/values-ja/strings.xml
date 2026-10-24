@@ -124,4 +124,15 @@
     <string name="settings_flick_auto_learning">覚えるまでは名前、覚えたらドット</string>
     <string name="settings_flick_auto_learned">フリックを覚えたのでドット表示</string>
     <string name="settings_flick_auto">自動</string>
+    <string name="memory_recall_description">メモリを呼び出す</string>
+    <string name="settings_memory_keys">メモリキー</string>
+    <string name="settings_memory_keys_summary">キーパッドの上に MC、M+、M−、MR</string>
+    <string name="settings_entry">入力方式</string>
+    <string name="settings_entry_algebraic">通常</string>
+    <string name="settings_entry_rpn">RPN</string>
+    <string name="settings_entry_algebraic_summary">書くとおりに入力</string>
+    <string name="settings_entry_rpn_summary">↵ でスタックに積み、演算子はすぐに計算</string>
+    <string name="menu_programmer">プログラマー</string>
+    <string name="programmer_word_size">ワードサイズ</string>
+    <string name="programmer_bits">%1$d ビット</string>
 </resources>

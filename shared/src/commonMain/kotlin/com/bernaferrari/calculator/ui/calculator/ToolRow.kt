@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import androidx.compose.material.icons.outlined.Code
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -110,6 +111,7 @@ fun ToolRow(
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
     onOpenGraph: () -> Unit = {},
+    onOpenProgrammer: () -> Unit = {},
     /** Set while the bar is being dragged: the controls step back and a pill shows the size. */
     resize: ResizeFeedback? = null,
     /** False when history already has a pane of its own, so the menu doesn't offer it. */
@@ -169,6 +171,12 @@ fun ToolRow(
                         text = { Text(stringResource(Res.string.menu_unit_converter)) },
                         leadingIcon = { Icon(Icons.Outlined.Straighten, contentDescription = null) },
                         onClick = { menu = false; onOpenConverter() },
+                    )
+                    // Only in the menu: hex and bits are for the few, so they get no icon in the row.
+                    DropdownMenuItem(
+                        text = { Text(stringResource(Res.string.menu_programmer)) },
+                        leadingIcon = { Icon(Icons.Outlined.Code, contentDescription = null) },
+                        onClick = { menu = false; onOpenProgrammer() },
                     )
                     HorizontalDivider()
                     if (!historyOpen && showHistoryEntry) {

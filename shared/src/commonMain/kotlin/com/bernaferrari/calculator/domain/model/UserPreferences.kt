@@ -1,5 +1,7 @@
 package com.bernaferrari.calculator.domain.model
 
+import com.bernaferrari.calculator.domain.programmer.Base
+import com.bernaferrari.calculator.domain.programmer.WordSize
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -27,6 +29,14 @@ data class UserPreferences(
     val keypadScale: Float = 1f,
     /** The graph keypad's height relative to its default; separate, since the graph wants its plot. */
     val graphKeypadScale: Float = 1f,
+    /** A row of memory keys (MC M+ M− MR) above the keypad, for people who work that way. */
+    val memoryKeys: Boolean = false,
+    /** What memory holds, as a number in the expression language; null when it's empty. */
+    val memory: String? = null,
+    /** Reverse Polish entry: ↵ pushes onto a stack and operators act at once. */
+    val rpn: Boolean = false,
+    val programmerBase: Base = Base.DEC,
+    val programmerWord: WordSize = WordSize.QWORD,
 )
 
 /**

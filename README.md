@@ -22,7 +22,7 @@
 ## Why people like it
 
 - **Functions under your thumb.** sin, log, √, x², π and more live on the digits, each named on its key. Flick up for one, down for the other, hold to see both. Reach for one that can't apply yet and it shakes its head.
-- **Exact answers.** 0.1 + 0.2 is 0.3. Smart percent: 200 + 10% is 220.
+- **Exact answers.** 0.1 + 0.2 is 0.3. Smart percent: 200 + 10% is 220. A result that's a simple fraction says so too: 0.375 is also 3/8.
 - **A history you'll actually use.** Past results stay above the keys. Tap one to reuse it, pull down to see them all.
 - **Graphs that teach.** Up to six functions, sliders for a, b, c, d, roots and turns you can tap. Recent graphs are kept, and any one shares as an image.
 - **A unit converter, one tap away.** Length, mass, temperature, data and more, with exact factors.
@@ -45,6 +45,15 @@ After a few flicks the keypad trades its names for two small dots on each key, t
 <p align="center">
   <img src="docs/demo-dots.webp" width="260" alt="With dot hints: flick the 7 for sin, tap ƒ to turn the keys into functions, flick the 2 down for √">
 </p>
+
+## For the ones who want more
+
+Off by default, one switch away, and out of everyone else's way:
+
+- **Memory keys.** MC, M+, M− and MR in a slim row above the keypad; what's stored shows in the display, tap it to recall.
+- **RPN.** Reverse Polish entry with an open-ended stack: ↵ pushes, operators act at once, x⇄y and roll on the parentheses key.
+- **Programmer.** Hex, decimal, octal and binary, AND, OR, XOR, NOT and shifts, in 8, 16, 32 or 64 bits. From the ⋮ menu.
+- **A home screen widget** on Android: the calculator itself, and its answers land in the app's history.
 
 ## Private by design
 

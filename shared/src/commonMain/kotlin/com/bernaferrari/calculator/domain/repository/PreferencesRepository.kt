@@ -41,4 +41,7 @@ interface PreferencesRepository {
 
     suspend fun updateKeypadScale(scale: Float)
     suspend fun updateGraphKeypadScale(scale: Float)
+
+    /** Any other change, for settings that only one screen cares about. */
+    suspend fun update(change: (UserPreferences) -> UserPreferences)
 }
