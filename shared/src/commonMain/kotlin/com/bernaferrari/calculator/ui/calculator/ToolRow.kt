@@ -1,5 +1,11 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.PathMeasure
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowLeft
@@ -96,6 +102,8 @@ data class ResizeFeedback(
     val mode: Mode,
     /** Letting go now would switch to history or back to the keypad (not just resize). */
     val armed: Boolean = false,
+    /** How far toward [armed] the pull has come, 0 to 1; drawn around the pill's edge. */
+    val progress: Float = 0f,
 ) {
     enum class Mode { Resize, ToHistory, ToKeypad }
 }
@@ -246,6 +254,31 @@ private fun CursorArrow(direction: Int, tint: Color, haptics: Haptics?, onStep: 
 }
 
 /**
+ * A line traced around the pill's edge, clockwise from the top, as far as [progress] goes: how
+ * close the pull is to switching. Once it's armed the pill turns solid instead.
+ */
+private fun Modifier.pullProgress(progress: Float, color: Color): Modifier = drawWithContent {
+    drawContent()
+    if (progress <= 0f) return@drawWithContent
+    val stroke = 2.5.dp.toPx()
+    val inset = stroke / 2
+    val r = size.height / 2 - inset
+    // The capsule's outline, starting at the top centre.
+    val outline = Path().apply {
+        moveTo(size.width / 2, inset)
+        lineTo(size.width - inset - r, inset)
+        arcTo(Rect(size.width - inset - 2 * r, inset, size.width - inset, size.height - inset), -90f, 180f, false)
+        lineTo(inset + r, size.height - inset)
+        arcTo(Rect(inset, inset, inset + 2 * r, size.height - inset), 90f, 180f, false)
+        lineTo(size.width / 2, inset)
+    }
+    val measure = PathMeasure().apply { setPath(outline, false) }
+    val traced = Path()
+    measure.getSegment(0f, measure.length * progress.coerceIn(0f, 1f), traced, true)
+    drawPath(traced, color, style = Stroke(width = stroke, cap = StrokeCap.Round))
+}
+
+/**
  * Stands in for the bar while it's dragged: an arrow, the size in percent and a small track with
  * the default marked. Pulled past the smallest size it says where the pull is going instead.
  */
@@ -273,6 +306,7 @@ internal fun ResizePill(feedback: ResizeFeedback?, modifier: Modifier) {
                 .height(40.dp)
                 .clip(CircleShape)
                 .background(pillColor)
+                .pullProgress(if (f.mode == ResizeFeedback.Mode.Resize || solid) 0f else f.progress, colors.primary)
                 .animateContentSize(spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMedium))
                 .padding(horizontal = 16.dp),
         ) {

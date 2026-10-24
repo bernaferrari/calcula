@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.SideEffect
@@ -225,6 +226,7 @@ fun CalculatorScreen(
         val reveal = remember { Animatable(if (historyOpen) 0f else 1f) }
         var pulling by remember { mutableStateOf(false) }
         var armed by remember { mutableStateOf(false) }
+        var pullProgress by remember { mutableFloatStateOf(0f) }
         LaunchedEffect(historyOpen) {
             if (!pulling) reveal.animateTo(if (historyOpen) 0f else 1f, spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow))
         }
@@ -245,6 +247,7 @@ fun CalculatorScreen(
             },
             onHistory = { open -> if (!split) historyOpen = open },
             onArmed = { armed = it },
+            onProgress = { pullProgress = it },
         )
         // The saved size has caught up with the finger: hand the height back to it.
         LaunchedEffect(state.keypadScale) { dragRow = null }
@@ -284,6 +287,7 @@ fun CalculatorScreen(
                             else -> ResizeFeedback.Mode.Resize
                         },
                         armed = armed,
+                        progress = pullProgress,
                     )
                 },
                 // Takes over the bottom inset as the keypad leaves, in step with it.
@@ -440,6 +444,7 @@ private fun Modifier.keypadResize(
     onHistory: (Boolean) -> Unit,
     defaultRow: Dp,
     onArmed: (Boolean) -> Unit,
+    onProgress: (Float) -> Unit,
 ): Modifier {
     // The gesture outlives recompositions; it reads today's sizes, not the first frame's.
     val currentRow by rememberUpdatedState(rowHeight)
@@ -448,7 +453,7 @@ private fun Modifier.keypadResize(
     val currentHistory by rememberUpdatedState(historyOpen)
     val currentDone by rememberUpdatedState(onDone)
     val currentDefault by rememberUpdatedState(defaultRow)
-    return keypadResizeGesture({ currentRow }, { currentLimits }, { currentFull }, { currentHistory }, reveal, onPulling, onRow, onTick, { currentDone(it) }, onHistory, defaultRow = { currentDefault }, onArmed = onArmed)
+    return keypadResizeGesture({ currentRow }, { currentLimits }, { currentFull }, { currentHistory }, reveal, onPulling, onRow, onTick, { currentDone(it) }, onHistory, defaultRow = { currentDefault }, onArmed = onArmed, onProgress = onProgress)
 }
 
 private fun Modifier.keypadResizeGesture(
@@ -466,6 +471,8 @@ private fun Modifier.keypadResizeGesture(
     defaultRow: () -> Dp,
     /** Whether letting go now would switch between keypad and history, so the pill can say so. */
     onArmed: (Boolean) -> Unit,
+    /** How close the pull is to switching (0 to 1), for the pill's progress ring. */
+    onProgress: (Float) -> Unit,
 ): Modifier = pointerInput(Unit) {
     var startRow = 0f
     var offset = 0f
@@ -501,6 +508,7 @@ private fun Modifier.keypadResizeGesture(
                 // Up from history: the keys rise with the finger.
                 val r = (-offset / full).coerceIn(0f, 1f)
                 launch { reveal.snapTo(r) }
+                onProgress((-offset / threshold).coerceIn(0f, 1f))
                 val nowPast = -offset > threshold
                 if (nowPast != past) { past = nowPast; onArmed(past); onTick() }
                 return@drag
@@ -530,6 +538,7 @@ private fun Modifier.keypadResizeGesture(
             // Past the smallest size, the pull starts sending the keypad away.
             over = ((min - wanted) * 5f).coerceAtLeast(0f)
             launch { reveal.snapTo(1f - (over / full).coerceIn(0f, 1f)) }
+            onProgress((over / threshold).coerceIn(0f, 1f))
             val nowPast = over > threshold
             if (nowPast != past) { past = nowPast; onArmed(past); onTick() }
         }
