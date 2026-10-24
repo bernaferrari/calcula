@@ -215,11 +215,11 @@ private fun androidx.compose.foundation.layout.RowScope.Fact(value: String, labe
     Column(
         Modifier
             .weight(1f)
-            .clip(RoundedCornerShape(18.dp))
-            .background(colors.surface.copy(alpha = 0.55f))
+            // Outlined, not filled: facts about the keys, not more keys.
+            .border(1.5.dp, colors.onPrimaryContainer.copy(alpha = 0.3f), RoundedCornerShape(18.dp))
             .padding(horizontal = 12.dp, vertical = 10.dp),
     ) {
-        Text(value, style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 24.sp, fontWeight = FontWeight.Medium), color = colors.onSurface, maxLines = 1)
-        Text(label, style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant, maxLines = 1)
+        Text(value, style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 24.sp, fontWeight = FontWeight.Medium), color = colors.onPrimaryContainer, maxLines = 1)
+        Text(label, style = MaterialTheme.typography.labelMedium, color = colors.onPrimaryContainer.copy(alpha = 0.75f), maxLines = 1)
     }
 }
