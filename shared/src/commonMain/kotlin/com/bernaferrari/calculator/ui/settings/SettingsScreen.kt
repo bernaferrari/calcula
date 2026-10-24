@@ -1,5 +1,7 @@
 package com.bernaferrari.calculator.ui.settings
 
+import androidx.compose.foundation.layout.Spacer
+import kotlinx.coroutines.flow.StateFlow
 import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.outlined.Keyboard
 import com.bernaferrari.calculator.domain.model.Notation
@@ -101,7 +103,8 @@ class SettingsViewModel(
     private val history: CalculatorRepository = AppGraph.history,
 ) : ViewModel() {
     val prefs = preferences.getUserPreferences()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), UserPreferences())
+        // Starts from what's saved, not the defaults, so nothing animates from a default color on open.
+        .let { it.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), (it as? StateFlow<UserPreferences>)?.value ?: UserPreferences()) }
 
     private fun save(block: suspend PreferencesRepository.() -> Unit) = viewModelScope.launch { preferences.block() }
 
@@ -151,17 +154,19 @@ fun SettingsScreen(
         }
         // On wide screens the list keeps a readable width, centred.
         Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
-        LazyColumn(Modifier.widthIn(max = 640.dp).fillMaxSize().clipToBounds().fadeBottomEdge(bottomInset + 12.dp), contentPadding = PaddingValues(bottom = bottomInset + 32.dp)) {
+        // A plain scrolling column, not a lazy list: settings is short, and keeping every row
+        // composed means scrolling back up never rebuilds the swatches and tiny keypads.
+        Column(Modifier.widthIn(max = 640.dp).fillMaxSize().clipToBounds().fadeBottomEdge(bottomInset + 12.dp).verticalScroll(rememberScrollState())) {
 
-            item {
+            run {
                 val palette = prefs.palette.orDefault()
                 SettingsSection(
                     stringResource(Res.string.settings_appearance),
                     listOfNotNull(
                         { p ->
-                            // Follow the system, or pin light or dark: one connected group, like the other choices.
+                            // Follow the system, or pin light or dark: the buttons name themselves, so no header.
                             ChoiceRow(
-                                p, Icons.Outlined.BrightnessMedium, stringResource(Res.string.settings_theme),
+                                p, null, null,
                                 listOf(ThemeMode.SYSTEM, ThemeMode.LIGHT, ThemeMode.DARK), if (prefs.themeMode == ThemeMode.MATERIAL_YOU) ThemeMode.SYSTEM else prefs.themeMode,
                                 label = {
                                     stringResource(
@@ -190,7 +195,7 @@ fun SettingsScreen(
                 )
             }
 
-            item {
+            run {
                 SettingsSection(
                     stringResource(Res.string.settings_calculator),
                     listOf(
@@ -295,7 +300,7 @@ fun SettingsScreen(
                 )
             }
 
-            item {
+            run {
                 SettingsSection(
                     stringResource(Res.string.settings_feedback),
                     listOf(
@@ -306,7 +311,7 @@ fun SettingsScreen(
                 )
             }
 
-            item {
+            run {
                 SettingsSection(
                     stringResource(Res.string.settings_more),
                     listOf(
@@ -316,7 +321,7 @@ fun SettingsScreen(
                 )
             }
 
-            item {
+            run {
                 SettingsSection(
                     stringResource(Res.string.settings_about),
                     listOf(
@@ -331,6 +336,7 @@ fun SettingsScreen(
                     ),
                 )
             }
+            Spacer(Modifier.height(bottomInset + 32.dp))
         }
         }
       }
