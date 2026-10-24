@@ -137,4 +137,5 @@
     <string name="programmer_bits">%1$d bits</string>
     <string name="cursor_left">Déplacer le curseur à gauche</string>
     <string name="cursor_right">Déplacer le curseur à droite</string>
+    <string name="take_result">Utiliser le résultat</string>
 </resources>

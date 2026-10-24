@@ -184,6 +184,7 @@ fun CalculatorScreen(
             historyOpen = historyOpen,
             entryMaxFontSize = if (compact) 48.sp else 64.sp,
             onRecallMemory = { viewModel.onMemory(MemoryOp.RECALL) },
+            onEvaluate = { viewModel.onKey(Key.EQUALS) },
             modifier = modifier,
         )
     }

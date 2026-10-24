@@ -139,4 +139,5 @@
     <string name="programmer_bits">%1$d bits</string>
     <string name="cursor_left">Mover cursor para a esquerda</string>
     <string name="cursor_right">Mover cursor para a direita</string>
+    <string name="take_result">Usar resultado</string>
 </resources>

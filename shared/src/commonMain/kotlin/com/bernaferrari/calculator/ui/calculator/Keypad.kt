@@ -125,14 +125,14 @@ fun MainKeypad(
     val rows = listOf(
         listOf(
             Spec(Key.CLEAR, "C", Tone.Function, "Clear"),
-            if (rpn) Spec(Key.PARENS, "x⇄y", Tone.Function, "Swap x and y", up = Alt("R↓", Key.LPAREN, "roll down"), down = Alt("R↑", Key.RPAREN, "roll up"), flips = false)
-            else Spec(Key.PARENS, "( )", Tone.Function, "Parentheses", up = Alt("(", Key.LPAREN, "open parenthesis"), down = Alt(")", Key.RPAREN, "close parenthesis"), flips = false),
             if (variable) Spec(
                 Key.VARIABLE, "x", Tone.Operator, "x",
                 up = Alt("y", Key.VARIABLE_Y),
                 down = nextParameter?.let { Alt(it.toString(), parameterKey(it), "parameter $it") },
                 flips = false,
             ) else Spec(Key.PERCENT, "%", Tone.Function, "Percent"),
+            // Backspace up top, by the operators and away from C, as on the old keypad.
+            Spec(Key.DELETE, "⌫", Tone.Function, "Backspace, hold to clear"),
             // 1/x is "1 ÷ x", and sits under × (xʸ) like its counterpart.
             Spec(Key.DIVIDE, "÷", Tone.Operator, "Divide", up = Alt("1/x", Key.RECIPROCAL, "reciprocal")),
         ),
@@ -157,9 +157,11 @@ fun MainKeypad(
             Spec(Key.PLUS, "+", Tone.Operator, "Plus"),
         ),
         listOf(
+            // 0 under 2 and the point under 3, like a phone's dial pad; parentheses take the corner.
+            if (rpn) Spec(Key.PARENS, "x⇄y", Tone.Function, "Swap x and y", up = Alt("R↓", Key.LPAREN, "roll down"), down = Alt("R↑", Key.RPAREN, "roll up"), flips = false)
+            else Spec(Key.PARENS, "( )", Tone.Function, "Parentheses", up = Alt("(", Key.LPAREN, "open parenthesis"), down = Alt(")", Key.RPAREN, "close parenthesis"), flips = false),
             Spec(Key.D0, "0", Tone.Digit, up = Alt("00", Key.DOUBLE_ZERO), down = Alt("000", Key.TRIPLE_ZERO), flips = false),
             Spec(Key.DOT, decimal.toString(), Tone.Digit, "Decimal point"),
-            Spec(Key.DELETE, "⌫", Tone.Digit, "Backspace, hold to clear"),
             if (rpn) Spec(Key.EQUALS, "↵", Tone.Equals, "Enter", icon = Icons.AutoMirrored.Rounded.KeyboardReturn)
             else Spec(Key.EQUALS, "=", Tone.Equals, "Equals"),
         ),

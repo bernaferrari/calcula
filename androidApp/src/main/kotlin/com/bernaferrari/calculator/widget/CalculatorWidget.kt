@@ -156,11 +156,11 @@ class CalculatorWidget : GlanceAppWidget() {
 private enum class Tone { Digit, Function, Clear, Operator, Equals }
 
 private val ROWS = listOf(
-    listOf(Triple(Key.CLEAR, "C", Tone.Clear), Triple(Key.PARENS, "( )", Tone.Function), Triple(Key.PERCENT, "%", Tone.Function), Triple(Key.DIVIDE, "÷", Tone.Operator)),
+    listOf(Triple(Key.CLEAR, "C", Tone.Clear), Triple(Key.PERCENT, "%", Tone.Function), Triple(Key.DELETE, "⌫", Tone.Function), Triple(Key.DIVIDE, "÷", Tone.Operator)),
     listOf(Triple(Key.D7, "7", Tone.Digit), Triple(Key.D8, "8", Tone.Digit), Triple(Key.D9, "9", Tone.Digit), Triple(Key.TIMES, "×", Tone.Operator)),
     listOf(Triple(Key.D4, "4", Tone.Digit), Triple(Key.D5, "5", Tone.Digit), Triple(Key.D6, "6", Tone.Digit), Triple(Key.MINUS, "−", Tone.Operator)),
     listOf(Triple(Key.D1, "1", Tone.Digit), Triple(Key.D2, "2", Tone.Digit), Triple(Key.D3, "3", Tone.Digit), Triple(Key.PLUS, "+", Tone.Operator)),
-    listOf(Triple(Key.D0, "0", Tone.Digit), Triple(Key.DOT, ".", Tone.Digit), Triple(Key.DELETE, "⌫", Tone.Digit), Triple(Key.EQUALS, "=", Tone.Equals)),
+    listOf(Triple(Key.PARENS, "( )", Tone.Function), Triple(Key.D0, "0", Tone.Digit), Triple(Key.DOT, ".", Tone.Digit), Triple(Key.EQUALS, "=", Tone.Equals)),
 )
 
 /** A key press: the same state machine as the app, kept in the widget's own state. */

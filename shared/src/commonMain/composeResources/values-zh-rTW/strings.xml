@@ -137,4 +137,5 @@
     <string name="programmer_bits">%1$d 位元</string>
     <string name="cursor_left">游標左移</string>
     <string name="cursor_right">游標右移</string>
+    <string name="take_result">使用結果</string>
 </resources>

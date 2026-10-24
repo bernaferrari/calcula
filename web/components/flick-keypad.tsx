@@ -16,8 +16,8 @@ type Spec = {
 const ROWS: Spec[][] = [
   [
     { label: "C", insert: "AC", tone: "clear" },
-    { label: "( )", insert: "()", tone: "fn", up: { label: "(", insert: "(" }, down: { label: ")", insert: ")" } },
     { label: "%", insert: "%", tone: "fn" },
+    { label: "⌫", insert: "⌫", tone: "fn" },
     { label: "÷", insert: "÷", tone: "op", up: { label: "1/x", insert: "⁻¹" } },
   ],
   [
@@ -39,9 +39,9 @@ const ROWS: Spec[][] = [
     { label: "+", insert: "+", tone: "op" },
   ],
   [
+    { label: "( )", insert: "()", tone: "fn", up: { label: "(", insert: "(" }, down: { label: ")", insert: ")" } },
     { label: "0", insert: "0", tone: "digit", up: { label: "00", insert: "00" }, down: { label: "000", insert: "000" } },
     { label: ".", insert: ".", tone: "digit" },
-    { label: "⌫", insert: "⌫", tone: "digit" },
     { label: "=", insert: "=", tone: "eq" },
   ],
 ];

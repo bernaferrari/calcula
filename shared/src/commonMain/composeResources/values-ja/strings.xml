@@ -137,4 +137,5 @@
     <string name="programmer_bits">%1$d ビット</string>
     <string name="cursor_left">カーソルを左へ</string>
     <string name="cursor_right">カーソルを右へ</string>
+    <string name="take_result">結果を確定</string>
 </resources>

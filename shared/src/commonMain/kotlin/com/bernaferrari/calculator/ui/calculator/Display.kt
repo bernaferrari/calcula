@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import androidx.compose.foundation.clickable
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.withStyle
@@ -151,6 +152,8 @@ fun CalculatorDisplay(
     historyOpen: Boolean = false,
     entryMaxFontSize: TextUnit = 64.sp,
     onRecallMemory: () -> Unit = {},
+    /** Tapping the preview (`= 52`) takes it, like pressing `=`. */
+    onEvaluate: () -> Unit = {},
 ) {
     val shake = remember { Animatable(0f) }
     val reduceMotion = LocalReduceMotion.current
@@ -252,6 +255,7 @@ fun CalculatorDisplay(
                     onToggleAngle = { haptics.tap(); onToggleAngle() },
                     onCopy = { haptics.heavy(); onCopy(it) },
                     onRecallMemory = { haptics.tap(); onRecallMemory() },
+                    onEvaluate = onEvaluate,
                     modifier = Modifier.offset { IntOffset(shake.value.roundToInt(), 0) },
                 )
             }
@@ -272,6 +276,7 @@ private fun LiveEntry(
     onToggleAngle: () -> Unit,
     onCopy: (String) -> Unit,
     onRecallMemory: () -> Unit,
+    onEvaluate: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.colorScheme
@@ -389,7 +394,13 @@ private fun LiveEntry(
                     ),
                     maxSize = 34.sp,
                     minSize = 16.sp,
-                    modifier = Modifier.weight(1f).padding(start = 12.dp),
+                    // The answer you're after: tap it to take it, same as `=`.
+                    modifier = Modifier.weight(1f).padding(start = 12.dp).clickable(
+                        interactionSource = null,
+                        indication = null,
+                        onClickLabel = stringResource(Res.string.take_result),
+                        onClick = onEvaluate,
+                    ),
                 )
             }
         }
