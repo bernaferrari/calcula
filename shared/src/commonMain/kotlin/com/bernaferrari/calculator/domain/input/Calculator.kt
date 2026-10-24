@@ -154,6 +154,14 @@ object Calculator {
         return state.copy(editor = ExpressionEditor.insertNumber(editor, number), resultShown = false, error = null)
     }
 
+    /** Puts text (a constant's value, a function's `name(`) at the cursor, replacing a just-shown result. */
+    fun insertText(state: CalcState, text: String): CalcState {
+        val number = isPlainNumber(text)
+        if (number) return insertNumber(state, text)
+        val editor = if (state.resultShown) Editor() else state.editor
+        return state.copy(editor = ExpressionEditor.insertRaw(editor, text), resultShown = false, error = null, selection = null)
+    }
+
     /** The value shown under the expression while typing, or null when it would add nothing. */
     fun preview(text: String, angleUnit: AngleUnit, decimalPlaces: Int = AUTO_DECIMALS, notation: Notation = Notation.NORMAL): String? {
         if (isPlainNumber(text)) return null

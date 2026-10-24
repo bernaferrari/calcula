@@ -1,5 +1,8 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.SpanStyle
@@ -152,6 +155,8 @@ fun CalculatorDisplay(
     historyOpen: Boolean = false,
     entryMaxFontSize: TextUnit = 64.sp,
     onRecallMemory: () -> Unit = {},
+    /** Holding the memory chip opens the memories. */
+    onOpenMemory: () -> Unit = {},
     /** Tapping the preview (`= 52`) takes it, like pressing `=`. */
     onEvaluate: () -> Unit = {},
 ) {
@@ -182,6 +187,7 @@ fun CalculatorDisplay(
         if (newestId != null) tapeState.animateScrollToItem(0)
     }
 
+    CompositionLocalProvider(LocalOpenMemory provides onOpenMemory) {
     Box(modifier) {
         Column(Modifier.fillMaxSize()) {
             Tape(
@@ -261,6 +267,7 @@ fun CalculatorDisplay(
             }
             }
         }
+    }
     }
 }
 
@@ -409,6 +416,8 @@ private fun LiveEntry(
 
 private val TRIG = listOf("sin", "cos", "tan")
 
+private val LocalOpenMemory = staticCompositionLocalOf<() -> Unit> { {} }
+
 /** `2 3/8` set as a fraction: small numerator raised, a slash, small denominator on the line. */
 private fun fractionText(fraction: String): AnnotatedString = buildAnnotatedString {
     append("= ")
@@ -421,18 +430,24 @@ private fun fractionText(fraction: String): AnnotatedString = buildAnnotatedStri
     withStyle(SpanStyle(fontSize = 0.62.em)) { append(denominator) }
 }
 
-/** What memory holds, when it holds something: an "M" and the number. Tap to recall it. */
+/** What memory holds, when it holds something: an "M" and the number. Tap to recall, hold for all of them. */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun MemoryChip(memory: String?, formatter: DisplayFormatter, onRecall: () -> Unit) {
+    val onOpen = LocalOpenMemory.current
     AnimatedVisibility(memory != null, enter = scaleIn(spring(dampingRatio = 0.5f)) + fadeIn(), exit = scaleOut() + fadeOut()) {
         val shown = memory ?: return@AnimatedVisibility
         val description = stringResource(Res.string.memory_recall_description)
         Surface(
-            onClick = onRecall,
             shape = RoundedCornerShape(50),
             color = MaterialTheme.colorScheme.surfaceContainerHigh,
             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(end = 8.dp).widthIn(max = 160.dp).semantics { contentDescription = description },
+            modifier = Modifier
+                .padding(end = 8.dp)
+                .widthIn(max = 160.dp)
+                .clip(RoundedCornerShape(50))
+                .combinedClickable(onClick = onRecall, onLongClick = onOpen)
+                .semantics { contentDescription = description },
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
                 Text("M", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)

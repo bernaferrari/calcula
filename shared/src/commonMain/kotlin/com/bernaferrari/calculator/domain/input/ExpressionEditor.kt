@@ -1,5 +1,7 @@
 package com.bernaferrari.calculator.domain.input
 
+import com.bernaferrari.calculator.domain.math.UserFunctions
+
 /** An expression being typed, with the cursor as an index into [text]. */
 data class Editor(val text: String = "", val cursor: Int = text.length) {
     val left: Char? get() = text.getOrNull(cursor - 1)
@@ -15,8 +17,10 @@ object ExpressionEditor {
     private const val POSTFIX_END = "!%²³¹"
     private const val PREFIX_FUNCTIONS = "√∛"
 
-    /** Names that are inserted as `name(` and deleted as a unit. */
-    private val FUNCTIONS = listOf("sin⁻¹", "cos⁻¹", "tan⁻¹", "sinh", "cosh", "tanh", "sin", "cos", "tan", "log", "abs", "ln")
+    /** Names that are inserted as `name(` and deleted as a unit, the person's own included. */
+    private val BUILT_IN = listOf("sin⁻¹", "cos⁻¹", "tan⁻¹", "sinh", "cosh", "tanh", "sin", "cos", "tan", "log", "abs", "ln")
+    private val FUNCTIONS: List<String>
+        get() = (BUILT_IN + UserFunctions.all.map { it.name }).sortedByDescending { it.length }
 
     /** True if the character can end an operand, so an operator or `)` may follow it. */
     fun endsOperand(c: Char?): Boolean = c != null && (c.isDigit() || c == '.' || c == ')' || c == 'π' || c == 'e' || c == 'x' || c == 'y' || c in "abcd" || c in POSTFIX_END)

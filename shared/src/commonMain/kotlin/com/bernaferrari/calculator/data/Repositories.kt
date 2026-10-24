@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.data
 
+import com.bernaferrari.calculator.domain.math.UserFunctions
 import com.bernaferrari.calculator.domain.model.FLICKS_LEARNED
 import com.bernaferrari.calculator.domain.model.ColorStyle
 import com.bernaferrari.calculator.domain.model.FlickHints
@@ -28,12 +29,14 @@ private val json = Json {
 class StoredPreferencesRepository(private val store: KeyValueStore) : PreferencesRepository {
     private val state = MutableStateFlow(
         store.get(KEY)?.let { runCatching { json.decodeFromString<UserPreferences>(it) }.getOrNull() } ?: UserPreferences(),
-    )
+    ).also { UserFunctions.all = it.value.functions }
 
     override fun getUserPreferences(): Flow<UserPreferences> = state
 
     private fun edit(change: (UserPreferences) -> UserPreferences) {
         state.update(change)
+        // The person's functions are part of the language everywhere, so the engine hears at once.
+        UserFunctions.all = state.value.functions
         store.put(KEY, json.encodeToString(state.value))
     }
 

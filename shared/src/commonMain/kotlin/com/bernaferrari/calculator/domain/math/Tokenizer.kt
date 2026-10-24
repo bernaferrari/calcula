@@ -29,7 +29,9 @@ internal object Tokenizer {
     /** The graph's slider parameters, in the order they are handed out. */
     const val PARAMETERS = "abcd"
 
-    fun tokenize(input: String): List<Token> {
+    fun tokenize(raw: String): List<Token> {
+        // The person's own functions are rewritten into what they mean first.
+        val input = UserFunctions.expand(raw)
         val tokens = mutableListOf<Token>()
         var i = 0
         while (i < input.length) {

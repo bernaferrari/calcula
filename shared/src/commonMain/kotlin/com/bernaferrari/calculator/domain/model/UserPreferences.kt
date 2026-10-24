@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.domain.model
 
+import com.bernaferrari.calculator.domain.math.UserFunction
 import com.bernaferrari.calculator.domain.programmer.Base
 import com.bernaferrari.calculator.domain.programmer.WordSize
 import kotlinx.serialization.Serializable
@@ -31,8 +32,12 @@ data class UserPreferences(
     val graphKeypadScale: Float = 1f,
     /** A row of memory keys (MC M+ M− MR) above the keypad, for people who work that way. */
     val memoryKeys: Boolean = false,
-    /** What memory holds, as a number in the expression language; null when it's empty. */
-    val memory: String? = null,
+    /** Stored values, newest last; the memory keys work on the first. */
+    val memories: List<Memory> = emptyList(),
+    /** Functions of x the person defined, like `tip(x) = x×0.18`. */
+    val functions: List<UserFunction> = emptyList(),
+    /** Flicks the person reassigned: "D7.up" to an action id like "const:c" or "fn:tip". */
+    val flicks: Map<String, String> = emptyMap(),
     /** Reverse Polish entry: ↵ pushes onto a stack and operators act at once. */
     val rpn: Boolean = false,
     val programmerBase: Base = Base.DEC,
@@ -64,6 +69,10 @@ enum class ColorStyle { TONAL_SPOT, NEUTRAL, VIBRANT, EXPRESSIVE }
 const val AUTO_DECIMALS = -1
 
 enum class Notation { NORMAL, SCIENTIFIC, ENGINEERING }
+
+/** One stored value, as a number in the expression language, with an optional name. */
+@Serializable
+data class Memory(val value: String, val label: String? = null)
 
 /** AUTO follows the locale; DOT and COMMA force `1,234.5` or `1.234,5`. */
 enum class DecimalSeparator { AUTO, DOT, COMMA }

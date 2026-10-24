@@ -1,5 +1,7 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import com.bernaferrari.calculator.domain.math.UserFunction
+import com.bernaferrari.calculator.domain.model.Memory
 import com.bernaferrari.calculator.domain.model.Notation
 import com.bernaferrari.calculator.domain.model.hints
 import com.bernaferrari.calculator.domain.model.FlickHints
@@ -70,8 +72,10 @@ data class CalculatorUiState(
     /** The result as a simple fraction, when it is one. */
     val fraction: String? = null,
     val memoryKeys: Boolean = false,
-    /** What memory holds, or null. */
+    /** What the first memory holds, or null; the memory keys work on it. */
     val memory: String? = null,
+    val memories: List<Memory> = emptyList(),
+    val functions: List<UserFunction> = emptyList(),
     /** Reverse Polish entry; [stack] then holds X, Y, Z… as numbers, X as typed while typing. */
     val rpn: Boolean = false,
     val stack: List<String> = emptyList(),
@@ -128,7 +132,9 @@ class CalculatorViewModel(
             selection = calc.selection,
             fraction = calc.fraction,
             memoryKeys = prefs.memoryKeys,
-            memory = prefs.memory,
+            memory = prefs.memories.firstOrNull()?.value,
+            memories = prefs.memories,
+            functions = prefs.functions,
             rpn = prefs.rpn,
             stack = rpn.stack.mapIndexed { i, v -> if (i == 0 && rpn.entry != null) rpn.entry else NumberFormatter.format(v) },
             entering = rpn.entry != null,
@@ -213,17 +219,52 @@ class CalculatorViewModel(
      * take away the answer; MR drops what's stored at the cursor (or onto the stack).
      */
     fun onMemory(op: MemoryOp) {
-        val stored = settings.value.memory
+        val memories = settings.value.memories
+        val first = memories.firstOrNull()
         when (op) {
-            MemoryOp.CLEAR -> saveMemory(null)
-            MemoryOp.RECALL -> if (stored != null) insertNumber(stored)
+            MemoryOp.CLEAR -> saveMemories(memories.drop(1))
+            MemoryOp.RECALL -> if (first != null) insertNumber(first.value)
             MemoryOp.ADD, MemoryOp.SUBTRACT -> {
                 val value = currentValue() ?: return
-                val base = stored?.let { CalcEngine.evaluateOrNull(it) } ?: Decimal.ZERO
-                val sum = if (op == MemoryOp.ADD) base.add(value) else base.subtract(value)
-                saveMemory(Calculator.formatResult(sum, AUTO_DECIMALS))
+                val base = first?.value?.let { CalcEngine.evaluateOrNull(it) } ?: Decimal.ZERO
+                val sum = Calculator.formatResult(if (op == MemoryOp.ADD) base.add(value) else base.subtract(value), AUTO_DECIMALS)
+                saveMemories(if (first == null) listOf(Memory(sum)) else listOf(first.copy(value = sum)) + memories.drop(1))
             }
         }
+    }
+
+    /** Keeps what's on screen as a memory of its own, at the end of the list. */
+    fun onStoreMemory() {
+        val value = currentValue() ?: return
+        saveMemories(settings.value.memories + Memory(Calculator.formatResult(value, AUTO_DECIMALS)))
+    }
+
+    fun onRecallMemory(index: Int) { settings.value.memories.getOrNull(index)?.let { insertNumber(it.value) } }
+
+    fun onDeleteMemory(index: Int) = saveMemories(settings.value.memories.filterIndexed { i, _ -> i != index })
+
+    fun onRenameMemory(index: Int, label: String) = saveMemories(
+        settings.value.memories.mapIndexed { i, m -> if (i == index) m.copy(label = label.trim().ifEmpty { null }) else m },
+    )
+
+    /** Adds a function of the person's own, or replaces the one with that name. */
+    fun onSaveFunction(function: UserFunction) {
+        viewModelScope.launch { preferences.update { p -> p.copy(functions = p.functions.filter { it.name != function.name } + function) } }
+    }
+
+    fun onDeleteFunction(name: String) {
+        viewModelScope.launch { preferences.update { p -> p.copy(functions = p.functions.filter { it.name != name }) } }
+    }
+
+    /** Drops a constant's value or a function call at the cursor. */
+    fun onInsertText(text: String) {
+        if (settings.value.rpn) {
+            // RPN has no expression to type into: a constant goes on the stack, a function applies to x.
+            val value = CalcEngine.evaluateOrNull(if (text.endsWith("(")) text + (Rpn.x(rpn.value)?.toPlainString() ?: "0") + ")" else text) ?: return
+            rpn.value = Rpn.pushNumber(if (text.endsWith("(")) rpn.value.copy(stack = rpn.value.stack.drop(1), entry = null, lift = false) else rpn.value, Calculator.formatResult(value, AUTO_DECIMALS))
+            return
+        }
+        setState(Calculator.insertText(calc.value, text))
     }
 
     private fun currentValue(): Decimal? {
@@ -236,8 +277,8 @@ class CalculatorViewModel(
         return CalcEngine.evaluateOrNull(calc.value.editor.text.ifEmpty { return null })
     }
 
-    private fun saveMemory(value: String?) {
-        viewModelScope.launch { preferences.update { it.copy(memory = value) } }
+    private fun saveMemories(memories: List<Memory>) {
+        viewModelScope.launch { preferences.update { it.copy(memories = memories) } }
     }
 
     /** A function picked by a flick or from the ƒ layer. */

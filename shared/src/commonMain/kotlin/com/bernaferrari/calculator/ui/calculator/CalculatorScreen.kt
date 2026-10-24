@@ -1,5 +1,7 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import com.bernaferrari.calculator.ui.library.LibraryTab
+import com.bernaferrari.calculator.ui.library.LibrarySheet
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.foundation.layout.width
@@ -143,6 +145,7 @@ fun CalculatorScreen(
     // Labels hide the 123|ƒ switch, so the keys mustn't be left on the function layer without it.
     LaunchedEffect(state.flickHints) { if (state.flickHints == FlickHints.LABELS) layer = FunctionLayer.Off }
     var historyOpen by rememberSaveable { mutableStateOf(false) }
+    var library by rememberSaveable { mutableStateOf<LibraryTab?>(null) }
     // Back closes history mode before leaving the app.
     @OptIn(ExperimentalComposeUiApi::class)
     BackHandler(enabled = historyOpen) { historyOpen = false }
@@ -201,6 +204,7 @@ fun CalculatorScreen(
             historyOpen = historyOpen,
             entryMaxFontSize = if (compact) 48.sp else 64.sp,
             onRecallMemory = { viewModel.onMemory(MemoryOp.RECALL) },
+            onOpenMemory = { library = LibraryTab.MEMORY },
             onEvaluate = { viewModel.onKey(Key.EQUALS) },
             modifier = modifier,
         )
@@ -289,6 +293,7 @@ fun CalculatorScreen(
                 onOpenConverter = { onOpenConverter(currentNumber) },
                 onOpenGraph = onOpenGraph,
                 onOpenProgrammer = onOpenProgrammer,
+                onOpenLibrary = { library = LibraryTab.CONSTANTS },
                 onOpenSettings = onOpenSettings,
                 resize = if (!pulling) null else {
                     val span = (maxRow - minRow).value.coerceAtLeast(1f)
@@ -338,6 +343,24 @@ fun CalculatorScreen(
                     .graphicsLayer { alpha = (shown * 1.6f).coerceIn(0f, 1f) },
             )
         }
+    }
+
+    library?.let { tab ->
+        LibrarySheet(
+            initialTab = tab,
+            memories = state.memories,
+            functions = state.functions,
+            formatter = formatter,
+            haptics = haptics,
+            onInsert = viewModel::onInsertText,
+            onRecallMemory = viewModel::onRecallMemory,
+            onStoreMemory = viewModel::onStoreMemory,
+            onDeleteMemory = viewModel::onDeleteMemory,
+            onRenameMemory = viewModel::onRenameMemory,
+            onSaveFunction = viewModel::onSaveFunction,
+            onDeleteFunction = viewModel::onDeleteFunction,
+            onDismiss = { library = null },
+        )
     }
 
     CompositionLocalProvider(LocalReduceMotion provides state.reduceMotion) {
