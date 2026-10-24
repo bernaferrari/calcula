@@ -203,8 +203,9 @@ fun ActionRow(
 @Composable
 fun <T> ChoiceRow(
     position: SegmentPosition,
-    icon: ImageVector,
-    title: String,
+    /** Null for a row whose options say it all (System · Light · Dark): just the buttons. */
+    icon: ImageVector?,
+    title: String?,
     options: List<T>,
     selected: T,
     label: @Composable (T) -> String,
@@ -214,9 +215,11 @@ fun <T> ChoiceRow(
 ) {
     RowSurface(position) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                RowIcon(icon)
-                Spacer(Modifier.width(16.dp))
+            if (title != null) Row(verticalAlignment = Alignment.CenterVertically) {
+                if (icon != null) {
+                    RowIcon(icon)
+                    Spacer(Modifier.width(16.dp))
+                }
                 RowText(title, subtitle)
             }
             Row(
