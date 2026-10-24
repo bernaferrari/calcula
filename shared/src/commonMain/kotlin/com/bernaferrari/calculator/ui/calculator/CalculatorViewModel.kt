@@ -219,6 +219,24 @@ class CalculatorViewModel(
         calc.update { it.copy(editor = ExpressionEditor.moveCursor(it.editor, position), resultShown = false, selection = null) }
     }
 
+    /** ‹ ›: one step left (−1) or right (+1), over `sin(` as a whole. True if the cursor moved. */
+    fun onCursorStep(direction: Int): Boolean {
+        val editor = calc.value.editor
+        val next = ExpressionEditor.nudge(editor, direction)
+        if (next.cursor == editor.cursor) return false
+        calc.update { it.copy(editor = next, selection = null) }
+        return true
+    }
+
+    /** Held ‹ ›: to the very start or end. */
+    fun onCursorJump(direction: Int): Boolean {
+        val editor = calc.value.editor
+        val target = if (direction < 0) 0 else editor.text.length
+        if (target == editor.cursor) return false
+        calc.update { it.copy(editor = editor.copy(cursor = target), selection = null) }
+        return true
+    }
+
     fun onSelect(selection: Span?) = calc.update { it.copy(selection = selection) }
 
     /** Cut and paste: [start, end) of the expression becomes [text]. */

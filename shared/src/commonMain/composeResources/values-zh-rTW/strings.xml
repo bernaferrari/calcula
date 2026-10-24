@@ -135,4 +135,6 @@
     <string name="menu_programmer">程式設計師</string>
     <string name="programmer_word_size">字組大小</string>
     <string name="programmer_bits">%1$d 位元</string>
+    <string name="cursor_left">游標左移</string>
+    <string name="cursor_right">游標右移</string>
 </resources>

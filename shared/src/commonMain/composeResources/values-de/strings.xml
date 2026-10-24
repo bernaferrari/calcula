@@ -135,4 +135,6 @@
     <string name="menu_programmer">Programmierer</string>
     <string name="programmer_word_size">Wortbreite</string>
     <string name="programmer_bits">%1$d Bit</string>
+    <string name="cursor_left">Cursor nach links</string>
+    <string name="cursor_right">Cursor nach rechts</string>
 </resources>

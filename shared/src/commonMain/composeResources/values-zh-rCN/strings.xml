@@ -135,4 +135,6 @@
     <string name="menu_programmer">程序员</string>
     <string name="programmer_word_size">字长</string>
     <string name="programmer_bits">%1$d 位</string>
+    <string name="cursor_left">光标左移</string>
+    <string name="cursor_right">光标右移</string>
 </resources>

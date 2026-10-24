@@ -1,5 +1,9 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowLeft
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -118,6 +122,14 @@ fun ToolRow(
     showHistoryEntry: Boolean = true,
     /** False when every key already names its functions (Labels), so 123|ƒ would add nothing. */
     showLayerSwitch: Boolean = true,
+    /**
+     * ‹ › to step the cursor, where 123|ƒ would be: only in Labels mode, and only while there's an
+     * expression to move through. Each returns whether the cursor moved.
+     */
+    cursorArrows: Boolean = false,
+    onCursorStep: (Int) -> Boolean = { false },
+    onCursorJump: (Int) -> Boolean = { false },
+    haptics: Haptics? = null,
 ) {
     val quiet = MaterialTheme.colorScheme.onSurfaceVariant
     val dragging = resize != null
@@ -145,6 +157,13 @@ fun ToolRow(
                 }
             } else if (showLayerSwitch) {
                 LayerSwitch(layer, onLayer)
+            } else {
+                AnimatedVisibility(cursorArrows, enter = fadeIn() + scaleIn(initialScale = 0.9f), exit = fadeOut() + scaleOut(targetScale = 0.9f)) {
+                    Row {
+                        CursorArrow(-1, quiet, haptics, onCursorStep, onCursorJump)
+                        CursorArrow(1, quiet, haptics, onCursorStep, onCursorJump)
+                    }
+                }
             }
         }
         Row(Modifier.align(Alignment.CenterEnd)) {
@@ -196,6 +215,33 @@ fun ToolRow(
         }
         }
         ResizePill(resize, Modifier.align(Alignment.Center))
+    }
+}
+
+/** Tap for one step, hold to jump to that end. A tick when the cursor moves, nothing at the end. */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun CursorArrow(direction: Int, tint: Color, haptics: Haptics?, onStep: (Int) -> Boolean, onJump: (Int) -> Boolean) {
+    val description = stringResource(if (direction < 0) Res.string.cursor_left else Res.string.cursor_right)
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .size(48.dp)
+            .clip(CircleShape)
+            .combinedClickable(
+                role = Role.Button,
+                onClickLabel = description,
+                onClick = { if (onStep(direction)) haptics?.tick() },
+                onLongClick = { if (onJump(direction)) haptics?.heavy() },
+            )
+            .semantics { contentDescription = description },
+    ) {
+        Icon(
+            if (direction < 0) Icons.AutoMirrored.Rounded.KeyboardArrowLeft else Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+            contentDescription = null,
+            tint = tint,
+            modifier = Modifier.size(28.dp),
+        )
     }
 }
 

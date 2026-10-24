@@ -257,6 +257,11 @@ fun CalculatorScreen(
                 layer = layer,
                 // With every function named on its key, the ƒ layer has nothing left to reveal.
                 showLayerSwitch = state.flickHints != FlickHints.LABELS,
+                // Where 123|ƒ would be, Labels mode gets ‹ › while there's an expression to edit.
+                cursorArrows = !state.rpn && !state.resultShown && state.text.isNotEmpty(),
+                onCursorStep = viewModel::onCursorStep,
+                onCursorJump = viewModel::onCursorJump,
+                haptics = haptics,
                 onToggleHistory = { haptics.tap(); historyOpen = !historyOpen },
                 // Beside a history pane there's no history to open.
                 showHistoryEntry = !split,

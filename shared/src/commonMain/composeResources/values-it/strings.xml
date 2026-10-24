@@ -135,4 +135,6 @@
     <string name="menu_programmer">Programmatore</string>
     <string name="programmer_word_size">Dimensione parola</string>
     <string name="programmer_bits">%1$d bit</string>
+    <string name="cursor_left">Sposta il cursore a sinistra</string>
+    <string name="cursor_right">Sposta il cursore a destra</string>
 </resources>
