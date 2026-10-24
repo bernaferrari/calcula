@@ -75,6 +75,8 @@ data class CalculatorUiState(
     /** What the first memory holds, or null; the memory keys work on it. */
     val memory: String? = null,
     val memories: List<Memory> = emptyList(),
+    /** There's a number on screen worth storing (not nothing, not zero): M+, M− and Keep light up. */
+    val canStore: Boolean = false,
     val functions: List<UserFunction> = emptyList(),
     /** Flicks the person reassigned, resolved to what they do. */
     val flicks: Map<String, CustomFlick?> = emptyMap(),
@@ -97,6 +99,10 @@ class CalculatorViewModel(
     )
     private val generation = MutableStateFlow(0)
     private val rpn = MutableStateFlow(RpnState())
+    // Every edit can be stepped back and forward: ⌫ flicks up to undo, down to redo.
+    private val undoStack = ArrayDeque<CalcState>()
+    private val redoStack = ArrayDeque<CalcState>()
+    private val steps = MutableStateFlow(0 to 0)
 
     private val _events = MutableSharedFlow<Outcome>(extraBufferCapacity = 8)
     val events: SharedFlow<Outcome> = _events
@@ -111,7 +117,7 @@ class CalculatorViewModel(
     private val settings = prefs.stateIn(viewModelScope, SharingStarted.Eagerly, UserPreferences())
 
     val state: StateFlow<CalculatorUiState> = combine(
-        combine(calc, rpn) { a, b -> a to b }, preview, historyRepository.getRecentHistory(limit = 200), prefs, generation,
+        combine(calc, rpn, steps) { a, b, _ -> a to b }, preview, historyRepository.getRecentHistory(limit = 200), prefs, generation,
     ) { (calc, rpn), preview, history, prefs, generation ->
         CalculatorUiState(
             text = calc.editor.text,
@@ -130,12 +136,14 @@ class CalculatorViewModel(
             keypadScale = prefs.keypadScale,
             decimalSeparator = prefs.decimalSeparator,
             generation = generation,
-            inert = if (prefs.rpn) emptySet() else Calculator.inertKeys(calc),
+            inert = if (prefs.rpn) setOf(Key.UNDO, Key.REDO) else Calculator.inertKeys(calc) - setOf(Key.UNDO, Key.REDO) +
+                listOfNotNull(Key.UNDO.takeIf { undoStack.isEmpty() }, Key.REDO.takeIf { redoStack.isEmpty() }),
             selection = calc.selection,
             fraction = calc.fraction,
             memoryKeys = prefs.memoryKeys,
             memory = prefs.memories.firstOrNull()?.value,
             memories = prefs.memories,
+            canStore = storable(calc, rpn, preview, prefs.rpn),
             functions = prefs.functions,
             flicks = FlickCatalog.resolve(prefs.flicks, prefs.functions),
             rpn = prefs.rpn,
@@ -156,23 +164,17 @@ class CalculatorViewModel(
         }
     }
 
-    private val _cleared = MutableSharedFlow<Unit>(extraBufferCapacity = 4)
 
-    /** An expression (or the stack) was just cleared, so the screen can offer to undo it. */
-    val cleared: SharedFlow<Unit> = _cleared
+    private fun undo() {
+        val previous = undoStack.removeLastOrNull() ?: return
+        redoStack.addLast(calc.value)
+        setState(previous, record = false)
+    }
 
-    /** What C or a held ⌫ threw away, until something new is typed. */
-    private var beforeClear: Pair<CalcState, RpnState>? = null
-
-    /** Brings back what was just cleared, as long as nothing has been typed since. */
-    fun onUndoClear() {
-        val (c, r) = beforeClear ?: return
-        beforeClear = null
-        if (settings.value.rpn) {
-            if (rpn.value.stack.isEmpty()) rpn.value = r
-        } else if (calc.value.editor.isEmpty) {
-            setState(c)
-        }
+    private fun redo() {
+        val next = redoStack.removeLastOrNull() ?: return
+        undoStack.addLast(calc.value)
+        setState(next, record = false)
     }
 
     // Usage is counted here and saved after each calculation (and when the screen goes), not on
@@ -199,16 +201,9 @@ class CalculatorViewModel(
 
     fun onKey(key: Key) {
         count(key)
-        if (key == Key.CLEAR) {
-            val empty = if (settings.value.rpn) rpn.value.stack.isEmpty() else calc.value.editor.isEmpty
-            if (!empty) {
-                beforeClear = calc.value to rpn.value
-                _cleared.tryEmit(Unit)
-            }
-        } else {
-            beforeClear = null
-        }
         if (settings.value.rpn) return onRpnKey(key)
+        if (key == Key.UNDO) return undo()
+        if (key == Key.REDO) return redo()
         if (key == Key.CLEAR && calc.value.editor.isEmpty) return
         val (next, outcome) = Calculator.press(calc.value, key)
         setState(next)
@@ -261,6 +256,20 @@ class CalculatorViewModel(
                 saveMemories(if (first == null) listOf(Memory(sum)) else listOf(first.copy(value = sum)) + memories.drop(1))
             }
         }
+    }
+
+    private fun storable(calc: CalcState, rpn: RpnState, preview: String?, rpnMode: Boolean): Boolean {
+        val value = if (rpnMode) Rpn.x(rpn) else {
+            val text = calc.editor.text
+            val shown = when {
+                calc.resultShown -> text
+                preview != null -> preview
+                text.isNotEmpty() && Calculator.isPlainNumber(text) -> text
+                else -> null
+            }
+            shown?.let { CalcEngine.evaluateOrNull(it) }
+        }
+        return value != null && value.signum() != 0
     }
 
     /** Keeps what's on screen as a memory of its own, at the end of the list. */
@@ -405,7 +414,15 @@ class CalculatorViewModel(
         if (expression.isNotEmpty()) setState(CalcState(editor = Editor(expression), angleUnit = calc.value.angleUnit))
     }
 
-    private fun setState(next: CalcState) {
+    private fun setState(next: CalcState, record: Boolean = true) {
+        val current = calc.value
+        // Only changes to what's shown count as steps; moving the cursor doesn't.
+        if (record && (next.editor.text != current.editor.text || next.resultShown != current.resultShown)) {
+            undoStack.addLast(current)
+            if (undoStack.size > 100) undoStack.removeFirst()
+            redoStack.clear()
+        }
+        steps.value = undoStack.size to redoStack.size
         calc.value = next
         savedState[KEY_TEXT] = next.editor.text
         savedState[KEY_RESULT] = next.resultShown

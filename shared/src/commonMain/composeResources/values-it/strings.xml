@@ -138,7 +138,6 @@
     <string name="cursor_left">Sposta il cursore a sinistra</string>
     <string name="cursor_right">Sposta il cursore a destra</string>
     <string name="take_result">Usa risultato</string>
-    <string name="expression_cleared">Cancellato</string>
     <string name="settings_notation">Notazione</string>
     <string name="settings_notation_normal">Normale</string>
     <string name="settings_notation_sci">Sci.</string>
@@ -234,4 +233,6 @@
         <item quantity="other">giorni</item>
     </plurals>
     <string name="usage_settings_summary">Come calcoli, in una scheda da condividere</string>
+    <string name="key_undo">annulla</string>
+    <string name="key_redo">ripeti</string>
 </resources>

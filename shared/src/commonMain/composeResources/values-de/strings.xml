@@ -138,7 +138,6 @@
     <string name="cursor_left">Cursor nach links</string>
     <string name="cursor_right">Cursor nach rechts</string>
     <string name="take_result">Ergebnis übernehmen</string>
-    <string name="expression_cleared">Gelöscht</string>
     <string name="settings_notation">Notation</string>
     <string name="settings_notation_normal">Normal</string>
     <string name="settings_notation_sci">Wiss.</string>
@@ -234,4 +233,6 @@
         <item quantity="other">Tage</item>
     </plurals>
     <string name="usage_settings_summary">Wie du rechnest, als Karte zum Teilen</string>
+    <string name="key_undo">zurück</string>
+    <string name="key_redo">wieder</string>
 </resources>

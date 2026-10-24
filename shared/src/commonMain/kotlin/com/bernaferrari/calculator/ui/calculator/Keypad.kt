@@ -1,5 +1,7 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import com.bernaferrari.calculator.resources.*
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
@@ -108,7 +110,14 @@ private val MemoryRowHeight = 40.dp
 val MemoryRowExtra = MemoryRowHeight + KeyGap
 
 /** The keypad's keys and their flicks, as shipped; [withFlicks] lays the person's choices over them. */
-internal fun keypadRows(decimal: Char, rpn: Boolean = false, variable: Boolean = false, nextParameter: Char? = null): List<List<Spec>> =
+internal fun keypadRows(
+    decimal: Char,
+    rpn: Boolean = false,
+    variable: Boolean = false,
+    nextParameter: Char? = null,
+    undo: String = "undo",
+    redo: String = "redo",
+): List<List<Spec>> =
     listOf(
         listOf(
             Spec(Key.CLEAR, "C", Tone.Function, "Clear"),
@@ -119,7 +128,8 @@ internal fun keypadRows(decimal: Char, rpn: Boolean = false, variable: Boolean =
                 flips = false,
             ) else Spec(Key.PERCENT, "%", Tone.Function, "Percent"),
             // Backspace up top, by the operators and away from C, as on the old keypad.
-            Spec(Key.DELETE, "⌫", Tone.Function, "Backspace, hold to clear"),
+            // Flick up to undo, down to redo; hold to clear.
+        Spec(Key.DELETE, "⌫", Tone.Function, "Backspace, hold to clear", up = Alt(undo, Key.UNDO), down = Alt(redo, Key.REDO, named = true), flips = false),
             // 1/x is "1 ÷ x", and sits under × (xʸ) like its counterpart.
             Spec(Key.DIVIDE, "÷", Tone.Operator, "Divide", up = Alt("1/x", Key.RECIPROCAL, "reciprocal")),
         ),
@@ -205,12 +215,14 @@ fun MainKeypad(
     /** Shows MC M+ M− MR above the keys; [memoryFull] lights up the ones that need something stored. */
     onMemory: ((MemoryOp) -> Unit)? = null,
     memoryFull: Boolean = false,
+    /** Whether there's a number on screen for M+ and M− to add or take away. */
+    canStore: Boolean = true,
     /** Flicks the person reassigned, by slot ("D7.up"); a null value takes that flick away. */
     flicks: Map<String, CustomFlick?> = emptyMap(),
     /** Where a chosen flick that types text sends it. */
     onInsertText: (String) -> Unit = {},
 ) {
-    val rows = keypadRows(decimal, rpn, variable, nextParameter).withFlicks(flicks)
+    val rows = keypadRows(decimal, rpn, variable, nextParameter, stringResource(Res.string.key_undo), stringResource(Res.string.key_redo)).withFlicks(flicks)
     val reduceMotion = LocalReduceMotion.current
     BoxWithConstraints(modifier) {
     // Labels follow the keys' size, so a keypad dragged short or tall keeps its proportions.
@@ -224,7 +236,7 @@ fun MainKeypad(
         verticalArrangement = Arrangement.spacedBy(KeyGap),
         modifier = Modifier.fillMaxSize().padding(start = KeyGap * 2, end = KeyGap * 2, top = KeyGap, bottom = KeyGap * 2 + bottomInset),
     ) {
-        if (onMemory != null) MemoryRow(memoryFull, haptics, onMemory, Modifier.fillMaxWidth().height(MemoryRowHeight))
+        if (onMemory != null) MemoryRow(memoryFull, canStore, haptics, onMemory, Modifier.fillMaxWidth().height(MemoryRowHeight))
         rows.forEachIndexed { r, row ->
             var pressedIndex by remember { mutableIntStateOf(-1) }
             Row(horizontalArrangement = Arrangement.spacedBy(KeyGap), modifier = Modifier.weight(1f).fillMaxWidth()) {
@@ -271,14 +283,15 @@ fun MainKeypad(
 
 /** MC M+ M− MR: slim keys, quieter than the digits; the ones that need memory dim while it's empty. */
 @Composable
-private fun MemoryRow(full: Boolean, haptics: Haptics, onMemory: (MemoryOp) -> Unit, modifier: Modifier) {
+private fun MemoryRow(full: Boolean, canStore: Boolean, haptics: Haptics, onMemory: (MemoryOp) -> Unit, modifier: Modifier) {
     Row(horizontalArrangement = Arrangement.spacedBy(KeyGap), modifier = modifier) {
         listOf(MemoryOp.CLEAR to "MC", MemoryOp.ADD to "M+", MemoryOp.SUBTRACT to "M−", MemoryOp.RECALL to "MR").forEach { (op, label) ->
-            val needsValue = op == MemoryOp.CLEAR || op == MemoryOp.RECALL
-            val alpha by animateFloatAsState(if (needsValue && !full) 0.38f else 1f, label = "memory")
+            // MC and MR need something stored; M+ and M− need a number on screen.
+            val enabled = if (op == MemoryOp.CLEAR || op == MemoryOp.RECALL) full else canStore
+            val alpha by animateFloatAsState(if (enabled) 1f else 0.38f, label = "memory")
             Surface(
                 onClick = { haptics.tap(); onMemory(op) },
-                enabled = !needsValue || full,
+                enabled = enabled,
                 shape = RoundedCornerShape(50),
                 color = MaterialTheme.colorScheme.surfaceContainer,
                 contentColor = MaterialTheme.colorScheme.onSurfaceVariant,

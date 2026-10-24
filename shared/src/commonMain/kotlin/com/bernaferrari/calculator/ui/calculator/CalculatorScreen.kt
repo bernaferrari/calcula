@@ -156,22 +156,6 @@ fun CalculatorScreen(
     val deletedOne = stringResource(Res.string.history_deleted)
     val deletedAll = stringResource(Res.string.history_cleared)
     val undo = stringResource(Res.string.undo)
-    val clearedMessage = stringResource(Res.string.expression_cleared)
-    // C and a held ⌫ throw away the whole expression; a moment to change your mind.
-    LaunchedEffect(Unit) {
-        viewModel.cleared.collect {
-            snackbar.currentSnackbarData?.dismiss()
-            // Long, since typing anything new takes it away anyway.
-            val result = snackbar.showSnackbar(clearedMessage, actionLabel = undo, duration = SnackbarDuration.Long)
-            if (result == SnackbarResult.ActionPerformed) viewModel.onUndoClear()
-        }
-    }
-    // Typing something new means the cleared expression is gone for good: so is the offer.
-    LaunchedEffect(state.text, state.stack) {
-        if ((state.text.isNotEmpty() || state.stack.isNotEmpty()) && snackbar.currentSnackbarData?.visuals?.message == clearedMessage) {
-            snackbar.currentSnackbarData?.dismiss()
-        }
-    }
     LaunchedEffect(Unit) {
         viewModel.removed.collect { entries ->
             snackbar.currentSnackbarData?.dismiss()
@@ -347,6 +331,7 @@ fun CalculatorScreen(
                 rpn = state.rpn,
                 onMemory = if (state.memoryKeys) viewModel::onMemory else null,
                 memoryFull = state.memory != null,
+                canStore = state.canStore,
                 flicks = state.flicks,
                 onInsertText = { viewModel.onInsertText(it); if (layer == FunctionLayer.Once) layer = FunctionLayer.Off },
                 bottomInset = bottomInset,
@@ -374,11 +359,13 @@ fun CalculatorScreen(
             onInsert = viewModel::onInsertText,
             onRecallMemory = viewModel::onRecallMemory,
             onStoreMemory = viewModel::onStoreMemory,
+            canStore = state.canStore,
             onDeleteMemory = viewModel::onDeleteMemory,
             onRenameMemory = viewModel::onRenameMemory,
             onSaveFunction = viewModel::onSaveFunction,
             onDeleteFunction = viewModel::onDeleteFunction,
             onDismiss = { library = null },
+            hints = state.flickHints,
         )
     }
 
@@ -451,6 +438,7 @@ fun CalculatorScreen(
                     rpn = state.rpn,
                     onMemory = if (state.memoryKeys) viewModel::onMemory else null,
                     memoryFull = state.memory != null,
+                canStore = state.canStore,
                     flicks = state.flicks,
                     onInsertText = viewModel::onInsertText,
                     bottomInset = bottomInset,

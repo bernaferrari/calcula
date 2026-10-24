@@ -32,6 +32,8 @@ data class ProgState(
     val word: WordSize = WordSize.QWORD,
     val resultShown: Boolean = false,
     val error: ProgError? = null,
+    /** What was evaluated, kept above the result so `FF + 1 =` stays readable after `=`. */
+    val expression: List<String>? = null,
 )
 
 object Programmer {
@@ -39,7 +41,8 @@ object Programmer {
     private val PREFIX = setOf("NOT", "−u")
 
     fun press(state: ProgState, key: ProgKey): ProgState {
-        val s = state.copy(error = null)
+        if (key == ProgKey.EQUALS && state.resultShown) return state
+        val s = state.copy(error = null, expression = null)
         val digit = key.digit
         if (digit != null) {
             if (digit >= s.base.radix) return s
@@ -63,7 +66,7 @@ object Programmer {
             ProgKey.EQUALS -> {
                 if (s.tokens.isEmpty() || s.resultShown) return s
                 when (val r = evaluate(close(s.tokens), s.base, s.word)) {
-                    is Result.Value -> s.copy(tokens = tokensFor(r.value, s.base, s.word), resultShown = true)
+                    is Result.Value -> s.copy(tokens = tokensFor(r.value, s.base, s.word), resultShown = true, expression = close(s.tokens))
                     is Result.Failed -> s.copy(error = r.error)
                 }
             }
@@ -100,31 +103,37 @@ object Programmer {
     /** Moves to another base: every number keeps its value and is rewritten in the new one. */
     fun withBase(state: ProgState, base: Base): ProgState = state.copy(
         base = base,
-        tokens = state.tokens.flatMapIndexed { i, t ->
-            if (!isNumber(t)) return@flatMapIndexed listOf(t)
-            var v = parse(t, state.base, state.word) ?: 0L
-            // A negative typed in decimal can't keep its minus in hex: fold it into the number.
-            val negated = state.tokens.getOrNull(i - 1) == "−u"
-            if (negated && base != Base.DEC) v = wrap(-v, state.word)
-            tokensFor(v, base, state.word)
-        }.let { tokens ->
-            if (base == Base.DEC) tokens
-            else tokens.filterIndexed { i, t -> !(t == "−u" && tokens.getOrNull(i + 1)?.let(::isNumber) == true) }
-        },
+        tokens = inBase(state.tokens, state.base, base, state.word),
+        expression = state.expression?.let { inBase(it, state.base, base, state.word) },
         error = null,
     )
+
+    /** Tokens rewritten from one base to another, each number keeping its value. */
+    fun inBase(tokens: List<String>, from: Base, to: Base, word: WordSize): List<String> =
+        tokens.flatMapIndexed { i, t ->
+            if (!isNumber(t)) return@flatMapIndexed listOf(t)
+            var v = parse(t, from, word) ?: 0L
+            // A negative typed in decimal can't keep its minus in hex: fold it into the number.
+            val negated = tokens.getOrNull(i - 1) == "−u"
+            if (negated && to != Base.DEC) v = wrap(-v, word)
+            tokensFor(v, to, word)
+        }.let { out ->
+            if (to == Base.DEC) out
+            else out.filterIndexed { i, t -> !(t == "−u" && out.getOrNull(i + 1)?.let(::isNumber) == true) }
+        }
 
     /** Flips one bit of the current value; the expression becomes that number, ready to go on with. */
     fun flipBit(state: ProgState, bit: Int): ProgState {
         val value = value(state) ?: 0L
         val flipped = wrap(value xor (1L shl bit), state.word)
-        return state.copy(tokens = tokensFor(flipped, state.base, state.word), resultShown = false, error = null)
+        return state.copy(tokens = tokensFor(flipped, state.base, state.word), resultShown = false, error = null, expression = null)
     }
 
     /** Changes the word size: numbers are cut down to fit, as the hardware would. */
     fun withWord(state: ProgState, word: WordSize): ProgState = state.copy(
         word = word,
         tokens = state.tokens.flatMap { t -> if (isNumber(t)) tokensFor(wrap(parse(t, state.base, state.word) ?: 0L, word), state.base, word) else listOf(t) },
+        expression = null,
         error = null,
     )
 
@@ -137,21 +146,30 @@ object Programmer {
     }
 
     /** How the expression reads: operators spaced out, a minus hugging its number. */
-    fun display(state: ProgState): String = buildString {
-        state.tokens.forEachIndexed { i, t ->
+    fun display(state: ProgState): String = display(state.tokens, state.base)
+
+    fun display(tokens: List<String>, base: Base): String = buildString {
+        tokens.forEachIndexed { i, t ->
             when {
                 t == "−u" -> { if (i > 0) append(' '); append('−') }
-                t == "(" -> { if (i > 0 && state.tokens[i - 1] != "−u" && state.tokens[i - 1] != "(") append(' '); append('(') }
+                t == "(" -> { if (i > 0 && tokens[i - 1] != "−u" && tokens[i - 1] != "(") append(' '); append('(') }
                 t == ")" -> append(')')
                 isNumber(t) -> {
-                    val prev = state.tokens.getOrNull(i - 1)
+                    val prev = tokens.getOrNull(i - 1)
                     if (i > 0 && prev != "−u" && prev != "(") append(' ')
-                    append(group(t, state.base))
+                    append(group(t, base))
                 }
                 else -> { if (i > 0) append(' '); append(t) }
             }
         }
     }
+
+    /** Whether there's an operation to preview, not just a number on its own. */
+    fun hasOperation(state: ProgState): Boolean = state.tokens.any { !isNumber(it) && it != "−u" }
+
+    /** Starts over from a value, as if it had just been typed. */
+    fun withValue(state: ProgState, value: Long): ProgState =
+        state.copy(tokens = tokensFor(wrap(value, state.word), state.base, state.word), resultShown = true, expression = null, error = null)
 
     /** A value as tokens: a negative decimal is a minus and its digits. */
     private fun tokensFor(value: Long, base: Base, word: WordSize): List<String> {

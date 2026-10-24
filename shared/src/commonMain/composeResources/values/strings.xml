@@ -142,7 +142,6 @@
     <string name="cursor_left">Move cursor left</string>
     <string name="cursor_right">Move cursor right</string>
     <string name="take_result">Use result</string>
-    <string name="expression_cleared">Cleared</string>
     <string name="settings_notation">Notation</string>
     <string name="settings_notation_normal">Normal</string>
     <string name="settings_notation_sci">Sci</string>
@@ -238,4 +237,6 @@
         <item quantity="other">days</item>
     </plurals>
     <string name="usage_settings_summary">How you calculate, as a card to share</string>
+    <string name="key_undo">undo</string>
+    <string name="key_redo">redo</string>
 </resources>

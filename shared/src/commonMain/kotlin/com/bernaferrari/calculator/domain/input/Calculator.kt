@@ -36,6 +36,9 @@ enum class Key {
     PARAM_D,
     /** RPN's change sign (CHS); algebraic entry types a minus instead. */
     NEGATE,
+    /** Step back or forward through the edits; the view model keeps that history. */
+    UNDO,
+    REDO,
 }
 
 /** A selected stretch of the expression, [start, end) in its raw text; empty when only a spot is picked. */
@@ -278,7 +281,7 @@ object Calculator {
             Key.ROOT -> if (endsOperand(e.left) && e.left != '.') insertRaw(e, "^(1÷") else e
             Key.DOUBLE_ZERO -> insertDigit(insertDigit(e, '0'), '0')
             Key.TRIPLE_ZERO -> insertDigit(insertDigit(insertDigit(e, '0'), '0'), '0')
-            Key.EQUALS, Key.CLEAR, Key.INVERSE, Key.NEGATE -> e
+            Key.EQUALS, Key.CLEAR, Key.INVERSE, Key.NEGATE, Key.UNDO, Key.REDO -> e
         }
     }
 }

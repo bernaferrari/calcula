@@ -3,6 +3,40 @@
 package com.bernaferrari.calculator.ui.library
 
 import androidx.compose.ui.unit.em
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.input.ImeAction
+import com.bernaferrari.calculator.domain.input.CalcState
+import com.bernaferrari.calculator.domain.input.Calculator
+import com.bernaferrari.calculator.domain.input.Editor
+import com.bernaferrari.calculator.domain.input.ExpressionEditor
+import com.bernaferrari.calculator.domain.input.Key
+import com.bernaferrari.calculator.ui.calculator.MainKeypad
+import kotlinx.coroutines.delay
+import com.bernaferrari.calculator.domain.model.AngleUnit
+import com.bernaferrari.calculator.domain.model.FlickHints
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.withStyle
@@ -100,11 +134,14 @@ fun LibrarySheet(
     onInsert: (String) -> Unit,
     onRecallMemory: (Int) -> Unit,
     onStoreMemory: () -> Unit,
+    /** Whether there's a number on screen worth keeping. */
+    canStore: Boolean = true,
     onDeleteMemory: (Int) -> Unit,
     onRenameMemory: (Int, String) -> Unit,
     onSaveFunction: (UserFunction) -> Unit,
     onDeleteFunction: (String) -> Unit,
     onDismiss: () -> Unit,
+    hints: FlickHints = FlickHints.DOTS,
 ) {
     var tab by remember { mutableStateOf(initialTab) }
     val take: (String) -> Unit = { haptics.tap(); onInsert(it); onDismiss() }
@@ -114,11 +151,12 @@ fun LibrarySheet(
             AnimatedContent(tab, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "tab", modifier = Modifier.weight(1f)) { current ->
                 when (current) {
                     LibraryTab.CONSTANTS -> ConstantsTab(formatter, take)
-                    LibraryTab.FUNCTIONS -> FunctionsTab(functions, formatter, haptics, onPick = { take("${it.name}(") }, onSave = onSaveFunction, onDelete = onDeleteFunction)
+                    LibraryTab.FUNCTIONS -> FunctionsTab(functions, formatter, haptics, onPick = { take("${it.name}(") }, onSave = onSaveFunction, onDelete = onDeleteFunction, hints = hints)
                     LibraryTab.MEMORY -> MemoryTab(
                         memories, formatter,
                         onRecall = { haptics.tap(); onRecallMemory(it); onDismiss() },
                         onStore = { haptics.confirm(); onStoreMemory() },
+                        canStore = canStore,
                         onDelete = onDeleteMemory,
                         onRename = onRenameMemory,
                     )
@@ -216,11 +254,18 @@ private fun FunctionsTab(
     onPick: (UserFunction) -> Unit,
     onSave: (UserFunction) -> Unit,
     onDelete: (String) -> Unit,
+    hints: FlickHints,
 ) {
     var editing by remember { mutableStateOf(false) }
-    Column(Modifier.padding(top = 8.dp)) {
+    Column(Modifier.fillMaxSize().padding(top = 8.dp)) {
         if (editing) {
-            FunctionEditor(functions, formatter, onSave = { haptics.confirm(); onSave(it); editing = false }, onCancel = { editing = false })
+            FunctionEditor(
+                functions, formatter, haptics, hints,
+                onSave = { haptics.confirm(); onSave(it); editing = false },
+                onCancel = { editing = false },
+                modifier = Modifier.fillMaxSize(),
+            )
+            return@Column
         } else {
             FilledTonalButton(onClick = { haptics.tap(); editing = true }, modifier = Modifier.padding(horizontal = 16.dp)) {
                 Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -260,61 +305,172 @@ private fun FunctionsTab(
 
 /**
  * A name and a body in x, with a live try-out (`tip(10) = 1.8`) so a typo shows before saving.
- * The system keyboard's * / - become × ÷ −.
+ * The name is letters, so it gets the system keyboard; the body is math, so it gets ours, with
+ * the `%` key turned into x and every function a flick away, just like the calculator.
  */
 @Composable
-private fun FunctionEditor(functions: List<UserFunction>, formatter: DisplayFormatter, onSave: (UserFunction) -> Unit, onCancel: () -> Unit) {
+private fun FunctionEditor(
+    functions: List<UserFunction>,
+    formatter: DisplayFormatter,
+    haptics: Haptics,
+    hints: FlickHints,
+    onSave: (UserFunction) -> Unit,
+    onCancel: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     var name by remember { mutableStateOf("") }
-    var body by remember { mutableStateOf("") }
-    val normalized = body.replace('*', '×').replace('/', '÷').replace('-', '−').replace(" ", "")
+    var body by remember { mutableStateOf(Editor()) }
+    var naming by remember { mutableStateOf(true) }
+    val focus = LocalFocusManager.current
+    val nameFocus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { nameFocus.requestFocus() }
+    val text = body.text
     val validName = UserFunctions.isValidName(name, taken = functions.map { it.name })
     val shownName = name.ifEmpty { "f" }
-    val draft = UserFunction(shownName, normalized)
-    val trial = if (normalized.isEmpty()) null else runCatching {
+    val draft = UserFunction(shownName, text)
+    val trial = if (text.isEmpty()) null else runCatching {
         CalcEngine.evaluateOrNull(UserFunctions.expand("$shownName(10)", functions + draft))
     }.getOrNull()
-    Surface(
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-    ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it.lowercase().filter { c -> c in 'a'..'z' }.take(8) },
-                    singleLine = true,
-                    label = { Text(stringResource(Res.string.function_name)) },
-                    isError = name.isNotEmpty() && !validName,
-                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None, keyboardType = KeyboardType.Ascii, autoCorrectEnabled = false),
-                    modifier = Modifier.weight(0.42f),
+    val scheme = MaterialTheme.colorScheme
+    val editBody = {
+        naming = false
+        focus.clearFocus()
+    }
+    Column(modifier) {
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = scheme.surfaceContainerHigh,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        ) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it.lowercase().filter { c -> c in 'a'..'z' }.take(8) },
+                        singleLine = true,
+                        label = { Text(stringResource(Res.string.function_name)) },
+                        isError = name.isNotEmpty() && !validName,
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.None,
+                            keyboardType = KeyboardType.Ascii,
+                            autoCorrectEnabled = false,
+                            imeAction = ImeAction.Next,
+                        ),
+                        keyboardActions = KeyboardActions(onNext = { editBody() }),
+                        modifier = Modifier
+                            .weight(0.42f)
+                            .focusRequester(nameFocus)
+                            .onFocusChanged { if (it.isFocused) naming = true },
+                    )
+                    Text("(x) =", style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 20.sp), modifier = Modifier.padding(horizontal = 8.dp))
+                    BodyField(body, formatter, active = !naming, onTap = { raw ->
+                        editBody()
+                        if (raw != null) body = ExpressionEditor.moveCursor(body, raw)
+                    }, modifier = Modifier.weight(0.58f))
+                }
+                Text(
+                    when {
+                        name.isNotEmpty() && !validName -> stringResource(Res.string.function_name_rule)
+                        trial != null -> "$shownName(10) = " + formatter.number(NumberFormatter.format(trial))
+                        else -> " "
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (name.isNotEmpty() && !validName) scheme.error else scheme.onSurfaceVariant,
                 )
-                Text("(x) =", style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 20.sp), modifier = Modifier.padding(horizontal = 8.dp))
-                OutlinedTextField(
-                    value = body,
-                    onValueChange = { body = it },
-                    singleLine = true,
-                    placeholder = { Text("x×0.18") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii, autoCorrectEnabled = false),
-                    modifier = Modifier.weight(0.58f),
-                )
-            }
-            Text(
-                when {
-                    name.isNotEmpty() && !validName -> stringResource(Res.string.function_name_rule)
-                    trial != null -> "$shownName(10) = " + formatter.number(NumberFormatter.format(trial))
-                    else -> " "
-                },
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (name.isNotEmpty() && !validName) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                TextButton(onClick = onCancel) { Text(stringResource(Res.string.function_cancel)) }
-                TextButton(onClick = { onSave(UserFunction(name, normalized)) }, enabled = validName && trial != null) {
-                    Text(stringResource(Res.string.function_save))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    TextButton(onClick = onCancel) { Text(stringResource(Res.string.function_cancel)) }
+                    TextButton(onClick = { onSave(UserFunction(name, text)) }, enabled = validName && trial != null) {
+                        Text(stringResource(Res.string.function_save))
+                    }
                 }
             }
         }
+        // While the name has the system keyboard, ours steps aside.
+        AnimatedVisibility(!naming, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically(), modifier = Modifier.weight(1f)) {
+            val press: (Key) -> Unit = { key ->
+                when (key) {
+                    Key.CLEAR -> body = Editor()
+                    // `=` finishes the function, like Save.
+                    Key.EQUALS -> if (validName && trial != null) onSave(UserFunction(name, text)) else haptics.reject()
+                    else -> body = Calculator.press(CalcState(editor = body, angleUnit = AngleUnit.RADIANS), key).first.editor
+                }
+            }
+            MainKeypad(
+                decimal = formatter.decimal,
+                haptics = haptics,
+                functionLayer = false,
+                onKey = press,
+                onFunctionKey = press,
+                onClearAll = { body = Editor() },
+                hints = hints,
+                variable = true,
+                inert = setOf(Key.UNDO, Key.REDO, Key.VARIABLE_Y),
+                onInsertText = { body = ExpressionEditor.insertRaw(body, it) },
+                bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding(),
+                modifier = Modifier.fillMaxSize().padding(top = 12.dp),
+            )
+        }
+    }
+}
+
+/** The body as the calculator shows math, with a cursor, in a box that reads like a text field. */
+@Composable
+private fun BodyField(editor: Editor, formatter: DisplayFormatter, active: Boolean, onTap: (Int?) -> Unit, modifier: Modifier = Modifier) {
+    val scheme = MaterialTheme.colorScheme
+    val plain = remember(editor.text) { formatter.format(editor.text, 0, null) }
+    val caret = if (editor.text.isEmpty()) 0 else plain.rawToDisplay[editor.cursor.coerceIn(0, editor.text.length)]
+    var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
+    val currentPlain by rememberUpdatedState(plain)
+    val blink = remember { Animatable(1f) }
+    LaunchedEffect(active, editor.text, caret) {
+        blink.snapTo(1f)
+        while (active) {
+            delay(550)
+            blink.animateTo(0f, tween(150))
+            delay(350)
+            blink.animateTo(1f, tween(150))
+        }
+    }
+    val border by animateColorAsState(if (active) scheme.primary else scheme.outline, label = "border")
+    Box(
+        contentAlignment = Alignment.CenterStart,
+        modifier = modifier
+            .padding(top = 8.dp)
+            .height(56.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .border(if (active) 2.dp else 1.dp, border, RoundedCornerShape(4.dp))
+            .pointerInput(Unit) {
+                detectTapGestures { position ->
+                    val l = layout
+                    val map = currentPlain.displayToRaw
+                    if (l == null || map.isEmpty()) return@detectTapGestures onTap(null)
+                    // The text starts 16dp in; taps past its end land at the end.
+                    val offset = l.getOffsetForPosition(position.copy(x = position.x - 16.dp.toPx()))
+                    onTap(map[offset.coerceIn(0, map.lastIndex)])
+                }
+            }
+            .padding(horizontal = 16.dp),
+    ) {
+        Text(
+            if (editor.text.isEmpty()) AnnotatedString("x×0.18")
+            else formatter.format(editor.text, 0, DisplayFormatter.Colors(scheme.primary, scheme.onSurfaceVariant, scheme.outline)).text,
+            style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 20.sp),
+            color = if (editor.text.isEmpty()) scheme.outline else scheme.onSurface,
+            maxLines = 1,
+            onTextLayout = { layout = it },
+            modifier = Modifier.drawWithContent {
+                drawContent()
+                val l = layout ?: return@drawWithContent
+                if (!active) return@drawWithContent
+                val rect = l.getCursorRect(caret.coerceIn(0, l.layoutInput.text.length))
+                val w = 2.dp.toPx()
+                drawRect(
+                    scheme.primary.copy(alpha = blink.value),
+                    topLeft = Offset(rect.left - w / 2, rect.top + rect.height * 0.12f),
+                    size = Size(w, rect.height * 0.76f),
+                )
+            },
+        )
     }
 }
 
@@ -324,12 +480,13 @@ private fun MemoryTab(
     formatter: DisplayFormatter,
     onRecall: (Int) -> Unit,
     onStore: () -> Unit,
+    canStore: Boolean,
     onDelete: (Int) -> Unit,
     onRename: (Int, String) -> Unit,
 ) {
     var renaming by remember { mutableStateOf<Int?>(null) }
     Column(Modifier.padding(top = 8.dp)) {
-        FilledTonalButton(onClick = onStore, modifier = Modifier.padding(horizontal = 16.dp)) {
+        FilledTonalButton(onClick = onStore, enabled = canStore, modifier = Modifier.padding(horizontal = 16.dp)) {
             Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(8.dp))
             Text(stringResource(Res.string.memory_store))

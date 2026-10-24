@@ -57,4 +57,14 @@ class ProgrammerTest {
         // The sign bit of a byte makes it negative.
         assertEquals(-128L, Programmer.value(Programmer.flipBit(ProgState(word = WordSize.BYTE), 7)))
     }
+
+    @Test fun keepsWhatWasEvaluatedAboveTheResult() {
+        val done = type(ProgKey.F, ProgKey.F, ProgKey.PLUS, ProgKey.D1, ProgKey.EQUALS, from = ProgState(base = Base.HEX))
+        assertEquals("FF + 1", Programmer.display(done.expression!!, done.base))
+        // It follows the base, and a second = keeps it rather than dropping it.
+        assertEquals("255 + 1", Programmer.withBase(done, Base.DEC).let { Programmer.display(it.expression!!, it.base) })
+        assertEquals(done, Programmer.press(done, ProgKey.EQUALS))
+        // Going on from the answer starts a new calculation.
+        assertNull(Programmer.press(done, ProgKey.PLUS).expression)
+    }
 }

@@ -138,7 +138,6 @@
     <string name="cursor_left">Déplacer le curseur à gauche</string>
     <string name="cursor_right">Déplacer le curseur à droite</string>
     <string name="take_result">Utiliser le résultat</string>
-    <string name="expression_cleared">Effacé</string>
     <string name="settings_notation">Notation</string>
     <string name="settings_notation_normal">Normale</string>
     <string name="settings_notation_sci">Sci.</string>
@@ -234,4 +233,6 @@
         <item quantity="other">jours</item>
     </plurals>
     <string name="usage_settings_summary">Ta façon de calculer, en carte à partager</string>
+    <string name="key_undo">annuler</string>
+    <string name="key_redo">rétablir</string>
 </resources>

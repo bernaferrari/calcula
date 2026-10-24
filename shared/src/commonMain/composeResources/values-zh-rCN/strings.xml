@@ -138,7 +138,6 @@
     <string name="cursor_left">光标左移</string>
     <string name="cursor_right">光标右移</string>
     <string name="take_result">使用结果</string>
-    <string name="expression_cleared">已清除</string>
     <string name="settings_notation">记数法</string>
     <string name="settings_notation_normal">常规</string>
     <string name="settings_notation_sci">科学</string>
@@ -231,4 +230,6 @@
         <item quantity="other">天</item>
     </plurals>
     <string name="usage_settings_summary">你的计算习惯，做成可分享的卡片</string>
+    <string name="key_undo">撤销</string>
+    <string name="key_redo">重做</string>
 </resources>
