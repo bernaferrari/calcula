@@ -2,6 +2,12 @@
 
 package com.bernaferrari.calculator.ui.stats
 
+import androidx.compose.foundation.layout.Spacer
+import com.bernaferrari.calculator.ui.topBarInset
+import com.bernaferrari.calculator.ui.TopBar
+import androidx.compose.ui.unit.Dp
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -135,16 +141,21 @@ fun StatisticsScreen(
         BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
             val keypadHeight = (maxHeight * 0.36f).coerceIn(260.dp, 340.dp)
             Column(Modifier.widthIn(max = 560.dp).fillMaxSize()) {
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.statusBarsPadding().padding(horizontal = 4.dp).height(56.dp).fillMaxWidth()) {
+                Box(Modifier.weight(1f).fillMaxWidth()) {
+                TopBar {
                     IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null) }
                     Text(stringResource(Res.string.menu_statistics), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
                     TextButton(onClick = { haptics.heavy(); viewModel.onClear() }, enabled = state.values.isNotEmpty() || state.entry.isNotEmpty()) {
                         Text(stringResource(Res.string.stats_clear))
                     }
                 }
-                Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
+                Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
+                    Spacer(Modifier.height(topBarInset()))
                     // The numbers so far, each a chip you can take out; the one being typed at the end.
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.animateContentSize()) {
+                    // The same 8dp between rows as between chips: chips otherwise pad themselves out to a
+                    // 48dp touch target, which opens the rows up twice as wide as the columns.
+                    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.animateContentSize()) {
                         state.values.forEachIndexed { i, v ->
                             InputChip(
                                 selected = false,
@@ -163,6 +174,7 @@ fun StatisticsScreen(
                                 )
                             },
                         )
+                    }
                     }
                     if (summary == null) {
                         Text(
@@ -194,6 +206,7 @@ fun StatisticsScreen(
                             }
                         }
                     }
+                }
                 }
                 StatsKeypad(
                     haptics = haptics,

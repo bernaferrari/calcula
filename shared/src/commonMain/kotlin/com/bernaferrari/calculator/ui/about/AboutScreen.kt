@@ -2,6 +2,8 @@
 
 package com.bernaferrari.calculator.ui.about
 
+import com.bernaferrari.calculator.ui.topBarInset
+import com.bernaferrari.calculator.ui.TopBar
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.geometry.Size
@@ -106,13 +108,13 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
 
     Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.containerTransform("about", isScreen = true).fillMaxSize()) {
         Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal))) {
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.statusBarsPadding().padding(horizontal = 4.dp).height(56.dp)) {
+            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+                TopBar {
                 IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null) }
             }
-            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
                 LazyColumn(
-                    Modifier.widthIn(max = 600.dp).fillMaxWidth().clipToBounds().fadeBottomEdge(bottomInset + 12.dp),
-                    contentPadding = PaddingValues(bottom = bottomInset + 32.dp),
+                    Modifier.widthIn(max = 600.dp).fillMaxWidth().fadeBottomEdge(bottomInset + 12.dp),
+                    contentPadding = PaddingValues(top = topBarInset(), bottom = bottomInset + 32.dp),
                 ) {
                     item(key = "hero") { Hero() }
                     item(key = "actions") {

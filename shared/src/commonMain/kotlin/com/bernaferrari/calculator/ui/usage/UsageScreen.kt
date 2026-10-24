@@ -1,5 +1,7 @@
 package com.bernaferrari.calculator.ui.usage
 
+import com.bernaferrari.calculator.ui.topBarInset
+import com.bernaferrari.calculator.ui.TopBar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -89,14 +91,16 @@ fun UsageScreen(onNavigateBack: () -> Unit) {
 
     Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.containerTransform("settings", isScreen = true).fillMaxSize()) {
         Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars)) {
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.statusBarsPadding().padding(horizontal = 4.dp).height(56.dp).fillMaxWidth()) {
+            Box(Modifier.weight(1f).fillMaxWidth()) {
+            TopBar {
                 IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null) }
                 Text(stringResource(Res.string.menu_usage), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
             }
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp),
             ) {
+                Spacer(Modifier.height(topBarInset()))
                 Box(
                     Modifier
                         .widthIn(max = 440.dp)
@@ -129,6 +133,7 @@ fun UsageScreen(onNavigateBack: () -> Unit) {
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(Res.string.usage_share))
                 }
+            }
             }
         }
     }

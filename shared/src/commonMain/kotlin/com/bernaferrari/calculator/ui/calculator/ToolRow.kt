@@ -142,6 +142,9 @@ fun ToolRow(
      * expression to move through. Each returns whether the cursor moved.
      */
     cursorArrows: Boolean = false,
+    /** Whether the cursor has room to go left / right; an arrow with nowhere to go is dimmed. */
+    canStepLeft: Boolean = true,
+    canStepRight: Boolean = true,
     onCursorStep: (Int) -> Boolean = { false },
     onCursorJump: (Int) -> Boolean = { false },
     haptics: Haptics? = null,
@@ -175,8 +178,8 @@ fun ToolRow(
             } else {
                 AnimatedVisibility(cursorArrows, enter = fadeIn() + scaleIn(initialScale = 0.9f), exit = fadeOut() + scaleOut(targetScale = 0.9f)) {
                     Row {
-                        CursorArrow(-1, quiet, haptics, onCursorStep, onCursorJump)
-                        CursorArrow(1, quiet, haptics, onCursorStep, onCursorJump)
+                        CursorArrow(-1, canStepLeft, quiet, haptics, onCursorStep, onCursorJump)
+                        CursorArrow(1, canStepRight, quiet, haptics, onCursorStep, onCursorJump)
                     }
                 }
             }
@@ -199,17 +202,19 @@ fun ToolRow(
     }
 }
 
-/** Tap for one step, hold to jump to that end. A tick when the cursor moves, nothing at the end. */
+/** Tap for one step, hold to jump to that end. Dimmed, and off, once the cursor is at that end. */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun CursorArrow(direction: Int, tint: Color, haptics: Haptics?, onStep: (Int) -> Boolean, onJump: (Int) -> Boolean) {
+private fun CursorArrow(direction: Int, enabled: Boolean, tint: Color, haptics: Haptics?, onStep: (Int) -> Boolean, onJump: (Int) -> Boolean) {
     val description = stringResource(if (direction < 0) Res.string.cursor_left else Res.string.cursor_right)
+    val alpha by animateFloatAsState(if (enabled) 1f else 0.38f, label = "arrow")
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .size(48.dp)
             .clip(CircleShape)
             .combinedClickable(
+                enabled = enabled,
                 role = Role.Button,
                 onClickLabel = description,
                 onClick = { if (onStep(direction)) haptics?.tick() },
@@ -220,7 +225,7 @@ private fun CursorArrow(direction: Int, tint: Color, haptics: Haptics?, onStep: 
         Icon(
             if (direction < 0) Icons.AutoMirrored.Rounded.KeyboardArrowLeft else Icons.AutoMirrored.Rounded.KeyboardArrowRight,
             contentDescription = null,
-            tint = tint,
+            tint = tint.copy(alpha = tint.alpha * alpha),
             modifier = Modifier.size(28.dp),
         )
     }

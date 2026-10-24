@@ -1,5 +1,7 @@
 package com.bernaferrari.calculator.ui.settings
 
+import com.bernaferrari.calculator.ui.topBarInset
+import com.bernaferrari.calculator.ui.TopBar
 import androidx.compose.foundation.layout.Spacer
 import kotlinx.coroutines.flow.StateFlow
 import androidx.compose.material.icons.outlined.Insights
@@ -147,16 +149,16 @@ fun SettingsScreen(
 
     Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.containerTransform("settings", isScreen = true).fillMaxSize()) {
       Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal))) {
-        // Pinned header, so scrolled content never slides under the status bar.
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.statusBarsPadding().padding(horizontal = 4.dp).height(56.dp)) {
+        // On wide screens the list keeps a readable width, centred.
+        Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+        TopBar {
             IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null) }
             Text(stringResource(Res.string.settings_title), style = MaterialTheme.typography.titleLarge)
         }
-        // On wide screens the list keeps a readable width, centred.
-        Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
         // A plain scrolling column, not a lazy list: settings is short, and keeping every row
         // composed means scrolling back up never rebuilds the swatches and tiny keypads.
-        Column(Modifier.widthIn(max = 640.dp).fillMaxSize().clipToBounds().fadeBottomEdge(bottomInset + 12.dp).verticalScroll(rememberScrollState())) {
+        Column(Modifier.widthIn(max = 640.dp).fillMaxSize().fadeBottomEdge(bottomInset + 12.dp).verticalScroll(rememberScrollState())) {
+            Spacer(Modifier.height(topBarInset()))
 
             run {
                 val palette = prefs.palette.orDefault()
