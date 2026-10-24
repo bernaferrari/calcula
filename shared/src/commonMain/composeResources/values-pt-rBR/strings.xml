@@ -140,7 +140,6 @@
     <string name="cursor_left">Mover cursor para a esquerda</string>
     <string name="cursor_right">Mover cursor para a direita</string>
     <string name="take_result">Usar resultado</string>
-    <string name="expression_cleared">Apagado</string>
     <string name="settings_notation">Notação</string>
     <string name="settings_notation_normal">Normal</string>
     <string name="settings_notation_sci">Cient.</string>
@@ -236,4 +235,6 @@
         <item quantity="other">dias</item>
     </plurals>
     <string name="usage_settings_summary">Como você calcula, num cartão para compartilhar</string>
+    <string name="key_undo">desfazer</string>
+    <string name="key_redo">refazer</string>
 </resources>

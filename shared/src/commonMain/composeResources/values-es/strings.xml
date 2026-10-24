@@ -138,7 +138,6 @@
     <string name="cursor_left">Mover el cursor a la izquierda</string>
     <string name="cursor_right">Mover el cursor a la derecha</string>
     <string name="take_result">Usar resultado</string>
-    <string name="expression_cleared">Borrado</string>
     <string name="settings_notation">Notación</string>
     <string name="settings_notation_normal">Normal</string>
     <string name="settings_notation_sci">Cient.</string>
@@ -234,4 +233,6 @@
         <item quantity="other">días</item>
     </plurals>
     <string name="usage_settings_summary">Cómo calculas, en una tarjeta para compartir</string>
+    <string name="key_undo">deshacer</string>
+    <string name="key_redo">rehacer</string>
 </resources>

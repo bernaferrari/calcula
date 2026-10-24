@@ -27,7 +27,7 @@
 - **Exact answers.** 0.1 + 0.2 is 0.3, not 0.30000000000000004. Smart percent: 200 + 10% is 220. When a result is a simple fraction it says so too: 0.375 is also 3/8.
 - **A keypad you already know.** 0 under 2 like a phone's dial pad, backspace up top by the operators, parentheses in the corner. Tap the preview (= 52) to take it, like pressing =.
 - **A history you'll actually use.** Past results stay above the keys. Tap one to reuse it, pull the bar down to see them all, add a note to any of them, share the lot as text.
-- **Edits like text.** Double-tap to select, then wrap it in parentheses or √ with one key. Drag along the expression, or use ‹ ›, to move the cursor. Cleared something by mistake? Undo.
+- **Edits like text.** Double-tap to select, then wrap it in parentheses or √ with one key. Drag along the expression, or use ‹ ›, to move the cursor. Flick ⌫ up to undo, down to redo.
 - **Quiets down as you learn.** After a few flicks the names step back to small dots. Prefer the names, the dots or nothing at all? One setting.
 - **Yours to shape.** Light or dark, ten color families or your wallpaper's, each in four styles you preview as the keypad itself. Drag the bar above the keys to make them bigger or smaller.
 
@@ -61,7 +61,7 @@ Everything here is off by default or tucked in the ⋮ menu, so the calculator s
 | Library | Your own keys | Programmer |
 | :---: | :---: | :---: |
 | <img src="docs/screenshots/library.png" width="240" alt="Library sheet with constants grouped by field, each with its symbol and value"> | <img src="docs/screenshots/customize-keys.png" width="240" alt="Keypad diagram with every flick as a tag; changed ones highlighted"> | <img src="docs/screenshots/programmer.png" width="240" alt="C0FFEE in hex, 12,648,430 in decimal, and its bits"> |
-| 28 constants of science (c, h, Nₐ, G…), functions you write yourself, and named memories. | Any flick can do anything: a built-in function, a constant, one of your functions, or nothing. | Hex, decimal, octal and binary, bitwise operators and shifts, 8 to 64 bits, every bit tappable. |
+| 28 constants of science (c, h, Nₐ, G…), functions you write yourself, and named memories. | Any flick can do anything: a built-in function, a constant, one of your functions, or nothing. | Hex, decimal, octal and binary, bitwise operators and shifts, 8 to 64 bits, every bit tappable, and a tape of what you worked out. |
 
 | RPN and memory | Statistics | Styles |
 | :---: | :---: | :---: |

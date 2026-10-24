@@ -1,5 +1,10 @@
 package com.bernaferrari.calculator.ui.programmer
 
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.ToggleButton
@@ -99,7 +104,22 @@ class ProgrammerViewModel(private val preferences: PreferencesRepository = AppGr
         }
     }
 
-    fun onKey(key: ProgKey) { _state.value = Programmer.press(_state.value, key) }
+    /** This visit's calculations, oldest first, each in the base it was typed in. */
+    private val _tape = MutableStateFlow<List<ProgEntry>>(emptyList())
+    val tape: StateFlow<List<ProgEntry>> = _tape
+
+    fun onKey(key: ProgKey) {
+        val before = _state.value
+        val next = Programmer.press(before, key)
+        _state.value = next
+        val expression = next.expression
+        if (next.resultShown && !before.resultShown && expression != null) {
+            val value = Programmer.value(next) ?: return
+            _tape.value = (_tape.value + ProgEntry(expression, next.base, next.word, value)).takeLast(50)
+        }
+    }
+
+    fun onReuse(entry: ProgEntry) { _state.value = Programmer.withValue(_state.value, entry.value) }
 
     fun onBase(base: Base) {
         _state.value = Programmer.withBase(_state.value, base)
@@ -114,6 +134,9 @@ class ProgrammerViewModel(private val preferences: PreferencesRepository = AppGr
     }
 }
 
+/** One line of the tape: `FF + 1 = 100`. */
+data class ProgEntry(val tokens: List<String>, val base: Base, val word: WordSize, val value: Long)
+
 /**
  * Integers for people who think in bits: the value in all four bases at once (tap one to type in
  * it), a word size, and keys for the bitwise operators. A screen of its own, so the calculator
@@ -125,6 +148,7 @@ fun ProgrammerScreen(
     viewModel: ProgrammerViewModel = viewModel { ProgrammerViewModel() },
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val tape by viewModel.tape.collectAsStateWithLifecycle()
     val settings: SettingsViewModel = viewModel { SettingsViewModel() }
     val prefs by settings.prefs.collectAsStateWithLifecycle()
     val haptics = rememberHaptics(enabled = { prefs.hapticFeedback }, sounds = { prefs.soundEnabled })
@@ -147,8 +171,50 @@ fun ProgrammerScreen(
             }
             val readout: @Composable (Modifier) -> Unit = { modifier ->
                 Column(modifier.padding(horizontal = 12.dp), verticalArrangement = Arrangement.Bottom) {
-                    Box(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 12.dp), contentAlignment = Alignment.BottomEnd) {
-                        val error = state.error
+                    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+                    val mono = TextStyle(fontFamily = GoogleSansFlex, fontSize = 20.sp, textAlign = TextAlign.End)
+                    // Earlier calculations, newest at the bottom, in today's base; tap one to go on from its answer.
+                    val earlier = if (state.resultShown && state.expression != null) tape.dropLast(1) else tape
+                    LazyColumn(
+                        reverseLayout = true,
+                        horizontalAlignment = Alignment.End,
+                        modifier = Modifier.weight(1f).fillMaxWidth(),
+                    ) {
+                        items(earlier.asReversed()) { entry ->
+                            val shown = Programmer.inBase(entry.tokens, entry.base, state.base, entry.word)
+                            val answer = Programmer.group(Programmer.format(entry.value, state.base, entry.word), state.base)
+                            Text(
+                                buildAnnotatedString {
+                                    append(Programmer.display(shown, state.base))
+                                    append(" = ")
+                                    withStyle(SpanStyle(color = MaterialTheme.colorScheme.onSurface)) { append(answer) }
+                                },
+                                style = mono.copy(fontSize = 18.sp),
+                                color = muted,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .clickable { haptics.tap(); viewModel.onReuse(entry) }
+                                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                            )
+                        }
+                    }
+                    val error = state.error
+                    val expression = state.expression
+                    // What gave the answer, kept above it, as the calculator does.
+                    if (state.resultShown && expression != null) {
+                        Text(
+                            Programmer.display(expression, state.base) + " =",
+                            style = mono.copy(fontSize = 24.sp),
+                            color = muted,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                        )
+                    }
+                    Box(Modifier.fillMaxWidth().padding(horizontal = 12.dp), contentAlignment = Alignment.BottomEnd) {
                         if (error != null) {
                             Text(
                                 stringResource(if (error == ProgError.DIVIDE_BY_ZERO) Res.string.error_divide_by_zero else Res.string.error_syntax),
@@ -162,7 +228,7 @@ fun ProgrammerScreen(
                                 style = TextStyle(
                                     fontFamily = GoogleSansFlex,
                                     textAlign = TextAlign.End,
-                                    color = if (text.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f) else MaterialTheme.colorScheme.onSurface,
+                                    color = if (text.isEmpty()) muted.copy(alpha = 0.45f) else MaterialTheme.colorScheme.onSurface,
                                 ),
                                 maxSize = 52.sp,
                                 minSize = 20.sp,
@@ -170,6 +236,16 @@ fun ProgrammerScreen(
                             )
                         }
                     }
+                    // While typing an operation, its answer so far, in the same base.
+                    val preview = if (!state.resultShown && error == null && Programmer.hasOperation(state)) value else null
+                    Text(
+                        preview?.let { "= " + Programmer.group(Programmer.format(it, state.base, state.word), state.base) }.orEmpty(),
+                        style = mono.copy(fontSize = 24.sp),
+                        color = muted,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).height(if (preview != null) 34.dp else 0.dp),
+                    )
                     // One other reading of the number, quietly: decimal, or hex while typing in decimal.
                     val other = if (state.base == Base.DEC) Base.HEX else Base.DEC
                     Text(
