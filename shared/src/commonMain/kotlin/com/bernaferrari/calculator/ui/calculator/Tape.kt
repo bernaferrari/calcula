@@ -1,7 +1,5 @@
 package com.bernaferrari.calculator.ui.calculator
 
-import com.bernaferrari.calculator.ui.MenuShape
-import com.bernaferrari.calculator.ui.flushMenu
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.IconButton
@@ -294,7 +292,7 @@ private fun TapeEntry(
                 }
             }
             Box(Modifier.align(Alignment.BottomEnd)) {
-                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, shape = MenuShape, modifier = Modifier.flushMenu()) {
+                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                     DropdownMenuItem(text = { Text(stringResource(Res.string.tape_copy_result)) }, onClick = { menu = false; onCopy(entry.result) })
                     DropdownMenuItem(text = { Text(stringResource(Res.string.tape_edit)) }, onClick = { menu = false; onEditExpression(entry) })
                     DropdownMenuItem(

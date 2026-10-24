@@ -2,6 +2,11 @@
 
 package com.bernaferrari.calculator.ui.settings
 
+import com.bernaferrari.calculator.ui.theme.GoogleSansFlex
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import com.bernaferrari.calculator.domain.model.ColorStyle
 import androidx.compose.animation.animateColorAsState
@@ -305,36 +310,77 @@ fun StyleRow(position: SegmentPosition, palette: AppPalette, selected: ColorStyl
     }
 }
 
+/**
+ * A tiny calculator in that style's own key colors (C, the digits, the operators, `=`), so the
+ * choice shows how the keypad will look rather than a row of swatches. Its name sits underneath.
+ */
 @Composable
-private fun StyleKeys(scheme: ColorScheme, selected: Boolean, description: String, onClick: () -> Unit) {
+private fun RowScope.StyleKeys(scheme: ColorScheme, selected: Boolean, description: String, onClick: () -> Unit) {
     val haptics = LocalHapticFeedback.current
     val ring by animateDpAsState(if (selected) 2.5.dp else 0.dp, spring(dampingRatio = Spring.DampingRatioMediumBouncy), label = "ring")
-    val scale by animateFloatAsState(if (selected) 1f else 0.92f, spring(dampingRatio = Spring.DampingRatioMediumBouncy), label = "scale")
-    Box(
-        Modifier
-            .size(54.dp)
-            .graphicsLayer { scaleX = scale; scaleY = scale }
+    val scale by animateFloatAsState(if (selected) 1f else 0.94f, spring(dampingRatio = Spring.DampingRatioMediumBouncy), label = "scale")
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .weight(1f)
             .semantics { contentDescription = description }
             .selectable(selected = selected, role = Role.RadioButton, interactionSource = remember { MutableInteractionSource() }, indication = null) {
                 if (!selected) {
                     haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
                     onClick()
                 }
-            }
-            // Fades in with its width, so an unselected keypad has no hairline left over.
-            .border(ring, MaterialTheme.colorScheme.primary.copy(alpha = (ring / 2.5.dp).coerceIn(0f, 1f)), RoundedCornerShape(16.dp))
-            .padding(ring + 2.dp)
-            .clip(RoundedCornerShape(13.dp))
-            .background(scheme.surface)
-            .padding(5.dp),
+            },
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            listOf(listOf(scheme.primaryContainer, scheme.secondaryContainer), listOf(scheme.tertiaryContainer, scheme.primary)).forEach { row ->
-                Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                    row.forEach { color -> Box(Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(6.dp)).background(color)) }
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .aspectRatio(0.8f)
+                .graphicsLayer { scaleX = scale; scaleY = scale }
+                // Fades in with its width, so an unselected calculator has no hairline left over.
+                .border(ring, MaterialTheme.colorScheme.primary.copy(alpha = (ring / 2.5.dp).coerceIn(0f, 1f)), RoundedCornerShape(16.dp))
+                .padding(ring + 2.dp)
+                .clip(RoundedCornerShape(13.dp))
+                .background(scheme.surface)
+                .padding(5.dp),
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                // The display: a number, right-aligned, like the real one.
+                Text(
+                    "42",
+                    style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 13.sp),
+                    color = scheme.onSurface,
+                    textAlign = TextAlign.End,
+                    modifier = Modifier.fillMaxWidth().padding(end = 2.dp),
+                )
+                val function = scheme.surfaceContainerHighest to scheme.onSurfaceVariant
+                val digit = scheme.surfaceContainerHigh to scheme.onSurface
+                val operator = scheme.secondaryContainer to scheme.onSecondaryContainer
+                val rows = listOf(
+                    listOf("C" to (scheme.surfaceContainerHighest to scheme.tertiary), "%" to function, "⌫" to function, "÷" to operator),
+                    listOf("7" to digit, "8" to digit, "9" to digit, "×" to operator),
+                    listOf("4" to digit, "5" to digit, "6" to digit, "=" to (scheme.primary to scheme.onPrimary)),
+                )
+                rows.forEach { row ->
+                    Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                        row.forEach { (glyph, colors) ->
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(4.dp)).background(colors.first),
+                            ) {
+                                Text(glyph, style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 8.sp, lineHeight = 8.sp), color = colors.second)
+                            }
+                        }
+                    }
                 }
             }
         }
+        Text(
+            description,
+            style = MaterialTheme.typography.labelMedium,
+            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            modifier = Modifier.padding(top = 4.dp),
+        )
     }
 }
 

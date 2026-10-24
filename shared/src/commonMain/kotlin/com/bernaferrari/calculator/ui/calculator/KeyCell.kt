@@ -107,7 +107,7 @@ fun KeyCell(
     /** Names the flicks in small type in the top and bottom corners, for flicks nobody would guess. */
     labelFlicks: Boolean = false,
     pressHaptic: Boolean = true,
-    restRadius: androidx.compose.ui.unit.Dp = com.bernaferrari.calculator.ui.KeyRadius,
+    restRadius: androidx.compose.ui.unit.Dp = com.bernaferrari.calculator.ui.theme.KeyRadius,
     onPressedChange: (Boolean) -> Unit = {},
     onLongClick: (() -> Unit)? = null,
     label: @Composable () -> Unit,

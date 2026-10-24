@@ -3,8 +3,6 @@ package com.bernaferrari.calculator.ui.calculator
 import androidx.compose.material3.AppBarRowScope
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.AppBarRow
-import com.bernaferrari.calculator.ui.MenuShape
-import com.bernaferrari.calculator.ui.flushMenu
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.AutoStories
 import androidx.compose.ui.geometry.Rect

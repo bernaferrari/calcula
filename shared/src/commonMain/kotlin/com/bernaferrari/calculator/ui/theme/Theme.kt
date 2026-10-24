@@ -2,6 +2,9 @@
 
 package com.bernaferrari.calculator.ui.theme
 
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Shapes
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialExpressiveTheme
@@ -26,7 +29,12 @@ fun CalculatorTheme(
         MaterialExpressiveTheme(
             colorScheme = colorScheme,
             typography = calculatorTypography(font),
+            // Menus, snackbars, tooltips and text fields round like the keys, not Material's 4dp.
+            shapes = Shapes(extraSmall = RoundedCornerShape(KeyRadius)),
             content = content,
         )
     }
 }
+
+/** The keys' resting corner radius; the theme's smallest shape follows it. */
+val KeyRadius = 14.dp
