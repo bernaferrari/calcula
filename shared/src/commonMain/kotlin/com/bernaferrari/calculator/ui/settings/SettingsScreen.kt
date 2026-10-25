@@ -263,13 +263,10 @@ fun SettingsScreen(
                         { p ->
                             ChoiceRow(
                                 p, Icons.Outlined.SwipeVertical, stringResource(Res.string.settings_flick_hints),
-                                // Auto (null) is a choice of its own, so Labels can be picked for good
-                                // even while Auto is still showing labels.
-                                listOf<FlickHints?>(null) + FlickHints.entries, prefs.flickHints,
+                                FlickHints.entries, prefs.hints,
                                 label = {
                                     stringResource(
                                         when (it) {
-                                            null -> Res.string.settings_flick_auto
                                             FlickHints.LABELS -> Res.string.settings_flick_labels
                                             FlickHints.DOTS -> Res.string.settings_flick_dots_option
                                             FlickHints.NONE -> Res.string.settings_flick_none
@@ -277,10 +274,6 @@ fun SettingsScreen(
                                     )
                                 },
                                 onSelect = viewModel::setFlickHints,
-                                // Auto says what it's doing right now.
-                                subtitle = if (prefs.flickHints != null) null else stringResource(
-                                    if (prefs.hints == FlickHints.LABELS) Res.string.settings_flick_auto_learning else Res.string.settings_flick_auto_learned,
-                                ),
                             )
                         },
                         { p ->

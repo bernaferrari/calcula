@@ -121,9 +121,6 @@
     <string name="style_muted">柔和</string>
     <string name="style_vivid">鲜艳</string>
     <string name="style_playful">活泼</string>
-    <string name="settings_flick_auto_learning">先显示名称，熟悉滑动后改为圆点</string>
-    <string name="settings_flick_auto_learned">已熟悉滑动，显示圆点</string>
-    <string name="settings_flick_auto">自动</string>
     <string name="memory_recall_description">调用存储</string>
     <string name="settings_memory_keys">存储键</string>
     <string name="settings_memory_keys_summary">在键盘上方显示 MC、M+、M−、MR</string>

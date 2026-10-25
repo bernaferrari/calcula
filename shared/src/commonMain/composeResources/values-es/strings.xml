@@ -121,9 +121,6 @@
     <string name="style_muted">Suave</string>
     <string name="style_vivid">Vivo</string>
     <string name="style_playful">Divertido</string>
-    <string name="settings_flick_auto_learning">Nombres por ahora, puntos cuando conozcas los gestos</string>
-    <string name="settings_flick_auto_learned">Puntos, ahora que conoces los gestos</string>
-    <string name="settings_flick_auto">Auto</string>
     <string name="memory_recall_description">Recuperar memoria</string>
     <string name="settings_memory_keys">Teclas de memoria</string>
     <string name="settings_memory_keys_summary">MC, M+, M− y MR sobre el teclado</string>

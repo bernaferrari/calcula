@@ -27,10 +27,8 @@ interface PreferencesRepository {
 
     suspend fun updateDecimalSeparator(separator: DecimalSeparator)
 
-    /** A hint style for good, or null for automatic (names first, dots once the flicks are known). */
+    /** An explicit hint style; null uses the default labels. */
     suspend fun updateFlickHints(hints: FlickHints?)
-    /** One more function picked by flick; only counts while the hint style is still automatic. */
-    suspend fun countFlick()
 
     suspend fun updateSoundEnabled(enabled: Boolean)
 

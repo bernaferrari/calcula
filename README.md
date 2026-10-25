@@ -28,7 +28,7 @@
 - **A keypad you already know.** 0 under 2 like a phone's dial pad, backspace up top by the operators, parentheses in the corner. Tap the preview (= 52) to take it, like pressing =.
 - **A history you'll actually use.** Past results stay above the keys. Tap one to reuse it, pull the bar down to see them all, add a note to any of them, share the lot as text.
 - **Edits like text.** Double-tap to select, then wrap it in parentheses or √ with one key. Drag along the expression, or use ‹ ›, to move the cursor. Flick ⌫ up to undo, down to redo.
-- **Quiets down as you learn.** After a few flicks the names step back to small dots. Prefer the names, the dots or nothing at all? One setting.
+- **Hints that stay your way.** Function names stay on the keys until you choose otherwise. Prefer small dots or nothing at all? Change the hint style in Settings.
 - **Yours to shape.** Light or dark, ten color families or your wallpaper's, each in four styles you preview as the keypad itself. Drag the bar above the keys to make them bigger or smaller.
 
 ## Beyond the keypad
@@ -48,7 +48,7 @@ A card of how you calculate: your keypad lit up where your thumb goes most, how 
 
 ## Once you know your way around
 
-The names give way to two small dots per key: the same flicks, less to read. When you want every function in view, **ƒ** turns the digits into them for one press, or hold it to keep them; the ones that would do nothing yet are dimmed.
+Prefer less to read? Choose two small dots per key in Settings: the same flicks, quieter hints. When you want every function in view, **ƒ** turns the digits into them for one press, or hold it to keep them; the ones that would do nothing yet are dimmed.
 
 <p align="center">
   <img src="docs/demo-dots.webp" width="260" alt="With dots: flick the 7 for sin, tap ƒ to turn the keys into functions, flick the 2 down for √">

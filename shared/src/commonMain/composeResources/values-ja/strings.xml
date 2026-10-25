@@ -121,9 +121,6 @@
     <string name="style_muted">落ち着き</string>
     <string name="style_vivid">鮮やか</string>
     <string name="style_playful">遊び心</string>
-    <string name="settings_flick_auto_learning">覚えるまでは名前、覚えたらドット</string>
-    <string name="settings_flick_auto_learned">フリックを覚えたのでドット表示</string>
-    <string name="settings_flick_auto">自動</string>
     <string name="memory_recall_description">メモリを呼び出す</string>
     <string name="settings_memory_keys">メモリキー</string>
     <string name="settings_memory_keys_summary">キーパッドの上に MC、M+、M−、MR</string>

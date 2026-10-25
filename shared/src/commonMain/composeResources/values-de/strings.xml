@@ -121,9 +121,6 @@
     <string name="style_muted">Gedämpft</string>
     <string name="style_vivid">Kräftig</string>
     <string name="style_playful">Verspielt</string>
-    <string name="settings_flick_auto_learning">Erst Namen, Punkte, sobald du die Wischgesten kennst</string>
-    <string name="settings_flick_auto_learned">Punkte, jetzt wo du die Wischgesten kennst</string>
-    <string name="settings_flick_auto">Auto</string>
     <string name="memory_recall_description">Speicher abrufen</string>
     <string name="settings_memory_keys">Speichertasten</string>
     <string name="settings_memory_keys_summary">MC, M+, M− und MR über der Tastatur</string>

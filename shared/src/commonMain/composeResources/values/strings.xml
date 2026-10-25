@@ -125,9 +125,6 @@
     <string name="style_muted">Muted</string>
     <string name="style_vivid">Vivid</string>
     <string name="style_playful">Playful</string>
-    <string name="settings_flick_auto_learning">Names for now, dots once you know the flicks</string>
-    <string name="settings_flick_auto_learned">Dots, now that you know the flicks</string>
-    <string name="settings_flick_auto">Auto</string>
     <string name="memory_recall_description">Recall memory</string>
     <string name="settings_memory_keys">Memory keys</string>
     <string name="settings_memory_keys_summary">MC, M+, M− and MR above the keypad</string>

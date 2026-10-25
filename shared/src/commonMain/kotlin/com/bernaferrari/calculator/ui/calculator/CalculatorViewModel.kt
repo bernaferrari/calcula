@@ -324,8 +324,6 @@ class CalculatorViewModel(
     fun onSwipeKey(key: Key) {
         pendingFlicks++
         onKey(key)
-        // Counts toward the keypad trading its function names for dots once the gesture is known.
-        viewModelScope.launch { preferences.countFlick() }
     }
 
     fun onCursorMoved(position: Int) {

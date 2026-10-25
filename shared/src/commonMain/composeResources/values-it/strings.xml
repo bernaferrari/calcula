@@ -121,9 +121,6 @@
     <string name="style_muted">Tenue</string>
     <string name="style_vivid">Vivace</string>
     <string name="style_playful">Giocoso</string>
-    <string name="settings_flick_auto_learning">Nomi per ora, punti quando conoscerai i gesti</string>
-    <string name="settings_flick_auto_learned">Punti, ora che conosci i gesti</string>
-    <string name="settings_flick_auto">Auto</string>
     <string name="memory_recall_description">Richiama memoria</string>
     <string name="settings_memory_keys">Tasti memoria</string>
     <string name="settings_memory_keys_summary">MC, M+, M− e MR sopra la tastiera</string>
