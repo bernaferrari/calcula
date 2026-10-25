@@ -1,5 +1,4 @@
 <resources>
-    <string name="app_name">SDK Monitor</string>
 
     <!-- Theme Mode -->
     <string name="theme_system">Sistema</string>
@@ -256,4 +255,203 @@
     <string name="notifications_help_background_sync">Le notifiche aiutano a mantenere aggiornate le tue app in background</string>
     <string name="allow_notifications">Consenti Notifiche</string>
 
+
+    <!-- Calculator localization -->
+    <string name="error_divide_by_zero">Impossibile dividere per zero</string>
+    <string name="error_domain">Non definito per questo valore</string>
+    <string name="error_syntax">Espressione incompleta</string>
+    <string name="error_overflow">Numero troppo grande</string>
+    <string name="tape_copy_result">Copia risultato</string>
+    <string name="tape_edit">Modifica calcolo</string>
+    <string name="tape_delete">Elimina</string>
+    <string name="copied">Copiato</string>
+    <string name="menu_more">Altre opzioni</string>
+    <string name="menu_clear_history">Cancella cronologia</string>
+    <string name="menu_settings">Impostazioni</string>
+    <string name="menu_unit_converter">Convertitore di unità</string>
+    <string name="menu_programmer">Programmatore</string>
+    <string name="menu_statistics">Statistiche</string>
+    <string name="angle_degrees">DEG</string>
+    <string name="angle_radians">RAD</string>
+    <string name="angle_toggle_description">Unità angolare, tocca per cambiare</string>
+    <string name="settings_appearance">Aspetto</string>
+    <string name="settings_haptics">Feedback aptico</string>
+    <string name="settings_haptics_description">Senti ogni pressione</string>
+    <string name="settings_history">Cronologia</string>
+    <string name="settings_clear_history">Cancella cronologia</string>
+    <string name="swipe_tip">Scorri sui tasti ↑↓ per sin, √, π e altro</string>
+    <string name="settings_tools">Strumenti</string>
+    <string name="show_history">Mostra cronologia</string>
+    <string name="show_keypad">Mostra tastiera</string>
+    <string name="function_layer_description">Funzioni. Tocca per usarne una, tocca ancora o tieni premuto per mantenerle</string>
+    <string name="history_empty">Nessun calcolo</string>
+    <string name="history_clear">Cancella</string>
+    <string name="history_today">Oggi</string>
+    <string name="history_yesterday">Ieri</string>
+    <string name="history_deleted">Calcolo eliminato</string>
+    <string name="history_cleared">Cronologia cancellata</string>
+    <string name="undo">Annulla</string>
+    <string name="settings_dynamic_color">Colori dello sfondo</string>
+    <string name="settings_about">Informazioni</string>
+    <string name="settings_licenses">Licenze open source</string>
+    <string name="converter_swap">Scambia unità</string>
+    <string name="converter_backspace">Cancella, tieni premuto per svuotare</string>
+    <string name="unit_length">Lunghezza</string>
+    <string name="unit_mass">Massa</string>
+    <string name="unit_temperature">Temperatura</string>
+    <string name="unit_area">Area</string>
+    <string name="unit_volume">Volume</string>
+    <string name="unit_speed">Velocità</string>
+    <string name="unit_time">Tempo</string>
+    <string name="unit_data">Dati</string>
+    <string name="unit_energy">Energia</string>
+    <string name="unit_pressure">Pressione</string>
+    <string name="settings_dynamic_color_description">Abbina allo sfondo</string>
+    <string name="settings_high_contrast">Contrasto elevato</string>
+    <string name="settings_high_contrast_description">Sfondi uniformi e testo più marcato</string>
+    <string name="settings_calculator">Calcolatrice</string>
+    <string name="settings_angle_unit">Unità angolare</string>
+    <string name="settings_degrees">Gradi</string>
+    <string name="settings_radians">Radianti</string>
+    <string name="settings_decimal_places">Cifre decimali</string>
+    <string name="settings_auto">Automatico</string>
+    <string name="settings_decimal_separator">Formato numerico</string>
+    <string name="settings_show_tape">Mostra calcoli recenti</string>
+    <string name="settings_show_tape_description">Mantieni il nastro sopra il risultato</string>
+    <string name="settings_flick_dots">Mostra indicatori delle funzioni</string>
+    <string name="settings_flick_dots_description">Segna i tasti con funzioni nascoste</string>
+    <string name="settings_feedback">Feedback</string>
+    <string name="settings_sounds">Suoni dei tasti</string>
+    <string name="settings_sounds_description">Un clic leggero a ogni pressione</string>
+    <string name="settings_reduce_motion">Riduci movimento</string>
+    <string name="settings_reduce_motion_description">Dissolvenze semplici al posto di rotazioni e rimbalzi</string>
+    <string name="settings_more">Altro</string>
+    <string name="settings_version">Versione %1$s</string>
+    <string name="settings_clear_history_title">Cancellare la cronologia?</string>
+    <string name="settings_clear_history_body">Tutti i calcoli salvati verranno eliminati.</string>
+
+    <!-- Calculator localization -->
+
+    <!-- Calculator localization -->
+    <string name="measure_mm">Millimetro</string>
+    <string name="measure_cm">Centimetro</string>
+    <string name="measure_m">Metro</string>
+    <string name="measure_km">Chilometro</string>
+    <string name="measure_in">Pollice</string>
+    <string name="measure_ft">Piede</string>
+    <string name="measure_yd">Iarda</string>
+    <string name="measure_mi">Miglio</string>
+    <string name="measure_nmi">Miglio nautico</string>
+    <string name="measure_mg">Milligrammo</string>
+    <string name="measure_g">Grammo</string>
+    <string name="measure_kg">Chilogrammo</string>
+    <string name="measure_t">Tonnellata</string>
+    <string name="measure_oz">Oncia</string>
+    <string name="measure_lb">Libbra</string>
+    <string name="measure_st">Stone</string>
+    <string name="measure_c">Celsius</string>
+    <string name="measure_f">Fahrenheit</string>
+    <string name="measure_k">Kelvin</string>
+    <string name="measure_cm2">Centimetro quadrato</string>
+    <string name="measure_m2">Metro quadrato</string>
+    <string name="measure_ha">Ettaro</string>
+    <string name="measure_km2">Chilometro quadrato</string>
+    <string name="measure_ft2">Piede quadrato</string>
+    <string name="measure_ac">Acro</string>
+    <string name="measure_mi2">Miglio quadrato</string>
+    <string name="measure_ml">Millilitro</string>
+    <string name="measure_l">Litro</string>
+    <string name="measure_m3">Metro cubo</string>
+    <string name="measure_floz">Oncia liquida USA</string>
+    <string name="measure_cup">Tazza USA</string>
+    <string name="measure_gal">Gallone USA</string>
+    <string name="measure_mps">Metri al secondo</string>
+    <string name="measure_kmh">Chilometri orari</string>
+    <string name="measure_mph">Miglia orarie</string>
+    <string name="measure_kn">Nodi</string>
+    <string name="measure_ms">Millisecondo</string>
+    <string name="measure_s">Secondo</string>
+    <string name="measure_min">Minuto</string>
+    <string name="measure_h">Ora</string>
+    <string name="measure_d">Giorno</string>
+    <string name="measure_wk">Settimana</string>
+    <string name="measure_yr">Anno</string>
+    <string name="measure_b">Bit</string>
+    <string name="measure_byte">Byte</string>
+    <string name="measure_kb">Kilobyte</string>
+    <string name="measure_mb">Megabyte</string>
+    <string name="measure_gb">Gigabyte</string>
+    <string name="measure_tb">Terabyte</string>
+    <string name="measure_kib">Kibibyte</string>
+    <string name="measure_mib">Mebibyte</string>
+    <string name="measure_gib">Gibibyte</string>
+    <string name="measure_j">Joule</string>
+    <string name="measure_kj">Chilojoule</string>
+    <string name="measure_cal">Caloria</string>
+    <string name="measure_kcal">Chilocaloria</string>
+    <string name="measure_wh">Wattora</string>
+    <string name="measure_kwh">Chilowattora</string>
+    <string name="measure_pa">Pascal</string>
+    <string name="measure_kpa">Chilopascal</string>
+    <string name="measure_bar">Bar</string>
+    <string name="measure_atm">Atmosfera</string>
+    <string name="measure_psi">Libbra per pollice quadrato</string>
+    <string name="measure_mmhg">Millimetro di mercurio</string>
+
+    <!-- Calculator localization -->
+
+    <!-- Calculator localization -->
+
+    <!-- Calculator localization -->
+    <string name="key_clear">Cancella</string>
+    <string name="key_parens">Parentesi</string>
+    <string name="key_lparen">Parentesi aperta</string>
+    <string name="key_rparen">Parentesi chiusa</string>
+    <string name="key_percent">Percentuale</string>
+    <string name="key_divide">Dividi</string>
+    <string name="key_times">Moltiplica</string>
+    <string name="key_power">Potenza</string>
+    <string name="key_asin">Arcoseno</string>
+    <string name="key_acos">Arcocoseno</string>
+    <string name="key_atan">Arcotangente</string>
+    <string name="key_ln">Logaritmo naturale</string>
+    <string name="key_exp">e elevato a</string>
+    <string name="key_log">Logaritmo in base 10</string>
+    <string name="key_pow10">10 elevato a</string>
+    <string name="key_sqrt">Radice quadrata</string>
+    <string name="key_cbrt">Radice cubica</string>
+    <string name="key_minus">Meno</string>
+    <string name="key_pi">Pi</string>
+    <string name="key_e">Numero di Eulero</string>
+    <string name="key_square">Al quadrato</string>
+    <string name="key_cube">Al cubo</string>
+    <string name="key_factorial">Fattoriale</string>
+    <string name="key_reciprocal">Reciproco</string>
+    <string name="key_plus">Più</string>
+    <string name="key_dot">Separatore decimale</string>
+    <string name="key_equals">Uguale</string>
+    <string name="key_inverse">Funzioni inverse</string>
+    <string name="key_inverse_on">Funzioni inverse attivate</string>
+    <string name="key_inverse_off">Funzioni inverse disattivate</string>
+
+    <!-- Calculator localization -->
+    <string name="key_sin">Seno</string>
+
+    <!-- Calculator localization -->
+    <string name="key_cos">Coseno</string>
+
+    <!-- Calculator localization -->
+    <string name="key_tan">Tangente</string>
+
+    <!-- Calculator localization -->
+    <string name="key_negate">Cambia segno</string>
+
+    <!-- Calculator localization -->
+    <string name="battery_optimization_active">Ottimizzazione batteria attiva</string>
+
+    <!-- Calculator localization -->
+    <string name="battery_optimization_may_delay_sync">L’ottimizzazione della batteria può ritardare o impedire la sincronizzazione in background</string>
+
+    <!-- Calculator localization -->
+    <string name="disable_optimization">Disattiva ottimizzazione</string>
 </resources>

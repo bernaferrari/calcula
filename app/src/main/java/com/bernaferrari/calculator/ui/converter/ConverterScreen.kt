@@ -104,7 +104,7 @@ fun ConverterScreen(onNavigateBack: () -> Unit, viewModel: ConverterViewModel = 
     Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.containerTransform("converter", isScreen = true).fillMaxSize()) {
     Column(Modifier.fillMaxSize()) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.statusBarsPadding().padding(horizontal = 4.dp).height(56.dp)) {
-            IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null) }
+            IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.back)) }
             Text(stringResource(R.string.menu_unit_converter), style = MaterialTheme.typography.titleLarge)
         }
         LazyRow(
@@ -209,7 +209,7 @@ private fun UnitRow(
                     .clickable(onClick = onPickUnit)
                     .padding(start = 12.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
             ) {
-                Text(unit.name, style = MaterialTheme.typography.titleMedium, color = colors.onSurfaceVariant)
+                Text(stringResource(unit.nameResource), style = MaterialTheme.typography.titleMedium, color = colors.onSurfaceVariant)
                 Icon(Icons.Rounded.KeyboardArrowDown, contentDescription = null, tint = colors.onSurfaceVariant)
             }
             Row {
@@ -254,14 +254,14 @@ private fun UnitGrid(units: List<MeasureUnit>, selected: MeasureUnit, haptics: H
                     KeyCell(
                         container = if (isSelected) colors.primary else colors.surfaceContainerHigh,
                         content = content,
-                        description = unit.name,
+                        description = stringResource(unit.nameResource),
                         haptics = haptics,
                         onClick = { onPick(unit) },
                         modifier = Modifier.weight(1f).fillMaxHeight(),
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(unit.symbol, style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 22.sp, fontWeight = FontWeight.Medium), color = content, maxLines = 1)
-                            Text(unit.name, style = MaterialTheme.typography.labelSmall, color = content.copy(alpha = 0.75f), maxLines = 1)
+                            Text(stringResource(unit.nameResource), style = MaterialTheme.typography.labelSmall, color = content.copy(alpha = 0.75f), maxLines = 1)
                         }
                     }
                 }
@@ -294,14 +294,14 @@ private fun ConverterKeypad(
                 digits.forEach { d -> TextKey(d.toString(), colors.surfaceContainerHigh, colors.onSurface, haptics, { onDigit(d) }) }
                 when (index) {
                     0 -> IconKey(colors.surfaceContainerHighest, colors.onSurfaceVariant, haptics, onDelete, onLongClick = onClear)
-                    1 -> TextKey("AC", colors.surfaceContainerHighest, colors.tertiary, haptics, onClear)
-                    else -> TextKey("±", colors.surfaceContainerHighest, colors.onSurfaceVariant, haptics, onNegate)
+                    1 -> TextKey("AC", colors.surfaceContainerHighest, colors.tertiary, haptics, onClear, description = stringResource(R.string.key_clear))
+                    else -> TextKey("±", colors.surfaceContainerHighest, colors.onSurfaceVariant, haptics, onNegate, description = stringResource(R.string.key_negate))
                 }
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(gap), modifier = Modifier.weight(1f)) {
             TextKey("0", colors.surfaceContainerHigh, colors.onSurface, haptics, { onDigit('0') }, weight = 2f)
-            TextKey(decimal.toString(), colors.surfaceContainerHigh, colors.onSurface, haptics, onDecimal)
+            TextKey(decimal.toString(), colors.surfaceContainerHigh, colors.onSurface, haptics, onDecimal, description = stringResource(R.string.key_dot))
             SwapKey(haptics, onSwap)
         }
     }
@@ -315,11 +315,12 @@ private fun androidx.compose.foundation.layout.RowScope.TextKey(
     haptics: Haptics,
     onClick: () -> Unit,
     weight: Float = 1f,
+    description: String = label,
 ) {
     KeyCell(
         container = container,
         content = content,
-        description = label,
+        description = description,
         haptics = haptics,
         onClick = onClick,
         modifier = Modifier.weight(weight).fillMaxHeight(),

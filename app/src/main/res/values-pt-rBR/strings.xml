@@ -1,5 +1,4 @@
 <resources>
-    <string name="app_name">SDK Monitor</string>
 
     <!-- Theme Mode -->
     <string name="theme_system">Sistema</string>
@@ -324,4 +323,133 @@
     <string name="settings_version">Versão %1$s</string>
     <string name="settings_clear_history_title">Limpar histórico?</string>
     <string name="settings_clear_history_body">Todos os cálculos salvos serão excluídos.</string>
+
+    <!-- Calculator localization -->
+    <string name="angle_degrees">DEG</string>
+    <string name="angle_radians">RAD</string>
+
+    <!-- Calculator localization -->
+
+    <!-- Calculator localization -->
+    <string name="measure_mm">Milímetro</string>
+    <string name="measure_cm">Centímetro</string>
+    <string name="measure_m">Metro</string>
+    <string name="measure_km">Quilômetro</string>
+    <string name="measure_in">Polegada</string>
+    <string name="measure_ft">Pé</string>
+    <string name="measure_yd">Jarda</string>
+    <string name="measure_mi">Milha</string>
+    <string name="measure_nmi">Milha náutica</string>
+    <string name="measure_mg">Miligrama</string>
+    <string name="measure_g">Grama</string>
+    <string name="measure_kg">Quilograma</string>
+    <string name="measure_t">Tonelada</string>
+    <string name="measure_oz">Onça</string>
+    <string name="measure_lb">Libra</string>
+    <string name="measure_st">Stone</string>
+    <string name="measure_c">Celsius</string>
+    <string name="measure_f">Fahrenheit</string>
+    <string name="measure_k">Kelvin</string>
+    <string name="measure_cm2">Centímetro quadrado</string>
+    <string name="measure_m2">Metro quadrado</string>
+    <string name="measure_ha">Hectare</string>
+    <string name="measure_km2">Quilômetro quadrado</string>
+    <string name="measure_ft2">Pé quadrado</string>
+    <string name="measure_ac">Acre</string>
+    <string name="measure_mi2">Milha quadrada</string>
+    <string name="measure_ml">Mililitro</string>
+    <string name="measure_l">Litro</string>
+    <string name="measure_m3">Metro cúbico</string>
+    <string name="measure_floz">Onça líquida americana</string>
+    <string name="measure_cup">Xícara americana</string>
+    <string name="measure_gal">Galão americano</string>
+    <string name="measure_mps">Metros por segundo</string>
+    <string name="measure_kmh">Quilômetros por hora</string>
+    <string name="measure_mph">Milhas por hora</string>
+    <string name="measure_kn">Nós</string>
+    <string name="measure_ms">Milissegundo</string>
+    <string name="measure_s">Segundo</string>
+    <string name="measure_min">Minuto</string>
+    <string name="measure_h">Hora</string>
+    <string name="measure_d">Dia</string>
+    <string name="measure_wk">Semana</string>
+    <string name="measure_yr">Ano</string>
+    <string name="measure_b">Bit</string>
+    <string name="measure_byte">Byte</string>
+    <string name="measure_kb">Quilobyte</string>
+    <string name="measure_mb">Megabyte</string>
+    <string name="measure_gb">Gigabyte</string>
+    <string name="measure_tb">Terabyte</string>
+    <string name="measure_kib">Kibibyte</string>
+    <string name="measure_mib">Mebibyte</string>
+    <string name="measure_gib">Gibibyte</string>
+    <string name="measure_j">Joule</string>
+    <string name="measure_kj">Quilojoule</string>
+    <string name="measure_cal">Caloria</string>
+    <string name="measure_kcal">Quilocaloria</string>
+    <string name="measure_wh">Watt-hora</string>
+    <string name="measure_kwh">Quilowatt-hora</string>
+    <string name="measure_pa">Pascal</string>
+    <string name="measure_kpa">Quilopascal</string>
+    <string name="measure_bar">Bar</string>
+    <string name="measure_atm">Atmosfera</string>
+    <string name="measure_psi">Libra por polegada quadrada</string>
+    <string name="measure_mmhg">Milímetro de mercúrio</string>
+
+    <!-- Calculator localization -->
+
+    <!-- Calculator localization -->
+
+    <!-- Calculator localization -->
+    <string name="key_clear">Limpar</string>
+    <string name="key_parens">Parênteses</string>
+    <string name="key_lparen">Abrir parêntese</string>
+    <string name="key_rparen">Fechar parêntese</string>
+    <string name="key_percent">Porcentagem</string>
+    <string name="key_divide">Dividir</string>
+    <string name="key_times">Multiplicar</string>
+    <string name="key_power">Potência</string>
+    <string name="key_asin">Arco seno</string>
+    <string name="key_acos">Arco cosseno</string>
+    <string name="key_atan">Arco tangente</string>
+    <string name="key_ln">Logaritmo natural</string>
+    <string name="key_exp">e elevado a</string>
+    <string name="key_log">Logaritmo na base 10</string>
+    <string name="key_pow10">10 elevado a</string>
+    <string name="key_sqrt">Raiz quadrada</string>
+    <string name="key_cbrt">Raiz cúbica</string>
+    <string name="key_minus">Menos</string>
+    <string name="key_pi">Pi</string>
+    <string name="key_e">Número de Euler</string>
+    <string name="key_square">Ao quadrado</string>
+    <string name="key_cube">Ao cubo</string>
+    <string name="key_factorial">Fatorial</string>
+    <string name="key_reciprocal">Recíproco</string>
+    <string name="key_plus">Mais</string>
+    <string name="key_dot">Separador decimal</string>
+    <string name="key_equals">Igual</string>
+    <string name="key_inverse">Funções inversas</string>
+    <string name="key_inverse_on">Funções inversas ativadas</string>
+    <string name="key_inverse_off">Funções inversas desativadas</string>
+
+    <!-- Calculator localization -->
+    <string name="key_sin">Seno</string>
+
+    <!-- Calculator localization -->
+    <string name="key_cos">Cosseno</string>
+
+    <!-- Calculator localization -->
+    <string name="key_tan">Tangente</string>
+
+    <!-- Calculator localization -->
+    <string name="key_negate">Trocar sinal</string>
+
+    <!-- Calculator localization -->
+    <string name="battery_optimization_active">Otimização de bateria ativa</string>
+
+    <!-- Calculator localization -->
+    <string name="battery_optimization_may_delay_sync">A otimização de bateria pode atrasar ou impedir a sincronização em segundo plano</string>
+
+    <!-- Calculator localization -->
+    <string name="disable_optimization">Desativar otimização</string>
 </resources>

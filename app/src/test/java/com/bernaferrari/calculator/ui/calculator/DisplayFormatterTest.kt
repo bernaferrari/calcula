@@ -15,6 +15,16 @@ class DisplayFormatterTest {
         assertEquals("999", us.number("999"))
     }
 
+    @Test fun supportedLocalesUseTheirOwnSeparators() {
+        for (tag in listOf("de", "es", "it", "pt-BR")) {
+            assertEquals(tag, "1.234,5", DisplayFormatter(Locale.forLanguageTag(tag)).number("1234.5"))
+        }
+        assertEquals("1 234,5", DisplayFormatter(Locale.FRENCH).number("1234.5"))
+        for (locale in listOf(Locale.JAPANESE, Locale.CHINESE)) {
+            assertEquals("1,234.5", DisplayFormatter(locale).number("1234.5"))
+        }
+    }
+
     @Test fun scientificNotationReadsAsPowerOfTen() {
         assertEquals("1.5×10²⁰", us.number("1.5E20"))
         assertEquals("2×10⁻¹²", us.number("2E−12"))

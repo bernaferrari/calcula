@@ -33,6 +33,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.bernaferrari.calculator.R
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.TextStyle
@@ -90,34 +92,34 @@ fun MainKeypad(
 ) {
     val rows = listOf(
         listOf(
-            Spec(Key.CLEAR, "AC", Tone.Function, "Clear"),
-            Spec(Key.PARENS, "( )", Tone.Function, "Parentheses", up = Alt("(", Key.LPAREN, "open parenthesis"), down = Alt(")", Key.RPAREN, "close parenthesis"), flips = false),
-            Spec(Key.PERCENT, "%", Tone.Function, "Percent"),
-            Spec(Key.DIVIDE, "÷", Tone.Operator, "Divide"),
+            Spec(Key.CLEAR, "AC", Tone.Function, stringResource(R.string.key_clear)),
+            Spec(Key.PARENS, "( )", Tone.Function, stringResource(R.string.key_parens), up = Alt("(", Key.LPAREN, stringResource(R.string.key_lparen)), down = Alt(")", Key.RPAREN, stringResource(R.string.key_rparen)), flips = false),
+            Spec(Key.PERCENT, "%", Tone.Function, stringResource(R.string.key_percent)),
+            Spec(Key.DIVIDE, "÷", Tone.Operator, stringResource(R.string.key_divide)),
         ),
         listOf(
-            Spec(Key.D7, "7", Tone.Digit, up = Alt("sin", Key.SIN), down = Alt("sin⁻¹", Key.ASIN, "arcsine")),
-            Spec(Key.D8, "8", Tone.Digit, up = Alt("cos", Key.COS), down = Alt("cos⁻¹", Key.ACOS, "arccosine")),
-            Spec(Key.D9, "9", Tone.Digit, up = Alt("tan", Key.TAN), down = Alt("tan⁻¹", Key.ATAN, "arctangent")),
-            Spec(Key.TIMES, "×", Tone.Operator, "Multiply", up = Alt("xʸ", Key.POWER, "power")),
+            Spec(Key.D7, "7", Tone.Digit, up = Alt("sin", Key.SIN, stringResource(R.string.key_sin)), down = Alt("sin⁻¹", Key.ASIN, stringResource(R.string.key_asin))),
+            Spec(Key.D8, "8", Tone.Digit, up = Alt("cos", Key.COS, stringResource(R.string.key_cos)), down = Alt("cos⁻¹", Key.ACOS, stringResource(R.string.key_acos))),
+            Spec(Key.D9, "9", Tone.Digit, up = Alt("tan", Key.TAN, stringResource(R.string.key_tan)), down = Alt("tan⁻¹", Key.ATAN, stringResource(R.string.key_atan))),
+            Spec(Key.TIMES, "×", Tone.Operator, stringResource(R.string.key_times), up = Alt("xʸ", Key.POWER, stringResource(R.string.key_power))),
         ),
         listOf(
-            Spec(Key.D4, "4", Tone.Digit, up = Alt("ln", Key.LN, "natural log"), down = Alt("eˣ", Key.EXP, "e to the power")),
-            Spec(Key.D5, "5", Tone.Digit, up = Alt("log", Key.LOG, "log base 10"), down = Alt("10ˣ", Key.POW10, "10 to the power")),
-            Spec(Key.D6, "6", Tone.Digit, up = Alt("√", Key.SQRT, "square root"), down = Alt("∛", Key.CBRT, "cube root")),
-            Spec(Key.MINUS, "−", Tone.Operator, "Minus"),
+            Spec(Key.D4, "4", Tone.Digit, up = Alt("ln", Key.LN, stringResource(R.string.key_ln)), down = Alt("eˣ", Key.EXP, stringResource(R.string.key_exp))),
+            Spec(Key.D5, "5", Tone.Digit, up = Alt("log", Key.LOG, stringResource(R.string.key_log)), down = Alt("10ˣ", Key.POW10, stringResource(R.string.key_pow10))),
+            Spec(Key.D6, "6", Tone.Digit, up = Alt("√", Key.SQRT, stringResource(R.string.key_sqrt)), down = Alt("∛", Key.CBRT, stringResource(R.string.key_cbrt))),
+            Spec(Key.MINUS, "−", Tone.Operator, stringResource(R.string.key_minus)),
         ),
         listOf(
-            Spec(Key.D1, "1", Tone.Digit, up = Alt("π", Key.PI, "pi"), down = Alt("e", Key.E, "Euler's number")),
-            Spec(Key.D2, "2", Tone.Digit, up = Alt("x²", Key.SQUARE, "squared"), down = Alt("x³", Key.CUBE, "cubed")),
-            Spec(Key.D3, "3", Tone.Digit, up = Alt("x!", Key.FACTORIAL, "factorial"), down = Alt("1/x", Key.RECIPROCAL, "reciprocal")),
-            Spec(Key.PLUS, "+", Tone.Operator, "Plus"),
+            Spec(Key.D1, "1", Tone.Digit, up = Alt("π", Key.PI, stringResource(R.string.key_pi)), down = Alt("e", Key.E, stringResource(R.string.key_e))),
+            Spec(Key.D2, "2", Tone.Digit, up = Alt("x²", Key.SQUARE, stringResource(R.string.key_square)), down = Alt("x³", Key.CUBE, stringResource(R.string.key_cube))),
+            Spec(Key.D3, "3", Tone.Digit, up = Alt("x!", Key.FACTORIAL, stringResource(R.string.key_factorial)), down = Alt("1/x", Key.RECIPROCAL, stringResource(R.string.key_reciprocal))),
+            Spec(Key.PLUS, "+", Tone.Operator, stringResource(R.string.key_plus)),
         ),
         listOf(
             Spec(Key.D0, "0", Tone.Digit, up = Alt("00", Key.DOUBLE_ZERO), down = Alt("000", Key.TRIPLE_ZERO), flips = false),
-            Spec(Key.DOT, decimal.toString(), Tone.Digit, "Decimal point"),
-            Spec(Key.DELETE, "⌫", Tone.Digit, "Backspace, hold to clear"),
-            Spec(Key.EQUALS, "=", Tone.Equals, "Equals"),
+            Spec(Key.DOT, decimal.toString(), Tone.Digit, stringResource(R.string.key_dot)),
+            Spec(Key.DELETE, "⌫", Tone.Digit, stringResource(R.string.converter_backspace)),
+            Spec(Key.EQUALS, "=", Tone.Equals, stringResource(R.string.key_equals)),
         ),
     )
     val reduceMotion = LocalReduceMotion.current
@@ -257,7 +259,7 @@ private fun KeypadKey(
     }
 }
 
-private data class SciSpec(val key: Key, val label: String, val inverseLabel: String = label, val description: String = label)
+private data class SciSpec(val key: Key, val label: String, val inverseLabel: String = label)
 
 /** Landscape has room for every function as its own key, beside the main keypad. */
 @Composable
@@ -270,7 +272,7 @@ fun ScientificGrid(
     modifier: Modifier = Modifier,
 ) {
     val rows = listOf(
-        listOf(SciSpec(Key.INVERSE, "INV", description = "Inverse functions"), SciSpec(Key.SQRT, "√", "∛"), SciSpec(Key.PI, "π")),
+        listOf(SciSpec(Key.INVERSE, "INV"), SciSpec(Key.SQRT, "√", "∛"), SciSpec(Key.PI, "π")),
         listOf(SciSpec(Key.SIN, "sin", "sin⁻¹"), SciSpec(Key.COS, "cos", "cos⁻¹"), SciSpec(Key.TAN, "tan", "tan⁻¹")),
         listOf(SciSpec(Key.LN, "ln", "eˣ"), SciSpec(Key.LOG, "log", "10ˣ"), SciSpec(Key.E, "e")),
         listOf(SciSpec(Key.POWER, "xʸ", "x⁻¹"), SciSpec(Key.SQUARE, "x²", "x³"), SciSpec(Key.FACTORIAL, "x!")),
@@ -287,12 +289,12 @@ fun ScientificGrid(
                     KeyCell(
                         container = MaterialTheme.colorScheme.surfaceContainer,
                         content = MaterialTheme.colorScheme.primary,
-                        description = "Angle unit",
+                        description = stringResource(R.string.angle_toggle_description),
                         haptics = haptics,
                         onClick = onToggleAngle,
                         modifier = Modifier.weight(1f).fillMaxHeight(),
                     ) {
-                        Text(if (angleUnit == AngleUnit.DEGREES) "DEG" else "RAD", style = ScientificStyle, color = MaterialTheme.colorScheme.primary)
+                        Text(stringResource(if (angleUnit == AngleUnit.DEGREES) R.string.angle_degrees else R.string.angle_radians), style = ScientificStyle, color = MaterialTheme.colorScheme.primary)
                     }
                 }
             }
@@ -313,7 +315,22 @@ private fun ScientificKey(spec: SciSpec, inverse: Boolean, haptics: Haptics, onK
     KeyCell(
         container = container,
         content = content,
-        description = if (isInverseKey) (if (inverse) "Inverse functions on" else "Inverse functions off") else label,
+        description = if (isInverseKey) (if (inverse) stringResource(R.string.key_inverse_on) else stringResource(R.string.key_inverse_off)) else stringResource(when (spec.key) {
+            Key.SQRT -> if (inverse) R.string.key_cbrt else R.string.key_sqrt
+            Key.PI -> R.string.key_pi
+            Key.SIN -> if (inverse) R.string.key_asin else R.string.key_sin
+            Key.COS -> if (inverse) R.string.key_acos else R.string.key_cos
+            Key.TAN -> if (inverse) R.string.key_atan else R.string.key_tan
+            Key.LN -> if (inverse) R.string.key_exp else R.string.key_ln
+            Key.LOG -> if (inverse) R.string.key_pow10 else R.string.key_log
+            Key.E -> R.string.key_e
+            Key.POWER -> if (inverse) R.string.key_reciprocal else R.string.key_power
+            Key.SQUARE -> if (inverse) R.string.key_cube else R.string.key_square
+            Key.FACTORIAL -> R.string.key_factorial
+            Key.LPAREN -> R.string.key_lparen
+            Key.RPAREN -> R.string.key_rparen
+            else -> R.string.key_inverse
+        }),
         haptics = haptics,
         onClick = { onKey(spec.key) },
         modifier = modifier,

@@ -47,6 +47,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -257,7 +258,10 @@ private fun TapeEntry(
 private fun DayLabel.text(): String = when (this) {
     DayLabel.Today -> stringResource(R.string.history_today)
     DayLabel.Yesterday -> stringResource(R.string.history_yesterday)
-    is DayLabel.Date -> remember(millis) { DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(millis)) }
+    is DayLabel.Date -> {
+        val locale = LocalConfiguration.current.locales[0]
+        remember(millis, locale) { DateFormat.getDateInstance(DateFormat.MEDIUM, locale).format(Date(millis)) }
+    }
 }
 
 /** The list is drawn bottom-up, so each day's header comes after its entries. */

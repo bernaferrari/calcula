@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Calculator++</string>
+    <string name="app_name" translatable="false">Calculator++</string>
 
     <!-- Theme Mode -->
     <string name="theme_system">System</string>
@@ -331,4 +331,116 @@
     <string name="settings_version">Version %1$s</string>
     <string name="settings_clear_history_title">Clear history?</string>
     <string name="settings_clear_history_body">All saved calculations will be deleted.</string>
+
+    <!-- Calculator localization -->
+    <string name="measure_mm">Millimetre</string>
+    <string name="measure_cm">Centimetre</string>
+    <string name="measure_m">Metre</string>
+    <string name="measure_km">Kilometre</string>
+    <string name="measure_in">Inch</string>
+    <string name="measure_ft">Foot</string>
+    <string name="measure_yd">Yard</string>
+    <string name="measure_mi">Mile</string>
+    <string name="measure_nmi">Nautical mile</string>
+    <string name="measure_mg">Milligram</string>
+    <string name="measure_g">Gram</string>
+    <string name="measure_kg">Kilogram</string>
+    <string name="measure_t">Tonne</string>
+    <string name="measure_oz">Ounce</string>
+    <string name="measure_lb">Pound</string>
+    <string name="measure_st">Stone</string>
+    <string name="measure_c">Celsius</string>
+    <string name="measure_f">Fahrenheit</string>
+    <string name="measure_k">Kelvin</string>
+    <string name="measure_cm2">Square centimetre</string>
+    <string name="measure_m2">Square metre</string>
+    <string name="measure_ha">Hectare</string>
+    <string name="measure_km2">Square kilometre</string>
+    <string name="measure_ft2">Square foot</string>
+    <string name="measure_ac">Acre</string>
+    <string name="measure_mi2">Square mile</string>
+    <string name="measure_ml">Millilitre</string>
+    <string name="measure_l">Litre</string>
+    <string name="measure_m3">Cubic metre</string>
+    <string name="measure_floz">US fluid ounce</string>
+    <string name="measure_cup">US cup</string>
+    <string name="measure_gal">US gallon</string>
+    <string name="measure_mps">Metres per second</string>
+    <string name="measure_kmh">Kilometres per hour</string>
+    <string name="measure_mph">Miles per hour</string>
+    <string name="measure_kn">Knots</string>
+    <string name="measure_ms">Millisecond</string>
+    <string name="measure_s">Second</string>
+    <string name="measure_min">Minute</string>
+    <string name="measure_h">Hour</string>
+    <string name="measure_d">Day</string>
+    <string name="measure_wk">Week</string>
+    <string name="measure_yr">Year</string>
+    <string name="measure_b">Bit</string>
+    <string name="measure_byte">Byte</string>
+    <string name="measure_kb">Kilobyte</string>
+    <string name="measure_mb">Megabyte</string>
+    <string name="measure_gb">Gigabyte</string>
+    <string name="measure_tb">Terabyte</string>
+    <string name="measure_kib">Kibibyte</string>
+    <string name="measure_mib">Mebibyte</string>
+    <string name="measure_gib">Gibibyte</string>
+    <string name="measure_j">Joule</string>
+    <string name="measure_kj">Kilojoule</string>
+    <string name="measure_cal">Calorie</string>
+    <string name="measure_kcal">Kilocalorie</string>
+    <string name="measure_wh">Watt-hour</string>
+    <string name="measure_kwh">Kilowatt-hour</string>
+    <string name="measure_pa">Pascal</string>
+    <string name="measure_kpa">Kilopascal</string>
+    <string name="measure_bar">Bar</string>
+    <string name="measure_atm">Atmosphere</string>
+    <string name="measure_psi">Pound per square inch</string>
+    <string name="measure_mmhg">Millimetre of mercury</string>
+
+    <!-- Calculator localization -->
+
+    <!-- Calculator localization -->
+    <string name="key_clear">Clear</string>
+    <string name="key_parens">Parentheses</string>
+    <string name="key_lparen">open parenthesis</string>
+    <string name="key_rparen">close parenthesis</string>
+    <string name="key_percent">Percent</string>
+    <string name="key_divide">Divide</string>
+    <string name="key_times">Multiply</string>
+    <string name="key_power">power</string>
+    <string name="key_asin">arcsine</string>
+    <string name="key_acos">arccosine</string>
+    <string name="key_atan">arctangent</string>
+    <string name="key_ln">natural log</string>
+    <string name="key_exp">e to the power</string>
+    <string name="key_log">log base 10</string>
+    <string name="key_pow10">10 to the power</string>
+    <string name="key_sqrt">square root</string>
+    <string name="key_cbrt">cube root</string>
+    <string name="key_minus">Minus</string>
+    <string name="key_pi">pi</string>
+    <string name="key_e">Euler\'s number</string>
+    <string name="key_square">squared</string>
+    <string name="key_cube">cubed</string>
+    <string name="key_factorial">factorial</string>
+    <string name="key_reciprocal">reciprocal</string>
+    <string name="key_plus">Plus</string>
+    <string name="key_dot">Decimal point</string>
+    <string name="key_equals">Equals</string>
+    <string name="key_inverse">Inverse functions</string>
+    <string name="key_inverse_on">Inverse functions on</string>
+    <string name="key_inverse_off">Inverse functions off</string>
+
+    <!-- Calculator localization -->
+    <string name="key_sin">Sine</string>
+
+    <!-- Calculator localization -->
+    <string name="key_cos">Cosine</string>
+
+    <!-- Calculator localization -->
+    <string name="key_tan">Tangent</string>
+
+    <!-- Calculator localization -->
+    <string name="key_negate">Change sign</string>
 </resources>

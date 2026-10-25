@@ -1,5 +1,4 @@
 <resources>
-    <string name="app_name">SDK Monitor</string>
 
     <!-- Theme Mode -->
     <string name="theme_system">系统</string>
@@ -252,4 +251,203 @@
     <string name="notifications_help_background_sync">通知有助于让您的应用在后台保持更新</string>
     <string name="allow_notifications">允许通知</string>
 
+
+    <!-- Calculator localization -->
+    <string name="error_divide_by_zero">不能除以零</string>
+    <string name="error_domain">此值无定义</string>
+    <string name="error_syntax">表达式不完整</string>
+    <string name="error_overflow">数值过大</string>
+    <string name="tape_copy_result">复制结果</string>
+    <string name="tape_edit">编辑计算</string>
+    <string name="tape_delete">删除</string>
+    <string name="copied">已复制</string>
+    <string name="menu_more">更多选项</string>
+    <string name="menu_clear_history">清除历史记录</string>
+    <string name="menu_settings">设置</string>
+    <string name="menu_unit_converter">单位换算</string>
+    <string name="menu_programmer">程序员</string>
+    <string name="menu_statistics">统计</string>
+    <string name="angle_degrees">DEG</string>
+    <string name="angle_radians">RAD</string>
+    <string name="angle_toggle_description">角度单位，点按切换</string>
+    <string name="settings_appearance">外观</string>
+    <string name="settings_haptics">触感反馈</string>
+    <string name="settings_haptics_description">感受每次按键</string>
+    <string name="settings_history">历史记录</string>
+    <string name="settings_clear_history">清除历史记录</string>
+    <string name="swipe_tip">上下轻扫按键可输入 sin、√、π 等</string>
+    <string name="settings_tools">工具</string>
+    <string name="show_history">显示历史记录</string>
+    <string name="show_keypad">显示键盘</string>
+    <string name="function_layer_description">函数。点按使用一次，再次点按或长按可保持</string>
+    <string name="history_empty">暂无计算记录</string>
+    <string name="history_clear">清除</string>
+    <string name="history_today">今天</string>
+    <string name="history_yesterday">昨天</string>
+    <string name="history_deleted">已删除计算</string>
+    <string name="history_cleared">已清除历史记录</string>
+    <string name="undo">撤销</string>
+    <string name="settings_dynamic_color">壁纸配色</string>
+    <string name="settings_about">关于</string>
+    <string name="settings_licenses">开源许可</string>
+    <string name="converter_swap">交换单位</string>
+    <string name="converter_backspace">退格，长按清空</string>
+    <string name="unit_length">长度</string>
+    <string name="unit_mass">质量</string>
+    <string name="unit_temperature">温度</string>
+    <string name="unit_area">面积</string>
+    <string name="unit_volume">体积</string>
+    <string name="unit_speed">速度</string>
+    <string name="unit_time">时间</string>
+    <string name="unit_data">数据</string>
+    <string name="unit_energy">能量</string>
+    <string name="unit_pressure">压力</string>
+    <string name="settings_dynamic_color_description">匹配壁纸</string>
+    <string name="settings_high_contrast">高对比度</string>
+    <string name="settings_high_contrast_description">纯色背景和更清晰的文字</string>
+    <string name="settings_calculator">计算器</string>
+    <string name="settings_angle_unit">角度单位</string>
+    <string name="settings_degrees">度</string>
+    <string name="settings_radians">弧度</string>
+    <string name="settings_decimal_places">小数位数</string>
+    <string name="settings_auto">自动</string>
+    <string name="settings_decimal_separator">数字格式</string>
+    <string name="settings_show_tape">显示最近的计算</string>
+    <string name="settings_show_tape_description">在结果上方保留计算记录</string>
+    <string name="settings_flick_dots">显示函数圆点</string>
+    <string name="settings_flick_dots_description">标记带有隐藏函数的按键</string>
+    <string name="settings_feedback">反馈</string>
+    <string name="settings_sounds">按键音</string>
+    <string name="settings_sounds_description">每次按键发出轻柔的声音</string>
+    <string name="settings_reduce_motion">减少动态效果</string>
+    <string name="settings_reduce_motion_description">使用简单淡入淡出代替翻转和弹跳</string>
+    <string name="settings_more">更多</string>
+    <string name="settings_version">版本 %1$s</string>
+    <string name="settings_clear_history_title">清除历史记录？</string>
+    <string name="settings_clear_history_body">所有已保存的计算将被删除。</string>
+
+    <!-- Calculator localization -->
+
+    <!-- Calculator localization -->
+    <string name="measure_mm">毫米</string>
+    <string name="measure_cm">厘米</string>
+    <string name="measure_m">米</string>
+    <string name="measure_km">千米</string>
+    <string name="measure_in">英寸</string>
+    <string name="measure_ft">英尺</string>
+    <string name="measure_yd">码</string>
+    <string name="measure_mi">英里</string>
+    <string name="measure_nmi">海里</string>
+    <string name="measure_mg">毫克</string>
+    <string name="measure_g">克</string>
+    <string name="measure_kg">千克</string>
+    <string name="measure_t">吨</string>
+    <string name="measure_oz">盎司</string>
+    <string name="measure_lb">磅</string>
+    <string name="measure_st">英石</string>
+    <string name="measure_c">摄氏度</string>
+    <string name="measure_f">华氏度</string>
+    <string name="measure_k">开尔文</string>
+    <string name="measure_cm2">平方厘米</string>
+    <string name="measure_m2">平方米</string>
+    <string name="measure_ha">公顷</string>
+    <string name="measure_km2">平方千米</string>
+    <string name="measure_ft2">平方英尺</string>
+    <string name="measure_ac">英亩</string>
+    <string name="measure_mi2">平方英里</string>
+    <string name="measure_ml">毫升</string>
+    <string name="measure_l">升</string>
+    <string name="measure_m3">立方米</string>
+    <string name="measure_floz">美制液量盎司</string>
+    <string name="measure_cup">美制杯</string>
+    <string name="measure_gal">美制加仑</string>
+    <string name="measure_mps">米每秒</string>
+    <string name="measure_kmh">千米每小时</string>
+    <string name="measure_mph">英里每小时</string>
+    <string name="measure_kn">节</string>
+    <string name="measure_ms">毫秒</string>
+    <string name="measure_s">秒</string>
+    <string name="measure_min">分钟</string>
+    <string name="measure_h">小时</string>
+    <string name="measure_d">天</string>
+    <string name="measure_wk">周</string>
+    <string name="measure_yr">年</string>
+    <string name="measure_b">比特</string>
+    <string name="measure_byte">字节</string>
+    <string name="measure_kb">千字节</string>
+    <string name="measure_mb">兆字节</string>
+    <string name="measure_gb">吉字节</string>
+    <string name="measure_tb">太字节</string>
+    <string name="measure_kib">千二进制字节</string>
+    <string name="measure_mib">兆二进制字节</string>
+    <string name="measure_gib">吉二进制字节</string>
+    <string name="measure_j">焦耳</string>
+    <string name="measure_kj">千焦</string>
+    <string name="measure_cal">卡路里</string>
+    <string name="measure_kcal">千卡</string>
+    <string name="measure_wh">瓦时</string>
+    <string name="measure_kwh">千瓦时</string>
+    <string name="measure_pa">帕斯卡</string>
+    <string name="measure_kpa">千帕</string>
+    <string name="measure_bar">巴</string>
+    <string name="measure_atm">标准大气压</string>
+    <string name="measure_psi">磅每平方英寸</string>
+    <string name="measure_mmhg">毫米汞柱</string>
+
+    <!-- Calculator localization -->
+
+    <!-- Calculator localization -->
+
+    <!-- Calculator localization -->
+    <string name="key_clear">清除</string>
+    <string name="key_parens">括号</string>
+    <string name="key_lparen">左括号</string>
+    <string name="key_rparen">右括号</string>
+    <string name="key_percent">百分比</string>
+    <string name="key_divide">除以</string>
+    <string name="key_times">乘以</string>
+    <string name="key_power">幂</string>
+    <string name="key_asin">反正弦</string>
+    <string name="key_acos">反余弦</string>
+    <string name="key_atan">反正切</string>
+    <string name="key_ln">自然对数</string>
+    <string name="key_exp">e 的幂</string>
+    <string name="key_log">以 10 为底的对数</string>
+    <string name="key_pow10">10 的幂</string>
+    <string name="key_sqrt">平方根</string>
+    <string name="key_cbrt">立方根</string>
+    <string name="key_minus">减</string>
+    <string name="key_pi">圆周率</string>
+    <string name="key_e">自然常数</string>
+    <string name="key_square">平方</string>
+    <string name="key_cube">立方</string>
+    <string name="key_factorial">阶乘</string>
+    <string name="key_reciprocal">倒数</string>
+    <string name="key_plus">加</string>
+    <string name="key_dot">小数点</string>
+    <string name="key_equals">等于</string>
+    <string name="key_inverse">反函数</string>
+    <string name="key_inverse_on">反函数已开启</string>
+    <string name="key_inverse_off">反函数已关闭</string>
+
+    <!-- Calculator localization -->
+    <string name="key_sin">正弦</string>
+
+    <!-- Calculator localization -->
+    <string name="key_cos">余弦</string>
+
+    <!-- Calculator localization -->
+    <string name="key_tan">正切</string>
+
+    <!-- Calculator localization -->
+    <string name="key_negate">切换正负号</string>
+
+    <!-- Calculator localization -->
+    <string name="battery_optimization_active">电池优化已开启</string>
+
+    <!-- Calculator localization -->
+    <string name="battery_optimization_may_delay_sync">电池优化可能延迟或阻止后台同步</string>
+
+    <!-- Calculator localization -->
+    <string name="disable_optimization">关闭优化</string>
 </resources>
