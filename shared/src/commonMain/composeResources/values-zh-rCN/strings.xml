@@ -132,6 +132,10 @@
     <string name="settings_entry_rpn_summary">↵ 压入堆栈，运算符立即计算</string>
     <string name="menu_programmer">程序员</string>
     <string name="programmer_word_size">字长</string>
+    <string name="programmer_signed">有符号</string>
+    <string name="programmer_unsigned">无符号</string>
+    <string name="programmer_rotate_left">循环左移</string>
+    <string name="programmer_rotate_right">循环右移</string>
     <string name="programmer_bits">%1$d 位</string>
     <string name="cursor_left">光标左移</string>
     <string name="cursor_right">光标右移</string>
@@ -221,8 +225,8 @@
     <string name="stats_clear">清除</string>
     <string name="stats_empty">输入数字后点按“添加”。点按任一结果即可在计算器中使用。</string>
     <string name="menu_usage">你的 Calcula</string>
-    <string name="usage_favorite">最爱</string>
-    <string name="usage_since">自 %1$s</string>
+    <string name="usage_favorite">最常用</string>
+    <string name="usage_since">%1$s 起</string>
     <string name="usage_share">分享你的卡片</string>
     <string name="usage_empty">先算一会儿，再回来看看你的键盘亮起来。</string>
     <plurals name="usage_calculations">

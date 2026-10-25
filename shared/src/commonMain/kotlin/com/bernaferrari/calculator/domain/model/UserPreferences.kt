@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.domain.model
 
+import com.bernaferrari.calculator.domain.programmer.ProgEntry
 import com.bernaferrari.calculator.domain.math.UserFunction
 import com.bernaferrari.calculator.domain.programmer.Base
 import com.bernaferrari.calculator.domain.programmer.WordSize
@@ -40,6 +41,10 @@ data class UserPreferences(
     val rpn: Boolean = false,
     val programmerBase: Base = Base.DEC,
     val programmerWord: WordSize = WordSize.QWORD,
+    /** Decimal in the programmer reads the top bit as a sign. */
+    val programmerSigned: Boolean = true,
+    /** The programmer's recent calculations, kept between visits. */
+    val programmerTape: List<ProgEntry> = emptyList(),
     /** How results are written: as is, or scientific (`1.23E6`) or engineering (`12.3E3`). */
     val notation: Notation = Notation.NORMAL,
     /** The numbers on the statistics screen, kept between visits. */

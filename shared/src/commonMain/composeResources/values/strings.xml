@@ -136,6 +136,10 @@
     <string name="settings_entry_rpn_summary">↵ pushes onto the stack; operators act at once</string>
     <string name="menu_programmer">Programmer</string>
     <string name="programmer_word_size">Word size</string>
+    <string name="programmer_signed">Signed</string>
+    <string name="programmer_unsigned">Unsigned</string>
+    <string name="programmer_rotate_left">Rotate left</string>
+    <string name="programmer_rotate_right">Rotate right</string>
     <string name="programmer_bits">%1$d-bit</string>
     <string name="cursor_left">Move cursor left</string>
     <string name="cursor_right">Move cursor right</string>

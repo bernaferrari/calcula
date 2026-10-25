@@ -67,4 +67,25 @@ class ProgrammerTest {
         // Going on from the answer starts a new calculation.
         assertNull(Programmer.press(done, ProgKey.PLUS).expression)
     }
+
+    @Test fun rotationsWrapAroundTheWord() {
+        val byte = ProgState(base = Base.HEX, word = WordSize.BYTE)
+        // 1000 0001 rotated left by 1 is 0000 0011; rotated right by 1 is 1100 0000.
+        assertEquals("3", Programmer.format(Programmer.value(type(ProgKey.D8, ProgKey.D1, ProgKey.ROL, ProgKey.D1, from = byte))!!, Base.HEX, WordSize.BYTE))
+        assertEquals("C0", Programmer.format(Programmer.value(type(ProgKey.D8, ProgKey.D1, ProgKey.ROR, ProgKey.D1, from = byte))!!, Base.HEX, WordSize.BYTE))
+        // A full turn comes back to where it started, in 64 bits too.
+        assertEquals(5L, Programmer.value(type(ProgKey.D5, ProgKey.ROL, ProgKey.D6, ProgKey.D4)))
+    }
+
+    @Test fun decimalCanBeUnsigned() {
+        val minusOne = type(ProgKey.D1, ProgKey.NEGATE, from = ProgState(word = WordSize.DWORD))
+        assertEquals("−1", Programmer.display(minusOne))
+        val unsigned = Programmer.withSigned(minusOne, false)
+        assertEquals("4 294 967 295", Programmer.display(unsigned))
+        assertEquals(-1L, Programmer.value(unsigned))
+        // And back: the bits never changed.
+        assertEquals("−1", Programmer.display(Programmer.withSigned(unsigned, true)))
+        // Negating while unsigned gives the two's complement directly.
+        assertEquals("4 294 967 291", Programmer.display(type(ProgKey.D5, ProgKey.NEGATE, from = ProgState(word = WordSize.DWORD, signed = false))))
+    }
 }

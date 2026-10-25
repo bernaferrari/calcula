@@ -13,7 +13,7 @@ enum class ProgKey(val text: String) {
     D0("0"), D1("1"), D2("2"), D3("3"), D4("4"), D5("5"), D6("6"), D7("7"), D8("8"), D9("9"),
     A("A"), B("B"), C("C"), D("D"), E("E"), F("F"),
     PLUS("+"), MINUS("−"), TIMES("×"), DIVIDE("÷"), MOD("mod"),
-    AND("AND"), OR("OR"), XOR("XOR"), NOT("NOT"), SHL("<<"), SHR(">>"),
+    AND("AND"), OR("OR"), XOR("XOR"), NOT("NOT"), SHL("<<"), SHR(">>"), ROL("ROL"), ROR("ROR"),
     LPAREN("("), RPAREN(")"), NEGATE("±"),
     CLEAR("C"), DELETE("⌫"), EQUALS("=");
 
@@ -21,6 +21,10 @@ enum class ProgKey(val text: String) {
 }
 
 enum class ProgError { DIVIDE_BY_ZERO, SYNTAX }
+
+/** One line of the programmer's tape: `FF + 1 = 100`, in the base and word it was worked out in. */
+@Serializable
+data class ProgEntry(val tokens: List<String>, val base: Base, val word: WordSize, val value: Long)
 
 /**
  * An expression as tokens: numbers (digits in [base]) and operators. Simpler than the main
@@ -34,10 +38,12 @@ data class ProgState(
     val error: ProgError? = null,
     /** What was evaluated, kept above the result so `FF + 1 =` stays readable after `=`. */
     val expression: List<String>? = null,
+    /** Decimal reads the top bit as a sign (FFFF FFFF is −1) or not (4 294 967 295). */
+    val signed: Boolean = true,
 )
 
 object Programmer {
-    private val BINARY = setOf("+", "−", "×", "÷", "mod", "AND", "OR", "XOR", "<<", ">>")
+    private val BINARY = setOf("+", "−", "×", "÷", "mod", "AND", "OR", "XOR", "<<", ">>", "ROL", "ROR")
     private val PREFIX = setOf("NOT", "−u")
 
     fun press(state: ProgState, key: ProgKey): ProgState {
@@ -64,9 +70,10 @@ object Programmer {
                 else -> s.copy(tokens = s.tokens.dropLast(1))
             }
             ProgKey.EQUALS -> {
-                if (s.tokens.isEmpty() || s.resultShown) return s
+                // A number on its own has nothing to work out.
+                if (s.tokens.isEmpty() || s.resultShown || !hasOperation(s)) return s
                 when (val r = evaluate(close(s.tokens), s.base, s.word)) {
-                    is Result.Value -> s.copy(tokens = tokensFor(r.value, s.base, s.word), resultShown = true, expression = close(s.tokens))
+                    is Result.Value -> s.copy(tokens = tokensFor(r.value, s.base, s.word, s.signed), resultShown = true, expression = close(s.tokens))
                     is Result.Failed -> s.copy(error = r.error)
                 }
             }
@@ -76,8 +83,8 @@ object Programmer {
                     val value = parse(last, s.base, s.word) ?: return s
                     val before = s.tokens.dropLast(1)
                     if (before.lastOrNull() == "−u") s.copy(tokens = before.dropLast(1) + last)
-                    else if (s.base == Base.DEC) s.copy(tokens = before + "−u" + last, resultShown = false)
-                    else s.copy(tokens = before + format(wrap(-value, s.word), s.base, s.word), resultShown = false)
+                    else if (s.base == Base.DEC && s.signed) s.copy(tokens = before + "−u" + last, resultShown = false)
+                    else s.copy(tokens = before + format(wrap(-value, s.word), s.base, s.word, s.signed), resultShown = false)
                 }
                 else -> s
             }
@@ -103,36 +110,47 @@ object Programmer {
     /** Moves to another base: every number keeps its value and is rewritten in the new one. */
     fun withBase(state: ProgState, base: Base): ProgState = state.copy(
         base = base,
-        tokens = inBase(state.tokens, state.base, base, state.word),
-        expression = state.expression?.let { inBase(it, state.base, base, state.word) },
+        tokens = inBase(state.tokens, state.base, base, state.word, state.signed),
+        expression = state.expression?.let { inBase(it, state.base, base, state.word, state.signed) },
+        error = null,
+    )
+
+    /** Switches decimal between signed and unsigned; every number keeps its bits. */
+    fun withSigned(state: ProgState, signed: Boolean): ProgState = state.copy(
+        signed = signed,
+        tokens = inBase(state.tokens, state.base, state.base, state.word, signed),
+        expression = state.expression?.let { inBase(it, state.base, state.base, state.word, signed) },
         error = null,
     )
 
     /** Tokens rewritten from one base to another, each number keeping its value. */
-    fun inBase(tokens: List<String>, from: Base, to: Base, word: WordSize): List<String> =
-        tokens.flatMapIndexed { i, t ->
+    fun inBase(tokens: List<String>, from: Base, to: Base, word: WordSize, signed: Boolean = true): List<String> {
+        // Only signed decimal writes a minus; elsewhere a negative is its two's complement.
+        val keepsMinus = to == Base.DEC && signed
+        return tokens.flatMapIndexed { i, t ->
             if (!isNumber(t)) return@flatMapIndexed listOf(t)
             var v = parse(t, from, word) ?: 0L
             // A negative typed in decimal can't keep its minus in hex: fold it into the number.
             val negated = tokens.getOrNull(i - 1) == "−u"
-            if (negated && to != Base.DEC) v = wrap(-v, word)
-            tokensFor(v, to, word)
+            if (negated && !keepsMinus) v = wrap(-v, word)
+            tokensFor(v, to, word, signed)
         }.let { out ->
-            if (to == Base.DEC) out
+            if (keepsMinus) out
             else out.filterIndexed { i, t -> !(t == "−u" && out.getOrNull(i + 1)?.let(::isNumber) == true) }
         }
+    }
 
     /** Flips one bit of the current value; the expression becomes that number, ready to go on with. */
     fun flipBit(state: ProgState, bit: Int): ProgState {
         val value = value(state) ?: 0L
         val flipped = wrap(value xor (1L shl bit), state.word)
-        return state.copy(tokens = tokensFor(flipped, state.base, state.word), resultShown = false, error = null, expression = null)
+        return state.copy(tokens = tokensFor(flipped, state.base, state.word, state.signed), resultShown = false, error = null, expression = null)
     }
 
     /** Changes the word size: numbers are cut down to fit, as the hardware would. */
     fun withWord(state: ProgState, word: WordSize): ProgState = state.copy(
         word = word,
-        tokens = state.tokens.flatMap { t -> if (isNumber(t)) tokensFor(wrap(parse(t, state.base, state.word) ?: 0L, word), state.base, word) else listOf(t) },
+        tokens = state.tokens.flatMap { t -> if (isNumber(t)) tokensFor(wrap(parse(t, state.base, state.word) ?: 0L, word), state.base, word, state.signed) else listOf(t) },
         expression = null,
         error = null,
     )
@@ -169,17 +187,17 @@ object Programmer {
 
     /** Starts over from a value, as if it had just been typed. */
     fun withValue(state: ProgState, value: Long): ProgState =
-        state.copy(tokens = tokensFor(wrap(value, state.word), state.base, state.word), resultShown = true, expression = null, error = null)
+        state.copy(tokens = tokensFor(wrap(value, state.word), state.base, state.word, state.signed), resultShown = true, expression = null, error = null)
 
     /** A value as tokens: a negative decimal is a minus and its digits. */
-    private fun tokensFor(value: Long, base: Base, word: WordSize): List<String> {
-        val text = format(value, base, word)
+    private fun tokensFor(value: Long, base: Base, word: WordSize, signed: Boolean = true): List<String> {
+        val text = format(value, base, word, signed)
         return if (text.startsWith("-")) listOf("−u", text.drop(1)) else listOf(text)
     }
 
-    /** The number in [base]: signed in decimal, the raw bits in the others. */
-    fun format(value: Long, base: Base, word: WordSize): String {
-        if (base == Base.DEC) return value.toString()
+    /** The number in [base]: decimal signed (or not, when asked), the raw bits in the others. */
+    fun format(value: Long, base: Base, word: WordSize, signed: Boolean = true): String {
+        if (base == Base.DEC && signed) return value.toString()
         val mask = if (word.bits == 64) -1L else (1L shl word.bits) - 1
         return (value and mask).toULong().toString(base.radix).uppercase()
     }
@@ -241,12 +259,26 @@ object Programmer {
         fun and(): Long { var v = shift(); while (peek() == "AND") { pos++; v = w(v and shift()) }; return v }
         fun shift(): Long {
             var v = add()
-            while (peek() == "<<" || peek() == ">>") {
+            while (peek() == "<<" || peek() == ">>" || peek() == "ROL" || peek() == "ROR") {
                 val op = tokens[pos++]
-                val n = add().toInt().coerceIn(0, 63)
-                v = w(if (op == "<<") v shl n else v shr n)
+                val n = add()
+                v = when (op) {
+                    "<<" -> w(v shl n.toInt().coerceIn(0, 63))
+                    ">>" -> w(v shr n.toInt().coerceIn(0, 63))
+                    // Rotations wrap around the word: what leaves one end comes back at the other.
+                    else -> rotate(v, if (op == "ROL") n else -n)
+                }
             }
             return v
+        }
+        fun rotate(v: Long, by: Long): Long {
+            val bits = word.bits
+            val n = (((by % bits) + bits) % bits).toInt()
+            if (n == 0) return v
+            if (bits == 64) return v.rotateLeft(n)
+            val mask = (1L shl bits) - 1
+            val x = v and mask
+            return w(((x shl n) or (x ushr (bits - n))) and mask)
         }
         fun add(): Long {
             var v = mul()

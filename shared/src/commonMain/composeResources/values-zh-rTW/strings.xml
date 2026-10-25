@@ -132,6 +132,10 @@
     <string name="settings_entry_rpn_summary">↵ 推入堆疊，運算子立即計算</string>
     <string name="menu_programmer">程式設計師</string>
     <string name="programmer_word_size">字組大小</string>
+    <string name="programmer_signed">有號</string>
+    <string name="programmer_unsigned">無號</string>
+    <string name="programmer_rotate_left">循環左移</string>
+    <string name="programmer_rotate_right">循環右移</string>
     <string name="programmer_bits">%1$d 位元</string>
     <string name="cursor_left">游標左移</string>
     <string name="cursor_right">游標右移</string>
@@ -221,8 +225,8 @@
     <string name="stats_clear">清除</string>
     <string name="stats_empty">輸入數字後輕觸「新增」。輕觸任一結果即可在計算機中使用。</string>
     <string name="menu_usage">你的 Calcula</string>
-    <string name="usage_favorite">最愛</string>
-    <string name="usage_since">自 %1$s</string>
+    <string name="usage_favorite">最常用</string>
+    <string name="usage_since">%1$s 起</string>
     <string name="usage_share">分享你的卡片</string>
     <string name="usage_empty">先算一會兒，再回來看看你的鍵盤亮起來。</string>
     <plurals name="usage_calculations">

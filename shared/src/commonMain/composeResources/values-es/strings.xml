@@ -110,11 +110,11 @@
     <string name="graph_library_empty">Las gráficas que hagas aparecen aquí</string>
     <string name="graph_open_library">Gráficas recientes</string>
     <string name="graph_delete">Eliminar</string>
-    <string name="resize_pull_history">Desliza para el historial</string>
-    <string name="resize_release_history">Suelta para el historial</string>
-    <string name="resize_pull_keypad">Desliza para el teclado</string>
-    <string name="resize_release_keypad">Suelta para el teclado</string>
-    <string name="settings_flick_hints">Pistas de funciones</string>
+    <string name="resize_pull_history">Tira hacia abajo para ver el historial</string>
+    <string name="resize_release_history">Suelta para ver el historial</string>
+    <string name="resize_pull_keypad">Tira hacia arriba para ver el teclado</string>
+    <string name="resize_release_keypad">Suelta para ver el teclado</string>
+    <string name="settings_flick_hints">Indicaciones de funciones</string>
     <string name="settings_flick_labels">Etiquetas</string>
     <string name="settings_flick_dots_option">Puntos</string>
     <string name="settings_flick_none">Ninguna</string>
@@ -128,10 +128,14 @@
     <string name="settings_entry">Entrada</string>
     <string name="settings_entry_algebraic">Algebraica</string>
     <string name="settings_entry_rpn">RPN</string>
-    <string name="settings_entry_algebraic_summary">Escríbelo como se escribe</string>
+    <string name="settings_entry_algebraic_summary">Introdúcelo tal como se escribe</string>
     <string name="settings_entry_rpn_summary">↵ apila; los operadores actúan al instante</string>
     <string name="menu_programmer">Programador</string>
     <string name="programmer_word_size">Tamaño de palabra</string>
+    <string name="programmer_signed">Con signo</string>
+    <string name="programmer_unsigned">Sin signo</string>
+    <string name="programmer_rotate_left">Rotar a la izquierda</string>
+    <string name="programmer_rotate_right">Rotar a la derecha</string>
     <string name="programmer_bits">%1$d bits</string>
     <string name="cursor_left">Mover el cursor a la izquierda</string>
     <string name="cursor_right">Mover el cursor a la derecha</string>
@@ -181,8 +185,8 @@
     <string name="function_name">Nombre</string>
     <string name="function_save">Guardar</string>
     <string name="function_cancel">Cancelar</string>
-    <string name="function_name_rule">De 2 a 8 letras minúsculas, que no sea un nombre ya usado</string>
-    <string name="functions_empty">Crea la tuya, como tip(x) = x×0,18, y úsala como sin.</string>
+    <string name="function_name_rule">De 2 a 8 letras minúsculas, sin usar un nombre integrado</string>
+    <string name="functions_empty">Crea la tuya, como propina(x) = x×0,18, y úsala como sin.</string>
     <string name="memory_store">Guardar el valor actual</string>
     <string name="memory_empty">Aún no hay nada guardado. Guarda un valor para usarlo después.</string>
     <string name="memory_name">Nombre</string>

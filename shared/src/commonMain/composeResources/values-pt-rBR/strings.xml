@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">SDK Monitor</string>
+    <string name="app_name">Calcula</string>
     <string name="theme_system">Sistema</string>
     <string name="theme_light">Claro</string>
     <string name="theme_dark">Escuro</string>
@@ -53,11 +53,11 @@
     <string name="settings_decimal_separator">Formato numérico</string>
     <string name="settings_show_tape">Mostrar cálculos recentes</string>
     <string name="settings_show_tape_description">Manter a fita acima do resultado</string>
-    <string name="settings_feedback">Resposta</string>
+    <string name="settings_feedback">Feedback</string>
     <string name="settings_sounds">Sons das teclas</string>
     <string name="settings_sounds_description">Um clique suave a cada toque</string>
     <string name="settings_reduce_motion">Reduzir movimento</string>
-    <string name="settings_reduce_motion_description">Transições simples em vez de giros e molas</string>
+    <string name="settings_reduce_motion_description">Transições simples em vez de giros e efeitos de mola</string>
     <string name="settings_more">Mais</string>
     <string name="settings_version">Versão %1$s</string>
     <string name="settings_clear_history_title">Limpar histórico?</string>
@@ -97,7 +97,7 @@
     <string name="graph_point_root">Raiz</string>
     <string name="graph_point_max">Máximo</string>
     <string name="graph_point_min">Mínimo</string>
-    <string name="graph_point_y_intercept">Corte no eixo y</string>
+    <string name="graph_point_y_intercept">Interseção com o eixo y</string>
     <string name="graph_point_intersection">Interseção</string>
     <string name="settings_theme">Tema</string>
     <string name="graph_play">Reproduzir</string>
@@ -112,10 +112,10 @@
     <string name="graph_library_empty">Os gráficos que você criar aparecem aqui</string>
     <string name="graph_open_library">Gráficos recentes</string>
     <string name="graph_delete">Excluir</string>
-    <string name="resize_pull_history">Puxe para o histórico</string>
-    <string name="resize_release_history">Solte para o histórico</string>
-    <string name="resize_pull_keypad">Puxe para o teclado</string>
-    <string name="resize_release_keypad">Solte para o teclado</string>
+    <string name="resize_pull_history">Puxe para baixo para ver o histórico</string>
+    <string name="resize_release_history">Solte para ver o histórico</string>
+    <string name="resize_pull_keypad">Puxe para cima para ver o teclado</string>
+    <string name="resize_release_keypad">Solte para ver o teclado</string>
     <string name="settings_flick_hints">Dicas de funções</string>
     <string name="settings_flick_labels">Rótulos</string>
     <string name="settings_flick_dots_option">Pontos</string>
@@ -134,6 +134,10 @@
     <string name="settings_entry_rpn_summary">↵ empilha; os operadores agem na hora</string>
     <string name="menu_programmer">Programador</string>
     <string name="programmer_word_size">Tamanho da palavra</string>
+    <string name="programmer_signed">Com sinal</string>
+    <string name="programmer_unsigned">Sem sinal</string>
+    <string name="programmer_rotate_left">Rotacionar à esquerda</string>
+    <string name="programmer_rotate_right">Rotacionar à direita</string>
     <string name="programmer_bits">%1$d bits</string>
     <string name="cursor_left">Mover cursor para a esquerda</string>
     <string name="cursor_right">Mover cursor para a direita</string>
@@ -192,14 +196,14 @@
     <string name="library_rename">Renomear</string>
     <string name="settings_customize_keys">Personalizar teclas</string>
     <string name="settings_customize_keys_summary">Escolha o que cada tecla e deslize faz</string>
-    <string name="customize_hint">Toque numa tecla para escolher o que ela faz, ou numa etiqueta acima ou abaixo dela para os deslizes.</string>
+    <string name="customize_hint">Toque numa tecla para escolher o que ela faz, ou num rótulo acima ou abaixo dela para os deslizes.</string>
     <string name="customize_reset">Redefinir</string>
     <string name="customize_none">Nada</string>
     <string name="customize_default">Padrão: %1$s</string>
     <string name="customize_builtin">Do app</string>
-    <string name="customize_flick_up">Deslizar para cima no %1$s</string>
-    <string name="customize_flick_down">Deslizar para baixo no %1$s</string>
-    <string name="customize_tap">Tocar no %1$s</string>
+    <string name="customize_flick_up">Deslizar para cima em %1$s</string>
+    <string name="customize_flick_down">Deslizar para baixo em %1$s</string>
+    <string name="customize_tap">Tocar em %1$s</string>
     <string name="customize_basics">Teclas</string>
     <string name="customize_export">Exportar</string>
     <string name="customize_import">Importar</string>
