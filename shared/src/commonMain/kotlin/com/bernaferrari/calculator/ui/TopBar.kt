@@ -25,10 +25,7 @@ private val TopBarHeight = 56.dp
 @Composable
 fun topBarInset(): Dp = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + TopBarHeight
 
-/**
- * A screen's title row and the status bar above it, half see-through: content scrolls up under
- * them (and the clock) veiled rather than cut off at a solid band.
- */
+/** A screen's title row and the status bar above it, pinned over the content that scrolls beneath. */
 @Composable
 fun BoxScope.TopBar(content: @Composable RowScope.() -> Unit) {
     Row(
@@ -37,7 +34,7 @@ fun BoxScope.TopBar(content: @Composable RowScope.() -> Unit) {
             .align(Alignment.TopCenter)
             .zIndex(1f)
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
+            .background(MaterialTheme.colorScheme.surface)
             .statusBarsPadding()
             .padding(horizontal = 4.dp)
             .height(TopBarHeight),

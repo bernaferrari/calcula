@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import androidx.compose.foundation.layout.statusBars
 import com.bernaferrari.calculator.platform.rememberTextSharer
 import com.bernaferrari.calculator.ui.library.LibraryTab
 import com.bernaferrari.calculator.ui.library.LibrarySheet
@@ -180,8 +181,9 @@ fun CalculatorScreen(
         if (!systemConfirmsCopy) scope.launch { snackbar.currentSnackbarData?.dismiss(); snackbar.showSnackbar(copied) }
     }
 
-    val display: @Composable (Modifier, Boolean, Boolean) -> Unit = { modifier, compact, tape ->
+    val display: @Composable (Modifier, Boolean, Boolean, Dp) -> Unit = { modifier, compact, tape, topInset ->
         CalculatorDisplay(
+            topInset = topInset,
             // Beside a history pane the tape above the result would only repeat it.
             state = if (tape) state else state.copy(showHistory = false),
             formatter = formatter,
@@ -273,7 +275,9 @@ fun CalculatorScreen(
         LaunchedEffect(state.keypadScale) { dragRow = null }
         Column(Modifier.fillMaxSize()) {
             Box(Modifier.weight(1f).fillMaxWidth()) {
-                display(Modifier.fillMaxSize().statusBarsPadding(), false, !split)
+                // Edge to edge: the tape scrolls up behind the status bar, softly faded, so past
+                // results stay in view under the clock instead of stopping at a solid band.
+                display(Modifier.fillMaxSize(), false, !split, WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
                 SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter))
             }
             ToolRow(
@@ -393,7 +397,7 @@ fun CalculatorScreen(
                     .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal)),
             ) {
                 Box(Modifier.weight(0.42f).fillMaxHeight().padding(bottom = bottomInset)) {
-                    display(Modifier.fillMaxSize().statusBarsPadding().padding(top = 44.dp), true, true)
+                    display(Modifier.fillMaxSize().statusBarsPadding().padding(top = 44.dp), true, true, 0.dp)
                     // Landscape has no tool row; its non-key controls sit quietly at the top.
                     Row(Modifier.statusBarsPadding().fillMaxWidth().padding(4.dp)) {
                         IconButton(onClick = { haptics.tap(); historyOpen = !historyOpen }) {

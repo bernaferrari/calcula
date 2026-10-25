@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import androidx.compose.ui.unit.Dp
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.IconButton
@@ -114,6 +115,8 @@ fun Tape(
     onNote: (CalculationHistory, String) -> Unit = { _, _ -> },
     /** Shares the whole history as text, from history mode. */
     onShare: () -> Unit = {},
+    /** The status bar above, when the tape runs up behind it. */
+    topInset: Dp = 0.dp,
 ) {
     val colors = MaterialTheme.colorScheme
     val formatColors = DisplayFormatter.Colors(operator = colors.primary.copy(alpha = 0.8f), function = colors.onSurfaceVariant, ghost = colors.outline)
@@ -128,7 +131,7 @@ fun Tape(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 12.dp, top = 8.dp),
+                modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 12.dp, top = 8.dp + topInset),
             ) {
                 Text(
                     stringResource(Res.string.settings_history),
@@ -147,7 +150,7 @@ fun Tape(
                 Text(stringResource(Res.string.history_empty), style = MaterialTheme.typography.bodyLarge, color = colors.onSurfaceVariant)
             }
         } else {
-            TapeList(rows, state, expanded, hideNewestResult, formatter, formatColors, onUseResult, onEditExpression, onDeleteEntry, onCopy, onNote, Modifier.weight(1f).fillMaxWidth())
+            TapeList(rows, state, expanded, hideNewestResult, formatter, formatColors, onUseResult, onEditExpression, onDeleteEntry, onCopy, onNote, if (expanded) 0.dp else topInset, Modifier.weight(1f).fillMaxWidth())
         }
     }
 }
@@ -165,23 +168,32 @@ private fun TapeList(
     onDeleteEntry: (CalculationHistory) -> Unit,
     onCopy: (String) -> Unit,
     onNote: (CalculationHistory, String) -> Unit,
+    topInset: Dp,
     modifier: Modifier,
 ) {
     val colors = MaterialTheme.colorScheme
     LazyColumn(
         state = state,
         reverseLayout = true,
-        contentPadding = PaddingValues(top = if (expanded) 8.dp else 24.dp),
+        contentPadding = PaddingValues(top = (if (expanded) 8.dp else 24.dp) + topInset),
         modifier = modifier
             // Fade the oldest entries out at the top instead of cutting them off.
             .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
             .drawWithContent {
                 drawContent()
+                val h = size.height.coerceAtLeast(1f)
+                val bar = topInset.toPx()
                 drawRect(
-                    Brush.verticalGradient(
+                    if (bar <= 0f) Brush.verticalGradient(
                         0f to Color.Transparent,
-                        // Just a short soft edge so entries don't clip hard under the status bar.
-                        20.dp.toPx() / size.height.coerceAtLeast(1f) to Color.Black,
+                        // Just a short soft edge so entries don't clip hard at the top.
+                        20.dp.toPx() / h to Color.Black,
+                    ) else Brush.verticalGradient(
+                        // Behind the status bar entries stay visible but quiet (towards the
+                        // background, lighter or darker with the theme), so the clock still reads.
+                        0f to Color.Black.copy(alpha = 0.2f),
+                        bar / h to Color.Black.copy(alpha = 0.55f),
+                        (bar + 24.dp.toPx()) / h to Color.Black,
                     ),
                     blendMode = BlendMode.DstIn,
                 )

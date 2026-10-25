@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import androidx.compose.ui.unit.Dp
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.draw.clip
@@ -161,6 +162,8 @@ fun CalculatorDisplay(
     onOpenMemory: () -> Unit = {},
     /** Tapping the preview (`= 52`) takes it, like pressing `=`. */
     onEvaluate: () -> Unit = {},
+    /** The status bar's height when the display runs up behind it; the tape scrolls under it. */
+    topInset: Dp = 0.dp,
 ) {
     val shake = remember { Animatable(0f) }
     val reduceMotion = LocalReduceMotion.current
@@ -207,6 +210,7 @@ fun CalculatorDisplay(
                 onShare = onShareHistory,
                 // Right after `=`, the big number below *is* the newest answer; don't say it twice.
                 hideNewestResult = state.resultShown && !historyOpen,
+                topInset = topInset,
                 modifier = Modifier.weight(1f).fillMaxWidth(),
             )
             val entry = Entry(
