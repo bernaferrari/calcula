@@ -1,0 +1,150 @@
+{
+  "source": "Production shared Compose UI with illustrative sample data; HTML/CSS framing",
+  "assets": [
+    {
+      "file": "phone/phone-01-every-key.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 100864,
+      "alt": "Calcula with labelled scientific flick shortcuts and a live answer preview"
+    },
+    {
+      "file": "phone/phone-02-graph.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 113746,
+      "alt": "Functions, a circle, and interactive parameter controls in Calcula"
+    },
+    {
+      "file": "phone/phone-03-convert.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 89417,
+      "alt": "Calcula converting 22 degrees Celsius to Fahrenheit"
+    },
+    {
+      "file": "phone/phone-04-customize.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 102979,
+      "alt": "Customizable calculator key and flick assignments"
+    },
+    {
+      "file": "phone/phone-05-programmer.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 119632,
+      "alt": "Programmer calculator showing C0FFEE in multiple number bases"
+    },
+    {
+      "file": "phone/phone-06-statistics.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 107921,
+      "alt": "Sample scores summarized with mean, median and standard deviation"
+    },
+    {
+      "file": "phone/phone-07-appearance.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 109753,
+      "alt": "Calcula appearance settings with color family and style previews"
+    },
+    {
+      "file": "tablet7/tablet7-01-every-key.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 67229,
+      "alt": "Calcula with labelled scientific flick shortcuts and a live answer preview"
+    },
+    {
+      "file": "tablet7/tablet7-02-graph.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 103885,
+      "alt": "Functions, a circle, and interactive parameter controls in Calcula"
+    },
+    {
+      "file": "tablet7/tablet7-03-convert.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 48255,
+      "alt": "Calcula converting 22 degrees Celsius to Fahrenheit"
+    },
+    {
+      "file": "tablet7/tablet7-07-appearance.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 108790,
+      "alt": "Calcula appearance settings with color family and style previews"
+    },
+    {
+      "file": "tablet10/tablet10-01-every-key.jpg",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 62706,
+      "alt": "Calcula with labelled scientific flick shortcuts and a live answer preview"
+    },
+    {
+      "file": "tablet10/tablet10-02-graph.jpg",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 103681,
+      "alt": "Functions, a circle, and interactive parameter controls in Calcula"
+    },
+    {
+      "file": "tablet10/tablet10-03-convert.jpg",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 53901,
+      "alt": "Calcula converting 22 degrees Celsius to Fahrenheit"
+    },
+    {
+      "file": "tablet10/tablet10-07-appearance.jpg",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 68996,
+      "alt": "Calcula appearance settings with color family and style previews"
+    },
+    {
+      "file": "desktop/desktop-01-every-key.jpg",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 55758,
+      "alt": "Calcula with labelled scientific flick shortcuts and a live answer preview"
+    },
+    {
+      "file": "desktop/desktop-02-graph.jpg",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 101164,
+      "alt": "Functions, a circle, and interactive parameter controls in Calcula"
+    },
+    {
+      "file": "desktop/desktop-03-convert.jpg",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 50133,
+      "alt": "Calcula converting 22 degrees Celsius to Fahrenheit"
+    },
+    {
+      "file": "desktop/desktop-07-appearance.jpg",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 66472,
+      "alt": "Calcula appearance settings with color family and style previews"
+    },
+    {
+      "file": "graphics/app-icon.png",
+      "width": 512,
+      "height": 512,
+      "bytes": 13299
+    },
+    {
+      "file": "graphics/feature-graphic.png",
+      "width": 1024,
+      "height": 500,
+      "bytes": 147394
+    }
+  ]
+}

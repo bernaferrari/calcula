@@ -1,0 +1,25 @@
+{
+  "brand": {"name":"Calcula","tagline":"Every key does more.","background":"#4F46E5","tile":"#7566F2","ink":"#201743","muted":"#5C526F"},
+  "themes": {
+    "soft": {"background":"#EAE6FF","ink":"#201743","muted":"#5C526F","frame":"#292335","border":"#FFFFFF","shadow":"#30205425"},
+    "dark": {"background":"#171326","ink":"#F5F0FF","muted":"#CCC0E2","frame":"#09070F","border":"#52445F","shadow":"#00000050"},
+    "paper": {"background":"#F7F3EA","ink":"#25221E","muted":"#655F55","frame":"#25221E","border":"#FFFFFF","shadow":"#35291520"}
+  },
+  "defaultTheme":"soft",
+  "captureDefaults":{"theme":"light","palette":"INDIGO","style":"TONAL_SPOT"},
+  "profiles": {
+    "phone":{"width":1080,"height":1920,"density":2.5,"decorated":true},
+    "tablet7":{"width":1080,"height":1920,"density":1.5,"decorated":false},
+    "tablet10":{"width":1920,"height":1080,"density":1.5,"decorated":false},
+    "desktop":{"width":1920,"height":1080,"density":1.25,"decorated":false}
+  },
+  "slides": [
+    {"id":"01-every-key","scene":"calculator","headline":"Every key\ndoes more.","caption":"Flick for functions. Keep the keypad you know.","alt":"Calcula with labelled scientific flick shortcuts and a live answer preview","groups":["phone","tablet7","tablet10","desktop"]},
+    {"id":"02-graph","scene":"graph","headline":"See the math.\nMove the curve.","caption":"Plot functions. Explore parameters. Find roots.","alt":"Functions, a circle, and interactive parameter controls in Calcula","groups":["phone","tablet7","tablet10","desktop"]},
+    {"id":"03-convert","scene":"converter","headline":"Different units.\nSame flow.","caption":"Convert a number. Take the answer back.","alt":"Calcula converting 22 degrees Celsius to Fahrenheit","groups":["phone","tablet7","tablet10","desktop"]},
+    {"id":"04-customize","scene":"customize","headline":"Your keys.\nYour shortcuts.","caption":"Give any flick the function you reach for.","alt":"Customizable calculator key and flick assignments","groups":["phone"]},
+    {"id":"05-programmer","scene":"programmer","headline":"Think in bits.\nWork in any base.","caption":"Hex, decimal, octal and binary, together.","alt":"Programmer calculator showing C0FFEE in multiple number bases","theme":"dark","palette":"TEAL","groups":["phone"]},
+    {"id":"06-statistics","scene":"statistics","headline":"A list of numbers.\nA clearer picture.","caption":"Mean, median and spread, ready to use.","alt":"Sample scores summarized with mean, median and standard deviation","groups":["phone"]},
+    {"id":"07-appearance","scene":"appearance","headline":"Make it\nfeel like you.","caption":"Your colors. Your light. Your kind of calm.","alt":"Calcula appearance settings with color family and style previews","theme":"dark","palette":"PURPLE","groups":["phone","tablet7","tablet10","desktop"]}
+  ]
+}

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Calcula store artwork</title>
+<style>
+@font-face{font-family:Calcula;src:url('../shared/src/commonMain/composeResources/font/google_sans_flex_regular.ttf');font-weight:400;font-display:block}
+@font-face{font-family:Calcula;src:url('../shared/src/commonMain/composeResources/font/google_sans_flex_bold.ttf');font-weight:700;font-display:block}
+*{box-sizing:border-box}html,body{margin:0;overflow:hidden}body{position:relative;background:var(--background);color:var(--ink);font-family:Calcula,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+header{position:absolute;left:88px;right:88px;top:72px;z-index:2}.eyebrow{font-size:24px;font-weight:700;letter-spacing:2.5px;margin:0 0 24px;text-transform:uppercase;color:var(--muted)}h1{font-size:100px;line-height:1.02;letter-spacing:-4px;font-weight:700;margin:0 0 24px;white-space:pre-line;text-wrap:balance}p{font-size:32px;line-height:1.32;letter-spacing:-.3px;color:var(--muted);margin:0;max-width:880px}
+.frame{position:absolute;left:144px;top:470px;width:792px;height:1396px;border:8px solid var(--frame);border-radius:44px;background:var(--frame);overflow:hidden;box-shadow:0 0 0 2px var(--border),0 24px 60px var(--shadow)}.frame img{display:block;width:100%;height:100%;object-fit:contain;background:var(--frame)}
+.bare header{display:none}.bare .frame{inset:0;width:100%;height:100%;border:0;border-radius:0;box-shadow:none;background:transparent}.bare .frame img{object-fit:contain;background:transparent}
+.feature header{left:64px;top:158px;right:390px}.feature .eyebrow{display:none}.feature h1{font-size:112px;letter-spacing:-5px;line-height:1;margin-bottom:23px;color:#FFF}.feature p{font-size:31px;color:#E5DFFF;white-space:nowrap}.feature .frame{left:714px;top:36px;width:236px;height:428px;border-width:0;border-radius:20px;box-shadow:none;background:transparent}.feature .frame img{object-fit:cover;object-position:center 78%}
+.icon header,.icon .frame{display:none}.icon{background:transparent}.icon>img{display:block;width:100%;height:100%}
+</style></head><body><header><div class="eyebrow">Calcula</div><h1></h1><p></p></header><main class="frame"><img alt=""></main>
+<script type="module">
+const q=new URLSearchParams(location.search), config=await(await fetch('design.json')).json();
+const kind=q.get('kind')||'phone',index=Number(q.get('slide')||0), list=config.slides.filter(x=>x.groups.includes(kind));
+const slide=list[index]||config.slides[0],profile=config.profiles[kind]||{width:1024,height:500},theme=config.themes[q.get('theme')||config.defaultTheme];
+let width=profile.width,height=profile.height;
+if(kind==='feature'){width=1024;height=500;document.body.classList.add('feature');theme.background=config.brand.background;theme.ink='#FFFFFF';slide.headline='Calcula';slide.caption=config.brand.tagline;}
+if(kind==='icon'){width=height=512;document.body.classList.add('icon');const img=document.createElement('img');img.src='../branding/calcula-icon.svg';img.alt='Calcula app icon';document.body.append(img);}
+for(const [k,v]of Object.entries(theme))document.body.style.setProperty('--'+k,v);
+document.documentElement.style.width=document.body.style.width=width+'px';document.documentElement.style.height=document.body.style.height=height+'px';
+if(profile.decorated===false)document.body.classList.add('bare');
+document.querySelector('h1').textContent=slide.headline;document.querySelector('p').textContent=slide.caption;
+const image=document.querySelector('.frame img');if(kind!=='icon')image.src=kind==='feature'?'en-US/raw/phone/01-every-key.png':`en-US/raw/${kind}/${slide.id}.png`;image.alt=slide.alt;
+await document.fonts.ready;await Promise.all([...document.images].filter(x=>x.hasAttribute('src')).map(x=>x.decode()));document.documentElement.dataset.ready='true';document.title='Artwork ready: '+kind+'/'+slide.id;
+</script></body></html>
