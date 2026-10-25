@@ -110,7 +110,7 @@ fun SettingsScreen(
       Column(Modifier.fillMaxSize()) {
         // Pinned header, so scrolled content never slides under the status bar.
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.statusBarsPadding().padding(horizontal = 4.dp).height(56.dp)) {
-            IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null) }
+            IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.back)) }
             Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.titleLarge)
         }
         LazyColumn(Modifier.weight(1f).clipToBounds(), contentPadding = PaddingValues(bottom = bottomInset + 32.dp)) {

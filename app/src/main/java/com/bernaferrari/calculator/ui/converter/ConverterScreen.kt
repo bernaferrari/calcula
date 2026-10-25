@@ -26,12 +26,16 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
@@ -63,6 +67,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -244,28 +249,36 @@ private fun UnitRow(
 private fun UnitGrid(units: List<MeasureUnit>, selected: MeasureUnit, haptics: Haptics, onPick: (MeasureUnit) -> Unit, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     val gap = 6.dp
-    val rows = units.chunked(3)
-    Column(verticalArrangement = Arrangement.spacedBy(gap), modifier = modifier.padding(horizontal = gap * 2, vertical = gap)) {
-        rows.forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(gap), modifier = Modifier.weight(1f)) {
-                row.forEach { unit ->
-                    val isSelected = unit == selected
-                    val content = if (isSelected) colors.onPrimary else colors.onSurface
-                    KeyCell(
-                        container = if (isSelected) colors.primary else colors.surfaceContainerHigh,
-                        content = content,
-                        description = stringResource(unit.nameResource),
-                        haptics = haptics,
-                        onClick = { onPick(unit) },
-                        modifier = Modifier.weight(1f).fillMaxHeight(),
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(unit.symbol, style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 22.sp, fontWeight = FontWeight.Medium), color = content, maxLines = 1)
-                            Text(stringResource(unit.nameResource), style = MaterialTheme.typography.labelSmall, color = content.copy(alpha = 0.75f), maxLines = 1)
-                        }
-                    }
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(minSize = 104.dp),
+        contentPadding = PaddingValues(horizontal = gap * 2, vertical = gap),
+        horizontalArrangement = Arrangement.spacedBy(gap),
+        verticalArrangement = Arrangement.spacedBy(gap),
+        modifier = modifier,
+    ) {
+        items(units, key = { it.id }) { unit ->
+            val isSelected = unit == selected
+            val content = if (isSelected) colors.onPrimary else colors.onSurface
+            Surface(
+                onClick = { haptics.tap(); onPick(unit) },
+                color = if (isSelected) colors.primary else colors.surfaceContainerHigh,
+                contentColor = content,
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth().heightIn(min = 80.dp).semantics { this.selected = isSelected },
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.padding(8.dp),
+                ) {
+                    Text(unit.symbol, style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 22.sp, fontWeight = FontWeight.Medium), color = content, maxLines = 1)
+                    Text(
+                        stringResource(unit.nameResource),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = content.copy(alpha = 0.75f),
+                        textAlign = TextAlign.Center,
+                    )
                 }
-                repeat(3 - row.size) { Box(Modifier.weight(1f)) }
             }
         }
     }

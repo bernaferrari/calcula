@@ -56,11 +56,12 @@ import com.bernaferrari.calculator.R
 import com.bernaferrari.calculator.domain.model.CalculationHistory
 import com.bernaferrari.calculator.ui.theme.GoogleSansFlex
 import java.text.DateFormat
-import java.util.Calendar
+import java.time.Instant
+import java.time.ZoneId
 import java.util.Date
 
 /** One row of the tape: either a calculation or, in history mode, the day it belongs to. */
-private sealed interface TapeRow {
+internal sealed interface TapeRow {
     val key: Any
 
     data class Entry(val entry: CalculationHistory, val newest: Boolean) : TapeRow {
@@ -73,7 +74,7 @@ private sealed interface TapeRow {
 
 }
 
-private sealed interface DayLabel {
+internal sealed interface DayLabel {
     data object Today : DayLabel
     data object Yesterday : DayLabel
     data class Date(val millis: Long) : DayLabel
@@ -265,28 +266,25 @@ private fun DayLabel.text(): String = when (this) {
 }
 
 /** The list is drawn bottom-up, so each day's header comes after its entries. */
-private fun buildRows(history: List<CalculationHistory>, expanded: Boolean): List<TapeRow> {
+internal fun buildRows(
+    history: List<CalculationHistory>,
+    expanded: Boolean,
+    now: Instant = Instant.now(),
+    zone: ZoneId = ZoneId.systemDefault(),
+): List<TapeRow> {
     if (!expanded) return history.mapIndexed { i, entry -> TapeRow.Entry(entry, newest = i == 0) }
-    val today = startOfDay(System.currentTimeMillis())
-    val yesterday = today - 24L * 60 * 60 * 1000
+    val today = now.atZone(zone).toLocalDate()
+    val yesterday = today.minusDays(1)
     val rows = mutableListOf<TapeRow>()
-    history.groupBy { startOfDay(it.timestamp) }.forEach { (day, entries) ->
+    history.groupBy { Instant.ofEpochMilli(it.timestamp).atZone(zone).toLocalDate() }.forEach { (day, entries) ->
         entries.forEach { rows += TapeRow.Entry(it, newest = it === history.first()) }
+        val start = day.atStartOfDay(zone).toInstant().toEpochMilli()
         val label = when (day) {
             today -> DayLabel.Today
             yesterday -> DayLabel.Yesterday
-            else -> DayLabel.Date(day)
+            else -> DayLabel.Date(start)
         }
-        rows += TapeRow.Day(label, day)
+        rows += TapeRow.Day(label, start)
     }
     return rows
-}
-
-private fun startOfDay(millis: Long): Long = Calendar.getInstance().run {
-    timeInMillis = millis
-    set(Calendar.HOUR_OF_DAY, 0)
-    set(Calendar.MINUTE, 0)
-    set(Calendar.SECOND, 0)
-    set(Calendar.MILLISECOND, 0)
-    timeInMillis
 }
