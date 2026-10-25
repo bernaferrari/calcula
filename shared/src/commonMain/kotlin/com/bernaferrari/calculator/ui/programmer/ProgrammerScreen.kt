@@ -1,5 +1,17 @@
 package com.bernaferrari.calculator.ui.programmer
 
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.zIndex
+import com.bernaferrari.calculator.platform.systemConfirmsCopy
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.foundation.layout.PaddingValues
@@ -158,12 +170,23 @@ fun ProgrammerScreen(
     val haptics = rememberHaptics(enabled = { prefs.hapticFeedback }, sounds = { prefs.soundEnabled })
     val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val value = Programmer.value(state)
+    @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
+    val snackbar = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val copiedMessage = stringResource(Res.string.copied)
+    // Plain digits, no grouping spaces, so they paste cleanly into code.
+    val copy: (String) -> Unit = { text ->
+        haptics.confirm()
+        clipboard.setText(AnnotatedString(text.replace('−', '-')))
+        if (!systemConfirmsCopy) scope.launch { snackbar.currentSnackbarData?.dismiss(); snackbar.showSnackbar(copiedMessage) }
+    }
 
     // Opened from the overflow menu, so it grows out of the ⋮ button, as Settings does.
     Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.containerTransform("settings", isScreen = true).fillMaxSize()) {
         BoxWithConstraints(
             Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal)),
         ) {
+            SnackbarHost(snackbar, Modifier.align(Alignment.Center).zIndex(1f))
             val landscape = maxWidth > maxHeight && maxHeight < 600.dp
             // The readout needs room for the answer, the bits and the bases; the keys get the rest.
             val keypadHeight = (maxHeight * 0.54f).coerceIn(340.dp, 500.dp)
@@ -188,8 +211,30 @@ fun ProgrammerScreen(
                     LazyColumn(
                         reverseLayout = true,
                         horizontalAlignment = Alignment.End,
-                        modifier = Modifier.weight(1f).fillMaxWidth(),
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            // Older lines fade out under the top bar instead of being sliced off.
+                            .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+                            .drawWithContent {
+                                drawContent()
+                                drawRect(
+                                    Brush.verticalGradient(0f to Color.Transparent, 24.dp.toPx() / size.height.coerceAtLeast(1f) to Color.Black),
+                                    blendMode = BlendMode.DstIn,
+                                )
+                            },
                     ) {
+                        // What gave the answer, right above it as the calculator does: the newest line
+                        // of the tape, so however long it gets it scrolls with the rest instead of being cut.
+                        val current = state.expression
+                        if (state.resultShown && current != null) item(key = "current") {
+                            Text(
+                                Programmer.display(current, state.base) + " =",
+                                style = mono.copy(fontSize = 24.sp),
+                                color = muted,
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 2.dp),
+                            )
+                        }
                         items(earlier.asReversed()) { entry ->
                             val shown = Programmer.inBase(entry.tokens, entry.base, state.base, entry.word)
                             val answer = Programmer.group(Programmer.format(entry.value, state.base, entry.word), state.base)
@@ -215,19 +260,21 @@ fun ProgrammerScreen(
                     // than there is, they run up into the tape's space, never down behind the board.
                     Column(Modifier.fillMaxWidth().wrapContentHeight(Alignment.Bottom, unbounded = true)) {
                     val error = state.error
-                    val expression = state.expression
-                    // What gave the answer, kept above it, as the calculator does.
-                    if (state.resultShown && expression != null) {
-                        Text(
-                            Programmer.display(expression, state.base) + " =",
-                            style = mono.copy(fontSize = 24.sp),
-                            color = muted,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
-                        )
-                    }
-                    Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.Bottom,
+                        horizontalArrangement = Arrangement.End,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            // Hold the number to copy it, as typed in this base.
+                            .combinedClickable(
+                                interactionSource = null,
+                                indication = null,
+                                onClick = {},
+                                onLongClick = { value?.let { copy(Programmer.format(it, state.base, state.word)) } },
+                            )
+                            .padding(horizontal = 12.dp),
+                    ) {
                         // Which base the big number is in, right beside it: 10 in BIN is not ten.
                         Text(
                             state.base.name,
@@ -261,18 +308,27 @@ fun ProgrammerScreen(
                     // an operation, then the same value in one other base, tagged as the number is.
                     val preview = if (!state.resultShown && error == null && Programmer.hasOperation(state)) value else null
                     val other = if (state.base == Base.DEC) Base.HEX else Base.DEC
-                    // Its room is kept even when empty, so the number doesn't hop up at the first operator.
-                    Text(
-                        preview?.let { "= " + Programmer.group(Programmer.format(it, state.base, state.word), state.base) }.orEmpty(),
+                    if (preview != null) Text(
+                        "= " + Programmer.group(Programmer.format(preview, state.base, state.word), state.base),
                         style = mono.copy(fontSize = 24.sp),
                         color = muted,
                         maxLines = 1,
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).height(28.dp),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
                     )
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.End,
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).height(28.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            // Tap to work in that base instead; hold to copy it.
+                            .combinedClickable(
+                                enabled = value != null,
+                                onClick = { haptics.tap(); viewModel.onBase(other) },
+                                onLongClick = { value?.let { copy(Programmer.format(it, other, state.word)) } },
+                            )
+                            .padding(horizontal = 12.dp)
+                            .height(28.dp),
                     ) {
                         if (value != null && error == null) {
                             Text(other.name, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(end = 8.dp))
@@ -324,6 +380,9 @@ fun ProgrammerScreen(
 private fun BitGrid(value: Long, word: WordSize, modifier: Modifier = Modifier, onFlip: (Int) -> Unit) {
     val colors = MaterialTheme.colorScheme
     val rows = (word.bits + 15) / 16
+    // Rows above the highest set bit step back, so the bits in use stand out; the lowest row never does.
+    val mask = if (word.bits == 64) -1L else (1L shl word.bits) - 1
+    val topBit = 63 - (value and mask).countLeadingZeroBits()
     // Rows as close as the cells in a group: one board, not four strips.
     val gap = 2.dp
     Column(
@@ -336,7 +395,9 @@ private fun BitGrid(value: Long, word: WordSize, modifier: Modifier = Modifier, 
         for (r in 0 until rows) {
             val high = word.bits - 1 - r * 16
             val count = minOf(16, word.bits - r * 16)
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().weight(1f)) {
+            val quiet = r < rows - 1 && high - count + 1 > topBit
+            val rowAlpha by animateFloatAsState(if (quiet) 0.45f else 1f, label = "row")
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().weight(1f).graphicsLayer { alpha = rowAlpha }) {
                 Text("$high", style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 10.sp), color = colors.outline, modifier = Modifier.width(20.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.weight(1f).fillMaxHeight()) {
                     for (g in 0 until 4) {
