@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.ui.programmer
 
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.heightIn
@@ -165,7 +166,7 @@ fun ProgrammerScreen(
         ) {
             val landscape = maxWidth > maxHeight && maxHeight < 600.dp
             // The readout needs room for the answer, the bits and the bases; the keys get the rest.
-            val keypadHeight = (maxHeight * 0.56f).coerceIn(340.dp, 520.dp)
+            val keypadHeight = (maxHeight * 0.54f).coerceIn(340.dp, 500.dp)
             val header: @Composable () -> Unit = {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.statusBarsPadding().padding(horizontal = 4.dp).height(56.dp).fillMaxWidth()) {
                     IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null) }
@@ -210,6 +211,9 @@ fun ProgrammerScreen(
                             )
                         }
                     }
+                    // The number and its lines, anchored to the bottom: if they ever need more room
+                    // than there is, they run up into the tape's space, never down behind the board.
+                    Column(Modifier.fillMaxWidth().wrapContentHeight(Alignment.Bottom, unbounded = true)) {
                     val error = state.error
                     val expression = state.expression
                     // What gave the answer, kept above it, as the calculator does.
@@ -263,12 +267,12 @@ fun ProgrammerScreen(
                         style = mono.copy(fontSize = 24.sp),
                         color = muted,
                         maxLines = 1,
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).height(32.dp),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).height(28.dp),
                     )
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.End,
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).height(32.dp),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).height(28.dp),
                     ) {
                         if (value != null && error == null) {
                             Text(other.name, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(end = 8.dp))
@@ -280,6 +284,7 @@ fun ProgrammerScreen(
                                 overflow = TextOverflow.Ellipsis,
                             )
                         }
+                    }
                     }
                     }
                     Spacer(Modifier.height(4.dp))
