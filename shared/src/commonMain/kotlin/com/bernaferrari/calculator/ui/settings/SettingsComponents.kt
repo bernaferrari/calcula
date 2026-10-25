@@ -325,7 +325,10 @@ private fun RowScope.StyleKeys(scheme: ColorScheme, selected: Boolean, descripti
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .weight(1f)
+            // A quarter of the row on a phone; on a tablet they stop at phone size, centred,
+            // instead of growing into four big calculators.
+            .weight(1f, fill = false)
+            .widthIn(max = 104.dp)
             .semantics { contentDescription = description }
             .selectable(selected = selected, role = Role.RadioButton, interactionSource = remember { MutableInteractionSource() }, indication = null) {
                 if (!selected) {

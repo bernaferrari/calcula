@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.ui.programmer
 
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -161,7 +162,8 @@ fun ProgrammerScreen(
             Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal)),
         ) {
             val landscape = maxWidth > maxHeight && maxHeight < 600.dp
-            val keypadHeight = (maxHeight * 0.58f).coerceIn(360.dp, 520.dp)
+            // The readout needs room for the answer, the bits and the bases; the keys get the rest.
+            val keypadHeight = (maxHeight * 0.54f).coerceIn(340.dp, 500.dp)
             val header: @Composable () -> Unit = {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.statusBarsPadding().padding(horizontal = 4.dp).height(56.dp).fillMaxWidth()) {
                     IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null) }
@@ -171,6 +173,9 @@ fun ProgrammerScreen(
             }
             val readout: @Composable (Modifier) -> Unit = { modifier ->
                 Column(modifier.padding(horizontal = 12.dp), verticalArrangement = Arrangement.Bottom) {
+                    // Everything above the bases: the board is measured before the tape, so it gets
+                    // its full height when there's room and squeezes when there isn't; the tape has the rest.
+                    Column(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.Bottom) {
                     val muted = MaterialTheme.colorScheme.onSurfaceVariant
                     val mono = TextStyle(fontFamily = GoogleSansFlex, fontSize = 20.sp, textAlign = TextAlign.End)
                     // Earlier calculations, newest at the bottom, in today's base; tap one to go on from its answer.
@@ -257,6 +262,7 @@ fun ProgrammerScreen(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).height(32.dp),
                     )
                     BitGrid(value ?: 0L, state.word) { haptics.tick(); viewModel.onFlipBit(it) }
+                    }
                     Spacer(Modifier.height(8.dp))
                     BaseSelector(state.base) { haptics.tap(); viewModel.onBase(it) }
                 }
@@ -290,18 +296,26 @@ fun ProgrammerScreen(
  * row's ends. Tap one to flip it.
  */
 @Composable
-private fun BitGrid(value: Long, word: WordSize, onFlip: (Int) -> Unit) {
+private fun BitGrid(value: Long, word: WordSize, modifier: Modifier = Modifier, onFlip: (Int) -> Unit) {
     val colors = MaterialTheme.colorScheme
     val rows = (word.bits + 15) / 16
-    Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    val gap = 4.dp
+    Column(
+        modifier
+            .fillMaxWidth()
+            // Full size is 22dp a row; never less than 14, where a 0 or 1 still reads.
+            .heightIn(min = 14.dp * rows + gap * (rows - 1) + 8.dp, max = 22.dp * rows + gap * (rows - 1) + 8.dp)
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(gap),
+    ) {
         for (r in 0 until rows) {
             val high = word.bits - 1 - r * 16
             val count = minOf(16, word.bits - r * 16)
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().weight(1f)) {
                 Text("$high", style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 10.sp), color = colors.outline, modifier = Modifier.width(20.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.weight(1f)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.weight(1f).fillMaxHeight()) {
                     for (g in 0 until 4) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(2.dp), modifier = Modifier.weight(1f)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(2.dp), modifier = Modifier.weight(1f).fillMaxHeight()) {
                             for (i in 0 until 4) {
                                 val index = g * 4 + i
                                 if (index >= count) { Spacer(Modifier.weight(1f)); continue }
@@ -312,8 +326,8 @@ private fun BitGrid(value: Long, word: WordSize, onFlip: (Int) -> Unit) {
                                     contentAlignment = Alignment.Center,
                                     modifier = Modifier
                                         .weight(1f)
-                                        .height(22.dp)
-                                        .clip(RoundedCornerShape(6.dp))
+                                        .fillMaxHeight()
+                                        .clip(RoundedCornerShape(5.dp))
                                         .background(fill)
                                         .clickable { onFlip(bit) },
                                 ) {
