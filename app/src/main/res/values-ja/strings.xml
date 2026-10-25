@@ -1,256 +1,11 @@
 <resources>
-
-    <!-- Theme Mode -->
     <string name="theme_system">システム</string>
-    <string name="theme_material_you">ダイナミック</string>
     <string name="theme_light">ライト</string>
     <string name="theme_dark">ダーク</string>
-    <string name="theme_system_description">システム設定に従う</string>
-    <string name="theme_material_you_description">壁紙からの色</string>
-    <string name="theme_light_description">常にライトテーマ</string>
-    <string name="theme_dark_description">常にダークテーマ</string>
-
-    <string-array name="singularTime">
-        <item>分</item>
-        <item>時間</item>
-        <item>日</item>
-    </string-array>
-
-    <string-array name="pluralTime">
-        <item>分</item>
-        <item>時間</item>
-        <item>日</item>
-    </string-array>
-
-    <plurals name="searchApps">
-        <item quantity="other">%d個のアプリを検索</item>
-    </plurals>
-
-    <plurals name="minutes_ago">
-        <item quantity="other">%d分前</item>
-    </plurals>
-
-    <plurals name="hours_ago">
-        <item quantity="other">%d時間前</item>
-    </plurals>
-
-    <plurals name="days_ago">
-        <item quantity="other">%d日前</item>
-    </plurals>
-
-    <string name="sync_every" formatted="false">%d %s毎に同期</string>
-    <string name="sync_disabled">同期が無効です</string>
-
     <string name="dismiss">閉じる</string>
-    <string name="contact">連絡先</string>
-    <string name="about_title">SDKモニター v%1$s</string>
-    <string name="about_body"><![CDATA[
-        <b>Bernardo Ferrari</b>によってデザイン・開発されました。<br/>
-        <a href=\'https://github.com/bernaferrari\'>GitHub</a>&nbsp;&nbsp;
-        <a href=\'https://www.reddit.com/user/bernaferrari\'>Reddit</a>&nbsp;&nbsp;
-        <a href=\'https://www.linkedin.com/in/bernaferrari\'>LinkedIn</a><br/><br/>
-        このプロジェクトは<a href=\'https://github.com/bernaferrari/SDKMonitor\'>オープンソース</a>で、
-        Apache 2.0の下でライセンスされています。
-  ]]></string>
-
-    <string name="background_sync_description">アプリは常に更新されているため、targetSDKが変更されたかどうかを定期的にチェックします。</string>
-    <string name="home">ホーム</string>
-    <string name="logs">ログ</string>
-    <string name="settings">設定</string>
-    <string name="loading">読み込み中</string>
-
-    <string name="target_sdk_logs">TargetSDKログ</string>
-    <string name="no_logs_yet">まだログがありません</string>
-    <string name="app_changes_will_appear">アプリの変更がここに表示されます</string>
-    <string name="failed_to_load_logs">ログの読み込みに失敗しました</string>
-    <string name="loading_logs">ログを読み込み中…</string>
-    <string name="retry">再試行</string>
-    
-    <!-- Navigation titles -->
-    <string name="main_title">アプリ</string>
-    <string name="logs_title">ログ</string>
     <string name="settings_title">設定</string>
-
-    <!-- Time formatting -->
-    <string name="just_now">たった今</string>
-    <string name="never">なし</string>
-    <string name="today">今日</string>
-    <string name="this_week">今週</string>
-    <string name="this_month">今月</string>
-    <string name="this_year">今年</string>
-
-    <!-- Main Screen -->
-    <string name="apps_count">%d個のアプリ</string>
-    <string name="search_apps_hint">アプリを検索…</string>
-    <string name="clear_search">検索をクリア</string>
-    <string name="filter_apps">アプリをフィルター</string>
-    <string name="sort_by">並び替え</string>
-    <string name="all_apps">すべてのアプリ</string>
-    <string name="user_apps">ユーザーアプリ</string>
-    <string name="system_apps">システムアプリ</string>
-    <string name="sort_by_name">名前</string>
-    <string name="sort_by_sdk">SDKバージョン</string>
-    <string name="loading_apps">アプリを読み込み中…</string>
-    <string name="setting_up_your_apps">アプリをセットアップ中…</string>
-    <string name="apps_sync_progress">%1$d / %2$d 個のアプリ</string>
-    <string name="something_went_wrong">問題が発生しました</string>
-    <string name="no_apps_found">アプリが見つかりません</string>
-    <string name="try_searching_different_terms">別のキーワードで検索してみてください</string>
-    <string name="try_changing_filter">フィルターを変更してみてください</string>
-    <string name="no_filtered_apps_found">%sが見つかりません</string>
-    
-    <!-- Logs Screen -->
-    <string name="change_logs">変更履歴</string>
-    <string name="loading_change_history">✨ 変更履歴を読み込み中</string>
-    <string name="analyzing_app_ecosystem">アプリエコシステムを分析中…</string>
-    <string name="oops_something_went_wrong">おっと！問題が発生しました</string>
-    <string name="no_changes_yet">まだ変更はありません</string>
-    <string name="when_apps_update_description">アプリがターゲットSDKバージョンを更新すると、ここに美しいタイムラインが表示されます</string>
-    <string name="sdk_monitor_watching">✨ SDKモニターが監視中</string>
-    <string name="change_timeline">変更履歴</string>
-    <string name="showing">表示中</string>
-    <string name="activity_overview">アクティビティ概要</string>
-    <string name="past_week">過去1週間</string>
-    <string name="past_month">過去1ヶ月</string>
-    <string name="past_6_months">過去6ヶ月</string>
-    
-    <!-- Details Screen -->
-    <string name="app_details">アプリ詳細</string>
     <string name="back">戻る</string>
-    <string name="loading_app_details">アプリ詳細を読み込み中</string>
-    <string name="app_not_found">アプリが見つかりません</string>
-    <string name="try_again">再試行</string>
-    <string name="target_sdk">targetSDK</string>
-    <string name="min_sdk">minSDK</string>
-    <string name="app_information">アプリ情報</string>
-    <string name="play_store">Play Store</string>
-    <string name="package_label">パッケージ</string>
-    <string name="version_label">バージョン</string>
-    <string name="updated_label">更新日</string>
-    <string name="size_label">サイズ</string>
-    <string name="version_history">バージョン履歴</string>
-    <string name="no_version_history">まだバージョン履歴はありません。アプリが更新されると、その変遷をここで確認できます。</string>
-    <string name="latest">最新</string>
-    <string name="api_version">API %d</string>
-    
-    <!-- Settings Screen -->
-    <string name="theme_mode">テーマモード</string>
-    <string name="light">ライト</string>
-    <string name="dark">ダーク</string>
-    <string name="system">システム</string>
-    
-    <!-- About Dialog -->
-    <string name="about">このアプリについて</string>
-    <string name="designed_developed_by">デザイン・開発</string>
-    <string name="bernardo_ferrari">Bernardo Ferrari</string>
-    <string name="github">GitHub</string>
-    <string name="reddit">Reddit</string>
-    <string name="linkedin">LinkedIn</string>
-    <string name="open_source_project">このプロジェクトはオープンソースで、Apache 2.0の下でライセンスされています。</string>
-
-    <!-- Common UI Elements -->
-    <string name="error">エラー</string>
-    <string name="close">閉じる</string>
-    <string name="open">開く</string>
-    <string name="analytics">分析</string>
-    <string name="timeline">タイムライン</string>
-    <string name="updated_to">更新先</string>
-    <string name="app_icon">アプリアイコン</string>
-    <string name="app_icon_for">%sのアプリアイコン</string>
-    <string name="clear_all">すべてクリア</string>
-    <string name="loading_settings">設定を読み込み中…</string>
-    <string name="error_loading_settings">設定の読み込みエラー</string>
-    <string name="settings_screen_title">設定</string>
-    <string name="privacy_first">🔒 プライバシー優先</string>
-    <string name="privacy_description">このアプリは個人データを収集、保存、送信しません。すべての情報はお使いのデバイスに完全にローカルに保存されます。</string>
-    <string name="sdk_analytics">SDK分析</string>
-    <string name="apps_lowercase">アプリ</string>
-    <string name="versions_lowercase">バージョン</string>
-    <string name="api_format">API %d</string>
-    <string name="target_sdk_format">ターゲットSDK %d</string>
-    <string name="apps_count_format" formatted="false">%d %s</string>
-    <string name="app_singular">アプリ</string>
-    <string name="apps_plural">アプリ</string>
-    <string name="no_apps_found_sdk">このSDKバージョンのアプリが見つかりません</string>
-    <string name="no_apps_found_filter">%sが見つかりません</string>
-    <string name="try_different_filter">別のフィルターを試してください</string>
-    <string name="filter_options">フィルターオプション</string>
-    <string name="percentage_format">%d%%</string>
-    <string name="data_management">データ管理</string>
-    <string name="about_section">このアプリについて</string>
-    <string name="learn_more_about_app">このアプリについて詳しく知る</string>
-    <string name="app_version_format">%1$s v%2$s</string>
-    <string name="unknown_error">不明なエラー</string>
-
-    <!-- Settings Screen Missing Strings -->
-    <string name="appearance">外観</string>
-    <string name="background_sync">自動同期</string>
-    <string name="tap_to_configure_automatic_updates">タップして自動更新を設定</string>
-    <string name="enabled_daily_updates">有効 - 毎日更新</string>
-    <string name="enabled_weekly_updates">有効 - 毎週更新</string>
-    <string name="enabled_monthly_updates">有効 - 毎月更新</string>
-    <string name="enabled_every">%1$s%2$s毎に有効</string>
-    <string name="delete_all_app_change_history_and_logs">すべてのアプリ変更履歴とログを削除</string>
-    <string name="confirm_clear_all_logs">これによりすべてのアプリ変更履歴とログが永久に削除されます。この操作は元に戻せません。</string>
-
-    <!-- Background Sync Dialog -->
-    <string name="enable_sync">同期を有効にする</string>
-    <string name="disable_sync">同期を無効にする</string>
-    <string name="save">保存</string>
     <string name="cancel">キャンセル</string>
-    <string name="wifi_only">WiFiのみ</string>
-    <string name="requires_charging">充電が必要</string>
-    <string name="battery_not_low">バッテリー残量十分</string>
-    <string name="apps_will_update_automatically">アプリが自動的に更新されます</string>
-    <string name="tap_to_enable_automatic_updates">タップして自動更新を有効にする</string>
-    <string name="sync_frequency">同期頻度</string>
-    <string name="daily">毎日</string>
-    <string name="weekly">毎週</string>
-    <string name="monthly">毎月</string>
-    <string name="custom">カスタム</string>
-    <string name="once_every_day">1日に1回</string>
-    <string name="once_every_week">1週間に1回</string>
-    <string name="once_every_month">1ヶ月に1回</string>
-    <string name="set_your_own_interval">独自の間隔を設定</string>
-    <string name="set_custom_interval">カスタム間隔を設定</string>
-    <string name="every">毎</string>
-    <string name="unit">単位</string>
-    <string name="required">必須</string>
-    <string name="select_app_to_get_started">開始するアプリを選択</string>
-
-    <!-- About Screen -->
-    <string name="made_with_care_by">愛情を込めて作成</string>
-    <string name="privacy_first_title">プライバシー優先</string>
-    <string name="zero_tracking">ゼロトラッキング</string>
-    <string name="open_source">オープンソース</string>
-    <string name="view_on_github">GitHubで表示</string>
-    <string name="get_in_touch">お問い合わせ</string>
-    <string name="send_feedback_or_ask_questions">フィードバックの送信やご質問</string>
-    <string name="version_format">バージョン %s</string>
-    <string name="no_data_collection">データ収集なし</string>
-    <string name="everything_stays_local">すべてローカルに保存</string>
-    <string name="no_internet_permissions_needed">インターネット権限不要</string>
-    <string name="open_source_transparent">オープンソースで透明性</string>
-    <string name="sdk_monitor_feedback">SDKモニターフィードバック</string>
-    <string name="send_feedback">フィードバック送信</string>
-
-    <!-- Export Data -->
-    <string name="export_data">データをエクスポート</string>
-    <string name="export_data_description">アプリデータをCSVバックアップとしてダウンロード</string>
-    <string name="export_sdk_monitor_data">SDKモニターデータをエクスポート</string>
-    <string name="sdk_monitor_data_backup">SDKモニターデータのバックアップが%sに作成されました</string>
-
-    <!-- Notification Permission Strings -->
-    <string name="notifications_disabled">通知が無効</string>
-    <string name="notifications_required_for_background_sync">バックグラウンド同期が動作するには通知が必要です</string>
-    <string name="background_sync_requires_notifications">バックグラウンド同期は通知を使用して自動更新をスケジュールします。デバイス設定で通知を有効にしてください。</string>
-    <string name="open_settings">設定を開く</string>
-    <string name="enable_notifications">通知を有効にする</string>
-    <string name="notifications_help_background_sync">通知はアプリをバックグラウンドで更新し続けるのに役立ちます</string>
-    <string name="allow_notifications">通知を許可</string>
-
-
-    <!-- Calculator localization -->
     <string name="error_divide_by_zero">ゼロでは割れません</string>
     <string name="error_domain">この値では定義されていません</string>
     <string name="error_syntax">式が不完全です</string>
@@ -259,12 +14,8 @@
     <string name="tape_edit">計算を編集</string>
     <string name="tape_delete">削除</string>
     <string name="copied">コピーしました</string>
-    <string name="menu_more">その他のオプション</string>
-    <string name="menu_clear_history">履歴を消去</string>
     <string name="menu_settings">設定</string>
     <string name="menu_unit_converter">単位換算</string>
-    <string name="menu_programmer">プログラマー</string>
-    <string name="menu_statistics">統計</string>
     <string name="angle_degrees">DEG</string>
     <string name="angle_radians">RAD</string>
     <string name="angle_toggle_description">角度の単位、タップして切り替え</string>
@@ -273,8 +24,6 @@
     <string name="settings_haptics_description">キーを押すたびに振動</string>
     <string name="settings_history">履歴</string>
     <string name="settings_clear_history">履歴を消去</string>
-    <string name="swipe_tip">キーを上下にフリックして sin、√、π などを入力</string>
-    <string name="settings_tools">ツール</string>
     <string name="show_history">履歴を表示</string>
     <string name="show_keypad">キーパッドを表示</string>
     <string name="function_layer_description">関数。一度タップで入力、再度タップまたは長押しで固定</string>
@@ -323,10 +72,6 @@
     <string name="settings_version">バージョン %1$s</string>
     <string name="settings_clear_history_title">履歴を消去しますか？</string>
     <string name="settings_clear_history_body">保存された計算がすべて削除されます。</string>
-
-    <!-- Calculator localization -->
-
-    <!-- Calculator localization -->
     <string name="measure_mm">ミリメートル</string>
     <string name="measure_cm">センチメートル</string>
     <string name="measure_m">メートル</string>
@@ -391,12 +136,6 @@
     <string name="measure_atm">標準大気圧</string>
     <string name="measure_psi">重量ポンド毎平方インチ</string>
     <string name="measure_mmhg">水銀柱ミリメートル</string>
-
-    <!-- Calculator localization -->
-
-    <!-- Calculator localization -->
-
-    <!-- Calculator localization -->
     <string name="key_clear">消去</string>
     <string name="key_parens">括弧</string>
     <string name="key_lparen">左括弧</string>
@@ -427,25 +166,8 @@
     <string name="key_inverse">逆関数</string>
     <string name="key_inverse_on">逆関数オン</string>
     <string name="key_inverse_off">逆関数オフ</string>
-
-    <!-- Calculator localization -->
     <string name="key_sin">正弦</string>
-
-    <!-- Calculator localization -->
     <string name="key_cos">余弦</string>
-
-    <!-- Calculator localization -->
     <string name="key_tan">正接</string>
-
-    <!-- Calculator localization -->
     <string name="key_negate">符号を切り替え</string>
-
-    <!-- Calculator localization -->
-    <string name="battery_optimization_active">バッテリー最適化が有効です</string>
-
-    <!-- Calculator localization -->
-    <string name="battery_optimization_may_delay_sync">バッテリー最適化によりバックグラウンド同期が遅延または停止する場合があります</string>
-
-    <!-- Calculator localization -->
-    <string name="disable_optimization">最適化を無効にする</string>
 </resources>

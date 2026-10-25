@@ -1,258 +1,11 @@
 <resources>
-
-    <!-- Theme Mode -->
     <string name="theme_system">系统</string>
-    <string name="theme_material_you">动态</string>
     <string name="theme_light">浅色</string>
     <string name="theme_dark">深色</string>
-    <string name="theme_system_description">跟随系统设置</string>
-    <string name="theme_material_you_description">壁纸取色</string>
-    <string name="theme_light_description">始终浅色主题</string>
-    <string name="theme_dark_description">始终深色主题</string>
-
-    <string-array name="singularTime">
-        <item>分钟</item>
-        <item>小时</item>
-        <item>天</item>
-    </string-array>
-
-    <string-array name="pluralTime">
-        <item>分钟</item>
-        <item>小时</item>
-        <item>天</item>
-    </string-array>
-
-    <plurals name="searchApps">
-        <item quantity="one">搜索 %d 个应用</item>
-        <item quantity="other">搜索 %d 个应用</item>
-    </plurals>
-
-    <plurals name="minutes_ago">
-        <item quantity="one">%d分钟前</item>
-        <item quantity="other">%d分钟前</item>
-    </plurals>
-
-    <plurals name="hours_ago">
-        <item quantity="one">%d小时前</item>
-        <item quantity="other">%d小时前</item>
-    </plurals>
-
-    <plurals name="days_ago">
-        <item quantity="one">%d天前</item>
-        <item quantity="other">%d天前</item>
-    </plurals>
-
-    <string name="sync_every" formatted="false">每 %d %s 同步</string>
-    <string name="sync_disabled">同步已禁用</string>
-
     <string name="dismiss">关闭</string>
-    <string name="contact">联系</string>
-    <string name="about_title">SDK监视器 v%1$s</string>
-    <string name="about_body"><![CDATA[
-        由 <b>Bernardo Ferrari</b> 设计与开发。<br/>
-        <a href=\'https://github.com/bernaferrari\'>GitHub</a>&nbsp;&nbsp;
-        <a href=\'https://www.reddit.com/user/bernaferrari\'>Reddit</a>&nbsp;&nbsp;
-        <a href=\'https://www.linkedin.com/in/bernaferrari\'>LinkedIn</a><br/><br/>
-        此项目是<a href=\'https://github.com/bernaferrari/SDKMonitor\'>开源项目</a>，
-        采用Apache 2.0许可证。
-  ]]></string>
-
-    <string name="background_sync_description">定期检查targetSDK是否已更改，因为应用程序总是在更新。</string>
-    <string name="home">主页</string>
-    <string name="logs">日志</string>
-    <string name="settings">设置</string>
-    <string name="loading">加载中</string>
-
-    <string name="target_sdk_logs">TargetSDK日志</string>
-    <string name="no_logs_yet">暂无日志</string>
-    <string name="app_changes_will_appear">应用变化将在此处显示</string>
-    <string name="failed_to_load_logs">加载日志失败</string>
-    <string name="loading_logs">正在加载日志…</string>
-    <string name="retry">重试</string>
-    
-    <!-- Navigation titles -->
-    <string name="main_title">应用</string>
-    <string name="logs_title">日志</string>
     <string name="settings_title">设置</string>
-
-    <!-- Time formatting -->
-    <string name="just_now">刚刚</string>
-    <string name="never">从不</string>
-    <string name="today">今天</string>
-    <string name="this_week">本周</string>
-    <string name="this_month">本月</string>
-    <string name="this_year">今年</string>
-
-    <!-- Main Screen -->
-    <string name="apps_count">%d个应用</string>
-    <string name="search_apps_hint">搜索应用…</string>
-    <string name="clear_search">清除搜索</string>
-    <string name="filter_apps">筛选应用</string>
-    <string name="sort_by">排序方式</string>
-    <string name="all_apps">所有应用</string>
-    <string name="user_apps">用户应用</string>
-    <string name="system_apps">系统应用</string>
-    <string name="sort_by_name">名称</string>
-    <string name="sort_by_sdk">SDK版本</string>
-    <string name="loading_apps">正在加载应用…</string>
-    <string name="setting_up_your_apps">正在设置您的应用…</string>
-    <string name="apps_sync_progress">%1$d / %2$d 个应用</string>
-    <string name="something_went_wrong">出现了问题</string>
-    <string name="no_apps_found">未找到应用</string>
-    <string name="try_searching_different_terms">尝试使用不同的搜索词</string>
-    <string name="try_changing_filter">尝试更改筛选器</string>
-    <string name="no_filtered_apps_found">未找到%s</string>
-    
-    <!-- Logs Screen -->
-    <string name="change_logs">变更记录</string>
-    <string name="loading_change_history">✨ 正在加载变更历史</string>
-    <string name="analyzing_app_ecosystem">正在分析您的应用生态系统…</string>
-    <string name="oops_something_went_wrong">哎呀！出现了问题</string>
-    <string name="no_changes_yet">暂无变化</string>
-    <string name="when_apps_update_description">当应用更新其目标SDK版本时，您将在此处看到美丽的变化时间线</string>
-    <string name="sdk_monitor_watching">✨ SDK监视器正在监控</string>
-    <string name="change_timeline">变化时间线</string>
-    <string name="showing">显示</string>
-    <string name="activity_overview">活动概览</string>
-    <string name="past_week">过去一周</string>
-    <string name="past_month">过去一月</string>
-    <string name="past_6_months">过去6个月</string>
-    
-    <!-- Details Screen -->
-    <string name="app_details">应用详情</string>
     <string name="back">返回</string>
-    <string name="loading_app_details">正在加载应用详情</string>
-    <string name="app_not_found">未找到应用</string>
-    <string name="try_again">重试</string>
-    <string name="target_sdk">targetSDK</string>
-    <string name="min_sdk">minSDK</string>
-    <string name="app_information">应用信息</string>
-    <string name="play_store">Play商店</string>
-    <string name="package_label">包名</string>
-    <string name="version_label">版本</string>
-    <string name="updated_label">更新时间</string>
-    <string name="size_label">大小</string>
-    <string name="version_history">版本历史</string>
-    <string name="no_version_history">暂无版本历史。当应用更新时，您将在此处看到其演变过程。</string>
-    <string name="latest">最新</string>
-    <string name="api_version">API %d</string>
-    
-    <!-- Settings Screen -->
-    <string name="theme_mode">主题模式</string>
-    <string name="light">浅色</string>
-    <string name="dark">深色</string>
-    <string name="system">系统</string>
-    <string name="appearance">外观</string>
-    <string name="background_sync">自动同步</string>
-    <string name="tap_to_configure_automatic_updates">点击配置自动更新</string>
-    <string name="enabled_daily_updates">已启用 - 每日更新</string>
-    <string name="enabled_weekly_updates">已启用 - 每周更新</string>
-    <string name="enabled_monthly_updates">已启用 - 每月更新</string>
-    <string name="enabled_every">每%1$s%2$s启用</string>
-    <string name="delete_all_app_change_history_and_logs">删除所有应用变更历史和日志</string>
-    <string name="confirm_clear_all_logs">这将永久删除所有应用变更历史和日志。此操作无法撤销。</string>
-    
-    <!-- About Dialog -->
-    <string name="about">关于</string>
-    <string name="designed_developed_by">设计与开发</string>
-    <string name="bernardo_ferrari">Bernardo Ferrari</string>
-    <string name="github">GitHub</string>
-    <string name="reddit">Reddit</string>
-    <string name="linkedin">LinkedIn</string>
-    <string name="open_source_project">此项目是开源项目，采用Apache 2.0许可证。</string>
-
-    <!-- Background Sync Dialog -->
-    <string name="apps_will_update_automatically">应用将自动更新</string>
-    <string name="tap_to_enable_automatic_updates">点击启用自动更新</string>
-    <string name="sync_frequency">同步频率</string>
-    <string name="daily">每日</string>
-    <string name="weekly">每周</string>
-    <string name="monthly">每月</string>
-    <string name="custom">自定义</string>
-    <string name="once_every_day">每天一次</string>
-    <string name="once_every_week">每周一次</string>
-    <string name="once_every_month">每月一次</string>
-    <string name="set_your_own_interval">设置您自己的间隔</string>
-    <string name="set_custom_interval">设置自定义间隔</string>
-    <string name="every">每</string>
-    <string name="unit">单位</string>
-    <string name="required">必填</string>
-    <string name="enable_sync">启用同步</string>
-    <string name="disable_sync">禁用同步</string>
-    <string name="save">保存</string>
     <string name="cancel">取消</string>
-    <string name="wifi_only">仅WiFi</string>
-    <string name="requires_charging">需要充电</string>
-    <string name="battery_not_low">电池电量不低</string>
-    
-    <!-- Common UI Elements -->
-    <string name="error">错误</string>
-    <string name="close">关闭</string>
-    <string name="open">打开</string>
-    <string name="analytics">分析</string>
-    <string name="timeline">时间线</string>
-    <string name="updated_to">更新至</string>
-    <string name="app_icon">应用图标</string>
-    <string name="app_icon_for">%s的应用图标</string>
-    <string name="clear_all">全部清除</string>
-    <string name="loading_settings">正在加载设置…</string>
-    <string name="error_loading_settings">加载设置时出错</string>
-    <string name="settings_screen_title">设置</string>
-    <string name="privacy_first">🔒 隐私优先</string>
-    <string name="privacy_description">此应用不收集、存储或传输任何个人数据。所有信息都完全保存在您的设备本地。</string>
-    <string name="sdk_analytics">SDK分析</string>
-    <string name="apps_lowercase">应用</string>
-    <string name="versions_lowercase">版本</string>
-    <string name="api_format">API %d</string>
-    <string name="target_sdk_format">目标SDK %d</string>
-    <string name="apps_count_format" formatted="false">%d %s</string>
-    <string name="app_singular">应用</string>
-    <string name="apps_plural">应用</string>
-    <string name="no_apps_found_sdk">未找到使用此SDK版本的应用</string>
-    <string name="no_apps_found_filter">未找到%s</string>
-    <string name="try_different_filter">尝试不同的筛选器</string>
-    <string name="filter_options">筛选选项</string>
-    <string name="percentage_format">%d%%</string>
-    <string name="data_management">数据管理</string>
-    <string name="about_section">关于</string>
-    <string name="learn_more_about_app">了解更多关于此应用</string>
-    <string name="app_version_format">%1$s v%2$s</string>
-    <string name="unknown_error">未知错误</string>
-    <string name="select_app_to_get_started">选择应用开始使用</string>
-
-    <!-- About Screen -->
-    <string name="made_with_care_by">用心制作</string>
-    <string name="privacy_first_title">隐私优先</string>
-    <string name="zero_tracking">零追踪</string>
-    <string name="open_source">开源</string>
-    <string name="view_on_github">在GitHub上查看</string>
-    <string name="get_in_touch">联系我们</string>
-    <string name="send_feedback_or_ask_questions">发送反馈或提问</string>
-    <string name="version_format">版本 %s</string>
-    <string name="no_data_collection">不收集数据</string>
-    <string name="everything_stays_local">一切都保存在本地</string>
-    <string name="no_internet_permissions_needed">无需网络权限</string>
-    <string name="open_source_transparent">开源且透明</string>
-    <string name="sdk_monitor_feedback">SDK监视器反馈</string>
-    <string name="send_feedback">发送反馈</string>
-
-    <!-- Export Data -->
-    <string name="export_data">导出数据</string>
-    <string name="export_data_description">将您的应用数据下载为CSV备份</string>
-    <string name="export_sdk_monitor_data">导出SDK监视器数据</string>
-    <string name="sdk_monitor_data_backup">SDK监视器数据备份创建于%s</string>
-
-    <!-- Notification Permission Strings -->
-    <string name="notifications_disabled">通知已禁用</string>
-    <string name="notifications_required_for_background_sync">后台同步需要通知权限才能正常工作</string>
-    <string name="background_sync_requires_notifications">后台同步使用通知来安排自动更新。请在设备设置中启用通知。</string>
-    <string name="open_settings">打开设置</string>
-    <string name="enable_notifications">启用通知</string>
-    <string name="notifications_help_background_sync">通知有助于让您的应用在后台保持更新</string>
-    <string name="allow_notifications">允许通知</string>
-
-
-    <!-- Calculator localization -->
     <string name="error_divide_by_zero">不能除以零</string>
     <string name="error_domain">此值无定义</string>
     <string name="error_syntax">表达式不完整</string>
@@ -261,12 +14,8 @@
     <string name="tape_edit">编辑计算</string>
     <string name="tape_delete">删除</string>
     <string name="copied">已复制</string>
-    <string name="menu_more">更多选项</string>
-    <string name="menu_clear_history">清除历史记录</string>
     <string name="menu_settings">设置</string>
     <string name="menu_unit_converter">单位换算</string>
-    <string name="menu_programmer">程序员</string>
-    <string name="menu_statistics">统计</string>
     <string name="angle_degrees">DEG</string>
     <string name="angle_radians">RAD</string>
     <string name="angle_toggle_description">角度单位，点按切换</string>
@@ -275,8 +24,6 @@
     <string name="settings_haptics_description">感受每次按键</string>
     <string name="settings_history">历史记录</string>
     <string name="settings_clear_history">清除历史记录</string>
-    <string name="swipe_tip">上下轻扫按键可输入 sin、√、π 等</string>
-    <string name="settings_tools">工具</string>
     <string name="show_history">显示历史记录</string>
     <string name="show_keypad">显示键盘</string>
     <string name="function_layer_description">函数。点按使用一次，再次点按或长按可保持</string>
@@ -325,10 +72,6 @@
     <string name="settings_version">版本 %1$s</string>
     <string name="settings_clear_history_title">清除历史记录？</string>
     <string name="settings_clear_history_body">所有已保存的计算将被删除。</string>
-
-    <!-- Calculator localization -->
-
-    <!-- Calculator localization -->
     <string name="measure_mm">毫米</string>
     <string name="measure_cm">厘米</string>
     <string name="measure_m">米</string>
@@ -393,12 +136,6 @@
     <string name="measure_atm">标准大气压</string>
     <string name="measure_psi">磅每平方英寸</string>
     <string name="measure_mmhg">毫米汞柱</string>
-
-    <!-- Calculator localization -->
-
-    <!-- Calculator localization -->
-
-    <!-- Calculator localization -->
     <string name="key_clear">清除</string>
     <string name="key_parens">括号</string>
     <string name="key_lparen">左括号</string>
@@ -429,25 +166,8 @@
     <string name="key_inverse">反函数</string>
     <string name="key_inverse_on">反函数已开启</string>
     <string name="key_inverse_off">反函数已关闭</string>
-
-    <!-- Calculator localization -->
     <string name="key_sin">正弦</string>
-
-    <!-- Calculator localization -->
     <string name="key_cos">余弦</string>
-
-    <!-- Calculator localization -->
     <string name="key_tan">正切</string>
-
-    <!-- Calculator localization -->
     <string name="key_negate">切换正负号</string>
-
-    <!-- Calculator localization -->
-    <string name="battery_optimization_active">电池优化已开启</string>
-
-    <!-- Calculator localization -->
-    <string name="battery_optimization_may_delay_sync">电池优化可能延迟或阻止后台同步</string>
-
-    <!-- Calculator localization -->
-    <string name="disable_optimization">关闭优化</string>
 </resources>

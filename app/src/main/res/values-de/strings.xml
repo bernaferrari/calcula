@@ -1,258 +1,11 @@
 <resources>
-
-    <!-- Theme Mode -->
     <string name="theme_system">System</string>
-    <string name="theme_material_you">Dynamisch</string>
     <string name="theme_light">Hell</string>
     <string name="theme_dark">Dunkel</string>
-    <string name="theme_system_description">Systemeinstellungen folgen</string>
-    <string name="theme_material_you_description">Farben vom Hintergrundbild</string>
-    <string name="theme_light_description">Immer helles Design</string>
-    <string name="theme_dark_description">Immer dunkles Design</string>
-
-    <string-array name="singularTime">
-        <item>Minute</item>
-        <item>Stunde</item>
-        <item>Tag</item>
-    </string-array>
-
-    <string-array name="pluralTime">
-        <item>Minuten</item>
-        <item>Stunden</item>
-        <item>Tage</item>
-    </string-array>
-
-    <plurals name="searchApps">
-        <item quantity="one">%d App durchsuchen</item>
-        <item quantity="other">%d Apps durchsuchen</item>
-    </plurals>
-
-    <plurals name="minutes_ago">
-        <item quantity="one">vor %d Minute</item>
-        <item quantity="other">vor %d Minuten</item>
-    </plurals>
-
-    <plurals name="hours_ago">
-        <item quantity="one">vor %d Stunde</item>
-        <item quantity="other">vor %d Stunden</item>
-    </plurals>
-
-    <plurals name="days_ago">
-        <item quantity="one">vor %d Tag</item>
-        <item quantity="other">vor %d Tagen</item>
-    </plurals>
-
-    <string name="sync_every" formatted="false">Alle %d %s synchronisieren</string>
-    <string name="sync_disabled">Synchronisation deaktiviert</string>
-
     <string name="dismiss">Verwerfen</string>
-    <string name="contact">Kontakt</string>
-    <string name="about_title">SDK Monitor v%1$s</string>
-    <string name="about_body"><![CDATA[
-        Entworfen &amp; entwickelt von <b>Bernardo Ferrari</b>.<br/>
-        <a href=\'https://github.com/bernaferrari\'>GitHub</a>&nbsp;&nbsp;
-        <a href=\'https://www.reddit.com/user/bernaferrari\'>Reddit</a>&nbsp;&nbsp;
-        <a href=\'https://www.linkedin.com/in/bernaferrari\'>LinkedIn</a><br/><br/>
-        Dieses Projekt ist <a href=\'https://github.com/bernaferrari/SDKMonitor\'>Open Source</a>, und ist
-        unter Apache 2.0 lizenziert.</a>.
-  ]]></string>
-
-    <string name="background_sync_description">Überprüft regelmäßig, ob sich das targetSDK geändert hat, da Apps immer aktualisiert werden.</string>
-    <string name="home">Startseite</string>
-    <string name="logs">Protokolle</string>
-    <string name="settings">Einstellungen</string>
-
-    <string name="target_sdk_logs">TargetSDK-Protokolle</string>
-    <string name="no_logs_yet">Noch Keine Protokolle</string>
-    <string name="app_changes_will_appear">App-Änderungen werden hier erscheinen, sobald sie auftreten</string>
-    <string name="failed_to_load_logs">Fehler beim Laden der Protokolle</string>
-    <string name="loading_logs">Lade Protokolle…</string>
-    <string name="retry">Wiederholen</string>
-
-    <!-- Navigation titles -->
-    <string name="main_title">Apps</string>
-    <string name="logs_title">Protokolle</string>
     <string name="settings_title">Einstellungen</string>
-
-    <!-- Time formatting -->
-    <string name="just_now">Gerade jetzt</string>
-    <string name="never">Niemals</string>
-    <string name="today">Heute</string>
-    <string name="this_week">Diese Woche</string>
-    <string name="this_month">Diesen Monat</string>
-    <string name="this_year">Dieses Jahr</string>
-
-    <!-- Main Screen -->
-    <string name="apps_count">%d Apps</string>
-    <string name="search_apps_hint">Apps durchsuchen…</string>
-    <string name="clear_search">Suche löschen</string>
-    <string name="filter_apps">Apps Filtern</string>
-    <string name="sort_by">Sortieren Nach</string>
-    <string name="all_apps">Alle Apps</string>
-    <string name="user_apps">Benutzer-Apps</string>
-    <string name="system_apps">System-Apps</string>
-    <string name="sort_by_name">Name</string>
-    <string name="sort_by_sdk">SDK-Version</string>
-    <string name="loading_apps">Lade Apps…</string>
-    <string name="setting_up_your_apps">Richte deine Apps ein…</string>
-    <string name="apps_sync_progress">%1$d von %2$d Apps</string>
-    <string name="something_went_wrong">Etwas ist schief gelaufen</string>
-    <string name="no_apps_found">Keine Apps gefunden</string>
-    <string name="try_searching_different_terms">Versuche die Suche mit anderen Begriffen</string>
-    <string name="try_changing_filter">Versuche deinen Filter zu ändern</string>
-    <string name="no_filtered_apps_found">Keine %s gefunden</string>
-
-    <!-- Logs Screen -->
-    <string name="change_logs">Änderungsprotokoll</string>
-    <string name="loading_change_history">✨ Lade Änderungsverlauf</string>
-    <string name="analyzing_app_ecosystem">Analysiere dein App-Ökosystem…</string>
-    <string name="oops_something_went_wrong">Ups! Etwas ist schief gelaufen</string>
-    <string name="no_changes_yet">Noch Keine Änderungen</string>
-    <string name="when_apps_update_description">Wenn Apps ihre Ziel-SDK-Versionen aktualisieren, siehst du hier eine schöne Zeitleiste der Änderungen</string>
-    <string name="sdk_monitor_watching">✨ SDK Monitor beobachtet</string>
-    <string name="change_timeline">Änderungs-Zeitleiste</string>
-    <string name="showing">Zeige</string>
-    <string name="activity_overview">Aktivitätsübersicht</string>
-    <string name="past_week">Letzte Woche</string>
-    <string name="past_month">Letzter Monat</string>
-    <string name="past_6_months">Letzte 6 Monate</string>
-
-    <!-- Details Screen -->
-    <string name="app_details">App-Details</string>
     <string name="back">Zurück</string>
-    <string name="loading_app_details">Lade App-Details</string>
-    <string name="app_not_found">App Nicht Gefunden</string>
-    <string name="try_again">Erneut Versuchen</string>
-    <string name="target_sdk">Ziel-SDK</string>
-    <string name="min_sdk">Min-SDK</string>
-    <string name="play_store">Play Store</string>
-    <string name="app_information">App-Informationen</string>
-    <string name="package_label">Paket</string>
-    <string name="version_label">Version</string>
-    <string name="updated_label">Aktualisiert</string>
-    <string name="size_label">Größe</string>
-    <string name="version_history">Versionsverlauf</string>
-    <string name="no_version_history">Noch kein Versionsverlauf verfügbar. Wenn die App aktualisiert wird, siehst du ihre Entwicklung hier.</string>
-    <string name="latest">NEUESTE</string>
-    <string name="api_version">API %d</string>
-
-    <!-- Settings Screen -->
-    <string name="theme_mode">Design-Modus</string>
-    <string name="light">Hell</string>
-    <string name="dark">Dunkel</string>
-    <string name="system">System</string>
-    <string name="appearance">Erscheinungsbild</string>
-    <string name="background_sync">Automatische Synchronisation</string>
-    <string name="tap_to_configure_automatic_updates">Tippen um automatische Updates zu konfigurieren</string>
-    <string name="enabled_daily_updates">Aktiviert - Tägliche Updates</string>
-    <string name="enabled_weekly_updates">Aktiviert - Wöchentliche Updates</string>
-    <string name="enabled_monthly_updates">Aktiviert - Monatliche Updates</string>
-    <string name="enabled_every">Aktiviert alle %1$s %2$s</string>
-    <string name="delete_all_app_change_history_and_logs">Alle App-Änderungsverläufe und Protokolle löschen</string>
-    <string name="confirm_clear_all_logs">Dies wird alle App-Änderungsverläufe und Protokolle dauerhaft löschen. Diese Aktion kann nicht rückgängig gemacht werden.</string>
-
-    <!-- About Dialog -->
-    <string name="about">Über</string>
-    <string name="designed_developed_by">Entworfen und entwickelt von</string>
-    <string name="bernardo_ferrari">Bernardo Ferrari</string>
-    <string name="github">GitHub</string>
-    <string name="reddit">Reddit</string>
-    <string name="linkedin">LinkedIn</string>
-    <string name="open_source_project">Dieses Projekt ist Open Source und unter Apache 2.0 lizenziert.</string>
-
-    <!-- Background Sync Dialog -->
-    <string name="enable_sync">Synchronisation Aktivieren</string>
-    <string name="disable_sync">Synchronisation Deaktivieren</string>
-    <string name="save">Speichern</string>
     <string name="cancel">Abbrechen</string>
-    <string name="wifi_only">Nur WLAN</string>
-    <string name="requires_charging">Erfordert Laden</string>
-    <string name="battery_not_low">Batterie nicht schwach</string>
-    <string name="apps_will_update_automatically">Apps werden automatisch aktualisiert</string>
-    <string name="tap_to_enable_automatic_updates">Tippen um automatische Updates zu aktivieren</string>
-    <string name="sync_frequency">Synchronisationsfrequenz</string>
-    <string name="daily">Täglich</string>
-    <string name="weekly">Wöchentlich</string>
-    <string name="monthly">Monatlich</string>
-    <string name="custom">Benutzerdefiniert</string>
-    <string name="once_every_day">Einmal täglich</string>
-    <string name="once_every_week">Einmal wöchentlich</string>
-    <string name="once_every_month">Einmal monatlich</string>
-    <string name="set_your_own_interval">Eigenes Intervall festlegen</string>
-    <string name="set_custom_interval">Benutzerdefiniertes Intervall Festlegen</string>
-    <string name="every">Alle</string>
-    <string name="unit">Einheit</string>
-    <string name="required">Erforderlich</string>
-
-    <!-- Common UI Elements -->
-    <string name="loading">Lädt</string>
-    <string name="error">Fehler</string>
-    <string name="close">Schließen</string>
-    <string name="open">Öffnen</string>
-    <string name="analytics">Analytics</string>
-    <string name="timeline">Zeitleiste</string>
-    <string name="updated_to">Aktualisiert auf</string>
-    <string name="app_icon">App-Icon</string>
-    <string name="app_icon_for">App-Icon für %s</string>
-    <string name="clear_all">Alle Löschen</string>
-    <string name="loading_settings">Lade Einstellungen…</string>
-    <string name="error_loading_settings">Fehler beim Laden der Einstellungen</string>
-    <string name="settings_screen_title">Einstellungen</string>
-    <string name="privacy_first">🔒 Datenschutz Zuerst</string>
-    <string name="privacy_description">Diese App sammelt, speichert oder überträgt keine persönlichen Daten. Alle Informationen bleiben vollständig lokal auf deinem Gerät.</string>
-    <string name="sdk_analytics">SDK-Analytics</string>
-    <string name="apps_lowercase">Apps</string>
-    <string name="versions_lowercase">Versionen</string>
-    <string name="api_format">API %d</string>
-    <string name="target_sdk_format">Ziel-SDK %d</string>
-    <string name="apps_count_format" formatted="false">%d %s</string>
-    <string name="app_singular">App</string>
-    <string name="apps_plural">Apps</string>
-    <string name="no_apps_found_sdk">Keine Apps mit dieser SDK-Version gefunden</string>
-    <string name="no_apps_found_filter">Keine %s gefunden</string>
-    <string name="try_different_filter">Versuche einen anderen Filter</string>
-    <string name="filter_options">Filteroptionen</string>
-    <string name="percentage_format">%d%%</string>
-    <string name="data_management">Datenverwaltung</string>
-    <string name="about_section">Über</string>
-    <string name="learn_more_about_app">Erfahre mehr über diese App</string>
-    <string name="app_version_format">%1$s v%2$s</string>
-    <string name="unknown_error">Unbekannter Fehler</string>
-    <string name="select_app_to_get_started">Wähle eine App zum Beginnen</string>
-
-    <!-- About Screen -->
-    <string name="made_with_care_by">Liebevoll erstellt von</string>
-    <string name="privacy_first_title">Datenschutz Zuerst</string>
-    <string name="zero_tracking">Kein Tracking</string>
-    <string name="open_source">Open Source</string>
-    <string name="view_on_github">Auf GitHub ansehen</string>
-    <string name="get_in_touch">Kontakt aufnehmen</string>
-    <string name="send_feedback_or_ask_questions">Feedback senden oder Fragen stellen</string>
-    <string name="version_format">Version %s</string>
-    <string name="no_data_collection">Keine Datensammlung</string>
-    <string name="everything_stays_local">Alles bleibt lokal</string>
-    <string name="no_internet_permissions_needed">Keine Internet-Berechtigungen erforderlich</string>
-    <string name="open_source_transparent">Open Source und transparent</string>
-    <string name="sdk_monitor_feedback">SDK Monitor Feedback</string>
-    <string name="send_feedback">Feedback Senden</string>
-
-    <!-- Export Data -->
-    <string name="export_data">Daten Exportieren</string>
-    <string name="export_data_description">Lade deine App-Daten als CSV-Backup herunter</string>
-    <string name="export_sdk_monitor_data">SDK Monitor Daten Exportieren</string>
-    <string name="sdk_monitor_data_backup">SDK Monitor Daten-Backup erstellt am %s</string>
-
-    <!-- Notification Permission Strings -->
-    <string name="notifications_disabled">Benachrichtigungen Deaktiviert</string>
-    <string name="notifications_required_for_background_sync">Benachrichtigungen sind erforderlich, damit die Hintergrundsynchronisation funktioniert</string>
-    <string name="background_sync_requires_notifications">Die Hintergrundsynchronisation verwendet Benachrichtigungen, um automatische Updates zu planen. Bitte aktiviere Benachrichtigungen in deinen Geräteeinstellungen.</string>
-    <string name="open_settings">Einstellungen Öffnen</string>
-    <string name="enable_notifications">Benachrichtigungen Aktivieren</string>
-    <string name="notifications_help_background_sync">Benachrichtigungen helfen dabei, deine Apps im Hintergrund aktuell zu halten</string>
-    <string name="allow_notifications">Benachrichtigungen Erlauben</string>
-
-
-    <!-- Calculator localization -->
     <string name="error_divide_by_zero">Division durch null nicht möglich</string>
     <string name="error_domain">Für diesen Wert nicht definiert</string>
     <string name="error_syntax">Unvollständiger Ausdruck</string>
@@ -261,12 +14,8 @@
     <string name="tape_edit">Berechnung bearbeiten</string>
     <string name="tape_delete">Löschen</string>
     <string name="copied">Kopiert</string>
-    <string name="menu_more">Weitere Optionen</string>
-    <string name="menu_clear_history">Verlauf löschen</string>
     <string name="menu_settings">Einstellungen</string>
     <string name="menu_unit_converter">Einheitenumrechner</string>
-    <string name="menu_programmer">Programmierer</string>
-    <string name="menu_statistics">Statistik</string>
     <string name="angle_degrees">DEG</string>
     <string name="angle_radians">RAD</string>
     <string name="angle_toggle_description">Winkeleinheit, zum Wechseln tippen</string>
@@ -275,8 +24,6 @@
     <string name="settings_haptics_description">Jeden Tastendruck spüren</string>
     <string name="settings_history">Verlauf</string>
     <string name="settings_clear_history">Verlauf löschen</string>
-    <string name="swipe_tip">Tasten ↑↓ wischen für sin, √, π und mehr</string>
-    <string name="settings_tools">Werkzeuge</string>
     <string name="show_history">Verlauf anzeigen</string>
     <string name="show_keypad">Tastatur anzeigen</string>
     <string name="function_layer_description">Funktionen. Einmal tippen für eine, erneut tippen oder halten zum Beibehalten</string>
@@ -325,10 +72,6 @@
     <string name="settings_version">Version %1$s</string>
     <string name="settings_clear_history_title">Verlauf löschen?</string>
     <string name="settings_clear_history_body">Alle gespeicherten Berechnungen werden gelöscht.</string>
-
-    <!-- Calculator localization -->
-
-    <!-- Calculator localization -->
     <string name="measure_mm">Millimeter</string>
     <string name="measure_cm">Zentimeter</string>
     <string name="measure_m">Meter</string>
@@ -393,12 +136,6 @@
     <string name="measure_atm">Atmosphäre</string>
     <string name="measure_psi">Pfund pro Quadratzoll</string>
     <string name="measure_mmhg">Millimeter Quecksilbersäule</string>
-
-    <!-- Calculator localization -->
-
-    <!-- Calculator localization -->
-
-    <!-- Calculator localization -->
     <string name="key_clear">Löschen</string>
     <string name="key_parens">Klammern</string>
     <string name="key_lparen">Klammer auf</string>
@@ -429,25 +166,8 @@
     <string name="key_inverse">Umkehrfunktionen</string>
     <string name="key_inverse_on">Umkehrfunktionen ein</string>
     <string name="key_inverse_off">Umkehrfunktionen aus</string>
-
-    <!-- Calculator localization -->
     <string name="key_sin">Sinus</string>
-
-    <!-- Calculator localization -->
     <string name="key_cos">Kosinus</string>
-
-    <!-- Calculator localization -->
     <string name="key_tan">Tangens</string>
-
-    <!-- Calculator localization -->
     <string name="key_negate">Vorzeichen wechseln</string>
-
-    <!-- Calculator localization -->
-    <string name="battery_optimization_active">Akkuoptimierung aktiv</string>
-
-    <!-- Calculator localization -->
-    <string name="battery_optimization_may_delay_sync">Die Akkuoptimierung kann die Hintergrundsynchronisierung verzögern oder verhindern</string>
-
-    <!-- Calculator localization -->
-    <string name="disable_optimization">Optimierung deaktivieren</string>
 </resources>

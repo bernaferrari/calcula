@@ -1,264 +1,12 @@
 <resources>
     <string name="app_name" translatable="false">Calculator++</string>
-
-    <!-- Theme Mode -->
     <string name="theme_system">System</string>
-    <string name="theme_material_you">Dynamic</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
-    <string name="theme_system_description">Follow system settings</string>
-    <string name="theme_material_you_description">Colors from wallpaper</string>
-    <string name="theme_light_description">Always light theme</string>
-    <string name="theme_dark_description">Always dark theme</string>
-
-    <string-array name="singularTime">
-        <item>minute</item>
-        <item>hour</item>
-        <item>day</item>
-    </string-array>
-
-    <string-array name="pluralTime">
-        <item>minutes</item>
-        <item>hours</item>
-        <item>days</item>
-    </string-array>
-
-    <plurals name="searchApps">
-        <item quantity="one">Search %d app</item>
-        <item quantity="other">Search %d apps</item>
-    </plurals>
-
-    <plurals name="minutes_ago">
-        <item quantity="one">%d minute ago</item>
-        <item quantity="other">%d minutes ago</item>
-    </plurals>
-
-    <plurals name="hours_ago">
-        <item quantity="one">%d hour ago</item>
-        <item quantity="other">%d hours ago</item>
-    </plurals>
-
-    <plurals name="days_ago">
-        <item quantity="one">%d day ago</item>
-        <item quantity="other">%d days ago</item>
-    </plurals>
-
-    <string name="sync_every" formatted="false">Sync every %d %s</string>
-    <string name="sync_disabled">Sync is disabled</string>
-
     <string name="dismiss">Dismiss</string>
-    <string name="contact">Contact</string>
-    <string name="about_title">SDK Monitor v%1$s</string>
-    <string name="about_body"><![CDATA[
-        Designed &amp; developed by <b>Bernardo Ferrari</b>.<br/>
-        <a href=\'https://github.com/bernaferrari\'>GitHub</a>&nbsp;&nbsp;
-        <a href=\'https://www.reddit.com/user/bernaferrari\'>Reddit</a>&nbsp;&nbsp;
-        <a href=\'https://www.linkedin.com/in/bernaferrari\'>LinkedIn</a><br/><br/>
-        This project is <a href=\'https://github.com/bernaferrari/SDKMonitor\'>open source</a>, and is
-        licensed under Apache 2.0.</a>.
-  ]]></string>
-
-    <string name="background_sync_description">Periodically check if targetSDK changed, since apps are always being updated.</string>
-    <string name="home">Home</string>
-    <string name="logs">Logs</string>
-    <string name="settings">Settings</string>
-    <string name="loading">Loading</string>
-
-    <string name="target_sdk_logs">TargetSDK Logs</string>
-    <string name="no_logs_yet">No Logs Yet</string>
-    <string name="app_changes_will_appear">App changes will appear here as they happen</string>
-    <string name="failed_to_load_logs">Failed to Load Logs</string>
-    <string name="loading_logs">Loading logs…</string>
-    <string name="retry">Retry</string>
-    
-    <!-- Navigation titles -->
-    <string name="main_title">Apps</string>
-    <string name="logs_title">Logs</string>
     <string name="settings_title">Settings</string>
-
-    <!-- Time formatting -->
-    <string name="just_now">Just now</string>
-    <string name="never">Never</string>
-    <string name="today">Today</string>
-    <string name="this_week">This week</string>
-    <string name="this_month">This month</string>
-    <string name="this_year">This year</string>
-
-    <!-- Main Screen -->
-    <string name="apps_count">%d apps</string>
-    <string name="search_apps_hint">Search apps…</string>
-    <string name="clear_search">Clear search</string>
-    <string name="filter_apps">Filter Apps</string>
-    <string name="sort_by">Sort By</string>
-    <string name="all_apps">All Apps</string>
-    <string name="user_apps">User Apps</string>
-    <string name="system_apps">System Apps</string>
-    <string name="sort_by_name">Name</string>
-    <string name="sort_by_sdk">SDK Version</string>
-    <string name="loading_apps">Loading apps…</string>
-    <string name="setting_up_your_apps">Setting up your apps…</string>
-    <string name="apps_sync_progress">%1$d of %2$d apps</string>
-    <string name="something_went_wrong">Something went wrong</string>
-    <string name="no_apps_found">No apps found</string>
-    <string name="try_searching_different_terms">Try searching with different terms</string>
-    <string name="try_changing_filter">Try changing your filter</string>
-    <string name="no_filtered_apps_found">No %s found</string>
-    
-    <!-- Logs Screen -->
-    <string name="change_logs">Change Logs</string>
-    <string name="loading_change_history">✨ Loading Change History</string>
-    <string name="analyzing_app_ecosystem">Analyzing your app ecosystem…</string>
-    <string name="oops_something_went_wrong">Oops! Something went wrong</string>
-    <string name="no_changes_yet">No Changes Yet</string>
-    <string name="when_apps_update_description">When apps update their target SDK versions, you\'ll see a beautiful timeline of changes here</string>
-    <string name="sdk_monitor_watching">✨ SDK Monitor is watching</string>
-    <string name="change_timeline">Change Timeline</string>
-    <string name="showing">Showing</string>
-    <string name="activity_overview">Activity Overview</string>
-    <string name="past_week">Past Week</string>
-    <string name="past_month">Past Month</string>
-    <string name="past_6_months">Past 6 Months</string>
-    
-    <!-- Details Screen -->
-    <string name="app_details">App Details</string>
     <string name="back">Back</string>
-    <string name="loading_app_details">Loading App Details</string>
-    <string name="app_not_found">App Not Found</string>
-    <string name="try_again">Try Again</string>
-    <string name="target_sdk">Target SDK</string>
-    <string name="min_sdk">Min SDK</string>
-    <string name="app_information">App Information</string>
-    <string name="play_store">Play Store</string>
-    <string name="package_label">Package</string>
-    <string name="version_label">Version</string>
-    <string name="updated_label">Updated</string>
-    <string name="size_label">Size</string>
-    <string name="version_history">Version History</string>
-    <string name="no_version_history">No version history available yet. When the app updates, you\'ll see its evolution here.</string>
-    <string name="latest">LATEST</string>
-    <string name="api_version">API %d</string>
-    <string name="select_app_to_get_started">Select an app to get started</string>
-    
-    <!-- Settings Screen -->
-    <string name="theme_mode">Theme Mode</string>
-    <string name="light">Light</string>
-    <string name="dark">Dark</string>
-    <string name="system">System</string>
-    <string name="appearance">Appearance</string>
-    <string name="background_sync">Background Sync</string>
-    <string name="tap_to_configure_automatic_updates">Tap to configure background updates</string>
-    <string name="enabled_daily_updates">Enabled - Daily updates</string>
-    <string name="enabled_weekly_updates">Enabled - Weekly updates</string>
-    <string name="enabled_monthly_updates">Enabled - Monthly updates</string>
-    <string name="enabled_every">Enabled every %1$s %2$s</string>
-    <string name="delete_all_app_change_history_and_logs">Delete all app change history and logs</string>
-    <string name="confirm_clear_all_logs">This will permanently delete all app change history and logs. This action cannot be undone.</string>
-    
-    <!-- About Dialog -->
-    <string name="about">About</string>
-    <string name="designed_developed_by">Designed &amp; developed by</string>
-    <string name="bernardo_ferrari">Bernardo Ferrari</string>
-    <string name="github">GitHub</string>
-    <string name="reddit">Reddit</string>
-    <string name="linkedin">LinkedIn</string>
-    <string name="open_source_project">This project is open source and licensed under Apache 2.0.</string>
-
-    <!-- Background Sync Dialog -->
-    <string name="apps_will_update_automatically">Apps will update automatically</string>
-    <string name="tap_to_enable_automatic_updates">Tap to enable automatic updates</string>
-    <string name="sync_frequency">Sync Frequency</string>
-    <string name="daily">Daily</string>
-    <string name="weekly">Weekly</string>
-    <string name="monthly">Monthly</string>
-    <string name="custom">Custom</string>
-    <string name="once_every_day">Once every day</string>
-    <string name="once_every_week">Once every week</string>
-    <string name="once_every_month">Once every month</string>
-    <string name="set_your_own_interval">Set your own interval</string>
-    <string name="set_custom_interval">Set Custom Interval</string>
-    <string name="every">Every</string>
-    <string name="unit">Unit</string>
-    <string name="required">Required</string>
-    <string name="enable_sync">Enable Sync</string>
-    <string name="disable_sync">Disable Sync</string>
-    <string name="save">Save</string>
     <string name="cancel">Cancel</string>
-    <string name="wifi_only">WiFi only</string>
-    <string name="requires_charging">Requires charging</string>
-    <string name="battery_not_low">Battery not low</string>
-    
-    <!-- Common UI Elements -->
-    <string name="error">Error</string>
-    <string name="close">Close</string>
-    <string name="open">Open</string>
-    <string name="analytics">Analytics</string>
-    <string name="timeline">Timeline</string>
-    <string name="updated_to">Updated to</string>
-    <string name="app_icon">App icon</string>
-    <string name="app_icon_for">App icon for %s</string>
-    <string name="clear_all">Clear All</string>
-    <string name="loading_settings">Loading settings…</string>
-    <string name="error_loading_settings">Error loading settings</string>
-    <string name="settings_screen_title">Settings</string>
-    <string name="privacy_first">🔒 Privacy First</string>
-    <string name="privacy_description">This app doesn\'t collect, store, or transmit any personal data. All information remains completely local on your device.</string>
-    <string name="sdk_analytics">SDK Analytics</string>
-    <string name="apps_lowercase">apps</string>
-    <string name="versions_lowercase">versions</string>
-    <string name="api_format">API %d</string>
-    <string name="target_sdk_format">Target SDK %d</string>
-    <string name="apps_count_format" formatted="false">%d %s</string>
-    <string name="app_singular">app</string>
-    <string name="apps_plural">apps</string>
-    <string name="no_apps_found_sdk">No apps found with this SDK version</string>
-    <string name="no_apps_found_filter">No %s found</string>
-    <string name="try_different_filter">Try a different filter</string>
-    <string name="filter_options">Filter options</string>
-    <string name="percentage_format">%d%%</string>
-    <string name="data_management">Data Management</string>
-    <string name="about_section">About</string>
-    <string name="learn_more_about_app">Learn more about this app</string>
-    <string name="app_version_format">%1$s v%2$s</string>
-    <string name="unknown_error">Unknown error</string>
-
-    <!-- About Screen -->
-    <string name="made_with_care_by">Made with care by</string>
-    <string name="privacy_first_title">Privacy First</string>
-    <string name="zero_tracking">Zero tracking</string>
-    <string name="open_source">Open Source</string>
-    <string name="view_on_github">View on GitHub</string>
-    <string name="get_in_touch">Get in Touch</string>
-    <string name="send_feedback_or_ask_questions">Send feedback or ask questions</string>
-    <string name="version_format">Version %s</string>
-    <string name="no_data_collection">No data collection</string>
-    <string name="everything_stays_local">Everything stays local</string>
-    <string name="no_internet_permissions_needed">No internet permissions needed</string>
-    <string name="open_source_transparent">Open source &amp; transparent</string>
-    <string name="sdk_monitor_feedback">SDK Monitor Feedback</string>
-    <string name="send_feedback">Send Feedback</string>
-
-    <!-- Export Data -->
-    <string name="export_data">Export Data</string>
-    <string name="export_data_description">Download your app data as CSV backup</string>
-    <string name="export_sdk_monitor_data">Export SDK Monitor Data</string>
-    <string name="sdk_monitor_data_backup">SDK Monitor data backup created on %s</string>
-
-    <!-- Notification Permission Strings -->
-    <string name="notifications_disabled">Notifications Disabled</string>
-    <string name="notifications_required_for_background_sync">Notifications are required for background sync to work</string>
-    <string name="background_sync_requires_notifications">Background sync uses notifications to schedule automatic updates. Please enable notifications in your device settings.</string>
-    <string name="open_settings">Open Settings</string>
-    <string name="enable_notifications">Enable Notifications</string>
-    <string name="notifications_help_background_sync">Notifications help keep your apps updated in the background</string>
-    <string name="allow_notifications">Allow Notifications</string>
-
-    <!-- Battery Optimization Strings -->
-    <string name="battery_optimization_active">Battery Optimization Active</string>
-    <string name="battery_optimization_may_delay_sync">Battery optimization may delay or prevent background sync from running</string>
-    <string name="disable_optimization">Disable Optimization</string>
-
-
-    <!-- Calculator -->
     <string name="error_divide_by_zero">Can\'t divide by zero</string>
     <string name="error_domain">Undefined for this value</string>
     <string name="error_syntax">Incomplete expression</string>
@@ -267,12 +15,8 @@
     <string name="tape_edit">Edit calculation</string>
     <string name="tape_delete">Delete</string>
     <string name="copied">Copied</string>
-    <string name="menu_more">More options</string>
-    <string name="menu_clear_history">Clear history</string>
     <string name="menu_settings">Settings</string>
     <string name="menu_unit_converter">Unit converter</string>
-    <string name="menu_programmer">Programmer</string>
-    <string name="menu_statistics">Statistics</string>
     <string name="angle_degrees">DEG</string>
     <string name="angle_radians">RAD</string>
     <string name="angle_toggle_description">Angle unit, tap to switch</string>
@@ -281,8 +25,6 @@
     <string name="settings_haptics_description">Feel every key press</string>
     <string name="settings_history">History</string>
     <string name="settings_clear_history">Clear history</string>
-    <string name="swipe_tip">Flick keys ↑↓ for sin, √, π and more</string>
-    <string name="settings_tools">Tools</string>
     <string name="show_history">Show history</string>
     <string name="show_keypad">Show keypad</string>
     <string name="function_layer_description">Functions. Tap for one, tap again or hold to keep them</string>
@@ -331,8 +73,6 @@
     <string name="settings_version">Version %1$s</string>
     <string name="settings_clear_history_title">Clear history?</string>
     <string name="settings_clear_history_body">All saved calculations will be deleted.</string>
-
-    <!-- Calculator localization -->
     <string name="measure_mm">Millimetre</string>
     <string name="measure_cm">Centimetre</string>
     <string name="measure_m">Metre</string>
@@ -397,10 +137,6 @@
     <string name="measure_atm">Atmosphere</string>
     <string name="measure_psi">Pound per square inch</string>
     <string name="measure_mmhg">Millimetre of mercury</string>
-
-    <!-- Calculator localization -->
-
-    <!-- Calculator localization -->
     <string name="key_clear">Clear</string>
     <string name="key_parens">Parentheses</string>
     <string name="key_lparen">open parenthesis</string>
@@ -431,16 +167,8 @@
     <string name="key_inverse">Inverse functions</string>
     <string name="key_inverse_on">Inverse functions on</string>
     <string name="key_inverse_off">Inverse functions off</string>
-
-    <!-- Calculator localization -->
     <string name="key_sin">Sine</string>
-
-    <!-- Calculator localization -->
     <string name="key_cos">Cosine</string>
-
-    <!-- Calculator localization -->
     <string name="key_tan">Tangent</string>
-
-    <!-- Calculator localization -->
     <string name="key_negate">Change sign</string>
 </resources>
