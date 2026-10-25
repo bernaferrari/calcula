@@ -82,7 +82,8 @@
     <string name="about_story">O Calcula nasceu do Calculator++, a calculadora de teclas deslizantes que Sergey Solovyev criou em 2011. Foi refeito do zero: matemática decimal exata, uma fita de papel que você pode reutilizar e teclas que escondem uma segunda e uma terceira função sob o seu polegar.</string>
     <string name="about_story_author">Bernardo Ferrari</string>
     <string name="about_elsewhere">Em outros lugares</string>
-    <string name="about_privacy">Sem anúncios, sem contas, sem rastreamento. Seus cálculos nunca saem deste aparelho.</string>
+    <string name="about_privacy">Sem anúncios, sem contas, sem rastreamento. Os cálculos são processados no seu aparelho.</string>
+    <string name="about_privacy_policy">Política de privacidade</string>
     <string name="about_credit">Baseado no Calculator++ de Sergey Solovyev</string>
     <string name="about_feedback_body">Ideias, bugs, elogios</string>
     <string name="settings_decimals_full">Todas</string>

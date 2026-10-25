@@ -84,7 +84,8 @@
     <string name="about_story">Calcula grows out of Calculator++, the swipe-key calculator Sergey Solovyev started in 2011. It is rebuilt from scratch: exact decimal math, a paper tape you can reuse, and keys that hide a second and third function under your thumb.</string>
     <string name="about_story_author">Bernardo Ferrari</string>
     <string name="about_elsewhere">Elsewhere</string>
-    <string name="about_privacy">No ads, no accounts, no tracking. Your calculations never leave this device.</string>
+    <string name="about_privacy">No ads, no accounts, no tracking. Calculations are processed on your device.</string>
+    <string name="about_privacy_policy">Privacy policy</string>
     <string name="about_credit">Based on Calculator++ by Sergey Solovyev</string>
     <string name="about_feedback_body">Ideas, bugs, praise</string>
     <string name="settings_decimals_full">Full</string>

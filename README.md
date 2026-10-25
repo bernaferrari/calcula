@@ -86,7 +86,9 @@ On tablets and foldables your history gets its own pane beside the keys. On the 
 
 ## Private by design
 
-No ads, no accounts, no tracking. Your calculations never leave your device.
+No ads, no accounts, no tracking. Calculations are processed on your device; the app does not send them to us.
+
+Read the [Privacy Policy](PRIVACY.md) for local storage, optional sharing, Android backups, and deletion controls.
 
 ## Where it comes from
 

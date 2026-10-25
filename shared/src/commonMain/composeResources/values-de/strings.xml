@@ -80,7 +80,8 @@
     <string name="about_feedback">Feedback senden</string>
     <string name="about_story">Calcula ist aus Calculator++ hervorgegangen, dem Rechner mit Wischtasten, den Sergey Solovyev 2011 begann. Er wurde von Grund auf neu gebaut: exakte Dezimalrechnung, ein Papierstreifen zum Wiederverwenden und Tasten, die unter deinem Daumen eine zweite und dritte Funktion verbergen.</string>
     <string name="about_elsewhere">Anderswo</string>
-    <string name="about_privacy">Keine Werbung, keine Konten, kein Tracking. Deine Rechnungen verlassen dieses Gerät nie.</string>
+    <string name="about_privacy">Keine Werbung, keine Konten, kein Tracking. Berechnungen werden auf deinem Gerät verarbeitet.</string>
+    <string name="about_privacy_policy">Datenschutzerklärung</string>
     <string name="about_credit">Basiert auf Calculator++ von Sergey Solovyev</string>
     <string name="about_feedback_body">Ideen, Fehler, Lob</string>
     <string name="settings_decimals_full">Alle</string>

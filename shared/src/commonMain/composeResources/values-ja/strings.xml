@@ -80,7 +80,8 @@
     <string name="about_feedback">フィードバックを送る</string>
     <string name="about_story">Calcula は、Sergey Solovyev が 2011 年に始めたフリック入力電卓 Calculator++ から生まれました。ゼロから作り直し、正確な10進計算、再利用できる計算テープ、そして親指の下に第2・第3の関数を隠したキーを備えています。</string>
     <string name="about_elsewhere">そのほかのリンク</string>
-    <string name="about_privacy">広告なし、アカウントなし、トラッキングなし。計算がこの端末の外に出ることはありません。</string>
+    <string name="about_privacy">広告なし、アカウントなし、トラッキングなし。計算は端末上で処理されます。</string>
+    <string name="about_privacy_policy">プライバシーポリシー</string>
     <string name="about_credit">Sergey Solovyev による Calculator++ が原作</string>
     <string name="about_feedback_body">アイデア、不具合、感想</string>
     <string name="settings_decimals_full">すべて</string>

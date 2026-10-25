@@ -80,7 +80,8 @@
     <string name="about_feedback">傳送意見</string>
     <string name="about_story">Calcula 源自 Sergey Solovyev 於 2011 年打造的滑動按鍵計算機 Calculator++。它從零重建：精確的十進位運算、可重複使用的紙帶紀錄，以及在拇指下藏著第二、第三個函數的按鍵。</string>
     <string name="about_elsewhere">其他地方</string>
-    <string name="about_privacy">無廣告、無帳戶、無追蹤。你的計算永遠不會離開這台裝置。</string>
+    <string name="about_privacy">無廣告、無帳戶、無追蹤。計算在你的裝置上完成。</string>
+    <string name="about_privacy_policy">隱私權政策</string>
     <string name="about_credit">基於 Sergey Solovyev 的 Calculator++</string>
     <string name="about_feedback_body">想法、問題、好評</string>
     <string name="settings_decimals_full">全部</string>

@@ -57,6 +57,7 @@ import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -92,7 +93,7 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
-private const val SOURCE_URL = "https://github.com/bernaferrari/android-calculatorpp"
+private const val SOURCE_URL = "https://github.com/bernaferrari/calcula"
 private const val FEEDBACK_EMAIL = "bernaferrari2@gmail.com"
 
 /**
@@ -157,7 +158,7 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
                         )
                         Elsewhere(open)
                     }
-                    item(key = "privacy") { Footer() }
+                    item(key = "privacy") { Footer(onOpenPrivacy = { open("$SOURCE_URL/blob/main/PRIVACY.md") }) }
                 }
             }
         }
@@ -306,7 +307,7 @@ private fun Elsewhere(open: (String) -> Unit) {
 
 /** A plain privacy promise and credit to the original author. */
 @Composable
-private fun Footer() {
+private fun Footer(onOpenPrivacy: () -> Unit) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -319,6 +320,9 @@ private fun Footer() {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
+        TextButton(onClick = onOpenPrivacy) {
+            Text(stringResource(Res.string.about_privacy_policy))
+        }
         Text(
             stringResource(Res.string.about_credit),
             style = MaterialTheme.typography.bodySmall,

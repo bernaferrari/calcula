@@ -80,7 +80,8 @@
     <string name="about_feedback">Envoyer un avis</string>
     <string name="about_story">Calcula est issu de Calculator++, la calculatrice à touches glissantes lancée par Sergey Solovyev en 2011. Elle a été reconstruite de zéro : calcul décimal exact, un ruban papier réutilisable et des touches qui cachent une deuxième et une troisième fonction sous votre pouce.</string>
     <string name="about_elsewhere">Ailleurs</string>
-    <string name="about_privacy">Pas de pub, pas de compte, pas de pistage. Vos calculs ne quittent jamais cet appareil.</string>
+    <string name="about_privacy">Pas de publicité, pas de compte, pas de pistage. Les calculs sont effectués sur votre appareil.</string>
+    <string name="about_privacy_policy">Politique de confidentialité</string>
     <string name="about_credit">Basé sur Calculator++ de Sergey Solovyev</string>
     <string name="about_feedback_body">Idées, bugs, compliments</string>
     <string name="settings_decimals_full">Toutes</string>

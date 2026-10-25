@@ -80,7 +80,8 @@
     <string name="about_feedback">Enviar comentarios</string>
     <string name="about_story">Calcula nace de Calculator++, la calculadora de teclas deslizables que Sergey Solovyev creó en 2011. Está rehecha desde cero: matemática decimal exacta, una cinta de papel reutilizable y teclas que esconden una segunda y una tercera función bajo tu pulgar.</string>
     <string name="about_elsewhere">En otros sitios</string>
-    <string name="about_privacy">Sin anuncios, sin cuentas, sin rastreo. Tus cálculos nunca salen de este dispositivo.</string>
+    <string name="about_privacy">Sin anuncios, sin cuentas, sin rastreo. Los cálculos se procesan en tu dispositivo.</string>
+    <string name="about_privacy_policy">Política de privacidad</string>
     <string name="about_credit">Basado en Calculator++ de Sergey Solovyev</string>
     <string name="about_feedback_body">Ideas, errores, elogios</string>
     <string name="settings_decimals_full">Todos</string>

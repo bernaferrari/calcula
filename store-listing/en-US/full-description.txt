@@ -24,4 +24,4 @@ AT HOME ON YOUR SCREEN
 A responsive layout for phones, tablets and larger windows. An Android home-screen widget puts the calculator within reach.
 
 PRIVATE BY DESIGN
-No ads, no accounts and no tracking. Your calculations stay on your device.
+No ads, no accounts and no tracking. Calculations run on your device. We do not collect your calculations or usage data.
