@@ -1,5 +1,7 @@
 package com.bernaferrari.calculator.ui.programmer
 
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.withStyle
@@ -163,19 +165,21 @@ fun ProgrammerScreen(
         ) {
             val landscape = maxWidth > maxHeight && maxHeight < 600.dp
             // The readout needs room for the answer, the bits and the bases; the keys get the rest.
-            val keypadHeight = (maxHeight * 0.54f).coerceIn(340.dp, 500.dp)
+            val keypadHeight = (maxHeight * 0.56f).coerceIn(340.dp, 520.dp)
             val header: @Composable () -> Unit = {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.statusBarsPadding().padding(horizontal = 4.dp).height(56.dp).fillMaxWidth()) {
                     IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null) }
-                    Text(stringResource(Res.string.menu_programmer), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+                    // The bases live up here beside the word size, so the readout below keeps its room
+                    // for the number and its bits.
+                    BaseSelector(state.base, Modifier.weight(1f)) { haptics.tap(); viewModel.onBase(it) }
                     WordPicker(state.word) { haptics.tap(); viewModel.onWord(it) }
                 }
             }
             val readout: @Composable (Modifier) -> Unit = { modifier ->
                 Column(modifier.padding(horizontal = 12.dp), verticalArrangement = Arrangement.Bottom) {
-                    // Everything above the bases: the board is measured before the tape, so it gets
-                    // its full height when there's room and squeezes when there isn't; the tape has the rest.
-                    Column(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.Bottom) {
+                    // The number and what's above it; the board below keeps a fixed size, pinned over
+                    // the keys, so nothing jumps as lines come and go. The tape gives way first.
+                    Column(Modifier.weight(1f).fillMaxWidth().clipToBounds(), verticalArrangement = Arrangement.Bottom) {
                     val muted = MaterialTheme.colorScheme.onSurfaceVariant
                     val mono = TextStyle(fontFamily = GoogleSansFlex, fontSize = 20.sp, textAlign = TextAlign.End)
                     // Earlier calculations, newest at the bottom, in today's base; tap one to go on from its answer.
@@ -219,7 +223,15 @@ fun ProgrammerScreen(
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
                         )
                     }
-                    Box(Modifier.fillMaxWidth().padding(horizontal = 12.dp), contentAlignment = Alignment.BottomEnd) {
+                    Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)) {
+                        // Which base the big number is in, right beside it: 10 in BIN is not ten.
+                        Text(
+                            state.base.name,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(bottom = 12.dp, end = 8.dp),
+                        )
+                        Box(Modifier.weight(1f, fill = false), contentAlignment = Alignment.BottomEnd) {
                         if (error != null) {
                             Text(
                                 stringResource(if (error == ProgError.DIVIDE_BY_ZERO) Res.string.error_divide_by_zero else Res.string.error_syntax),
@@ -237,34 +249,42 @@ fun ProgrammerScreen(
                                 ),
                                 maxSize = 52.sp,
                                 minSize = 20.sp,
-                                modifier = Modifier.fillMaxWidth(),
                             )
                         }
+                        }
                     }
-                    // While typing an operation, its answer so far, in the same base.
+                    // Under the number, right-aligned like the calculator: the answer so far while typing
+                    // an operation, then the same value in one other base, tagged as the number is.
                     val preview = if (!state.resultShown && error == null && Programmer.hasOperation(state)) value else null
+                    val other = if (state.base == Base.DEC) Base.HEX else Base.DEC
+                    // Its room is kept even when empty, so the number doesn't hop up at the first operator.
                     Text(
                         preview?.let { "= " + Programmer.group(Programmer.format(it, state.base, state.word), state.base) }.orEmpty(),
                         style = mono.copy(fontSize = 24.sp),
                         color = muted,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).height(if (preview != null) 34.dp else 0.dp),
-                    )
-                    // One other reading of the number, quietly: decimal, or hex while typing in decimal.
-                    val other = if (state.base == Base.DEC) Base.HEX else Base.DEC
-                    Text(
-                        value?.let { "${other.name}  " + Programmer.group(Programmer.format(it, other, state.word), other) }.orEmpty(),
-                        style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 20.sp, textAlign = TextAlign.End),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).height(32.dp),
                     )
-                    BitGrid(value ?: 0L, state.word) { haptics.tick(); viewModel.onFlipBit(it) }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.End,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).height(32.dp),
+                    ) {
+                        if (value != null && error == null) {
+                            Text(other.name, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(end = 8.dp))
+                            Text(
+                                Programmer.group(Programmer.format(value, other, state.word), other),
+                                style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 20.sp),
+                                color = muted,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
                     }
+                    }
+                    Spacer(Modifier.height(4.dp))
+                    BitGrid(value ?: 0L, state.word) { haptics.tick(); viewModel.onFlipBit(it) }
                     Spacer(Modifier.height(8.dp))
-                    BaseSelector(state.base) { haptics.tap(); viewModel.onBase(it) }
                 }
             }
             val keys: @Composable (Modifier) -> Unit = { modifier ->
@@ -299,13 +319,13 @@ fun ProgrammerScreen(
 private fun BitGrid(value: Long, word: WordSize, modifier: Modifier = Modifier, onFlip: (Int) -> Unit) {
     val colors = MaterialTheme.colorScheme
     val rows = (word.bits + 15) / 16
-    val gap = 4.dp
+    // Rows as close as the cells in a group: one board, not four strips.
+    val gap = 2.dp
     Column(
         modifier
             .fillMaxWidth()
-            // Full size is 22dp a row; never less than 14, where a 0 or 1 still reads.
-            .heightIn(min = 14.dp * rows + gap * (rows - 1) + 8.dp, max = 22.dp * rows + gap * (rows - 1) + 8.dp)
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .height(20.dp * rows + gap * (rows - 1))
+            .padding(horizontal = 8.dp),
         verticalArrangement = Arrangement.spacedBy(gap),
     ) {
         for (r in 0 until rows) {
@@ -346,8 +366,8 @@ private fun BitGrid(value: Long, word: WordSize, modifier: Modifier = Modifier, 
 /** The base you type in: one row, like the settings' choices. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun BaseSelector(selected: Base, onSelect: (Base) -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween), modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp)) {
+private fun BaseSelector(selected: Base, modifier: Modifier = Modifier, onSelect: (Base) -> Unit) {
+    Row(horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween), modifier = modifier.padding(horizontal = 4.dp)) {
         Base.entries.forEachIndexed { index, base ->
             ToggleButton(
                 checked = base == selected,
@@ -363,8 +383,9 @@ private fun BaseSelector(selected: Base, onSelect: (Base) -> Unit) {
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 ),
-                modifier = Modifier.weight(1f).height(44.dp),
-            ) { Text(base.name, maxLines = 1) }
+                contentPadding = PaddingValues(horizontal = 4.dp),
+                modifier = Modifier.weight(1f).height(40.dp),
+            ) { Text(base.name, maxLines = 1, style = MaterialTheme.typography.labelLarge) }
         }
     }
 }
