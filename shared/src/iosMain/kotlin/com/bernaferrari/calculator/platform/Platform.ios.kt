@@ -42,10 +42,10 @@ actual fun formatDate(epochMillis: Long): String = NSDateFormatter().apply {
     timeStyle = NSDateFormatterNoStyle
 }.stringFromDate(NSDate.dateWithTimeIntervalSince1970(epochMillis / 1000.0))
 
-actual class KeyValueStore(private val defaults: NSUserDefaults) {
-    actual fun get(key: String): String? = defaults.stringForKey(key)
+actual class KeyValueStore(private val defaults: NSUserDefaults) : StringStore {
+    actual override fun get(key: String): String? = defaults.stringForKey(key)
 
-    actual fun put(key: String, value: String?) {
+    actual override fun put(key: String, value: String?) {
         if (value == null) defaults.removeObjectForKey(key) else defaults.setObject(value, key)
     }
 }

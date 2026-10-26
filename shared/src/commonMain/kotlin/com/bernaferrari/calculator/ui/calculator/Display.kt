@@ -220,8 +220,8 @@ fun CalculatorDisplay(
             // History mode is about the past: the live entry steps aside until the keypad returns.
             AnimatedVisibility(
                 !historyOpen,
-                enter = expandVertically(spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow)) + fadeIn(tween(220, delayMillis = 80)),
-                exit = shrinkVertically(spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow)) + fadeOut(tween(120)),
+                enter = if (LocalReduceMotion.current) fadeIn() else expandVertically(spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow)) + fadeIn(tween(220, delayMillis = 80)),
+                exit = if (LocalReduceMotion.current) fadeOut() else shrinkVertically(spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow)) + fadeOut(tween(120)),
             ) {
             if (state.rpn) {
                 RpnEntry(
@@ -380,7 +380,7 @@ private fun LiveEntry(
             MemoryChip(entry.memory, formatter, onRecallMemory)
             // Degrees vs radians only matters once there is trigonometry, so that's the only time it shows.
             val usesAngles = TRIG.any { it in entry.text }
-            AnimatedVisibility(usesAngles, enter = scaleIn(spring(dampingRatio = 0.5f)) + fadeIn(), exit = scaleOut() + fadeOut()) {
+            AnimatedVisibility(usesAngles, enter = if (LocalReduceMotion.current) fadeIn() else scaleIn(spring(dampingRatio = 0.5f)) + fadeIn(), exit = if (LocalReduceMotion.current) fadeOut() else scaleOut() + fadeOut()) {
                 AngleChip(entry.angleUnit, onToggleAngle)
             }
             when {
@@ -443,7 +443,7 @@ private fun fractionText(fraction: String): AnnotatedString = buildAnnotatedStri
 @Composable
 private fun MemoryChip(memory: String?, formatter: DisplayFormatter, onRecall: () -> Unit) {
     val onOpen = LocalOpenMemory.current
-    AnimatedVisibility(memory != null, enter = scaleIn(spring(dampingRatio = 0.5f)) + fadeIn(), exit = scaleOut() + fadeOut()) {
+    AnimatedVisibility(memory != null, enter = if (LocalReduceMotion.current) fadeIn() else scaleIn(spring(dampingRatio = 0.5f)) + fadeIn(), exit = if (LocalReduceMotion.current) fadeOut() else scaleOut() + fadeOut()) {
         val shown = memory ?: return@AnimatedVisibility
         val description = stringResource(Res.string.memory_recall_description)
         Surface(
@@ -481,7 +481,7 @@ private fun RpnEntry(
     val colors = MaterialTheme.colorScheme
     Column(
         horizontalAlignment = Alignment.End,
-        modifier = modifier.fillMaxWidth().animateContentSize().padding(start = 24.dp, end = 24.dp, top = 4.dp, bottom = 12.dp),
+        modifier = modifier.fillMaxWidth().animateContentSize(com.bernaferrari.calculator.ui.motionSpec(spring())).padding(start = 24.dp, end = 24.dp, top = 4.dp, bottom = 12.dp),
     ) {
         val above = state.stack.drop(1).take(3)
         above.indices.reversed().forEach { i ->

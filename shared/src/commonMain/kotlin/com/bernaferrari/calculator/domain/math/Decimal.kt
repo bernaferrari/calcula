@@ -171,10 +171,10 @@ class Decimal private constructor(val unscaled: BigInteger, val scale: Int) : Co
         val ONE = Decimal(BigInteger.ONE, 0)
         val TEN = Decimal(BigInteger.TEN, 0)
 
-        private val powers = HashMap<Int, BigInteger>()
+        private val powers = List(64) { BigInteger.TEN.pow(it) }
 
         private fun pow10(n: Int): BigInteger =
-            if (n < 64) powers.getOrPut(n) { BigInteger.TEN.pow(n) } else BigInteger.TEN.pow(n)
+            if (n in powers.indices) powers[n] else BigInteger.TEN.pow(n)
 
         /** Integer division of [a] by a positive power of ten [b], rounded with [mode]. */
         private fun roundDiv(a: BigInteger, b: BigInteger, mode: RoundingMode): BigInteger {

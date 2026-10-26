@@ -121,6 +121,7 @@ fun ConverterScreen(
     onUse: (String) -> Unit,
     viewModel: ConverterViewModel = viewModel { ConverterViewModel(createSavedStateHandle()) },
 ) {
+    val reduceMotion = com.bernaferrari.calculator.ui.calculator.LocalReduceMotion.current
     val state by viewModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(seed) { if (seed != null) viewModel.seed(seed) }
     @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
@@ -166,7 +167,7 @@ fun ConverterScreen(
         val card: @Composable (Modifier) -> Unit = { modifier ->
                 // Both rows live in one card, the swap button riding the seam between them.
                 var turns by remember { mutableFloatStateOf(0f) }
-                val rotation by animateFloatAsState(turns * 180f, spring(dampingRatio = 0.6f, stiffness = Spring.StiffnessMediumLow), label = "swap")
+                val rotation by animateFloatAsState(turns * 180f, com.bernaferrari.calculator.ui.motionSpec(spring(dampingRatio = 0.6f, stiffness = Spring.StiffnessMediumLow)), label = "swap")
                 Surface(
                     shape = RoundedCornerShape(28.dp),
                     color = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -209,7 +210,7 @@ fun ConverterScreen(
                 AnimatedContent(
                     targetState = picking,
                     transitionSpec = {
-                        (fadeIn(tween(160, delayMillis = 60)) + scaleIn(spring(dampingRatio = 0.75f, stiffness = 500f), initialScale = 0.94f)) togetherWith
+                        if (reduceMotion) fadeIn() togetherWith fadeOut() else (fadeIn(tween(160, delayMillis = 60)) + scaleIn(spring(dampingRatio = 0.75f, stiffness = 500f), initialScale = 0.94f)) togetherWith
                             (fadeOut(tween(100)) + scaleOut(tween(140), targetScale = 0.96f))
                     },
                     label = "keypad",

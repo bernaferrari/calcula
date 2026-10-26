@@ -244,4 +244,8 @@
     <string name="usage_settings_summary">Come calcoli, in una scheda da condividere</string>
     <string name="key_undo">annulla</string>
     <string name="key_redo">ripeti</string>
+    <string name="gesture_help_title">Gesti dei tasti</string>
+    <string name="gesture_help_hint">Tieni premuto un tasto per vedere le sue funzioni.</string>
+    <string name="gesture_help_body">Scorri verso l’alto per la funzione superiore o verso il basso per quella inferiore. Tieni premuto il tasto per vederle entrambe.\n\nScorri sul tasto Cancella verso l’alto per annullare una modifica o verso il basso per ripeterla, in modalità espressione.\n\nTocca l’anteprima del risultato per accettarlo. Tocca due volte l’espressione per selezionare testo e applicare una funzione o parentesi.\n\nScegli le etichette nelle impostazioni per vedere entrambe le direzioni. Puoi riaprire questa guida dalle impostazioni.</string>
+    <string name="gesture_help_done">Capito</string>
 </resources>

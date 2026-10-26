@@ -38,7 +38,7 @@ internal object Tokenizer {
             val c = input[i]
             when {
                 c.isWhitespace() || c == ',' -> i++
-                c.isDigit() || c == '.' -> {
+                c in '0'..'9' || c == '.' -> {
                     val end = numberEnd(input, i)
                     tokens += Token.Num(parseNumber(input.substring(i, end)))
                     i = end
@@ -81,12 +81,12 @@ internal object Tokenizer {
     /** A number is digits with an optional fraction and an optional `E±n` exponent. */
     fun numberEnd(input: String, start: Int): Int {
         var i = start
-        while (i < input.length && (input[i].isDigit() || input[i] == '.')) i++
+        while (i < input.length && (input[i] in '0'..'9' || input[i] == '.')) i++
         if (i < input.length && input[i] == 'E') {
             var j = i + 1
             if (j < input.length && input[j] in "+−-") j++
-            if (j < input.length && input[j].isDigit()) {
-                while (j < input.length && input[j].isDigit()) j++
+            if (j < input.length && input[j] in '0'..'9') {
+                while (j < input.length && input[j] in '0'..'9') j++
                 i = j
             }
         }
@@ -98,7 +98,7 @@ internal object Tokenizer {
         if (normalized.count { it == '.' } > 1) throw CalcException(CalcError.SYNTAX)
         return try {
             Decimal(normalized.removeSuffix("."))
-        } catch (e: NumberFormatException) {
+        } catch (e: IllegalArgumentException) {
             throw CalcException(CalcError.SYNTAX)
         }
     }

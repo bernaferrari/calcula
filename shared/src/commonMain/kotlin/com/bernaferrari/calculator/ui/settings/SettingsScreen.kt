@@ -144,6 +144,8 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = viewModel { SettingsViewModel() },
 ) {
     val prefs by viewModel.prefs.collectAsStateWithLifecycle()
+    var gestureHelp by remember { mutableStateOf(false) }
+    if (gestureHelp) com.bernaferrari.calculator.ui.calculator.GestureHelpDialog { gestureHelp = false }
     var confirmClear by remember { mutableStateOf(false) }
     val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
@@ -310,6 +312,7 @@ fun SettingsScreen(
                 SettingsSection(
                     stringResource(Res.string.settings_more),
                     listOf(
+                        { p -> ActionRow(p, Icons.Outlined.Info, stringResource(Res.string.gesture_help_title), onClick = { gestureHelp = true }) },
                         { p -> ActionRow(p, Icons.Outlined.Insights, stringResource(Res.string.menu_usage), stringResource(Res.string.usage_settings_summary), onClick = onOpenUsage) },
                         { p -> ActionRow(p, Icons.Outlined.DeleteSweep, stringResource(Res.string.settings_clear_history), destructive = true, showChevron = false, onClick = { confirmClear = true }) },
                     ),

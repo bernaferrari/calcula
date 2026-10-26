@@ -23,6 +23,8 @@ class ThemeViewModel(
         private val _themeMode = MutableStateFlow(ThemeMode.SYSTEM)
         val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
         private val palette = MutableStateFlow<AppPalette?>(null)
+        private val _reduceMotion = MutableStateFlow(false)
+        val reduceMotion: StateFlow<Boolean> = _reduceMotion.asStateFlow()
         private val colorStyle = MutableStateFlow(ColorStyle.TONAL_SPOT)
 
         init {
@@ -38,6 +40,7 @@ class ThemeViewModel(
                         _themeMode.value = preferences.themeMode
                         palette.value = preferences.palette
                         colorStyle.value = preferences.colorStyle
+                        _reduceMotion.value = preferences.reduceMotion
                     }
             }
         }

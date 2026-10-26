@@ -14,6 +14,7 @@ import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.animation.AnimatedVisibility
@@ -154,6 +155,17 @@ fun CalculatorScreen(
     BackHandler(enabled = historyOpen) { historyOpen = false }
 
     val snackbar = remember { SnackbarHostState() }
+    var gestureHelp by rememberSaveable { mutableStateOf(false) }
+    val gestureHint = stringResource(Res.string.gesture_help_hint)
+    val gestureTitle = stringResource(Res.string.gesture_help_title)
+    LaunchedEffect(state.swipeHintSeen) {
+        if (!state.swipeHintSeen) {
+            val result = snackbar.showSnackbar(gestureHint, actionLabel = gestureTitle, withDismissAction = true, duration = SnackbarDuration.Long)
+            gestureHelp = result == SnackbarResult.ActionPerformed
+            viewModel.onSwipeHintSeen()
+        }
+    }
+    if (gestureHelp) GestureHelpDialog { gestureHelp = false }
     val deletedOne = stringResource(Res.string.history_deleted)
     val deletedAll = stringResource(Res.string.history_cleared)
     val undo = stringResource(Res.string.undo)
@@ -250,7 +262,7 @@ fun CalculatorScreen(
         var armed by remember { mutableStateOf(false) }
         var pullProgress by remember { mutableFloatStateOf(0f) }
         LaunchedEffect(historyOpen) {
-            if (!pulling) reveal.animateTo(if (historyOpen) 0f else 1f, spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow))
+            if (!pulling) reveal.animateTo(if (historyOpen) 0f else 1f, if (state.reduceMotion) snap() else spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow))
         }
         val shown = reveal.value
         val resize = Modifier.keypadResize(
@@ -502,6 +514,7 @@ private fun Modifier.keypadResize(
     onArmed: (Boolean) -> Unit,
     onProgress: (Float) -> Unit,
 ): Modifier {
+    val reduceMotion by rememberUpdatedState(LocalReduceMotion.current)
     // The gesture outlives recompositions; it reads today's sizes, not the first frame's.
     val currentRow by rememberUpdatedState(rowHeight)
     val currentLimits by rememberUpdatedState(limits)
@@ -509,7 +522,7 @@ private fun Modifier.keypadResize(
     val currentHistory by rememberUpdatedState(historyOpen)
     val currentDone by rememberUpdatedState(onDone)
     val currentDefault by rememberUpdatedState(defaultRow)
-    return keypadResizeGesture({ currentRow }, { currentLimits }, { currentFull }, { currentHistory }, reveal, onPulling, onRow, onTick, { currentDone(it) }, onHistory, defaultRow = { currentDefault }, onArmed = onArmed, onProgress = onProgress)
+    return keypadResizeGesture({ currentRow }, { currentLimits }, { currentFull }, { currentHistory }, reveal, onPulling, onRow, onTick, { currentDone(it) }, onHistory, reduceMotion = { reduceMotion }, defaultRow = { currentDefault }, onArmed = onArmed, onProgress = onProgress)
 }
 
 private fun Modifier.keypadResizeGesture(
@@ -523,6 +536,7 @@ private fun Modifier.keypadResizeGesture(
     onTick: () -> Unit,
     onDone: (Dp) -> Unit,
     onHistory: (Boolean) -> Unit,
+    reduceMotion: () -> Boolean,
     /** The size the keypad has by default: dragging past it catches there for a moment, with a tick. */
     defaultRow: () -> Dp,
     /** Whether letting go now would switch between keypad and history, so the pill can say so. */
@@ -604,7 +618,7 @@ private fun Modifier.keypadResizeGesture(
             val speed = tracker.calculateVelocity().y
             if (fromHistory) {
                 val commit = past || (speed < -flick && -offset > 8.dp.toPx())
-                if (commit) onHistory(false) else launch { reveal.animateTo(0f, spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow)) }
+                if (commit) onHistory(false) else launch { reveal.animateTo(0f, if (reduceMotion()) snap() else spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow)) }
                 return@end
             }
             if (past || (over > 0f && speed > flick)) {
@@ -617,7 +631,7 @@ private fun Modifier.keypadResizeGesture(
             val settled = row.coerceIn(range.start, range.endInclusive)
             onRow(settled)
             onDone(settled)
-            launch { reveal.animateTo(1f, spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow)) }
+            launch { reveal.animateTo(1f, if (reduceMotion()) snap() else spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow)) }
         }
         val cancel: () -> Unit = {
             onPulling(false)

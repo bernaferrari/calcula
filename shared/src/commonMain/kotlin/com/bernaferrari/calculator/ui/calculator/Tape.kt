@@ -126,8 +126,8 @@ fun Tape(
         // The title and Clear arrive with history mode, in step with the keypad leaving.
         AnimatedVisibility(
             expanded,
-            enter = expandVertically(spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow)) + fadeIn(tween(200, delayMillis = 60)),
-            exit = shrinkVertically(spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow)) + fadeOut(tween(100)),
+            enter = if (LocalReduceMotion.current) fadeIn() else expandVertically(spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow)) + fadeIn(tween(200, delayMillis = 60)),
+            exit = if (LocalReduceMotion.current) fadeOut() else shrinkVertically(spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow)) + fadeOut(tween(100)),
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -205,7 +205,7 @@ private fun TapeList(
                     row.label.text(),
                     style = MaterialTheme.typography.labelLarge,
                     color = colors.primary,
-                    modifier = Modifier.animateItem().fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 20.dp, bottom = 4.dp),
+                    modifier = Modifier.animateItem(placementSpec = if (LocalReduceMotion.current) null else spring()).fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 20.dp, bottom = 4.dp),
                 )
                 is TapeRow.Entry -> TapeEntry(
                     entry = row.entry,
@@ -217,7 +217,7 @@ private fun TapeList(
                     onDeleteEntry = onDeleteEntry,
                     onCopy = onCopy,
                     onNote = onNote,
-                    modifier = Modifier.animateItem(fadeInSpec = tween(220, delayMillis = 140)),
+                    modifier = Modifier.animateItem(fadeInSpec = tween(220, delayMillis = 140), placementSpec = if (LocalReduceMotion.current) null else spring()),
                 )
             }
         }
@@ -289,8 +289,8 @@ private fun TapeEntry(
                 Text("  =", style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 22.sp), color = colors.outline, maxLines = 1)
                 AnimatedVisibility(
                     visible = showResult,
-                    enter = expandHorizontally(spring(stiffness = Spring.StiffnessMediumLow), expandFrom = Alignment.Start) + fadeIn(tween(220, delayMillis = 60)),
-                    exit = shrinkHorizontally(tween(120)) + fadeOut(tween(80)),
+                    enter = if (LocalReduceMotion.current) fadeIn() else expandHorizontally(spring(stiffness = Spring.StiffnessMediumLow), expandFrom = Alignment.Start) + fadeIn(tween(220, delayMillis = 60)),
+                    exit = if (LocalReduceMotion.current) fadeOut() else shrinkHorizontally(tween(120)) + fadeOut(tween(80)),
                 ) {
                     Text(
                         buildAnnotatedString {

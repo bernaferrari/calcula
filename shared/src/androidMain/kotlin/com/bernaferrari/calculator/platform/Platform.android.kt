@@ -46,10 +46,10 @@ actual fun systemSeparators(): Separators {
 
 actual fun formatDate(epochMillis: Long): String = DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(epochMillis))
 
-actual class KeyValueStore(private val prefs: SharedPreferences) {
-    actual fun get(key: String): String? = prefs.getString(key, null)
+actual class KeyValueStore(private val prefs: SharedPreferences) : StringStore {
+    actual override fun get(key: String): String? = prefs.getString(key, null)
 
-    actual fun put(key: String, value: String?) = prefs.edit { if (value == null) remove(key) else putString(key, value) }
+    actual override fun put(key: String, value: String?) = prefs.edit { if (value == null) remove(key) else putString(key, value) }
 }
 
 actual fun keyValueStore(): KeyValueStore =

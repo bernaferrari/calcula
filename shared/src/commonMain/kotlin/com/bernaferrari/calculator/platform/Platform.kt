@@ -11,10 +11,16 @@ expect fun systemSeparators(): Separators
 /** A day in the locale's medium date style, e.g. "Oct 14, 2026" or "14 de out. de 2026". */
 expect fun formatDate(epochMillis: Long): String
 
-/** Persistent string storage: SharedPreferences, NSUserDefaults or localStorage. */
-expect class KeyValueStore {
+/** Small storage boundary shared by platform persistence and in-memory repository tests. */
+interface StringStore {
     fun get(key: String): String?
     fun put(key: String, value: String?)
+}
+
+/** Persistent string storage: SharedPreferences, NSUserDefaults or localStorage. */
+expect class KeyValueStore : StringStore {
+    override fun get(key: String): String?
+    override fun put(key: String, value: String?)
 }
 
 expect fun keyValueStore(): KeyValueStore

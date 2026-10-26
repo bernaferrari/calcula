@@ -5,6 +5,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -82,8 +83,6 @@ data class Hint(
     val label: String,
     val description: String = label,
     val enabled: Boolean = true,
-    /** Named on the key in Labels mode; otherwise a dot stands in for it there. */
-    val named: Boolean = true,
     val action: () -> Unit,
 )
 
@@ -112,6 +111,7 @@ fun KeyCell(
     onLongClick: (() -> Unit)? = null,
     label: @Composable () -> Unit,
 ) {
+    val reduceMotion by rememberUpdatedState(LocalReduceMotion.current)
     val pressed = remember { Animatable(0f) }
     val drag = remember { Animatable(0f) }
     var selection by remember { mutableStateOf<Swipe?>(null) }
@@ -154,7 +154,7 @@ fun KeyCell(
                     if (pressHaptic) haptics.tap()
                     currentOnPressedChange(true)
                     val grow = scope.launch {
-                        pressed.animateTo(1f, spring(dampingRatio = 0.55f, stiffness = Spring.StiffnessMedium))
+                        pressed.animateTo(1f, if (reduceMotion) snap() else spring(dampingRatio = 0.55f, stiffness = Spring.StiffnessMedium))
                     }
                     var longPressed = false
                     var moved = false
@@ -237,9 +237,9 @@ fun KeyCell(
                     currentOnPressedChange(false)
                     scope.launch {
                         if (pressed.value < 0.5f) pressed.snapTo(0.5f)
-                        pressed.animateTo(0f, tween(durationMillis = 260))
+                        pressed.animateTo(0f, if (reduceMotion) snap() else tween(durationMillis = 260))
                     }
-                    scope.launch { drag.animateTo(0f, spring(dampingRatio = 0.45f, stiffness = Spring.StiffnessMediumLow)) }
+                    scope.launch { drag.animateTo(0f, if (reduceMotion) snap() else spring(dampingRatio = 0.45f, stiffness = Spring.StiffnessMediumLow)) }
                     // Sliding off the key without picking a function cancels, like a real button.
                     val margin = 12.dp.toPx()
                     val inside = last.x in -margin..size.width + margin && last.y in -margin..size.height + margin
@@ -258,7 +258,7 @@ fun KeyCell(
                 // Expressive shape morph: a softly rounded rectangle at rest, a pill under the finger.
                 val p = pressed.value.coerceIn(0f, 1.2f)
                 val rest = restRadius.toPx()
-                val radius = lerp(rest, min(size.width, size.height) / 2f, p.coerceAtMost(1f))
+                val radius = if (reduceMotion) rest else lerp(rest, min(size.width, size.height) / 2f, p.coerceAtMost(1f))
                 val tint = if (selection != null) 0.16f else 0.1f * p.coerceAtMost(1f)
                 drawRoundRect(androidx.compose.ui.graphics.lerp(container, content, tint), cornerRadius = CornerRadius(radius, radius))
             },
@@ -272,11 +272,11 @@ fun KeyCell(
                 .matchParentSize()
                 .padding(vertical = FaceInset)
                 .graphicsLayer {
-                    val s = 1f - 0.06f * pressed.value.coerceIn(0f, 1f)
+                    val s = if (reduceMotion) 1f else 1f - 0.06f * pressed.value.coerceIn(0f, 1f)
                     scaleX = s
                     scaleY = s
                     // The face follows the finger a little, like a rubber key.
-                    translationY = (drag.value * 0.3f).coerceIn(-pull, pull)
+                    translationY = if (reduceMotion) 0f else (drag.value * 0.3f).coerceIn(-pull, pull)
                 },
         ) {
             val mainAlpha by animateFloatAsState(if (selection != null) 0.3f else 1f, label = "main")
@@ -286,20 +286,11 @@ fun KeyCell(
         // follows the finger.
         Box(Modifier.matchParentSize().padding(vertical = FaceInset)) {
             if (labelFlicks) {
-                val small = androidx.compose.ui.text.TextStyle(fontSize = 11.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Medium, fontFamily = com.bernaferrari.calculator.ui.theme.GoogleSansFlex)
-                // The up function by name, small, above the label: what a flick up types. Below, only
-                // the down functions people reach for are named (`)`, √, e); the inverses get a dot.
-                up?.let { Text(it.label, style = small, maxLines = 1, color = content.copy(alpha = if (!it.enabled) 0.25f else if (selection == Swipe.Up) 1f else 0.55f), modifier = Modifier.align(Alignment.TopCenter).offset(y = (-5).dp)) }
+                val small = androidx.compose.ui.text.TextStyle(fontSize = 12.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Medium, fontFamily = com.bernaferrari.calculator.ui.theme.GoogleSansFlex)
+                // Labels name both directions, including inverse functions, so a flick is discoverable.
+                up?.let { Text(it.label, style = small, maxLines = 1, color = content.copy(alpha = if (!it.enabled) 0.25f else if (selection == Swipe.Up) 1f else 0.75f), modifier = Modifier.align(Alignment.TopCenter).offset(y = (-5).dp)) }
                 down?.let { hint ->
-                    if (hint.named) {
-                        Text(hint.label, style = small, maxLines = 1, color = content.copy(alpha = if (!hint.enabled) 0.25f else if (selection == Swipe.Down) 1f else 0.55f), modifier = Modifier.align(Alignment.BottomCenter).offset(y = 5.dp))
-                    } else {
-                        // A dot where a name would be: same line, same ink, so names and dots read as one row.
-                        Box(Modifier.align(Alignment.BottomCenter).offset(y = 5.dp), contentAlignment = Alignment.Center) {
-                            Text("0", style = small, color = Color.Transparent)
-                            FlickDot(selection == Swipe.Down, hint.enabled, content, Modifier, restAlpha = 0.55f, disabledAlpha = 0.25f)
-                        }
-                    }
+                    Text(hint.label, style = small, maxLines = 1, color = content.copy(alpha = if (!hint.enabled) 0.25f else if (selection == Swipe.Down) 1f else 0.75f), modifier = Modifier.align(Alignment.BottomCenter).offset(y = 5.dp))
                 }
             }
         }
@@ -344,13 +335,14 @@ private fun FunctionOptions(
     keyHeight: Float,
 ) {
     val density = LocalDensity.current
+    val reduceMotion = LocalReduceMotion.current
     val pill = 52.dp
     val gap = 6.dp
     Popup(alignment = Alignment.Center, properties = PopupProperties(clippingEnabled = false)) {
         AnimatedVisibility(
             visibleState = visible,
-            enter = fadeIn(tween(90)) + scaleIn(spring(dampingRatio = 0.55f, stiffness = Spring.StiffnessMedium), initialScale = 0.7f),
-            exit = fadeOut(tween(120)) + scaleOut(tween(120), targetScale = 0.9f),
+            enter = if (reduceMotion) fadeIn(tween(90)) else fadeIn(tween(90)) + scaleIn(spring(dampingRatio = 0.55f, stiffness = Spring.StiffnessMedium), initialScale = 0.7f),
+            exit = if (reduceMotion) fadeOut(tween(120)) else fadeOut(tween(120)) + scaleOut(tween(120), targetScale = 0.9f),
         ) {
             with(density) {
                 // The popup is its own window and clips to its size: leave room around the key so a
@@ -369,13 +361,15 @@ private fun OptionPill(label: String, selected: Boolean, enabled: Boolean, modif
     val colors = MaterialTheme.colorScheme
     // A function with nothing to act on never lights up: it stays a quiet, faded pill, and shakes
     // its head when the finger reaches it.
+    val reduceMotion = LocalReduceMotion.current
     val refused = selected && !enabled
     val shake = remember { Animatable(0f) }
-    LaunchedEffect(refused) {
-        if (refused) shake.animateTo(0f, spring(dampingRatio = 0.2f, stiffness = 900f), initialVelocity = -1600f)
+    LaunchedEffect(refused, reduceMotion) {
+        if (reduceMotion) shake.snapTo(0f)
+        else if (refused) shake.animateTo(0f, spring(dampingRatio = 0.2f, stiffness = 900f), initialVelocity = -1600f)
     }
     @Suppress("NAME_SHADOWING") val selected = selected && enabled
-    val scale by animateFloatAsState(if (selected) 1.12f else 1f, spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium), label = "pill")
+    val scale by animateFloatAsState(if (selected && !reduceMotion) 1.12f else 1f, if (reduceMotion) snap() else spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium), label = "pill")
     // Waiting options read like tooltips (dark on a light theme, light on a dark one), so they stand
     // out from the pale keys they float over; the one the finger is heading to takes the accent.
     val container by androidx.compose.animation.animateColorAsState(if (selected) colors.primary else colors.onSurface, label = "pillColor")
@@ -409,7 +403,7 @@ private fun OptionPill(label: String, selected: Boolean, enabled: Boolean, modif
 private fun FlickDot(selected: Boolean, enabled: Boolean, color: Color, modifier: Modifier, restAlpha: Float = 0.35f, disabledAlpha: Float = 0.1f) {
     val size by animateFloatAsState(
         if (selected) 7f else 3.5f,
-        spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium),
+        if (LocalReduceMotion.current) snap() else spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium),
         label = "dot",
     )
     Box(

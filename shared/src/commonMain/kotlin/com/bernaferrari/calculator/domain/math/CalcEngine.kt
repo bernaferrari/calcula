@@ -260,18 +260,26 @@ object CalcEngine {
     }
 
     private fun pow(base: Decimal, exponent: Decimal): Decimal {
+        if (exponent.signum() == 0) return Decimal.ONE
+        if (base.signum() == 0) {
+            if (exponent.signum() < 0) throw CalcException(CalcError.DIVIDE_BY_ZERO)
+            return Decimal.ZERO
+        }
         val integer = exponent.stripTrailingZeros().let { it.scale() <= 0 }
-        if (integer && exponent.abs() <= Decimal(99_999)) {
+        if (integer && base.abs() == Decimal.ONE) {
+            val odd = exponent.remainder(Decimal(2)) != Decimal.ZERO
+            return if (base.signum() < 0 && odd) Decimal.ONE.negate() else Decimal.ONE
+        }
+        if (integer && exponent.abs() <= Decimal(Int.MAX_VALUE)) {
             val n = exponent.toInt()
-            if (base.signum() == 0) {
-                if (n < 0) throw CalcException(CalcError.DIVIDE_BY_ZERO)
-                return if (n == 0) Decimal.ONE else Decimal.ZERO
-            }
-            // Bail out before Decimal.pow spends ages building a number we would reject anyway.
-            val magnitude = (base.precision() - base.scale()).toDouble() * n
+            // Use log magnitude, not digit count: 1.00001^20000 is only about 1.22.
+            // Leave a small guard band for the estimate; evaluate checks the actual result.
+            val magnitude = ln(base.abs()) / kotlin.math.ln(10.0) * n
             if (abs(magnitude) > 10_050) throw CalcException(CalcError.OVERFLOW)
             return base.pow(n, MC)
         }
+        // An integer outside the bounded power budget must not become a fractional root.
+        if (integer) throw CalcException(CalcError.OVERFLOW)
         if (base.signum() < 0) {
             // Odd roots of negatives are real: (−8)^(1/3) = −2.
             val reciprocal = Decimal.ONE.divide(exponent, MC).round(MathContext(12))
@@ -279,10 +287,6 @@ object CalcEngine {
                 !reciprocal.toBigInteger().rem(BigInteger.TWO).isZero()
             if (isOddRoot) return pow(base.negate(), exponent).negate()
             throw CalcException(CalcError.DOMAIN)
-        }
-        if (base.signum() == 0) {
-            if (exponent.signum() < 0) throw CalcException(CalcError.DIVIDE_BY_ZERO)
-            return Decimal.ZERO
         }
         val log = ln(base) * exponent.toDouble()
         if (log > 23_000) throw CalcException(CalcError.OVERFLOW)

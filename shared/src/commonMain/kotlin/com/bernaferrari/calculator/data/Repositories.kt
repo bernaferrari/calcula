@@ -11,7 +11,9 @@ import com.bernaferrari.calculator.domain.model.ThemeMode
 import com.bernaferrari.calculator.domain.model.UserPreferences
 import com.bernaferrari.calculator.domain.repository.CalculatorRepository
 import com.bernaferrari.calculator.domain.repository.PreferencesRepository
-import com.bernaferrari.calculator.platform.KeyValueStore
+import com.bernaferrari.calculator.platform.StringStore
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -25,7 +27,7 @@ private val json = Json {
 }
 
 /** Settings as one JSON document; unknown or missing fields fall back to defaults. */
-class StoredPreferencesRepository(private val store: KeyValueStore) : PreferencesRepository {
+class StoredPreferencesRepository(private val store: StringStore) : PreferencesRepository {
     private val state = MutableStateFlow(
         store.get(KEY)?.let { runCatching { json.decodeFromString<UserPreferences>(it) }.getOrNull() } ?: UserPreferences(),
     ).also { UserFunctions.all = it.value.functions }
@@ -61,14 +63,20 @@ class StoredPreferencesRepository(private val store: KeyValueStore) : Preference
 }
 
 /** The tape, newest first, capped so it never grows without bound. */
-class StoredHistoryRepository(private val store: KeyValueStore) : CalculatorRepository {
+class StoredHistoryRepository(private val store: StringStore) : CalculatorRepository {
     private val entries = MutableStateFlow(
         store.get(KEY)?.let { runCatching { json.decodeFromString<List<CalculationHistory>>(it) }.getOrNull() }.orEmpty(),
     )
 
-    private fun edit(change: (List<CalculationHistory>) -> List<CalculationHistory>) {
-        entries.update { change(it).sortedByDescending(CalculationHistory::timestamp).take(LIMIT) }
-        store.put(KEY, json.encodeToString(entries.value))
+    private val writes = Mutex()
+    private var lastId = maxOf(store.get(ID_KEY)?.toLongOrNull() ?: 0L, entries.value.maxOfOrNull { it.id } ?: 0L)
+
+    private suspend fun edit(change: (List<CalculationHistory>) -> List<CalculationHistory>) = writes.withLock {
+        val next = change(entries.value).sortedByDescending(CalculationHistory::timestamp).take(LIMIT)
+        // Reserve IDs before saving entries. A failed write may skip an ID, but cannot reuse one.
+        store.put(ID_KEY, lastId.toString())
+        store.put(KEY, json.encodeToString(next))
+        entries.value = next
     }
 
     override fun getAllHistory(): Flow<List<CalculationHistory>> = entries
@@ -76,7 +84,13 @@ class StoredHistoryRepository(private val store: KeyValueStore) : CalculatorRepo
     override fun getRecentHistory(limit: Int): Flow<List<CalculationHistory>> = entries.map { it.take(limit) }
 
     override suspend fun insertCalculation(calculation: CalculationHistory) = edit { list ->
-        val entry = if (calculation.id != 0L) calculation else calculation.copy(id = (list.maxOfOrNull { it.id } ?: 0L) + 1)
+        val entry = if (calculation.id != 0L) {
+            lastId = maxOf(lastId, calculation.id)
+            calculation
+        } else {
+            check(lastId < Long.MAX_VALUE) { "History ID space exhausted" }
+            calculation.copy(id = ++lastId)
+        }
         list.filterNot { it.id == entry.id } + entry
     }
 
@@ -90,6 +104,7 @@ class StoredHistoryRepository(private val store: KeyValueStore) : CalculatorRepo
 
     private companion object {
         const val KEY = "history"
+        const val ID_KEY = "history_last_id"
         const val LIMIT = 500
     }
 }
@@ -125,7 +140,7 @@ interface GraphStore {
 }
 
 /** The graph's functions, view and sliders, kept beside the settings. */
-class StoredGraphStore(private val store: KeyValueStore) : GraphStore {
+class StoredGraphStore(private val store: StringStore) : GraphStore {
     override fun load(): GraphDocument? = store.get(KEY)?.let { runCatching { json.decodeFromString<GraphDocument>(it) }.getOrNull() }
     override fun save(document: GraphDocument) = store.put(KEY, json.encodeToString(document))
     override fun loadRecent(): List<SavedGraph> =

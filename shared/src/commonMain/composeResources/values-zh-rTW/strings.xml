@@ -241,4 +241,8 @@
     <string name="usage_settings_summary">你的計算習慣，做成可分享的卡片</string>
     <string name="key_undo">復原</string>
     <string name="key_redo">重做</string>
+    <string name="gesture_help_title">按鍵手勢</string>
+    <string name="gesture_help_hint">長按按鍵可查看其功能。</string>
+    <string name="gesture_help_body">向上滑動使用上方功能，向下滑動使用下方功能。長按可先查看兩種功能。\n\n在運算式輸入模式下，在刪除鍵上向上滑動可復原編輯，向下滑動可重做。\n\n點按結果預覽以確認。點兩下運算式選取文字，再套用函數或括號。\n\n在設定中選擇標籤，即可顯示兩個方向的功能。您隨時可以從設定重新開啟本指南。</string>
+    <string name="gesture_help_done">知道了</string>
 </resources>

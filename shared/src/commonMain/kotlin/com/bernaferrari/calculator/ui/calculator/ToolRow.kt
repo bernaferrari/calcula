@@ -1,5 +1,7 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import com.bernaferrari.calculator.ui.motionSpec
+import com.bernaferrari.calculator.ui.calculator.LocalReduceMotion
 import androidx.compose.material3.AppBarRowScope
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.AppBarRow
@@ -150,8 +152,9 @@ fun ToolRow(
     haptics: Haptics? = null,
 ) {
     val quiet = MaterialTheme.colorScheme.onSurfaceVariant
+    val reduceMotion = LocalReduceMotion.current
     val dragging = resize != null
-    val step by animateFloatAsState(if (dragging) 1f else 0f, spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMedium), label = "step")
+    val step by animateFloatAsState(if (dragging) 1f else 0f, motionSpec(spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMedium)), label = "step")
     Box(modifier.fillMaxWidth().height(52.dp).padding(horizontal = 8.dp)) {
         Box(
             Modifier.matchParentSize().graphicsLayer {
@@ -163,7 +166,7 @@ fun ToolRow(
         // Functions mean nothing while browsing history, so the switch becomes the way back.
         AnimatedContent(
             historyOpen,
-            transitionSpec = { (fadeIn() + scaleIn(initialScale = 0.9f)) togetherWith (fadeOut() + scaleOut(targetScale = 0.9f)) },
+            transitionSpec = { if (reduceMotion) fadeIn() togetherWith fadeOut() else (fadeIn() + scaleIn(initialScale = 0.9f)) togetherWith (fadeOut() + scaleOut(targetScale = 0.9f)) },
             contentAlignment = Alignment.CenterStart,
             modifier = Modifier.align(Alignment.CenterStart).padding(start = 4.dp),
             label = "left",
@@ -176,7 +179,7 @@ fun ToolRow(
             } else if (showLayerSwitch) {
                 LayerSwitch(layer, onLayer)
             } else {
-                AnimatedVisibility(cursorArrows, enter = fadeIn() + scaleIn(initialScale = 0.9f), exit = fadeOut() + scaleOut(targetScale = 0.9f)) {
+                AnimatedVisibility(cursorArrows, enter = if (reduceMotion) fadeIn() else fadeIn() + scaleIn(initialScale = 0.9f), exit = if (reduceMotion) fadeOut() else fadeOut() + scaleOut(targetScale = 0.9f)) {
                     Row {
                         CursorArrow(-1, canStepLeft, quiet, haptics, onCursorStep, onCursorJump)
                         CursorArrow(1, canStepRight, quiet, haptics, onCursorStep, onCursorJump)
@@ -335,18 +338,19 @@ private fun MenuEntry(label: String, icon: androidx.compose.ui.graphics.vector.I
  */
 @Composable
 internal fun ResizePill(feedback: ResizeFeedback?, modifier: Modifier) {
+    val reduceMotion = LocalReduceMotion.current
     val colors = MaterialTheme.colorScheme
     // Keeps showing the last reading while the pill animates away.
     var last by remember { mutableStateOf(feedback) }
     if (feedback != null) last = feedback
     AnimatedVisibility(
         feedback != null,
-        enter = fadeIn(tween(90)) + scaleIn(spring(dampingRatio = 0.55f, stiffness = Spring.StiffnessMedium), initialScale = 0.6f),
-        exit = fadeOut(tween(140)) + scaleOut(tween(160), targetScale = 0.85f),
+        enter = if (reduceMotion) fadeIn() else fadeIn(tween(90)) + scaleIn(spring(dampingRatio = 0.55f, stiffness = Spring.StiffnessMedium), initialScale = 0.6f),
+        exit = if (reduceMotion) fadeOut() else fadeOut(tween(140)) + scaleOut(tween(160), targetScale = 0.85f),
         modifier = modifier,
     ) {
         val f = last ?: return@AnimatedVisibility
-        val fill by animateFloatAsState(f.fraction, spring(stiffness = Spring.StiffnessHigh), label = "fill")
+        val fill by animateFloatAsState(f.fraction, motionSpec(spring(stiffness = Spring.StiffnessHigh)), label = "fill")
         // Solid once letting go will act, like pull-to-refresh: the pill says what release does.
         val solid = f.armed && f.mode != ResizeFeedback.Mode.Resize
         val pillColor by animateColorAsState(if (solid) colors.primary else colors.primaryContainer, label = "pill")
@@ -358,12 +362,12 @@ internal fun ResizePill(feedback: ResizeFeedback?, modifier: Modifier) {
                 .clip(CircleShape)
                 .background(pillColor)
                 .pullProgress(if (f.mode == ResizeFeedback.Mode.Resize || solid) 0f else f.progress, colors.primary)
-                .animateContentSize(spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMedium))
+                .animateContentSize(motionSpec(spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMedium)))
                 .padding(horizontal = 16.dp),
         ) {
             AnimatedContent(
                 f.mode,
-                transitionSpec = { (fadeIn() + scaleIn(initialScale = 0.6f)) togetherWith (fadeOut() + scaleOut(targetScale = 0.6f)) },
+                transitionSpec = { if (reduceMotion) fadeIn() togetherWith fadeOut() else (fadeIn() + scaleIn(initialScale = 0.6f)) togetherWith (fadeOut() + scaleOut(targetScale = 0.6f)) },
                 label = "pillMode",
             ) { mode ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -424,7 +428,7 @@ internal fun LayerSwitch(layer: FunctionLayer, onLayer: (FunctionLayer) -> Unit)
     // The indicator is also a thumb: slide it between 123 and ƒ, like an iOS segmented control.
     val indicator = remember { Animatable(if (on) segment else 0f) }
     var dragging by remember { mutableStateOf(false) }
-    val settle = spring<Float>(dampingRatio = 0.62f, stiffness = Spring.StiffnessMediumLow)
+    val settle = motionSpec(spring<Float>(dampingRatio = 0.62f, stiffness = Spring.StiffnessMediumLow))
     LaunchedEffect(on) { if (!dragging) indicator.animateTo(if (on) segment else 0f, settle) }
     val scope = rememberCoroutineScope()
     val currentLayer by rememberUpdatedState(layer)

@@ -2,6 +2,8 @@
 
 package com.bernaferrari.calculator.ui.settings
 
+import com.bernaferrari.calculator.ui.motionSpec
+import com.bernaferrari.calculator.ui.calculator.LocalReduceMotion
 import com.bernaferrari.calculator.ui.theme.GoogleSansFlex
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.style.TextAlign
@@ -320,8 +322,8 @@ fun StyleRow(position: SegmentPosition, palette: AppPalette, selected: ColorStyl
 @Composable
 private fun RowScope.StyleKeys(scheme: ColorScheme, selected: Boolean, description: String, onClick: () -> Unit) {
     val haptics = LocalHapticFeedback.current
-    val ring by animateDpAsState(if (selected) 2.5.dp else 0.dp, spring(dampingRatio = Spring.DampingRatioMediumBouncy), label = "ring")
-    val scale by animateFloatAsState(if (selected) 1f else 0.94f, spring(dampingRatio = Spring.DampingRatioMediumBouncy), label = "scale")
+    val ring by animateDpAsState(if (selected) 2.5.dp else 0.dp, motionSpec(spring(dampingRatio = Spring.DampingRatioMediumBouncy)), label = "ring")
+    val scale by animateFloatAsState(if (selected) 1f else 0.94f, motionSpec(spring(dampingRatio = Spring.DampingRatioMediumBouncy)), label = "scale")
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -395,12 +397,12 @@ private fun RowScope.StyleKeys(scheme: ColorScheme, selected: Boolean, descripti
 private fun PaletteSwatch(colors: List<Color>, selected: Boolean, description: String, onClick: () -> Unit, icon: ImageVector? = null, size: Dp = 46.dp) {
     val haptics = LocalHapticFeedback.current
     val interactions = remember { MutableInteractionSource() }
-    val bouncy = spring<Dp>(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium)
+    val bouncy = motionSpec(spring<Dp>(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium))
     val corner by animateDpAsState(if (selected) size * 0.3f else size / 2, bouncy, label = "corner")
     val ring = animateDpAsState(if (selected) 3.dp else 0.dp, bouncy, label = "ring").value.coerceAtLeast(0.dp)
     val rotation by animateFloatAsState(
         if (selected) 0f else 45f,
-        spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        motionSpec(spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow)),
         label = "rotation",
     )
     val ringColor by animateColorAsState(if (selected) MaterialTheme.colorScheme.surfaceContainer else Color.Transparent, label = "ringColor")

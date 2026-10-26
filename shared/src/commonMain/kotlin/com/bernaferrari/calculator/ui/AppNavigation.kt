@@ -42,6 +42,7 @@ enum class Screen { Calculator, Settings, Converter, About, Graph, Programmer, C
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun AppNavigation(modifier: Modifier = Modifier) {
+    val reduceMotion = com.bernaferrari.calculator.ui.calculator.LocalReduceMotion.current
     val backStack = rememberSaveable(
         saver = listSaver(save = { stack -> stack.map { it.name } }, restore = { names -> mutableStateListOf(*names.map(Screen::valueOf).toTypedArray()) }),
     ) { mutableStateListOf(Screen.Calculator) }
@@ -65,7 +66,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                 // The screen underneath stays put while the container grows over it (and back).
                 transitionSpec = { fadeIn(tween(120)) togetherWith ExitTransition.KeepUntilTransitionsFinished },
                 popTransitionSpec = { EnterTransition.None togetherWith fadeOut(tween(200, delayMillis = 120)) },
-                predictivePopTransitionSpec = { fadeIn(tween(220)) togetherWith (fadeOut(tween(220)) + scaleOut(targetScale = 0.9f)) },
+                predictivePopTransitionSpec = { fadeIn(tween(220)) togetherWith (if (reduceMotion) fadeOut(tween(220)) else fadeOut(tween(220)) + scaleOut(targetScale = 0.9f)) },
                 entryProvider = entryProvider {
                     entry<Screen>(Screen.Calculator) {
                         CalculatorScreen(

@@ -72,14 +72,12 @@ private val MemoryStyle @Composable get() = TextStyle(fontFamily = GoogleSansFle
 internal enum class Tone { Digit, Function, Operator, Equals }
 
 /**
- * A secondary function: what the key shows, and the key it types. [named] spells a flick-down
- * function out below the key in Labels mode; the rest (mostly inverses) get a dot there.
+ * A secondary function: what the key shows, and the key it types. Labels mode names both directions.
  */
 internal data class Alt(
     val label: String,
     val key: Key,
     val description: String = label,
-    val named: Boolean = false,
     /** Typed as is instead of [key]: a constant's value, a function of the person's own. */
     val insert: String? = null,
 ) {
@@ -135,7 +133,7 @@ internal fun keypadRows(
             ) else Spec(Key.PERCENT, "%", Tone.Function, "Percent"),
             // Backspace up top, by the operators and away from C, as on the old keypad.
             // Flick up to undo, down to redo; hold to clear.
-        Spec(Key.DELETE, "⌫", Tone.Function, "Backspace, hold to clear", up = Alt(undo, Key.UNDO), down = Alt(redo, Key.REDO, named = true), flips = false),
+        Spec(Key.DELETE, "⌫", Tone.Function, "Backspace, hold to clear", up = Alt(undo, Key.UNDO), down = Alt(redo, Key.REDO), flips = false),
             // 1/x is "1 ÷ x", and sits under × (xʸ) like its counterpart.
             Spec(Key.DIVIDE, "÷", Tone.Operator, "Divide", up = Alt("1/x", Key.RECIPROCAL, "reciprocal")),
         ),
@@ -149,20 +147,20 @@ internal fun keypadRows(
             Spec(Key.D4, "4", Tone.Digit, up = Alt("ln", Key.LN, "natural log"), down = Alt("eˣ", Key.EXP, "e to the power")),
             Spec(Key.D5, "5", Tone.Digit, up = Alt("log", Key.LOG, "log base 10"), down = Alt("10ˣ", Key.POW10, "10 to the power")),
             // The constants end the row.
-            Spec(Key.D6, "6", Tone.Digit, up = Alt("π", Key.PI, "pi"), down = Alt("e", Key.E, "Euler's number", named = true)),
-            Spec(Key.MINUS, "−", Tone.Operator, "Minus", down = if (rpn) Alt("±", Key.NEGATE, "change sign", named = true) else null, flips = false),
+            Spec(Key.D6, "6", Tone.Digit, up = Alt("π", Key.PI, "pi"), down = Alt("e", Key.E, "Euler's number")),
+            Spec(Key.MINUS, "−", Tone.Operator, "Minus", down = if (rpn) Alt("±", Key.NEGATE, "change sign") else null, flips = false),
         ),
         listOf(
             // Each number carries its own power and root: 1 over x, x², √ on 2, x³, ∛ on 3.
             Spec(Key.D1, "1", Tone.Digit, up = Alt("x!", Key.FACTORIAL, "factorial"), down = Alt("|x|", Key.ABS, "absolute value")),
-            Spec(Key.D2, "2", Tone.Digit, up = Alt("x²", Key.SQUARE, "squared"), down = Alt("√", Key.SQRT, "square root", named = true)),
+            Spec(Key.D2, "2", Tone.Digit, up = Alt("x²", Key.SQUARE, "squared"), down = Alt("√", Key.SQRT, "square root")),
             Spec(Key.D3, "3", Tone.Digit, up = Alt("x³", Key.CUBE, "cubed"), down = Alt("∛", Key.CBRT, "cube root")),
             Spec(Key.PLUS, "+", Tone.Operator, "Plus"),
         ),
         listOf(
             // 0 under 2 and the point under 3, like a phone's dial pad; parentheses take the corner.
-            if (rpn) Spec(Key.PARENS, "x⇄y", Tone.Function, "Swap x and y", up = Alt("R↓", Key.LPAREN, "roll down"), down = Alt("R↑", Key.RPAREN, "roll up", named = true), flips = false)
-            else Spec(Key.PARENS, "( )", Tone.Function, "Parentheses", up = Alt("(", Key.LPAREN, "open parenthesis"), down = Alt(")", Key.RPAREN, "close parenthesis", named = true), flips = false),
+            if (rpn) Spec(Key.PARENS, "x⇄y", Tone.Function, "Swap x and y", up = Alt("R↓", Key.LPAREN, "roll down"), down = Alt("R↑", Key.RPAREN, "roll up"), flips = false)
+            else Spec(Key.PARENS, "( )", Tone.Function, "Parentheses", up = Alt("(", Key.LPAREN, "open parenthesis"), down = Alt(")", Key.RPAREN, "close parenthesis"), flips = false),
             Spec(Key.D0, "0", Tone.Digit, up = Alt("00", Key.DOUBLE_ZERO), down = Alt("000", Key.TRIPLE_ZERO), flips = false),
             Spec(Key.DOT, decimal.toString(), Tone.Digit, "Decimal point"),
             if (rpn) Spec(Key.EQUALS, "↵", Tone.Equals, "Enter", icon = Icons.AutoMirrored.Rounded.KeyboardReturn)
@@ -179,7 +177,7 @@ internal val Spec.tapSlot: String get() = "$id.tap"
 /** A flick the person chose: a built-in function, or text to insert (a constant's value, `tip(`). Null removes the flick. */
 data class CustomFlick(val label: String, val key: Key? = null, val insert: String? = null)
 
-internal fun CustomFlick.toAlt() = Alt(label, key ?: Key.EQUALS, label, named = true, insert = insert)
+internal fun CustomFlick.toAlt() = Alt(label, key ?: Key.EQUALS, label, insert = insert)
 
 internal fun List<List<Spec>>.withFlicks(flicks: Map<String, CustomFlick?>): List<List<Spec>> =
     if (flicks.isEmpty()) this else {
@@ -400,7 +398,7 @@ private fun KeypadKey(
             }
         },
         up = spec.up?.let { Hint(it.label, it.description, enabled = !it.isInert(inert)) { fire(it) } },
-        down = spec.down?.let { Hint(it.label, it.description, enabled = !it.isInert(inert), named = it.named) { fire(it) } },
+        down = spec.down?.let { Hint(it.label, it.description, enabled = !it.isInert(inert)) { fire(it) } },
         // On the ƒ layer the face already names both functions.
         showDots = hints == FlickHints.DOTS && !onLayer,
         labelFlicks = hints == FlickHints.LABELS && !onLayer,

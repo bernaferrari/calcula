@@ -61,6 +61,7 @@ data class CalculatorUiState(
     val reduceMotion: Boolean = false,
     val showHistory: Boolean = true,
     val flickHints: FlickHints = FlickHints.DOTS,
+    val swipeHintSeen: Boolean = true,
     val keypadScale: Float = 1f,
     val decimalSeparator: DecimalSeparator = DecimalSeparator.AUTO,
     /** Bumps on every `=` and clear, so the display can animate the hand-off. */
@@ -95,10 +96,24 @@ class CalculatorViewModel(
     private val savedState: SavedStateHandle = SavedStateHandle(),
 ) : ViewModel() {
     private val calc = MutableStateFlow(
-        CalcState(editor = Editor(savedState.get<String>(KEY_TEXT).orEmpty()), resultShown = savedState[KEY_RESULT] ?: false),
+        CalcState(
+            editor = Editor(savedState.get<String>(KEY_TEXT).orEmpty()).let {
+                it.copy(cursor = (savedState.get<Int>("cursor") ?: it.cursor).coerceIn(0, it.text.length))
+            },
+            resultShown = savedState[KEY_RESULT] ?: false,
+            repeatTail = savedState["repeat_tail"],
+            inverse = savedState["inverse"] ?: false,
+            fraction = savedState["fraction"],
+        ),
     )
     private val generation = MutableStateFlow(0)
-    private val rpn = MutableStateFlow(RpnState())
+    private val rpn = MutableStateFlow(
+        RpnState(
+            stack = savedState.get<Array<String>>("rpn_stack")?.map { Decimal(it) }.orEmpty(),
+            entry = savedState["rpn_entry"],
+            lift = savedState["rpn_lift"] ?: true,
+        ),
+    )
     // Every edit can be stepped back and forward: ⌫ flicks up to undo, down to redo.
     private val undoStack = ArrayDeque<CalcState>()
     private val redoStack = ArrayDeque<CalcState>()
@@ -133,6 +148,7 @@ class CalculatorViewModel(
             reduceMotion = prefs.reduceMotion,
             showHistory = prefs.showHistory,
             flickHints = prefs.hints,
+            swipeHintSeen = prefs.swipeHintSeen,
             keypadScale = prefs.keypadScale,
             decimalSeparator = prefs.decimalSeparator,
             generation = generation,
@@ -226,7 +242,7 @@ class CalculatorViewModel(
         val current = rpn.value.copy(angleUnit = calc.value.angleUnit, decimalPlaces = calc.value.decimalPlaces, notation = calc.value.notation)
         if (key == Key.CLEAR && current.stack.isEmpty()) return
         val (next, outcome) = Rpn.press(current, key)
-        rpn.value = next
+        setRpnState(next)
         when (outcome) {
             is RpnOutcome.Evaluated -> viewModelScope.launch {
                 pendingCalculations++
@@ -300,7 +316,7 @@ class CalculatorViewModel(
         if (settings.value.rpn) {
             // RPN has no expression to type into: a constant goes on the stack, a function applies to x.
             val value = CalcEngine.evaluateOrNull(if (text.endsWith("(")) text + (Rpn.x(rpn.value)?.toPlainString() ?: "0") + ")" else text) ?: return
-            rpn.value = Rpn.pushNumber(if (text.endsWith("(")) rpn.value.copy(stack = rpn.value.stack.drop(1), entry = null, lift = false) else rpn.value, Calculator.formatResult(value, AUTO_DECIMALS))
+            setRpnState(Rpn.pushNumber(if (text.endsWith("(")) rpn.value.copy(stack = rpn.value.stack.drop(1), entry = null, lift = false) else rpn.value, Calculator.formatResult(value, AUTO_DECIMALS)))
             return
         }
         setState(Calculator.insertText(calc.value, text))
@@ -327,7 +343,7 @@ class CalculatorViewModel(
     }
 
     fun onCursorMoved(position: Int) {
-        calc.update { it.copy(editor = ExpressionEditor.moveCursor(it.editor, position), resultShown = false, selection = null) }
+        setState(calc.value.copy(editor = ExpressionEditor.moveCursor(calc.value.editor, position), resultShown = false, selection = null), record = false)
     }
 
     /** ‹ ›: one step left (−1) or right (+1), over `sin(` as a whole. True if the cursor moved. */
@@ -335,7 +351,7 @@ class CalculatorViewModel(
         val editor = calc.value.editor
         val next = ExpressionEditor.nudge(editor, direction)
         if (next.cursor == editor.cursor) return false
-        calc.update { it.copy(editor = next, selection = null) }
+        setState(calc.value.copy(editor = next, selection = null), record = false)
         return true
     }
 
@@ -344,7 +360,7 @@ class CalculatorViewModel(
         val editor = calc.value.editor
         val target = if (direction < 0) 0 else editor.text.length
         if (target == editor.cursor) return false
-        calc.update { it.copy(editor = editor.copy(cursor = target), selection = null) }
+        setState(calc.value.copy(editor = editor.copy(cursor = target), selection = null), record = false)
         return true
     }
 
@@ -367,6 +383,8 @@ class CalculatorViewModel(
 
     /** Entries just removed from the tape, so the screen can offer to undo. */
     val removed: SharedFlow<List<CalculationHistory>> = _removed
+
+    fun onSwipeHintSeen() { viewModelScope.launch { preferences.markSwipeHintSeen() } }
 
     fun onKeypadScale(scale: Float) {
         viewModelScope.launch { preferences.updateKeypadScale(scale) }
@@ -404,7 +422,7 @@ class CalculatorViewModel(
 
     /** A number coming back from the converter, dropped in at the cursor. */
     fun insertNumber(number: String) {
-        if (settings.value.rpn) rpn.value = Rpn.pushNumber(rpn.value, number)
+        if (settings.value.rpn) setRpnState(Rpn.pushNumber(rpn.value, number))
         else setState(Calculator.insertNumber(calc.value, number))
     }
 
@@ -421,9 +439,21 @@ class CalculatorViewModel(
             redoStack.clear()
         }
         steps.value = undoStack.size to redoStack.size
-        calc.value = next
+        // Undo restores editing state, not old global settings.
+        calc.value = next.copy(angleUnit = settings.value.angleUnit, decimalPlaces = settings.value.decimalPlaces, notation = settings.value.notation)
+        savedState["cursor"] = next.editor.cursor
+        savedState["repeat_tail"] = next.repeatTail
+        savedState["inverse"] = next.inverse
+        savedState["fraction"] = next.fraction
         savedState[KEY_TEXT] = next.editor.text
         savedState[KEY_RESULT] = next.resultShown
+    }
+
+    private fun setRpnState(next: RpnState) {
+        rpn.value = next
+        savedState["rpn_stack"] = next.stack.map { it.toPlainString() }.toTypedArray()
+        savedState["rpn_entry"] = next.entry
+        savedState["rpn_lift"] = next.lift
     }
 
     private companion object {

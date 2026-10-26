@@ -28,6 +28,7 @@ private val ContainerSpring = BoundsTransform { _, _ -> spring(dampingRatio = 0.
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun Modifier.containerTransform(key: String, isScreen: Boolean = false): Modifier {
+    if (com.bernaferrari.calculator.ui.calculator.LocalReduceMotion.current) return this
     val shared = LocalSharedTransitionScope.current ?: return this
     val animated = LocalNavAnimatedContentScope.current
     return with(shared) {
@@ -48,3 +49,8 @@ fun Modifier.containerTransform(key: String, isScreen: Boolean = false): Modifie
         )
     }
 }
+
+/** Spatial changes snap when reduced motion is enabled; opacity can still fade. */
+@Composable
+internal fun <T> motionSpec(spec: androidx.compose.animation.core.FiniteAnimationSpec<T>): androidx.compose.animation.core.FiniteAnimationSpec<T> =
+    if (com.bernaferrari.calculator.ui.calculator.LocalReduceMotion.current) androidx.compose.animation.core.snap() else spec

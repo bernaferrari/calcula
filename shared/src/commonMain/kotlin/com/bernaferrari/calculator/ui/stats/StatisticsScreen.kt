@@ -155,7 +155,7 @@ fun StatisticsScreen(
                     // The same 8dp between rows as between chips: chips otherwise pad themselves out to a
                     // 48dp touch target, which opens the rows up twice as wide as the columns.
                     CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.animateContentSize()) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.animateContentSize(com.bernaferrari.calculator.ui.motionSpec(androidx.compose.animation.core.spring()))) {
                         state.values.forEachIndexed { i, v ->
                             InputChip(
                                 selected = false,

@@ -26,10 +26,10 @@ actual fun systemSeparators(): Separators =
 
 actual fun formatDate(epochMillis: Long): String = jsFormatDate(epochMillis.toDouble())
 
-actual class KeyValueStore {
-    actual fun get(key: String): String? = localStorage.getItem(key)
+actual class KeyValueStore : StringStore {
+    actual override fun get(key: String): String? = localStorage.getItem(key)
 
-    actual fun put(key: String, value: String?) {
+    actual override fun put(key: String, value: String?) {
         if (value == null) localStorage.removeItem(key) else localStorage.setItem(key, value)
     }
 }
