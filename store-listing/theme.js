@@ -27,15 +27,17 @@ function key(main, alt) {
 }
 
 export default {
-  // Flat card colours that bleed softly into their neighbours, so the strip flows card to card.
+  // A crisp cream disc sits on every seam, half on each card, in panorama coordinates: one shape
+  // shared by two neighbours, so the strip reads as continuous. Heights and sizes alternate.
   art({W, H, index, slides}) {
-    const color = k => slides[k]?.vars?.['--background'];
+    const portrait = H > W;
     let out = '';
-    for (const [k, side] of [[index - 1, 0], [index + 1, W]]) {
-      const c = color(k);
-      if (!c) continue;
-      const id = `bleed${k}`;
-      out += `<defs><radialGradient id="${id}" gradientUnits="userSpaceOnUse" cx="${side}" cy="${H * .62}" r="${W * .55}"><stop offset="0" stop-color="${c}" stop-opacity=".95"/><stop offset=".6" stop-color="${c}" stop-opacity=".35"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></radialGradient></defs><rect width="${W}" height="${H}" fill="url(#${id})"/>`;
+    for (const seam of [index, index + 1]) {
+      if (seam <= 0 || seam >= slides.length) continue;
+      const cx = (seam - index) * W;
+      const cy = H * (seam % 2 ? (portrait ? .86 : .9) : (portrait ? .7 : .78));
+      const r = (portrait ? W : H) * (seam % 2 ? .34 : .26);
+      out += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#FFFBF2"/>`;
     }
     return out;
   },
