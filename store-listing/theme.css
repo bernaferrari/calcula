@@ -45,7 +45,7 @@ header p{margin:28px 0 0;font-size:40px;line-height:1.24;letter-spacing:-.5px;wh
 .tablet10 header p{font-size:34px}
 .tablet10 .brand{top:48px;left:96px}
 .tablet10 .glyph{left:600px;top:40px;font-size:620px}
-.tablet10 .zoomed .primary{left:780px;top:170px;width:1300px}
+.tablet10 .fit .primary{left:760px;top:250px;width:1080px}
 .tablet10 .flick .key{left:700px;top:760px;width:270px}
 .tablet10 .pair .primary{left:780px;top:180px;width:820px;transform:rotate(-2deg)}
 .tablet10 .pair .secondary{left:1500px;top:330px;width:380px;transform:rotate(3deg)}

@@ -6,7 +6,6 @@
       "vars": {
         "--background": "#F1E267"
       },
-      "glyph": "sin",
       "raw": "phone/01-every-key.png",
       "file": "phone/phone-01-every-key.jpg"
     },
@@ -16,7 +15,6 @@
       "vars": {
         "--background": "#C4D0F6"
       },
-      "glyph": "∫",
       "raw": "phone/02-graph.png",
       "file": "phone/phone-02-graph.jpg"
     },
@@ -62,23 +60,12 @@
     },
     {
       "feature": "06-statistics",
-      "layout": "single",
+      "layout": "zoomed",
       "vars": {
         "--background": "#F4C77E"
       },
-      "glyph": "∑",
       "raw": "phone/06-statistics.png",
-      "file": "phone/phone-05-statistics.jpg",
-      "callouts": [
-        {
-          "x": 30,
-          "y": 420,
-          "w": 1020,
-          "h": 740,
-          "mag": 1.06,
-          "radius": 40
-        }
-      ]
+      "file": "phone/phone-05-statistics.jpg"
     },
     {
       "feature": "04-customize",
@@ -125,7 +112,6 @@
       "vars": {
         "--background": "#F1E267"
       },
-      "glyph": "sin",
       "devices": [
         {
           "raw": "tablet7/01-every-key.png",
@@ -140,7 +126,6 @@
       "vars": {
         "--background": "#C4D0F6"
       },
-      "glyph": "∫",
       "devices": [
         {
           "raw": "tablet7/02-graph.png",
@@ -209,11 +194,10 @@
   "tablet10": [
     {
       "feature": "01-every-key",
-      "layout": "flick zoomed",
+      "layout": "flick fit",
       "vars": {
         "--background": "#F1E267"
       },
-      "glyph": "sin",
       "devices": [
         {
           "raw": "tablet10/01-every-key.png",
@@ -224,11 +208,10 @@
     },
     {
       "feature": "02-graph",
-      "layout": "zoomed",
+      "layout": "fit",
       "vars": {
         "--background": "#C4D0F6"
       },
-      "glyph": "∫",
       "devices": [
         {
           "raw": "tablet10/02-graph.png",
