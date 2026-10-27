@@ -98,7 +98,7 @@
       "headline": "Think in\nany base.",
       "caption": "Switch bases. Show bits when you need them.",
       "alt": "Programmer calculator showing C0FFEE in multiple number bases",
-      "theme": "dark",
+      "theme": "light",
       "palette": "TEAL",
       "groups": [
         "phone",
@@ -147,7 +147,7 @@
         "scene": "programmer",
         "width": 1200,
         "height": 1920,
-        "theme": "dark",
+        "theme": "light",
         "palette": "TEAL"
       },
       {
