@@ -18,6 +18,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -61,6 +62,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bernaferrari.calculator.resources.*
@@ -129,19 +131,28 @@ fun Tape(
             enter = if (LocalReduceMotion.current) fadeIn() else expandVertically(spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow)) + fadeIn(tween(200, delayMillis = 60)),
             exit = if (LocalReduceMotion.current) fadeOut() else shrinkVertically(spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow)) + fadeOut(tween(100)),
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 12.dp, top = 8.dp + topInset),
-            ) {
-                Text(
-                    stringResource(Res.string.settings_history),
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = colors.onSurface,
-                    modifier = Modifier.weight(1f),
-                )
-                if (history.isNotEmpty()) {
-                    IconButton(onClick = onShare) { Icon(Icons.Outlined.Share, contentDescription = stringResource(Res.string.history_share), tint = colors.onSurfaceVariant) }
-                    TextButton(onClick = onClearAll) { Text(stringResource(Res.string.history_clear)) }
+            BoxWithConstraints(Modifier.fillMaxWidth()) {
+                val compact = maxWidth < 320.dp
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 12.dp, top = 8.dp + topInset),
+                ) {
+                    Text(
+                        stringResource(Res.string.settings_history),
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = colors.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f),
+                    )
+                    if (history.isNotEmpty()) {
+                        IconButton(onClick = onShare) { Icon(Icons.Outlined.Share, contentDescription = stringResource(Res.string.history_share), tint = colors.onSurfaceVariant) }
+                        if (compact) {
+                            IconButton(onClick = onClearAll) { Icon(Icons.Outlined.Delete, contentDescription = stringResource(Res.string.history_clear), tint = colors.onSurfaceVariant) }
+                        } else {
+                            TextButton(onClick = onClearAll) { Text(stringResource(Res.string.history_clear)) }
+                        }
+                    }
                 }
             }
         }
