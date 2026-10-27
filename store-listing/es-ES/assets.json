@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-27T14:13:00.986Z",
+  "generatedAt": "2026-10-27T14:13:21.119Z",
   "campaign": "A little flick goes a long way",
   "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
   "assets": [
@@ -57,7 +57,7 @@
       "file": "phone/phone-06-customize.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 225231,
+      "bytes": 225077,
       "alt": "Light appearance settings and custom key assignments, with color swatches and visual style previews",
       "sources": [
         "raw/phone/04-customize.png",

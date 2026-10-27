@@ -39,7 +39,8 @@ header p{margin:26px 0 0;font-size:40px;line-height:1.24;letter-spacing:-.5px;wh
 
 /* Customize: one phone hanging from the top, one rising from the bottom, the copy between them. */
 .phone .stack .block{left:56px;top:-120px;width:968px;height:2160px;border-radius:96px}
-.phone .stack header{top:700px}
+.phone .stack header{top:700px;text-align:center}
+.phone .stack header p{margin-left:auto;margin-right:auto}
 .phone .stack .primary{left:240px;top:-700px;width:600px}
 .phone .stack .secondary{left:240px;top:1180px;width:600px}
 
