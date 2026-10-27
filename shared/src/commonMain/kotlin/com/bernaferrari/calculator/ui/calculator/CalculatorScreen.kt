@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import org.jetbrains.compose.resources.getString
 import androidx.compose.foundation.layout.statusBars
 import com.bernaferrari.calculator.platform.rememberTextSharer
 import com.bernaferrari.calculator.ui.library.LibraryTab
@@ -156,23 +157,24 @@ fun CalculatorScreen(
 
     val snackbar = remember { SnackbarHostState() }
     var gestureHelp by rememberSaveable { mutableStateOf(false) }
-    val gestureHint = stringResource(Res.string.gesture_help_hint)
-    val gestureTitle = stringResource(Res.string.gesture_help_title)
     LaunchedEffect(state.swipeHintSeen) {
         if (!state.swipeHintSeen) {
+            // Loaded here rather than with stringResource: on the web resources arrive a moment
+            // after the first frame, and a snackbar made then would keep empty text (a blank bar).
+            val gestureHint = getString(Res.string.gesture_help_hint)
+            val gestureTitle = getString(Res.string.gesture_help_title)
             val result = snackbar.showSnackbar(gestureHint, actionLabel = gestureTitle, withDismissAction = true, duration = SnackbarDuration.Long)
             gestureHelp = result == SnackbarResult.ActionPerformed
             viewModel.onSwipeHintSeen()
         }
     }
     if (gestureHelp) GestureHelpDialog { gestureHelp = false }
-    val deletedOne = stringResource(Res.string.history_deleted)
-    val deletedAll = stringResource(Res.string.history_cleared)
-    val undo = stringResource(Res.string.undo)
     LaunchedEffect(Unit) {
         viewModel.removed.collect { entries ->
             snackbar.currentSnackbarData?.dismiss()
-            val result = snackbar.showSnackbar(if (entries.size == 1) deletedOne else deletedAll, actionLabel = undo, duration = SnackbarDuration.Short)
+            // Read now, not captured at the first frame (on the web that could still be empty).
+            val message = getString(if (entries.size == 1) Res.string.history_deleted else Res.string.history_cleared)
+            val result = snackbar.showSnackbar(message, actionLabel = getString(Res.string.undo), duration = SnackbarDuration.Short)
             if (result == SnackbarResult.ActionPerformed) viewModel.onRestore(entries)
         }
     }
