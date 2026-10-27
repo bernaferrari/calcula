@@ -1,0 +1,240 @@
+{
+  "generatedAt": "2026-10-27T05:53:45.981Z",
+  "campaign": "A little flick goes a long way",
+  "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
+  "assets": [
+    {
+      "file": "phone/phone-01-every-key.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 185420,
+      "alt": "Calcula with labelled scientific functions; a magnified real sin key explains the flick gesture",
+      "sources": [
+        "raw/phone/01-every-key.png"
+      ]
+    },
+    {
+      "file": "phone/phone-02-graph.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 220997,
+      "alt": "A graphing calculator with sine functions, a circle, and movable parameters, backed by a golden sine wave",
+      "sources": [
+        "raw/phone/02-graph.png"
+      ]
+    },
+    {
+      "file": "phone/phone-03-convert.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 160253,
+      "alt": "Unit converter showing 22 Celsius as 71.6 Fahrenheit, with the result lifted out",
+      "sources": [
+        "raw/phone/03-convert.png"
+      ]
+    },
+    {
+      "file": "phone/phone-04-programmer.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 184670,
+      "alt": "Programmer mode in dark theme showing the hexadecimal value C0 FFEE and its decimal",
+      "sources": [
+        "raw/phone/05-programmer.png"
+      ]
+    },
+    {
+      "file": "phone/phone-05-statistics.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 224834,
+      "alt": "Statistics with mean, median, sum, count and standard deviation for eight values",
+      "sources": [
+        "raw/phone/06-statistics.png"
+      ]
+    },
+    {
+      "file": "phone/phone-06-customize.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 294313,
+      "alt": "Light appearance settings and custom key assignments, with color swatches and visual style previews",
+      "sources": [
+        "raw/phone/07-appearance.png",
+        "raw/phone/04-customize.png"
+      ]
+    },
+    {
+      "file": "phone/phone-07-more-room.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 201255,
+      "alt": "Calcula on a landscape tablet with history beside the keypad, paired with the phone layout",
+      "sources": [
+        "raw/tablet10/01-every-key.png",
+        "raw/phone/01-every-key.png"
+      ]
+    },
+    {
+      "file": "tablet7/tablet7-01-every-key.jpg",
+      "width": 1200,
+      "height": 1920,
+      "bytes": 203605,
+      "alt": "Calcula on a 7-inch portrait tablet with history beside the keypad; Enlarged sin shortcut above the 7 key, redrawn from the app key style",
+      "sources": [
+        "raw/tablet7/01-every-key.png"
+      ]
+    },
+    {
+      "file": "tablet7/tablet7-02-graph.jpg",
+      "width": 1200,
+      "height": 1920,
+      "bytes": 231048,
+      "alt": "Graphing functions and a circle on the 7-inch tablet",
+      "sources": [
+        "raw/tablet7/02-graph.png"
+      ]
+    },
+    {
+      "file": "tablet7/tablet7-03-convert.jpg",
+      "width": 1200,
+      "height": 1920,
+      "bytes": 206823,
+      "alt": "The 7-inch tablet converting Celsius to Fahrenheit; Programmer with compact Bits controls on the 7-inch tablet",
+      "sources": [
+        "raw/tablet7/03-convert.png",
+        "raw/tablet7/05-programmer.png"
+      ]
+    },
+    {
+      "file": "tablet7/tablet7-04-customize.jpg",
+      "width": 1200,
+      "height": 1920,
+      "bytes": 287395,
+      "alt": "Light appearance settings on the 7-inch tablet; Custom key assignments on the 7-inch tablet",
+      "sources": [
+        "raw/tablet7/07-appearance.png",
+        "raw/tablet7/04-customize.png"
+      ]
+    },
+    {
+      "file": "tablet7/tablet7-05-more-room.jpg",
+      "width": 1200,
+      "height": 1920,
+      "bytes": 229915,
+      "alt": "The same 7-inch tablet in landscape with a separate history pane; The 7-inch tablet in portrait",
+      "sources": [
+        "raw/tablet7/08-calculator-landscape.png",
+        "raw/tablet7/01-every-key.png"
+      ]
+    },
+    {
+      "file": "tablet10/tablet10-01-every-key.jpg",
+      "width": 1920,
+      "height": 1200,
+      "bytes": 162377,
+      "alt": "Calcula on a 10-inch landscape tablet with history beside the keypad; Enlarged sin shortcut above the 7 key, redrawn from the app key style",
+      "sources": [
+        "raw/tablet10/01-every-key.png"
+      ]
+    },
+    {
+      "file": "tablet10/tablet10-02-graph.jpg",
+      "width": 1920,
+      "height": 1200,
+      "bytes": 238835,
+      "alt": "Functions, a circle, and interactive parameters on a 10-inch tablet",
+      "sources": [
+        "raw/tablet10/02-graph.png"
+      ]
+    },
+    {
+      "file": "tablet10/tablet10-03-convert.jpg",
+      "width": 1920,
+      "height": 1200,
+      "bytes": 176120,
+      "alt": "Landscape unit conversion on the 10-inch tablet; The 10-inch tablet in portrait showing Programmer mode",
+      "sources": [
+        "raw/tablet10/03-convert.png",
+        "raw/tablet10/08-programmer-portrait.png"
+      ]
+    },
+    {
+      "file": "tablet10/tablet10-04-customize.jpg",
+      "width": 1920,
+      "height": 1200,
+      "bytes": 242503,
+      "alt": "Light appearance settings on the 10-inch tablet in portrait; Custom key assignments on the 10-inch tablet in landscape",
+      "sources": [
+        "raw/tablet10/09-appearance-portrait.png",
+        "raw/tablet10/04-customize.png"
+      ]
+    },
+    {
+      "file": "tablet10/tablet10-05-more-room.jpg",
+      "width": 1920,
+      "height": 1200,
+      "bytes": 191461,
+      "alt": "A 10-inch landscape tablet with separate history and calculator panes; The same 10-inch tablet in portrait",
+      "sources": [
+        "raw/tablet10/01-every-key.png",
+        "raw/tablet10/10-calculator-portrait.png"
+      ]
+    },
+    {
+      "file": "desktop/desktop-01-every-key.jpg",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 105610,
+      "alt": "Calcula with labelled scientific flick shortcuts and a live answer preview",
+      "sources": [
+        "raw/desktop/01-every-key.png"
+      ]
+    },
+    {
+      "file": "desktop/desktop-02-graph.jpg",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 186028,
+      "alt": "Functions, a circle, and interactive parameter controls in Calcula",
+      "sources": [
+        "raw/desktop/02-graph.png"
+      ]
+    },
+    {
+      "file": "desktop/desktop-03-convert.jpg",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 88000,
+      "alt": "Calcula converting 22 degrees Celsius to Fahrenheit",
+      "sources": [
+        "raw/desktop/03-convert.png"
+      ]
+    },
+    {
+      "file": "desktop/desktop-07-appearance.jpg",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 107490,
+      "sources": [
+        "raw/desktop/07-appearance.png"
+      ]
+    },
+    {
+      "file": "graphics/feature-graphic.png",
+      "width": 1024,
+      "height": 500,
+      "bytes": 61547,
+      "sources": [
+        "raw/phone/01-every-key.png"
+      ]
+    },
+    {
+      "file": "graphics/app-icon.png",
+      "width": 512,
+      "height": 512,
+      "bytes": 17012,
+      "alt": "Calcula app icon"
+    }
+  ]
+}
