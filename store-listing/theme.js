@@ -27,17 +27,12 @@ function key(main, alt) {
 }
 
 export default {
-  // One continuous field: a single gradient spans the whole strip with each card's colour pinned at
-  // its centre, and every card shows its own window onto it, so there are no seams to hide.
-  art({W, H, index, slides}) {
-    const N = slides.length, x0 = -index * W;
-    const stops = slides.map((s, k) => `<stop offset="${(k + .5) / N}" stop-color="${s.vars?.['--background'] || '#F1E267'}"/>`).join('');
-    // Graph paper: a faint grid in panorama coordinates, so its lines continue across every seam.
-    const cell = Math.round(Math.min(W, H) / 18), major = cell * 5, off = ((x0 % major) + major) % major;
-    const grid = `<pattern id="minor" width="${cell}" height="${cell}" patternUnits="userSpaceOnUse" x="${off}"><path d="M${cell} 0V${cell}H0" fill="none" stroke="#ffffff" stroke-opacity=".16" stroke-width="1.5"/></pattern>` +
-      `<pattern id="major" width="${major}" height="${major}" patternUnits="userSpaceOnUse" x="${off}"><path d="M${major} 0V${major}H0" fill="none" stroke="#ffffff" stroke-opacity=".3" stroke-width="2.5"/></pattern>`;
-    return `<defs><linearGradient id="field" gradientUnits="userSpaceOnUse" x1="${x0}" x2="${x0 + N * W}" y1="0" y2="0">${stops}</linearGradient>${grid}</defs>` +
-      `<rect width="${W}" height="${H}" fill="url(#field)"/><rect width="${W}" height="${H}" fill="url(#minor)"/><rect width="${W}" height="${H}" fill="url(#major)"/>`;
+  // Paper: a faint graph-paper grid in panorama coordinates, so the cards still join when shown together.
+  art({W, H, index}) {
+    const cell = Math.round(Math.min(W, H) / 18), major = cell * 5, x0 = -index * W, off = ((x0 % major) + major) % major;
+    return `<defs><pattern id="minor" width="${cell}" height="${cell}" patternUnits="userSpaceOnUse" x="${off}"><path d="M${cell} 0V${cell}H0" fill="none" stroke="#22307f" stroke-opacity=".05" stroke-width="1.5"/></pattern>` +
+      `<pattern id="major" width="${major}" height="${major}" patternUnits="userSpaceOnUse" x="${off}"><path d="M${major} 0V${major}H0" fill="none" stroke="#22307f" stroke-opacity=".09" stroke-width="2"/></pattern></defs>` +
+      `<rect width="${W}" height="${H}" fill="url(#minor)"/><rect width="${W}" height="${H}" fill="url(#major)"/>`;
   },
 
   compose({kind, index, slide, main}) {
@@ -50,6 +45,10 @@ export default {
     if (index === 0) brand(main);
     if (slide.key) key(main, slide.key);
     // One giant, faint math glyph per card: a different symbol each time, like a page turning.
+    const block = document.createElement('div');
+    block.className = 'block';
+    block.setAttribute('aria-hidden', 'true');
+    main.append(block);
     if (slide.glyph && kind !== 'feature') {
       const glyph = document.createElement('div');
       glyph.className = 'glyph';

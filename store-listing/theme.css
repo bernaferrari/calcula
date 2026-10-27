@@ -2,57 +2,66 @@
 @font-face{font-family:Calcula;src:url('../shared/src/commonMain/composeResources/font/google_sans_flex_regular.ttf');font-weight:400;font-display:block}
 @font-face{font-family:Calcula;src:url('../shared/src/commonMain/composeResources/font/google_sans_flex_semibold.ttf');font-weight:600;font-display:block}
 @font-face{font-family:Calcula;src:url('../shared/src/commonMain/composeResources/font/google_sans_flex_bold.ttf');font-weight:700;font-display:block}
-:root{--ink:#283A9F}
-body{position:relative;font-family:Calcula,var(--script-font),sans-serif;font-kerning:normal;color:var(--ink);background:var(--background)}
-.campaign{background:var(--background)}
-.brand{position:absolute;left:72px;top:58px;display:flex;align-items:center;gap:14px;font-size:30px;font-weight:600;letter-spacing:-.6px;z-index:6}.brand img{width:44px;height:44px;display:block}
+:root{--ink:#22307f;--paper:#FBF5EA;--block:#F4D94A}
+body{position:relative;font-family:Calcula,var(--script-font),sans-serif;font-kerning:normal;color:var(--ink);background:var(--paper)}
+.campaign{background:var(--paper)}
+.brand{position:absolute;left:72px;top:60px;display:flex;align-items:center;gap:14px;font-size:30px;font-weight:600;letter-spacing:-.6px;z-index:6}.brand img{width:44px;height:44px;display:block}
 
-/* Editorial copy: big, left-aligned, indigo on flat card colours. */
+/* One giant calculator key per card, in the card's colour, behind the product. */
+.block{position:absolute;z-index:1;background:var(--block);border-radius:120px;box-shadow:inset 0 -18px 0 #00000014}
+
 header{left:72px;right:72px;top:150px;z-index:5}
-h1{font-size:136px;line-height:.96;font-weight:700;letter-spacing:-6px}
-header p{margin:28px 0 0;font-size:40px;line-height:1.24;letter-spacing:-.5px;white-space:pre-line;max-width:900px;opacity:.85}
+h1{font-size:132px;line-height:.96;font-weight:700;letter-spacing:-6px}
+header p{margin:26px 0 0;font-size:40px;line-height:1.24;letter-spacing:-.5px;white-space:pre-line;max-width:900px;opacity:.82}
 
-.device{--bezel:16px;--radius:54px;background:#1C2130;box-shadow:inset 0 0 0 2px #3A4256,0 6px 14px #202C5226,0 40px 80px -20px #202C5255}
-.callout{z-index:6;box-shadow:0 0 0 1px #202C5214,0 30px 70px -14px #202C5266}
-.glyph{position:absolute;z-index:1;font-weight:700;color:#ffffff;opacity:.28;line-height:1;letter-spacing:-.04em;pointer-events:none}
-.key{position:absolute;z-index:7;transform:rotate(-6deg);filter:drop-shadow(0 6px 10px #202C5222) drop-shadow(0 30px 40px #202C5244)}.key svg{display:block;width:100%;height:auto;font-family:Calcula,var(--script-font),sans-serif;font-weight:400}
+.device{--bezel:16px;--radius:54px;background:#1C2130;box-shadow:inset 0 0 0 2px #3A4256,0 6px 14px #22307f1f,0 50px 90px -24px #22307f55}
+.callout.crop{z-index:4;box-shadow:0 0 0 1px #22307f14,0 40px 80px -20px #22307f55}
+.key{position:absolute;z-index:7;transform:rotate(-6deg);filter:drop-shadow(0 6px 10px #22307f22) drop-shadow(0 30px 40px #22307f44)}.key svg{display:block;width:100%;height:auto;font-family:Calcula,var(--script-font),sans-serif;font-weight:400}
 
-/* Phone */
-.phone .zoomed .primary{left:110px;top:560px;width:860px}
-.phone .flick .key{left:40px;top:1240px;width:330px}
-.phone .single .primary{left:230px;top:620px;width:620px}
-.phone .glyph{right:50px;top:380px;font-size:440px}
-.phone .personalize .primary{left:60px;top:640px;width:500px;transform:rotate(-3deg)}
-.phone .personalize .secondary{left:520px;top:760px;width:500px;transform:rotate(3deg)}
+/* Phone compositions */
+.phone .flick .block{left:-80px;top:560px;width:900px;height:1500px}
+.phone .flick .primary{left:150px;top:600px;width:860px}
+.phone .flick .key{left:40px;top:1260px;width:330px}
+.phone .graphcrop .block{left:40px;top:560px;width:1000px;height:1300px}
+.phone .center .block{left:120px;top:640px;width:840px;height:1400px;border-radius:420px 420px 0 0}
+.phone .center .primary{left:200px;top:600px;width:680px}
+.phone .dark{--paper:#151938;--ink:#ffffff;color:#ffffff}
+.phone .dark .block{left:-200px;top:900px;width:1480px;height:1480px;border-radius:50%;background:#2B3170;box-shadow:none}
+.phone .dark .primary{left:150px;top:560px;width:780px}
+.phone .right .block{left:300px;top:520px;width:900px;height:1500px}
+.phone .right .primary{left:250px;top:600px;width:760px}
+.phone .pair .block{left:60px;top:900px;width:960px;height:1100px}
+.phone .pair .primary{left:60px;top:620px;width:470px}
+.phone .pair .secondary{left:550px;top:720px;width:470px}
+.phone .room .block{left:40px;top:560px;width:1000px;height:900px}
 .phone .room .primary{left:60px;top:640px;width:960px}
-.phone .room .secondary{left:640px;top:1080px;width:360px;z-index:3}
+.phone .room .secondary{left:640px;top:1060px;width:360px;z-index:3}
 
 /* 7-inch */
-.tablet7 h1{font-size:140px}
-.tablet7 .zoomed .primary{left:110px;top:620px;width:980px}
-.tablet7 .flick .key{left:30px;top:1300px;width:300px}
-.tablet7 .glyph{right:60px;top:420px;font-size:500px}
-.tablet7 .pair .primary{left:60px;top:700px;width:560px;transform:rotate(-3deg)}
-.tablet7 .pair .secondary{left:580px;top:820px;width:560px;transform:rotate(3deg)}
-.tablet7 .personalize .primary{left:60px;top:700px;width:560px;transform:rotate(-3deg)}
-.tablet7 .personalize .secondary{left:580px;top:820px;width:560px;transform:rotate(3deg)}
+.tablet7 h1{font-size:136px}
+.tablet7 .block{left:80px;top:600px;width:1040px;height:1400px}
+.tablet7 .flick .primary{left:150px;top:640px;width:980px}
+.tablet7 .flick .key{left:30px;top:1320px;width:300px}
+.tablet7 .center .primary{left:140px;top:640px;width:920px}
+.tablet7 .pair .primary{left:70px;top:680px;width:540px}
+.tablet7 .pair .secondary{left:590px;top:780px;width:540px}
 .tablet7 .room .primary{left:60px;top:700px;width:1080px}
 .tablet7 .room .secondary{left:740px;top:1140px;width:400px;z-index:3}
 
-/* 10-inch: copy left, product right */
-.tablet10 header{top:0;bottom:0;left:96px;right:auto;width:620px;display:flex;flex-direction:column;justify-content:center}
-.tablet10 h1{font-size:112px;letter-spacing:-5px}
+/* 10-inch: copy left, product on a block right */
+.tablet10 header{top:0;bottom:0;left:96px;right:auto;width:600px;display:flex;flex-direction:column;justify-content:center}
+.tablet10 h1{font-size:108px;letter-spacing:-5px}
 .tablet10 header p{font-size:34px}
 .tablet10 .brand{top:48px;left:96px}
-.tablet10 .glyph{left:600px;top:40px;font-size:620px}
-.tablet10 .fit .primary{left:760px;top:250px;width:1080px}
-.tablet10 .flick .key{left:700px;top:760px;width:270px}
-.tablet10 .pair .primary{left:780px;top:180px;width:820px;transform:rotate(-2deg)}
-.tablet10 .pair .secondary{left:1500px;top:330px;width:380px;transform:rotate(3deg)}
-.tablet10 .personalize .primary{left:780px;top:340px;width:440px;transform:rotate(-3deg)}
-.tablet10 .personalize .secondary{left:1160px;top:200px;width:700px;transform:rotate(2deg)}
-.tablet10 .room .primary{left:780px;top:190px;width:1080px}
-.tablet10 .room .secondary{left:1560px;top:520px;width:300px;z-index:3}
+.tablet10 .block{left:720px;top:120px;width:1140px;height:960px}
+.tablet10 .flick .primary,.tablet10 .center .primary{left:770px;top:250px;width:1040px}
+.tablet10 .flick .key{left:640px;top:760px;width:250px}
+.tablet10 .pair .primary{left:770px;top:200px;width:820px}
+.tablet10 .pair .secondary{left:1460px;top:380px;width:360px}
+.tablet10 .customize-pair .primary{left:790px;top:150px;width:520px}
+.tablet10 .customize-pair .secondary{left:1160px;top:420px;width:680px}
+.tablet10 .room .primary{left:770px;top:200px;width:1040px}
+.tablet10 .room .secondary{left:1560px;top:500px;width:280px;z-index:3}
 
-.feature .brand{left:52px;top:44px;font-size:24px;gap:10px}.feature .brand img{width:34px;height:34px}.feature header{left:52px;top:125px;right:310px}.feature h1{font-size:80px;line-height:.98;letter-spacing:-3px}.feature header p{font-size:27px;margin-top:25px}.feature .primary{left:760px;top:40px;width:230px}
+.feature .brand{left:52px;top:44px;font-size:24px;gap:10px}.feature .brand img{width:34px;height:34px}.feature header{left:52px;top:125px;right:310px}.feature h1{font-size:80px;line-height:.98;letter-spacing:-3px}.feature header p{font-size:27px;margin-top:25px}.feature .primary{left:760px;top:40px;width:230px}.feature .block{display:none}
 .icon,.icon body,.icon .campaign{background:transparent}.icon .app-icon{position:absolute;inset:0;width:100%;height:100%;display:block}

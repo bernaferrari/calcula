@@ -2,56 +2,85 @@
   "phone": [
     {
       "feature": "01-every-key",
-      "layout": "flick zoomed",
+      "layout": "flick",
       "vars": {
-        "--background": "#F1E267"
+        "--block": "#F4D94A"
       },
-      "raw": "phone/01-every-key.png",
-      "file": "phone/phone-01-every-key.jpg"
+      "file": "phone/phone-01-every-key.jpg",
+      "raw": "phone/01-every-key.png"
     },
     {
       "feature": "02-graph",
-      "layout": "zoomed",
+      "layout": "graphcrop",
       "vars": {
-        "--background": "#C4D0F6"
+        "--block": "#AFC0F5"
       },
-      "raw": "phone/02-graph.png",
-      "file": "phone/phone-02-graph.jpg"
+      "file": "phone/phone-02-graph.jpg",
+      "callouts": [
+        {
+          "raw": "phone/02-graph.png",
+          "x": 30,
+          "y": 210,
+          "w": 1020,
+          "h": 702,
+          "radius": 40,
+          "place": {
+            "left": 60,
+            "top": 620,
+            "width": 960
+          },
+          "role": "crop"
+        },
+        {
+          "raw": "phone/02-graph.png",
+          "x": 0,
+          "y": 912,
+          "w": 1080,
+          "h": 452,
+          "radius": 40,
+          "place": {
+            "left": 120,
+            "top": 1300,
+            "width": 840
+          },
+          "role": "crop lower"
+        }
+      ]
     },
     {
       "feature": "03-convert",
-      "layout": "zoomed",
+      "layout": "center",
       "vars": {
-        "--background": "#B5DED6"
+        "--block": "#9DDCCB"
       },
-      "raw": "phone/03-convert.png",
-      "file": "phone/phone-03-convert.jpg"
+      "file": "phone/phone-03-convert.jpg",
+      "raw": "phone/03-convert.png"
     },
     {
       "feature": "05-programmer",
-      "layout": "zoomed",
+      "layout": "dark",
       "vars": {
-        "--background": "#9FB3F2"
+        "--block": "#2B3170"
       },
-      "raw": "phone/05-programmer.png",
-      "file": "phone/phone-04-programmer.jpg"
+      "file": "phone/phone-04-programmer.jpg",
+      "raw": "phone/05-programmer.png"
     },
     {
       "feature": "06-statistics",
-      "layout": "zoomed",
+      "layout": "right",
       "vars": {
-        "--background": "#F4C77E"
+        "--block": "#F6C27A"
       },
-      "raw": "phone/06-statistics.png",
-      "file": "phone/phone-05-statistics.jpg"
+      "file": "phone/phone-05-statistics.jpg",
+      "raw": "phone/06-statistics.png"
     },
     {
       "feature": "04-customize",
-      "layout": "personalize",
+      "layout": "pair",
       "vars": {
-        "--background": "#EAB7AC"
+        "--block": "#EFA9A0"
       },
-      "glyph": "%",
+      "file": "phone/phone-06-customize.jpg",
       "devices": [
         {
           "raw": "phone/07-appearance.png",
@@ -61,15 +90,15 @@
           "raw": "phone/04-customize.png",
           "role": "secondary"
         }
-      ],
-      "file": "phone/phone-06-customize.jpg"
+      ]
     },
     {
       "feature": "05-more-room",
       "layout": "room",
       "vars": {
-        "--background": "#D2DFC4"
+        "--block": "#BFD8A8"
       },
+      "file": "phone/phone-07-more-room.jpg",
       "devices": [
         {
           "raw": "tablet10/01-every-key.png",
@@ -79,16 +108,15 @@
           "raw": "phone/01-every-key.png",
           "role": "secondary"
         }
-      ],
-      "file": "phone/phone-07-more-room.jpg"
+      ]
     }
   ],
   "tablet7": [
     {
       "feature": "01-every-key",
-      "layout": "flick zoomed",
+      "layout": "flick",
       "vars": {
-        "--background": "#F1E267"
+        "--block": "#F4D94A"
       },
       "devices": [
         {
@@ -100,9 +128,9 @@
     },
     {
       "feature": "02-graph",
-      "layout": "zoomed",
+      "layout": "center",
       "vars": {
-        "--background": "#C4D0F6"
+        "--block": "#AFC0F5"
       },
       "devices": [
         {
@@ -116,9 +144,8 @@
       "feature": "03-convert",
       "layout": "pair",
       "vars": {
-        "--background": "#B5DED6"
+        "--block": "#9DDCCB"
       },
-      "glyph": "°",
       "devices": [
         {
           "raw": "tablet7/03-convert.png",
@@ -133,11 +160,10 @@
     },
     {
       "feature": "04-customize",
-      "layout": "personalize",
+      "layout": "pair",
       "vars": {
-        "--background": "#EAB7AC"
+        "--block": "#EFA9A0"
       },
-      "glyph": "%",
       "devices": [
         {
           "raw": "tablet7/07-appearance.png",
@@ -154,7 +180,7 @@
       "feature": "05-more-room",
       "layout": "room",
       "vars": {
-        "--background": "#D2DFC4"
+        "--block": "#BFD8A8"
       },
       "devices": [
         {
@@ -172,9 +198,9 @@
   "tablet10": [
     {
       "feature": "01-every-key",
-      "layout": "flick fit",
+      "layout": "flick",
       "vars": {
-        "--background": "#F1E267"
+        "--block": "#F4D94A"
       },
       "devices": [
         {
@@ -186,9 +212,9 @@
     },
     {
       "feature": "02-graph",
-      "layout": "fit",
+      "layout": "center",
       "vars": {
-        "--background": "#C4D0F6"
+        "--block": "#AFC0F5"
       },
       "devices": [
         {
@@ -202,9 +228,8 @@
       "feature": "03-convert",
       "layout": "pair",
       "vars": {
-        "--background": "#B5DED6"
+        "--block": "#9DDCCB"
       },
-      "glyph": "°",
       "devices": [
         {
           "raw": "tablet10/03-convert.png",
@@ -219,11 +244,10 @@
     },
     {
       "feature": "04-customize",
-      "layout": "personalize",
+      "layout": "pair customize-pair",
       "vars": {
-        "--background": "#EAB7AC"
+        "--block": "#EFA9A0"
       },
-      "glyph": "%",
       "devices": [
         {
           "raw": "tablet10/09-appearance-portrait.png",
@@ -240,7 +264,7 @@
       "feature": "05-more-room",
       "layout": "room",
       "vars": {
-        "--background": "#D2DFC4"
+        "--block": "#BFD8A8"
       },
       "devices": [
         {
@@ -310,7 +334,7 @@
       "feature": "feature-graphic",
       "layout": "feature",
       "vars": {
-        "--background": "#F1E267"
+        "--block": "#F4D94A"
       },
       "devices": [
         {
