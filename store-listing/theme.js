@@ -27,23 +27,12 @@ function key(main, alt) {
 }
 
 export default {
-  // Discreet transitions: within the outer fifth of each card the flat colour eases toward its
-  // neighbour's, and both cards reach the same halfway colour exactly at the seam.
+  // One continuous field: a single gradient spans the whole strip with each card's colour pinned at
+  // its centre, and every card shows its own window onto it, so there are no seams to hide.
   art({W, H, index, slides}) {
-    const color = k => slides[k]?.vars?.['--background'];
-    const own = color(index);
-    const mix = (a, b) => '#' + [1, 3, 5].map(i => Math.round((parseInt(a.slice(i, i + 2), 16) + parseInt(b.slice(i, i + 2), 16)) / 2).toString(16).padStart(2, '0')).join('');
-    const band = W * .22;
-    let out = '';
-    for (const [k, left] of [[index - 1, true], [index + 1, false]]) {
-      const other = color(k);
-      if (!own || !other) continue;
-      const id = `edge${left ? 'l' : 'r'}`;
-      const [x1, x2] = left ? [0, band] : [W, W - band];
-      out += `<defs><linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="${x1}" x2="${x2}" y1="0" y2="0"><stop offset="0" stop-color="${mix(own, other)}"/><stop offset="1" stop-color="${own}" stop-opacity="0"/></linearGradient></defs>`;
-      out += `<rect x="${left ? 0 : W - band}" width="${band}" height="${H}" fill="url(#${id})"/>`;
-    }
-    return out;
+    const N = slides.length, x0 = -index * W;
+    const stops = slides.map((s, k) => `<stop offset="${(k + .5) / N}" stop-color="${s.vars?.['--background'] || '#F1E267'}"/>`).join('');
+    return `<defs><linearGradient id="field" gradientUnits="userSpaceOnUse" x1="${x0}" x2="${x0 + N * W}" y1="0" y2="0">${stops}</linearGradient></defs><rect width="${W}" height="${H}" fill="url(#field)"/>`;
   },
 
   compose({kind, index, slide, main}) {
