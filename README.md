@@ -63,3 +63,5 @@ History gets its own pane on tablets and foldables, keeping previous calculation
 No ads, accounts, or tracking. Calculations run on your device. Read the [Privacy Policy](PRIVACY.md) for local storage, optional sharing, backups, and deletion controls.
 
 Calcula grows out of [Calculator++](https://github.com/serso/android-calculatorpp), Sergey Solovyev's swipe-key calculator. That idea lives on in a new implementation built with Kotlin Multiplatform and Compose.
+
+<sub>Building from source or contributing? See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).</sub>
