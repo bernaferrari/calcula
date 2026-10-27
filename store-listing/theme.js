@@ -27,17 +27,21 @@ function key(main, alt) {
 }
 
 export default {
-  // A crisp cream disc sits on every seam, half on each card, in panorama coordinates: one shape
-  // shared by two neighbours, so the strip reads as continuous. Heights and sizes alternate.
+  // Discreet transitions: within the outer fifth of each card the flat colour eases toward its
+  // neighbour's, and both cards reach the same halfway colour exactly at the seam.
   art({W, H, index, slides}) {
-    const portrait = H > W;
+    const color = k => slides[k]?.vars?.['--background'];
+    const own = color(index);
+    const mix = (a, b) => '#' + [1, 3, 5].map(i => Math.round((parseInt(a.slice(i, i + 2), 16) + parseInt(b.slice(i, i + 2), 16)) / 2).toString(16).padStart(2, '0')).join('');
+    const band = W * .22;
     let out = '';
-    for (const seam of [index, index + 1]) {
-      if (seam <= 0 || seam >= slides.length) continue;
-      const cx = (seam - index) * W;
-      const cy = H * (seam % 2 ? (portrait ? .86 : .9) : (portrait ? .7 : .78));
-      const r = (portrait ? W : H) * (seam % 2 ? .34 : .26);
-      out += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#FFFBF2"/>`;
+    for (const [k, left] of [[index - 1, true], [index + 1, false]]) {
+      const other = color(k);
+      if (!own || !other) continue;
+      const id = `edge${left ? 'l' : 'r'}`;
+      const [x1, x2] = left ? [0, band] : [W, W - band];
+      out += `<defs><linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="${x1}" x2="${x2}" y1="0" y2="0"><stop offset="0" stop-color="${mix(own, other)}"/><stop offset="1" stop-color="${own}" stop-opacity="0"/></linearGradient></defs>`;
+      out += `<rect x="${left ? 0 : W - band}" width="${band}" height="${H}" fill="url(#${id})"/>`;
     }
     return out;
   },
