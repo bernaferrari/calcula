@@ -318,5 +318,35 @@
       "transparent": true,
       "file": "graphics/app-icon.png"
     }
+  ],
+  "readme": [
+    {
+      "feature": "readme-compare",
+      "layout": "compare",
+      "file": "readme/before-after.jpg",
+      "alt": "Calculator++ beside Calcula on the same phone: the calculator keypad, and the function plotter",
+      "devices": [
+        {
+          "raw": "compare/calculatorpp-calculator.png",
+          "role": "before pair1",
+          "label": "Calculator++"
+        },
+        {
+          "raw": "phone/01-every-key.png",
+          "role": "after pair1",
+          "label": "Calcula"
+        },
+        {
+          "raw": "compare/calculatorpp-graph.png",
+          "role": "before pair2",
+          "label": "Calculator++"
+        },
+        {
+          "raw": "phone/02-graph.png",
+          "role": "after pair2",
+          "label": "Calcula"
+        }
+      ]
+    }
   ]
 }

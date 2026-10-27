@@ -61,6 +61,7 @@ export default {
   /** Frames follow the captured pixels: the bezel and corner radius scale with the frame width. */
   layout({main}) {
     for (const node of main.querySelectorAll('.device:not(.device-frame-none)')) {
+      if (main.classList.contains('compare')) break;
       const image = node.querySelector('img'), width = node.clientWidth, landscape = image.naturalWidth > image.naturalHeight;
       node.style.setProperty('--bezel', `${Math.round(width * (landscape ? .011 : .022))}px`);
       node.style.setProperty('--radius', `${width * (landscape ? .03 : .075)}px`);
@@ -70,6 +71,11 @@ export default {
   // App frames keep their real status bar and sides inside the export. They may run off the
   // bottom edge, but most of each view stays visible.
   decorate({W, H, slide, devices}) {
+    if (slide.layout === 'compare') {
+      // Each name sits just under its screen.
+      for (const label of devices[0].node.parentElement.querySelectorAll('.device-label')) label.style.setProperty('--h', `${devices[0].box.height}px`);
+      return;
+    }
     for (const {box, spec} of devices) {
       if (spec.frame === 'none') continue;
       if (/stack/.test(slide.layout || '')) continue;

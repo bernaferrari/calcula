@@ -58,10 +58,18 @@ History gets its own pane on tablets and foldables, keeping previous calculation
 - **Double-tap the expression** to select, then apply a function or parentheses to that selection.
 - **Flick backspace up or down** to undo or redo.
 
+## From Calculator++ to Calcula
+
+The same phone, before and after: the keypad keeps its flick-for-a-function idea, and the plotter now draws as you type.
+
+<p align="center">
+  <img src="store-listing/en-US/readme/before-after.jpg" width="100%" alt="Calculator++ beside Calcula on the same phone: the calculator keypad, and the function plotter">
+</p>
+
+Calcula grows out of [Calculator++](https://github.com/serso/android-calculatorpp), Sergey Solovyev's swipe-key calculator. That idea lives on in a new implementation built with Kotlin Multiplatform and Compose.
+
 ## Private by design
 
 No ads, accounts, or tracking. Calculations run on your device. Read the [Privacy Policy](PRIVACY.md) for local storage, optional sharing, backups, and deletion controls.
-
-Calcula grows out of [Calculator++](https://github.com/serso/android-calculatorpp), Sergey Solovyev's swipe-key calculator. That idea lives on in a new implementation built with Kotlin Multiplatform and Compose.
 
 <sub>Building from source or contributing? See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).</sub>

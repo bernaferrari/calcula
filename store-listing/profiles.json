@@ -14,7 +14,7 @@
     "captureWidth": 1200,
     "captureHeight": 1920,
     "frame": "tablet",
-    "label": "7″ tablet"
+    "label": "7\u2033 tablet"
   },
   "tablet10": {
     "width": 1920,
@@ -22,7 +22,7 @@
     "captureWidth": 1920,
     "captureHeight": 1200,
     "frame": "tablet",
-    "label": "10″ tablet"
+    "label": "10\u2033 tablet"
   },
   "desktop": {
     "width": 1920,
@@ -43,5 +43,12 @@
     "height": 512,
     "frame": "none",
     "label": "Icon"
+  },
+  "readme": {
+    "width": 2400,
+    "height": 1260,
+    "frame": "phone",
+    "label": "README",
+    "defaultLocaleOnly": true
   }
 }
