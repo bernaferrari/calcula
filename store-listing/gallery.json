@@ -113,7 +113,7 @@
     },
     {
       "feature": "03-convert",
-      "layout": "one pair",
+      "layout": "one",
       "vars": {
         "--block": "#9DDCCB"
       },
@@ -121,10 +121,6 @@
         {
           "raw": "tablet7/03-convert.png",
           "role": "primary"
-        },
-        {
-          "raw": "tablet7/05-programmer.png",
-          "role": "secondary"
         }
       ],
       "file": "tablet7/tablet7-03-convert.jpg"

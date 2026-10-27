@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-27T14:13:21.108Z",
+  "generatedAt": "2026-10-27T14:13:56.922Z",
   "campaign": "A little flick goes a long way",
   "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
   "assets": [
@@ -99,11 +99,10 @@
       "file": "tablet7/tablet7-03-convert.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 195509,
+      "bytes": 169221,
       "alt": "The 7-inch tablet converting Celsius to Fahrenheit; Programmer with compact Bits controls on the 7-inch tablet",
       "sources": [
-        "raw/tablet7/03-convert.png",
-        "raw/tablet7/05-programmer.png"
+        "raw/tablet7/03-convert.png"
       ]
     },
     {
