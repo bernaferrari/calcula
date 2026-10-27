@@ -1,0 +1,73 @@
+{
+  "source": "adb exec-out screencap from the Android Resizable_Experimental emulator",
+  "locale": "de-DE",
+  "commit": "4550d6b1192ed057bf7b1193e6d75b1be477dcb1",
+  "apkSha256": "de277ce34bf828b673fe50a27dee8da5c06cd495f9eff5141bc56f4c86b223f5",
+  "serial": "emulator-5566",
+  "systemUi": "real status bar with 09:41 clock; full battery/Wi-Fi; gesture navigation pill",
+  "captures": [
+    {
+      "file": "de-DE/raw/phone/01-every-key.png",
+      "sha256": "95f44fe2267ae1fea6f68787b8b5f38236ce773ae3e1ea9e9d43026c7e3e0d43",
+      "scene": "calculator",
+      "palette": "AMBER",
+      "width": 1080,
+      "height": 2340,
+      "densityDpi": 400
+    },
+    {
+      "file": "de-DE/raw/phone/02-graph.png",
+      "sha256": "40f33c1d1edd6d39bd6fb571da27fde3e9752dc06738be7a5e761b171128b2e8",
+      "scene": "graph",
+      "palette": "BLUE",
+      "width": 1080,
+      "height": 2340,
+      "densityDpi": 400
+    },
+    {
+      "file": "de-DE/raw/phone/03-convert.png",
+      "sha256": "9805d48ecc94a993c8c6a22bbffc48414f2d17158b044d21a7e300be19cff849",
+      "scene": "converter",
+      "palette": "BLUE",
+      "width": 1080,
+      "height": 2340,
+      "densityDpi": 400
+    },
+    {
+      "file": "de-DE/raw/phone/04-customize.png",
+      "sha256": "f9c1420637917d41b3057abf009ab1f5c5599e602742bb46900577e44d95b0b8",
+      "scene": "customize",
+      "palette": "AMBER",
+      "width": 1080,
+      "height": 2340,
+      "densityDpi": 400
+    },
+    {
+      "file": "de-DE/raw/phone/05-programmer.png",
+      "sha256": "d842d3b2ad8d44c59fe9be2cb7de7b012aad7c8e33f39a6ae16b23674f899ade",
+      "scene": "programmer",
+      "palette": "TEAL",
+      "width": 1080,
+      "height": 2340,
+      "densityDpi": 400
+    },
+    {
+      "file": "de-DE/raw/phone/06-statistics.png",
+      "sha256": "ca599a71c1ce30917783128c274f9eb99733f6b77636ec0b823629a527b5b7c2",
+      "scene": "statistics",
+      "palette": "AMBER",
+      "width": 1080,
+      "height": 2340,
+      "densityDpi": 400
+    },
+    {
+      "file": "de-DE/raw/phone/07-appearance.png",
+      "sha256": "1ba32b97d47ac464fe1bfdd9a54b80102df7e487814caed4b41f0243630d2938",
+      "scene": "appearance",
+      "palette": "PURPLE",
+      "width": 1080,
+      "height": 2340,
+      "densityDpi": 400
+    }
+  ]
+}

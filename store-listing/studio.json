@@ -1,0 +1,24 @@
+{
+  "app": "Calcula",
+  "locales": [
+    "en-US",
+    "de-DE",
+    "es-ES",
+    "fr-FR",
+    "it-IT",
+    "ja-JP",
+    "pt-BR",
+    "zh-CN",
+    "zh-TW"
+  ],
+  "defaultLocale": "en-US",
+  "writeAssets": false,
+  "jpegQuality": 96,
+  "contactSheets": {
+    "phone": "contact-sheet-joined.jpg",
+    "tablet7": "tablet7/contact-sheet-joined.jpg",
+    "tablet10": "tablet10/contact-sheet-joined.jpg",
+    "desktop": false
+  },
+  "supersample": 2
+}

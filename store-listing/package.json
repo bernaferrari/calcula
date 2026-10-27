@@ -4,9 +4,13 @@
   "type": "module",
   "scripts": {
     "render": "node render.mjs",
-    "capture": "node render.mjs --capture",
-    "capture:build": "../gradlew :webApp:wasmJsBrowserDevelopmentExecutableDistribution -PstoreCapture",
+    "studio": "node studio/server.cjs 8790",
+    "capture": "python3 capture-emulator.py",
+    "capture:build": "../gradlew :androidApp:assembleStoreCapture",
     "validate": "node render.mjs --validate"
   },
-  "devDependencies": {"playwright":"1.62.1","sharp":"0.35.5"}
+  "devDependencies": {
+    "playwright": "1.62.1",
+    "sharp": "0.35.5"
+  }
 }

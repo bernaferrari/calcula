@@ -1,0 +1,373 @@
+{
+  "phone": [
+    {
+      "feature": "01-every-key",
+      "layout": "flick zoomed",
+      "vars": {
+        "--background": "#F1E267"
+      },
+      "glyph": "sin",
+      "raw": "phone/01-every-key.png",
+      "file": "phone/phone-01-every-key.jpg"
+    },
+    {
+      "feature": "02-graph",
+      "layout": "zoomed",
+      "vars": {
+        "--background": "#C4D0F6"
+      },
+      "glyph": "∫",
+      "raw": "phone/02-graph.png",
+      "file": "phone/phone-02-graph.jpg"
+    },
+    {
+      "feature": "03-convert",
+      "layout": "single",
+      "vars": {
+        "--background": "#B5DED6"
+      },
+      "glyph": "°",
+      "raw": "phone/03-convert.png",
+      "file": "phone/phone-03-convert.jpg",
+      "callouts": [
+        {
+          "x": 40,
+          "y": 1060,
+          "w": 1000,
+          "h": 360,
+          "mag": 1.12,
+          "radius": 48
+        }
+      ]
+    },
+    {
+      "feature": "05-programmer",
+      "layout": "single",
+      "vars": {
+        "--background": "#9FB3F2"
+      },
+      "glyph": "0x",
+      "raw": "phone/05-programmer.png",
+      "file": "phone/phone-04-programmer.jpg",
+      "callouts": [
+        {
+          "x": 30,
+          "y": 470,
+          "w": 1020,
+          "h": 450,
+          "mag": 1.08,
+          "radius": 40
+        }
+      ]
+    },
+    {
+      "feature": "06-statistics",
+      "layout": "single",
+      "vars": {
+        "--background": "#F4C77E"
+      },
+      "glyph": "∑",
+      "raw": "phone/06-statistics.png",
+      "file": "phone/phone-05-statistics.jpg",
+      "callouts": [
+        {
+          "x": 30,
+          "y": 420,
+          "w": 1020,
+          "h": 740,
+          "mag": 1.06,
+          "radius": 40
+        }
+      ]
+    },
+    {
+      "feature": "04-customize",
+      "layout": "personalize",
+      "vars": {
+        "--background": "#EAB7AC"
+      },
+      "glyph": "%",
+      "devices": [
+        {
+          "raw": "phone/07-appearance.png",
+          "role": "primary"
+        },
+        {
+          "raw": "phone/04-customize.png",
+          "role": "secondary"
+        }
+      ],
+      "file": "phone/phone-06-customize.jpg"
+    },
+    {
+      "feature": "05-more-room",
+      "layout": "room",
+      "vars": {
+        "--background": "#D2DFC4"
+      },
+      "glyph": "=",
+      "devices": [
+        {
+          "raw": "tablet10/01-every-key.png",
+          "role": "primary"
+        },
+        {
+          "raw": "phone/01-every-key.png",
+          "role": "secondary"
+        }
+      ],
+      "file": "phone/phone-07-more-room.jpg"
+    }
+  ],
+  "tablet7": [
+    {
+      "feature": "01-every-key",
+      "layout": "flick zoomed",
+      "vars": {
+        "--background": "#F1E267"
+      },
+      "glyph": "sin",
+      "devices": [
+        {
+          "raw": "tablet7/01-every-key.png",
+          "role": "primary"
+        }
+      ],
+      "file": "tablet7/tablet7-01-every-key.jpg"
+    },
+    {
+      "feature": "02-graph",
+      "layout": "zoomed",
+      "vars": {
+        "--background": "#C4D0F6"
+      },
+      "glyph": "∫",
+      "devices": [
+        {
+          "raw": "tablet7/02-graph.png",
+          "role": "primary"
+        }
+      ],
+      "file": "tablet7/tablet7-02-graph.jpg"
+    },
+    {
+      "feature": "03-convert",
+      "layout": "pair",
+      "vars": {
+        "--background": "#B5DED6"
+      },
+      "glyph": "°",
+      "devices": [
+        {
+          "raw": "tablet7/03-convert.png",
+          "role": "primary"
+        },
+        {
+          "raw": "tablet7/05-programmer.png",
+          "role": "secondary"
+        }
+      ],
+      "file": "tablet7/tablet7-03-convert.jpg"
+    },
+    {
+      "feature": "04-customize",
+      "layout": "personalize",
+      "vars": {
+        "--background": "#EAB7AC"
+      },
+      "glyph": "%",
+      "devices": [
+        {
+          "raw": "tablet7/07-appearance.png",
+          "role": "primary"
+        },
+        {
+          "raw": "tablet7/04-customize.png",
+          "role": "secondary"
+        }
+      ],
+      "file": "tablet7/tablet7-04-customize.jpg"
+    },
+    {
+      "feature": "05-more-room",
+      "layout": "room",
+      "vars": {
+        "--background": "#D2DFC4"
+      },
+      "glyph": "=",
+      "devices": [
+        {
+          "raw": "tablet7/08-calculator-landscape.png",
+          "role": "primary"
+        },
+        {
+          "raw": "tablet7/01-every-key.png",
+          "role": "secondary"
+        }
+      ],
+      "file": "tablet7/tablet7-05-more-room.jpg"
+    }
+  ],
+  "tablet10": [
+    {
+      "feature": "01-every-key",
+      "layout": "flick zoomed",
+      "vars": {
+        "--background": "#F1E267"
+      },
+      "glyph": "sin",
+      "devices": [
+        {
+          "raw": "tablet10/01-every-key.png",
+          "role": "primary"
+        }
+      ],
+      "file": "tablet10/tablet10-01-every-key.jpg"
+    },
+    {
+      "feature": "02-graph",
+      "layout": "zoomed",
+      "vars": {
+        "--background": "#C4D0F6"
+      },
+      "glyph": "∫",
+      "devices": [
+        {
+          "raw": "tablet10/02-graph.png",
+          "role": "primary"
+        }
+      ],
+      "file": "tablet10/tablet10-02-graph.jpg"
+    },
+    {
+      "feature": "03-convert",
+      "layout": "pair",
+      "vars": {
+        "--background": "#B5DED6"
+      },
+      "glyph": "°",
+      "devices": [
+        {
+          "raw": "tablet10/03-convert.png",
+          "role": "primary"
+        },
+        {
+          "raw": "tablet10/08-programmer-portrait.png",
+          "role": "secondary"
+        }
+      ],
+      "file": "tablet10/tablet10-03-convert.jpg"
+    },
+    {
+      "feature": "04-customize",
+      "layout": "personalize",
+      "vars": {
+        "--background": "#EAB7AC"
+      },
+      "glyph": "%",
+      "devices": [
+        {
+          "raw": "tablet10/09-appearance-portrait.png",
+          "role": "primary"
+        },
+        {
+          "raw": "tablet10/04-customize.png",
+          "role": "secondary"
+        }
+      ],
+      "file": "tablet10/tablet10-04-customize.jpg"
+    },
+    {
+      "feature": "05-more-room",
+      "layout": "room",
+      "vars": {
+        "--background": "#D2DFC4"
+      },
+      "glyph": "=",
+      "devices": [
+        {
+          "raw": "tablet10/01-every-key.png",
+          "role": "primary"
+        },
+        {
+          "raw": "tablet10/10-calculator-portrait.png",
+          "role": "secondary"
+        }
+      ],
+      "file": "tablet10/tablet10-05-more-room.jpg"
+    }
+  ],
+  "desktop": [
+    {
+      "feature": "01-every-key",
+      "devices": [
+        {
+          "raw": "desktop/01-every-key.png",
+          "frame": "none",
+          "alt": "Calcula with labelled scientific flick shortcuts and a live answer preview"
+        }
+      ],
+      "file": "desktop/desktop-01-every-key.jpg",
+      "sharedCopy": false
+    },
+    {
+      "feature": "02-graph",
+      "devices": [
+        {
+          "raw": "desktop/02-graph.png",
+          "frame": "none",
+          "alt": "Functions, a circle, and interactive parameter controls in Calcula"
+        }
+      ],
+      "file": "desktop/desktop-02-graph.jpg",
+      "sharedCopy": false
+    },
+    {
+      "feature": "03-convert",
+      "devices": [
+        {
+          "raw": "desktop/03-convert.png",
+          "frame": "none",
+          "alt": "Calcula converting 22 degrees Celsius to Fahrenheit"
+        }
+      ],
+      "file": "desktop/desktop-03-convert.jpg",
+      "sharedCopy": false
+    },
+    {
+      "feature": "07-appearance",
+      "devices": [
+        {
+          "raw": "desktop/07-appearance.png",
+          "frame": "none",
+          "alt": "Calcula appearance settings with color family and style previews"
+        }
+      ],
+      "file": "desktop/desktop-07-appearance.jpg",
+      "sharedCopy": false
+    }
+  ],
+  "feature": [
+    {
+      "feature": "feature-graphic",
+      "layout": "feature",
+      "vars": {
+        "--background": "#F1E267"
+      },
+      "devices": [
+        {
+          "raw": "phone/01-every-key.png",
+          "alt": "Calcula with scientific flick shortcuts"
+        }
+      ],
+      "file": "graphics/feature-graphic.png"
+    }
+  ],
+  "icon": [
+    {
+      "feature": "app-icon",
+      "transparent": true,
+      "file": "graphics/app-icon.png"
+    }
+  ]
+}

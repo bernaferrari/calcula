@@ -1,0 +1,89 @@
+{
+  "01-every-key": {
+    "title": "",
+    "body": "",
+    "alt": "",
+    "key": ""
+  },
+  "02-graph": {
+    "title": "",
+    "body": "",
+    "alt": ""
+  },
+  "03-convert": {
+    "title": "",
+    "body": "",
+    "alt": ""
+  },
+  "04-customize": {
+    "title": "",
+    "body": "",
+    "alt": ""
+  },
+  "05-more-room": {
+    "title": "",
+    "body": "",
+    "alt": ""
+  },
+  "desktop/01-every-key": {
+    "alt": ""
+  },
+  "desktop/02-graph": {
+    "alt": ""
+  },
+  "desktop/03-convert": {
+    "alt": ""
+  },
+  "07-appearance": {
+    "alt": ""
+  },
+  "feature-graphic": {
+    "title": "",
+    "body": ""
+  },
+  "app-icon": {
+    "alt": ""
+  },
+  "tablet7/01-every-key": {
+    "alt": ""
+  },
+  "tablet7/02-graph": {
+    "alt": ""
+  },
+  "tablet7/03-convert": {
+    "alt": ""
+  },
+  "tablet7/04-customize": {
+    "alt": ""
+  },
+  "tablet7/05-more-room": {
+    "alt": "",
+    "note": ""
+  },
+  "tablet10/01-every-key": {
+    "alt": ""
+  },
+  "tablet10/02-graph": {
+    "alt": ""
+  },
+  "tablet10/03-convert": {
+    "alt": ""
+  },
+  "tablet10/04-customize": {
+    "alt": ""
+  },
+  "tablet10/05-more-room": {
+    "alt": "",
+    "note": ""
+  },
+  "05-programmer": {
+    "title": "",
+    "body": "",
+    "alt": ""
+  },
+  "06-statistics": {
+    "title": "",
+    "body": "",
+    "alt": ""
+  }
+}

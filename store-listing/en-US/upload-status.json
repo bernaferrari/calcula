@@ -11,5 +11,15 @@
   "published": false,
   "order": "Filename order in each device folder",
   "video": "Omitted: no approved YouTube video supplied",
-  "xr": "Omitted: no XR experience"
+  "xr": "Omitted: no XR experience",
+  "localAssetsStatus": "phone and tablet campaigns rendered; not uploaded",
+  "localAssetsDate": "2026-10-25",
+  "localPhone": 5,
+  "localCampaign": "A little flick goes a long way",
+  "localCounts": {
+    "phone": 5,
+    "tablet7": 5,
+    "tablet10": 5,
+    "desktop": 4
+  }
 }

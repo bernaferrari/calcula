@@ -1,0 +1,89 @@
+{
+  "01-every-key": {
+    "title": "A little\nflick.",
+    "body": "Flick a key up for its\nscientific twin.",
+    "alt": "Calcula with labelled scientific functions; a magnified real sin key explains the flick gesture",
+    "key": "Enlarged sin shortcut above the 7 key, redrawn from the app key style"
+  },
+  "02-graph": {
+    "title": "Watch it\ntake shape.",
+    "body": "Plot anything. Drag a\nparameter. See it move.",
+    "alt": "A graphing calculator with sine functions, a circle, and movable parameters, backed by a golden sine wave"
+  },
+  "03-convert": {
+    "title": "From °C\nto °F.",
+    "body": "Units, converted\nas you type.",
+    "alt": "Unit converter showing 22 Celsius as 71.6 Fahrenheit, with the result lifted out"
+  },
+  "04-customize": {
+    "title": "Yours,\ndown to\nthe keys.",
+    "body": "Your colors.\nYour shortcuts.",
+    "alt": "Light appearance settings and custom key assignments, with color swatches and visual style previews"
+  },
+  "05-more-room": {
+    "title": "Make room\nfor more.",
+    "body": "History beside your work\non tablets and foldables.",
+    "alt": "Calcula on a landscape tablet with history beside the keypad, paired with the phone layout"
+  },
+  "desktop/01-every-key": {
+    "alt": "Calcula with labelled scientific flick shortcuts and a live answer preview"
+  },
+  "desktop/02-graph": {
+    "alt": "Functions, a circle, and interactive parameter controls in Calcula"
+  },
+  "desktop/03-convert": {
+    "alt": "Calcula converting 22 degrees Celsius to Fahrenheit"
+  },
+  "07-appearance": {
+    "alt": "Calcula appearance settings with color family and style previews"
+  },
+  "feature-graphic": {
+    "title": "A little flick.\nA lot more math.",
+    "body": "Scientific functions, a flick away."
+  },
+  "app-icon": {
+    "alt": "Calcula app icon"
+  },
+  "tablet7/01-every-key": {
+    "alt": "Calcula on a 7-inch portrait tablet with history beside the keypad; Enlarged sin shortcut above the 7 key, redrawn from the app key style"
+  },
+  "tablet7/02-graph": {
+    "alt": "Graphing functions and a circle on the 7-inch tablet"
+  },
+  "tablet7/03-convert": {
+    "alt": "The 7-inch tablet converting Celsius to Fahrenheit; Programmer with compact Bits controls on the 7-inch tablet"
+  },
+  "tablet7/04-customize": {
+    "alt": "Light appearance settings on the 7-inch tablet; Custom key assignments on the 7-inch tablet"
+  },
+  "tablet7/05-more-room": {
+    "alt": "The same 7-inch tablet in landscape with a separate history pane; The 7-inch tablet in portrait",
+    "note": "Portrait.\nLandscape."
+  },
+  "tablet10/01-every-key": {
+    "alt": "Calcula on a 10-inch landscape tablet with history beside the keypad; Enlarged sin shortcut above the 7 key, redrawn from the app key style"
+  },
+  "tablet10/02-graph": {
+    "alt": "Functions, a circle, and interactive parameters on a 10-inch tablet"
+  },
+  "tablet10/03-convert": {
+    "alt": "Landscape unit conversion on the 10-inch tablet; The 10-inch tablet in portrait showing Programmer mode"
+  },
+  "tablet10/04-customize": {
+    "alt": "Light appearance settings on the 10-inch tablet in portrait; Custom key assignments on the 10-inch tablet in landscape"
+  },
+  "tablet10/05-more-room": {
+    "alt": "A 10-inch landscape tablet with separate history and calculator panes; The same 10-inch tablet in portrait",
+    "note": "Portrait.\nLandscape."
+  },
+  "05-programmer": {
+    "title": "Hex,\nsorted.",
+    "body": "Programmer mode with\nbits, shifts and bases.",
+    "alt": "Programmer mode in dark theme showing the hexadecimal value C0 FFEE and its decimal"
+  },
+  "06-statistics": {
+    "title": "Numbers,\nsummed up.",
+    "body": "Mean, median and spread\nat a glance.",
+    "alt": "Statistics with mean, median, sum, count and standard deviation for eight values"
+  }
+}
