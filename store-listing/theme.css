@@ -21,7 +21,7 @@ header p{margin:28px 0 0;font-size:40px;line-height:1.24;letter-spacing:-.5px;wh
 .phone .zoomed .primary{left:110px;top:560px;width:860px}
 .phone .flick .key{left:40px;top:1240px;width:330px}
 .phone .single .primary{left:230px;top:620px;width:620px}
-.phone .glyph{right:-40px;top:420px;font-size:620px}
+.phone .glyph{right:50px;top:380px;font-size:440px}
 .phone .personalize .primary{left:60px;top:640px;width:500px;transform:rotate(-3deg)}
 .phone .personalize .secondary{left:520px;top:760px;width:500px;transform:rotate(3deg)}
 .phone .room .primary{left:60px;top:640px;width:960px}
@@ -31,7 +31,7 @@ header p{margin:28px 0 0;font-size:40px;line-height:1.24;letter-spacing:-.5px;wh
 .tablet7 h1{font-size:140px}
 .tablet7 .zoomed .primary{left:110px;top:620px;width:980px}
 .tablet7 .flick .key{left:30px;top:1300px;width:300px}
-.tablet7 .glyph{right:-40px;top:460px;font-size:700px}
+.tablet7 .glyph{right:60px;top:420px;font-size:500px}
 .tablet7 .pair .primary{left:60px;top:700px;width:560px;transform:rotate(-3deg)}
 .tablet7 .pair .secondary{left:580px;top:820px;width:560px;transform:rotate(3deg)}
 .tablet7 .personalize .primary{left:60px;top:700px;width:560px;transform:rotate(-3deg)}
@@ -44,7 +44,7 @@ header p{margin:28px 0 0;font-size:40px;line-height:1.24;letter-spacing:-.5px;wh
 .tablet10 h1{font-size:112px;letter-spacing:-5px}
 .tablet10 header p{font-size:34px}
 .tablet10 .brand{top:48px;left:96px}
-.tablet10 .glyph{left:560px;top:-80px;font-size:900px}
+.tablet10 .glyph{left:600px;top:40px;font-size:620px}
 .tablet10 .zoomed .primary{left:780px;top:170px;width:1300px}
 .tablet10 .flick .key{left:700px;top:760px;width:270px}
 .tablet10 .pair .primary{left:780px;top:180px;width:820px;transform:rotate(-2deg)}

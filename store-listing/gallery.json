@@ -105,7 +105,6 @@
       "vars": {
         "--background": "#D2DFC4"
       },
-      "glyph": "=",
       "devices": [
         {
           "raw": "tablet10/01-every-key.png",
@@ -194,7 +193,6 @@
       "vars": {
         "--background": "#D2DFC4"
       },
-      "glyph": "=",
       "devices": [
         {
           "raw": "tablet7/08-calculator-landscape.png",
@@ -283,7 +281,6 @@
       "vars": {
         "--background": "#D2DFC4"
       },
-      "glyph": "=",
       "devices": [
         {
           "raw": "tablet10/01-every-key.png",
