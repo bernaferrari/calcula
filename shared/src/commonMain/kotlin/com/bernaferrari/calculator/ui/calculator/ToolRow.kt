@@ -1,5 +1,8 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitEachGesture
 import com.bernaferrari.calculator.ui.motionSpec
 import com.bernaferrari.calculator.ui.calculator.LocalReduceMotion
 import androidx.compose.material3.AppBarRowScope
@@ -544,5 +547,38 @@ private fun Segment(
                     .background(color, CircleShape),
             )
         }
+    }
+}
+
+/**
+ * Holding the bar still for a moment shows its pill before any drag, so the resize is something
+ * people can find, not only stumble on. It only watches: drags, taps and the buttons on the bar
+ * work as before, and lifting the finger hides it again.
+ */
+internal fun Modifier.revealOnHold(onTick: () -> Unit, onHold: (Boolean) -> Unit): Modifier = pointerInput(Unit) {
+    awaitEachGesture {
+        val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+        val slop = viewConfiguration.touchSlop
+        var shown = false
+        val held = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+            while (true) {
+                val event = awaitPointerEvent(PointerEventPass.Initial)
+                val change = event.changes.firstOrNull { it.id == down.id } ?: return@withTimeoutOrNull false
+                // Lifted or moved first: a tap, or a drag that shows the pill on its own.
+                if (!change.pressed || (change.position - down.position).getDistance() > slop) return@withTimeoutOrNull false
+            }
+            @Suppress("UNREACHABLE_CODE") false
+        } == null
+        if (held) {
+            shown = true
+            onTick()
+            onHold(true)
+        }
+        // Keep it up while the finger is down (a drag may follow), then let it go.
+        while (shown) {
+            val event = awaitPointerEvent(PointerEventPass.Initial)
+            if (event.changes.none { it.pressed }) break
+        }
+        if (shown) onHold(false)
     }
 }

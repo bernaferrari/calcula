@@ -1,5 +1,7 @@
 package com.bernaferrari.calculator.ui.graph
 
+import com.bernaferrari.calculator.ui.calculator.revealOnHold
+import androidx.compose.runtime.mutableIntStateOf
 import com.bernaferrari.calculator.ui.calculator.ResizePill
 import com.bernaferrari.calculator.ui.calculator.ResizeFeedback
 import androidx.compose.animation.core.snap
@@ -100,6 +102,8 @@ fun GraphScreen(
     viewModel: GraphViewModel = viewModel { GraphViewModel(AppGraph.graph) },
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    // Each ask to come home (the button, a double-tap); the plot glides there rather than jumping.
+    var homeRequests by remember { mutableIntStateOf(0) }
     val settings: SettingsViewModel = viewModel { SettingsViewModel() }
     val prefs by settings.prefs.collectAsStateWithLifecycle()
     val haptics = rememberHaptics(enabled = { prefs.hapticFeedback }, sounds = { prefs.soundEnabled })
@@ -132,7 +136,7 @@ fun GraphScreen(
                     }) {
                         Icon(Icons.Outlined.Share, contentDescription = stringResource(Res.string.graph_share), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    IconButton(onClick = { haptics.tap(); viewModel.onResetView() }) {
+                    IconButton(onClick = { haptics.tap(); homeRequests++ }) {
                         Icon(Icons.Rounded.CenterFocusStrong, contentDescription = stringResource(Res.string.graph_reset), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
@@ -143,7 +147,9 @@ fun GraphScreen(
                     colors = colors,
                     formatter = formatter,
                     onViewport = viewModel::onViewport,
-                    onReset = { haptics.tap(); viewModel.onResetView() },
+                    onReset = { haptics.tap(); homeRequests++ },
+                    homeRequests = homeRequests,
+                    liveViewport = { viewModel.state.value.viewport },
                     onTraceTick = haptics::tick,
                     modifier = modifier.padding(horizontal = 12.dp).clip(RoundedCornerShape(28.dp)).background(MaterialTheme.colorScheme.surfaceContainerLow),
                 )
@@ -232,6 +238,8 @@ fun GraphScreen(
                 val maxRow = max(defaultRow, min(maxHeight * 0.5f / 5, 88.dp))
                 var dragRow by remember { mutableStateOf<Dp?>(null) }
                 var dragging by remember { mutableStateOf(false) }
+                // Holding the bar shows the size pill before any drag, so people find it.
+                var holding by remember { mutableStateOf(false) }
                 val rowHeight = dragRow ?: (defaultRow * prefs.graphKeypadScale).coerceIn(minRow, maxRow)
                 // The saved size has caught up with the finger: hand the height back to it.
                 LaunchedEffect(prefs.graphKeypadScale) { dragRow = null }
@@ -247,8 +255,8 @@ fun GraphScreen(
                         // Unchanged (say, back on the default), nothing will come back to clear it.
                         if (scale == prefs.graphKeypadScale) dragRow = null else settings.setGraphKeypadScale(scale)
                     },
-                )
-                val resize = if (!dragging) null else {
+                ).revealOnHold(haptics::tick) { holding = it }
+                val resize = if (!dragging && !holding) null else {
                     val span = (maxRow - minRow).value.coerceAtLeast(1f)
                     ResizeFeedback(
                         fraction = (rowHeight - minRow).value / span,

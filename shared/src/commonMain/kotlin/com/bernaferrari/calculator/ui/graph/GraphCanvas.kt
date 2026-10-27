@@ -1,5 +1,18 @@
 package com.bernaferrari.calculator.ui.graph
 
+import com.bernaferrari.calculator.ui.calculator.LocalReduceMotion
+import kotlin.math.exp
+import kotlin.math.ln
+import androidx.compose.ui.input.pointer.util.VelocityTracker
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.rememberSplineBasedDecay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.runtime.key
 import androidx.compose.foundation.Canvas
@@ -54,6 +67,8 @@ internal fun GraphCanvas(
     onReset: () -> Unit,
     onTraceTick: () -> Unit,
     modifier: Modifier = Modifier,
+    homeRequests: Int = 0,
+    liveViewport: () -> Viewport = { state.viewport },
 ) {
     val scheme = MaterialTheme.colorScheme
     val measurer = rememberTextMeasurer()
@@ -69,9 +84,48 @@ internal fun GraphCanvas(
     val points = remember(state.curves, state.active, state.viewport, canvasSize) { keyPoints(state, canvasSize, gapPx) }
     LaunchedEffect(state.functions, state.active) { selected = null }
     val kinds = KeyPoint.Kind.entries.associateWith { stringResource(it.title()) }
-    val currentViewport by rememberUpdatedState(state.viewport)
+    // Gestures and glides read the view as it is right now, not as of the last recomposition:
+    // a frame-old view would make each step overwrite the one before (a fling went nowhere).
+    val currentLive by rememberUpdatedState(liveViewport)
     val currentOnViewport by rememberUpdatedState(onViewport)
     val currentPoints by rememberUpdatedState(points)
+    // Moving on its own after the finger: a fling's glide, or the way home. A new touch stops it.
+    val scope = rememberCoroutineScope()
+    val motion = remember { arrayOfNulls<Job>(1) }
+    val decay = rememberSplineBasedDecay<Offset>()
+    val reduceMotion = LocalReduceMotion.current
+    fun panBy(dx: Float, dy: Float) {
+        val v = currentLive()
+        val unitsPerPx = v.span / canvasSize.width.coerceAtLeast(1)
+        currentOnViewport(v.copy(centerX = v.centerX - dx * unitsPerPx, centerY = v.centerY + dy * unitsPerPx))
+    }
+    // Only a new ask goes home: coming back into composition (say, after rotating) doesn't.
+    val handled = remember { intArrayOf(homeRequests) }
+    LaunchedEffect(homeRequests) {
+        if (homeRequests == handled[0]) return@LaunchedEffect
+        handled[0] = homeRequests
+        // Home is a fresh look: the trace and any picked point go too, as with a double-tap.
+        traceX = null
+        selected = null
+        motion[0]?.cancel()
+        val to = Viewport()
+        if (reduceMotion) { currentOnViewport(to); return@LaunchedEffect }
+        motion[0] = scope.launch {
+            val from = currentLive()
+            // Centre moves straight there; the zoom eases in scale (log), so it feels even both ways.
+            val fromLog = ln(from.span)
+            val toLog = ln(to.span)
+            animate(0f, 1f, animationSpec = tween(450, easing = FastOutSlowInEasing)) { t, _ ->
+                currentOnViewport(
+                    Viewport(
+                        centerX = from.centerX + (to.centerX - from.centerX) * t,
+                        centerY = from.centerY + (to.centerY - from.centerY) * t,
+                        span = exp(fromLog + (toLog - fromLog) * t),
+                    ),
+                )
+            }
+        }
+    }
 
     Canvas(
         modifier
@@ -79,12 +133,17 @@ internal fun GraphCanvas(
             .pointerInput(Unit) {
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
+                    // A finger on the plot catches it, like any scrolling surface.
+                    motion[0]?.cancel()
+                    val tracker = VelocityTracker()
+                    tracker.addPosition(down.uptimeMillis, down.position)
+                    var pinched = false
                     fun graphX(px: Float): Double {
-                        val v = currentViewport
+                        val v = currentLive()
                         return v.centerX + (px - size.width / 2f) * (v.span / size.width)
                     }
                     fun screenX(x: Double): Float {
-                        val v = currentViewport
+                        val v = currentLive()
                         return (size.width / 2f + (x - v.centerX) / (v.span / size.width)).toFloat()
                     }
                     // Holding still for the long-press timeout starts a trace; moving first (or a
@@ -125,8 +184,25 @@ internal fun GraphCanvas(
                         if (pressed.isEmpty()) {
                             // This gesture was a trace or a pan, not a tap: keep the tap detector out of it.
                             event.changes.forEach { it.consume() }
+                            // Let go mid-swipe and the plot keeps going, slowing down as any list does.
+                            if (!tracing && !pinched) {
+                                val velocity = tracker.calculateVelocity()
+                                val fling = Offset(velocity.x, velocity.y)
+                                if (fling.getDistance() > 300f) {
+                                    motion[0] = scope.launch {
+                                        var last = Offset.Zero
+                                        Animatable(Offset.Zero, Offset.VectorConverter).animateDecay(fling, decay) {
+                                            val delta = value - last
+                                            last = value
+                                            panBy(delta.x, delta.y)
+                                        }
+                                    }
+                                }
+                            }
                             break
                         }
+                        if (pressed.size > 1) pinched = true
+                        pressed.first().let { tracker.addPosition(it.uptimeMillis, it.position) }
                         if (tracing) {
                             traceAt(pressed.first().position.x)
                             pressed.forEach { it.consume() }
@@ -134,7 +210,7 @@ internal fun GraphCanvas(
                         }
                         val zoom = event.calculateZoom()
                         val pan = event.calculatePan()
-                        val v = currentViewport
+                        val v = currentLive()
                         val unitsPerPx = v.span / size.width
                         val centroid = event.calculateCentroid()
                         // Zoom around the fingers: the point under them stays under them.
@@ -158,7 +234,7 @@ internal fun GraphCanvas(
                 // A double-tap also brings the view home.
                 detectTapGestures(
                     onTap = { tap ->
-                        val v = currentViewport
+                        val v = currentLive()
                         val unitsPerPx = v.span / size.width
                         fun at(p: KeyPoint) = Offset(
                             (size.width / 2f + (p.x - v.centerX) / unitsPerPx).toFloat(),

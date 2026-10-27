@@ -147,7 +147,7 @@ internal fun DrawScope.drawKeyPoints(
     val p = selected?.takeIf { it in points } ?: return
     val center = Offset(sx(p.point.x), sy(p.point.y))
     val text = buildAnnotatedString {
-        withStyle(kindStyle.toSpanStyle().copy(color = scheme.inverseOnSurface.copy(alpha = 0.7f))) { append(kinds.getValue(p.point.kind)) }
+        withStyle(kindStyle.toSpanStyle().copy(color = scheme.onSurfaceVariant)) { append(kinds.getValue(p.point.kind)) }
         val comma = if (formatter.decimal == ',') "; " else ", "
         val decimals = "(" + formatter.number(readout(p.point.x)) + comma + formatter.number(readout(p.point.y)) + ")"
         val exactX = Exact.recognize(p.point.x)
@@ -156,7 +156,7 @@ internal fun DrawScope.drawKeyPoints(
             // π/2 says more than 1.5708; the decimals stay underneath.
             fun exact(v: Double, e: String?) = e ?: formatter.number(readout(v))
             append("\n(" + exact(p.point.x, exactX) + comma + exact(p.point.y, exactY) + ")")
-            withStyle(kindStyle.toSpanStyle().copy(color = scheme.inverseOnSurface.copy(alpha = 0.7f))) { append("\n≈ $decimals") }
+            withStyle(kindStyle.toSpanStyle().copy(color = scheme.onSurfaceVariant)) { append("\n≈ $decimals") }
         } else {
             append("\n$decimals")
         }
@@ -169,8 +169,11 @@ internal fun DrawScope.drawKeyPoints(
     // Above the point, or below it near the top; always inside the plot.
     val top = if (center.y - gap - h > 0f) center.y - gap - h else center.y + gap
     val left = (center.x - w / 2).coerceIn(pad, max(pad, size.width - w - pad))
-    drawRoundRect(scheme.inverseSurface, Offset(left, top), Size(w, h), androidx.compose.ui.geometry.CornerRadius(14.dp.toPx()))
-    drawText(layout, color = scheme.inverseOnSurface, topLeft = Offset(left + pad, top + pad))
+    // The theme's own raised surface, with a hairline edge to lift it off the plot, in light and dark.
+    val corner = androidx.compose.ui.geometry.CornerRadius(14.dp.toPx())
+    drawRoundRect(scheme.surfaceContainerHighest, Offset(left, top), Size(w, h), corner)
+    drawRoundRect(scheme.outlineVariant, Offset(left, top), Size(w, h), corner, style = Stroke(1.dp.toPx()))
+    drawText(layout, color = scheme.onSurface, topLeft = Offset(left + pad, top + pad))
 }
 
 /**
@@ -316,8 +319,11 @@ internal fun DrawScope.drawTrace(
     // The readout sits beside the finger, flipping sides near the edge so it is never under it.
     val left = if (tx + 24.dp.toPx() + w < size.width) tx + 16.dp.toPx() else tx - 16.dp.toPx() - w
     val top = 12.dp.toPx()
-    drawRoundRect(scheme.inverseSurface, Offset(left, top), Size(w, h), androidx.compose.ui.geometry.CornerRadius(14.dp.toPx()))
-    drawText(layout, color = scheme.inverseOnSurface, topLeft = Offset(left + pad, top + pad))
+    // The theme's own raised surface, with a hairline edge to lift it off the plot, in light and dark.
+    val corner = androidx.compose.ui.geometry.CornerRadius(14.dp.toPx())
+    drawRoundRect(scheme.surfaceContainerHighest, Offset(left, top), Size(w, h), corner)
+    drawRoundRect(scheme.outlineVariant, Offset(left, top), Size(w, h), corner, style = Stroke(1.dp.toPx()))
+    drawText(layout, color = scheme.onSurface, topLeft = Offset(left + pad, top + pad))
 }
 
 /** 1, 2 or 5 times a power of ten: grid steps people can read at a glance. */

@@ -259,6 +259,8 @@ fun CalculatorScreen(
         val fullKeypad = rowHeight * 5 + bottomInset + if (state.memoryKeys) MemoryRowExtra else 0.dp
         val reveal = remember { Animatable(if (historyOpen) 0f else 1f) }
         var pulling by remember { mutableStateOf(false) }
+        // Holding the bar shows the size pill before any drag, so people find it.
+        var holding by remember { mutableStateOf(false) }
         var armed by remember { mutableStateOf(false) }
         var pullProgress by remember { mutableFloatStateOf(0f) }
         LaunchedEffect(historyOpen) {
@@ -314,7 +316,7 @@ fun CalculatorScreen(
                 onOpenLibrary = { library = LibraryTab.CONSTANTS },
                 onOpenStatistics = onOpenStatistics,
                 onOpenSettings = onOpenSettings,
-                resize = if (!pulling) null else {
+                resize = if (!pulling && !holding) null else {
                     val span = (maxRow - minRow).value.coerceAtLeast(1f)
                     ResizeFeedback(
                         fraction = (rowHeight - minRow).value / span,
@@ -331,7 +333,7 @@ fun CalculatorScreen(
                     )
                 },
                 // Takes over the bottom inset as the keypad leaves, in step with it.
-                modifier = resize.padding(bottom = bottomInset * (1f - shown)),
+                modifier = resize.revealOnHold(haptics::tick) { holding = it }.padding(bottom = bottomInset * (1f - shown)),
             )
             MainKeypad(
                 decimal = formatter.decimal,
