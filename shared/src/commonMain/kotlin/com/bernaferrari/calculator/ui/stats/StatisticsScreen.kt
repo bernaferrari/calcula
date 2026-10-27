@@ -97,7 +97,16 @@ class StatisticsViewModel(private val preferences: PreferencesRepository = AppGr
     fun onDigit(d: Char) = edit { if (it.length >= 20) it else if (it == "0") d.toString() else it + d }
     fun onDot() = edit { if ('.' in it) it else if (it.isEmpty() || it == "−") "${it}0." else "$it." }
     fun onNegate() = edit { if (it.startsWith("−")) it.drop(1) else "−$it" }
-    fun onDelete() = edit { it.dropLast(1) }
+    fun onDelete() {
+        val current = _state.value
+        if (current.entry.isNotEmpty()) {
+            edit { it.dropLast(1) }
+        } else {
+            val previous = current.values.lastOrNull() ?: return
+            save(current.values.dropLast(1))
+            _state.value = _state.value.copy(entry = previous)
+        }
+    }
 
     fun onAdd(): Boolean {
         val entry = _state.value.entry

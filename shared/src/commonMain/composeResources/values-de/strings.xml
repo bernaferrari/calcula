@@ -244,6 +244,10 @@
     <string name="usage_settings_summary">Wie du rechnest, als Karte zum Teilen</string>
     <string name="key_undo">zurück</string>
     <string name="key_redo">wieder</string>
+    <string name="programmer_bit_view">Bits</string>
+    <string name="programmer_show_bits">Bits anzeigen</string>
+    <string name="programmer_hide_bits">Bits ausblenden</string>
+    <string name="programmer_bit_description">Bit %1$d: %2$d</string>
     <string name="gesture_help_title">Tastengesten</string>
     <string name="gesture_help_hint">Taste gedrückt halten, um ihre Funktionen zu sehen.</string>
     <string name="gesture_help_body">Nach oben wischen für die obere Funktion, nach unten für die untere. Taste gedrückt halten, um beide zu sehen.\n\nAuf der Löschtaste nach oben wischen, um eine Bearbeitung rückgängig zu machen, nach unten zum Wiederholen. Dies gilt im Ausdrucksmodus.\n\nAuf die Ergebnisvorschau tippen, um sie zu übernehmen. Den Ausdruck doppelt antippen, um Text auszuwählen und eine Funktion oder Klammern anzuwenden.\n\nBeschriftungen in den Einstellungen zeigen beide Richtungen. Diese Hilfe kann dort jederzeit geöffnet werden.</string>

@@ -241,6 +241,10 @@
     <string name="usage_settings_summary">你的计算习惯，做成可分享的卡片</string>
     <string name="key_undo">撤销</string>
     <string name="key_redo">重做</string>
+    <string name="programmer_bit_view">位</string>
+    <string name="programmer_show_bits">显示位</string>
+    <string name="programmer_hide_bits">隐藏位</string>
+    <string name="programmer_bit_description">第 %1$d 位：%2$d</string>
     <string name="gesture_help_title">按键手势</string>
     <string name="gesture_help_hint">长按按键可查看其功能。</string>
     <string name="gesture_help_body">向上滑动使用上方功能，向下滑动使用下方功能。长按可先查看两种功能。\n\n在表达式输入模式下，在删除键上向上滑动可撤销编辑，向下滑动可重做。\n\n点按结果预览以确认。双击表达式选择文本，然后应用函数或括号。\n\n在设置中选择标签，即可显示两个方向的功能。您随时可以从设置重新打开本指南。</string>

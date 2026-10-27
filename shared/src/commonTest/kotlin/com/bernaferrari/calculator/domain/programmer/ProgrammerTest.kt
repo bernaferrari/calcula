@@ -88,4 +88,24 @@ class ProgrammerTest {
         // Negating while unsigned gives the two's complement directly.
         assertEquals("4 294 967 291", Programmer.display(type(ProgKey.D5, ProgKey.NEGATE, from = ProgState(word = WordSize.DWORD, signed = false))))
     }
+    @Test fun theTopBitIsASignAndAddingOneKeepsTheBitsValid() {
+        val top = Programmer.flipBit(ProgState(base = Base.DEC), 63)
+        assertEquals(Long.MIN_VALUE, Programmer.value(top))
+        val plusOne = type(ProgKey.PLUS, ProgKey.D1, ProgKey.EQUALS, from = top)
+        assertEquals(Long.MIN_VALUE + 1, Programmer.value(plusOne))
+        assertNull(plusOne.error)
+        val unsigned = Programmer.withSigned(top, false)
+        assertEquals("9 223 372 036 854 775 808", Programmer.display(unsigned))
+        assertEquals(Long.MIN_VALUE, Programmer.value(unsigned))
+    }
+
+    @Test fun theTopBitCanBeEditedInBinaryWithoutAnOverflowError() {
+        val top = Programmer.flipBit(ProgState(base = Base.BIN), 63)
+        assertEquals(Long.MIN_VALUE, Programmer.value(top))
+        val plusOne = type(ProgKey.PLUS, ProgKey.D1, ProgKey.EQUALS, from = top)
+        assertEquals(Long.MIN_VALUE + 1, Programmer.value(plusOne))
+        assertEquals(64, Programmer.display(plusOne).count { it == '0' || it == '1' })
+        assertNull(plusOne.error)
+    }
+
 }

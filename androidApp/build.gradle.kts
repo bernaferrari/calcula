@@ -20,6 +20,11 @@ android {
     }
 
     buildTypes {
+        create("storeCapture") {
+            initWith(getByName("debug"))
+            applicationIdSuffix = ".storecapture"
+            matchingFallbacks += "debug"
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
@@ -40,6 +45,8 @@ android {
 }
 
 dependencies {
+    "storeCaptureImplementation"(libs.compose.foundation)
+    "storeCaptureImplementation"(libs.compose.material3)
     implementation(project(":shared"))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.ktx)

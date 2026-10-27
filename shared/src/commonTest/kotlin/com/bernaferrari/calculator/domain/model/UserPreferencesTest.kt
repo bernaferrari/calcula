@@ -5,6 +5,12 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class UserPreferencesTest {
+    @Test fun programmerBitsAreOptionalAndTheChoiceIsRemembered() {
+        assertEquals(false, Json.decodeFromString<UserPreferences>("{}").programmerShowBits)
+        val chosen = UserPreferences(programmerShowBits = true)
+        assertEquals(true, Json.decodeFromString<UserPreferences>(Json.encodeToString(chosen)).programmerShowBits)
+    }
+
     @Test fun labelsRemainTheDefault() {
         assertEquals(FlickHints.LABELS, UserPreferences().hints)
     }

@@ -18,12 +18,13 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 
 /**
- * One line of text at the largest size that fits the width it is given, never clipped: a measured
+ * Text at the largest single-line size that fits its width: a measured
  * first guess, corrected from the real layout if the shaped line still overflows. A plain text
- * node underneath, so it keeps its baseline for `alignByBaseline`.
+ * node underneath, so it keeps its baseline for `alignByBaseline`. Long values can optionally
+ * wrap once the minimum readable size is reached.
  */
 @Composable
-fun FitText(text: String, style: TextStyle, maxSize: TextUnit, minSize: TextUnit, modifier: Modifier = Modifier) {
+fun FitText(text: String, style: TextStyle, maxSize: TextUnit, minSize: TextUnit, modifier: Modifier = Modifier, wrapAtMinimum: Boolean = false) {
     val measurer = rememberTextMeasurer()
     var available by remember { mutableIntStateOf(-1) }
     val guess = remember(text, style, available, maxSize, minSize) {
@@ -42,8 +43,8 @@ fun FitText(text: String, style: TextStyle, maxSize: TextUnit, minSize: TextUnit
     BasicText(
         text,
         style = style.copy(fontSize = size.sp),
-        maxLines = 1,
-        softWrap = false,
+        maxLines = if (wrapAtMinimum && size <= minSize.value) Int.MAX_VALUE else 1,
+        softWrap = wrapAtMinimum && size <= minSize.value,
         onTextLayout = { layout ->
             if (layout.didOverflowWidth && size > minSize.value) size -= 1f else settled = available >= 0
         },

@@ -248,6 +248,10 @@
     <string name="usage_settings_summary">How you calculate, as a card to share</string>
     <string name="key_undo">undo</string>
     <string name="key_redo">redo</string>
+    <string name="programmer_bit_view">Bits</string>
+    <string name="programmer_show_bits">Show bits</string>
+    <string name="programmer_hide_bits">Hide bits</string>
+    <string name="programmer_bit_description">Bit %1$d: %2$d</string>
     <string name="gesture_help_title">Key gestures</string>
     <string name="gesture_help_hint">Hold a key to see its functions.</string>
     <string name="gesture_help_body">Flick a key up for its upper function, or down for its lower function. Hold it to reveal both before choosing.\n\nFlick backspace up to undo an edit, or down to redo. These shortcuts apply to standard expression entry.\n\nTap the answer preview to accept it. Double-tap the expression to select text, then use a function or parentheses on that selection.\n\nChoose Labels in Settings to see both flick directions. You can reopen this guide from Settings at any time.</string>

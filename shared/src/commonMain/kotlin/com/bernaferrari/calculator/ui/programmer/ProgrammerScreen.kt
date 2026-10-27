@@ -14,6 +14,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.snap
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material.icons.rounded.Check
 import com.bernaferrari.calculator.ui.calculator.Hint
@@ -25,12 +26,13 @@ import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.zIndex
 import com.bernaferrari.calculator.platform.systemConfirmsCopy
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.heightIn
@@ -39,6 +41,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.ToggleButton
@@ -76,6 +79,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Backspace
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.ArrowDropDown
+import androidx.compose.material.icons.rounded.ExpandMore
+import androidx.compose.material.icons.rounded.ExpandLess
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -88,6 +93,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.key
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -170,6 +176,10 @@ class ProgrammerViewModel(private val preferences: PreferencesRepository = AppGr
         viewModelScope.launch { preferences.update { it.copy(programmerSigned = signed) } }
     }
 
+    fun onShowBits(show: Boolean) {
+        viewModelScope.launch { preferences.update { it.copy(programmerShowBits = show) } }
+    }
+
     fun onWord(word: WordSize) {
         _state.value = Programmer.withWord(_state.value, word)
         viewModelScope.launch { preferences.update { it.copy(programmerWord = word) } }
@@ -235,157 +245,188 @@ fun ProgrammerScreen(
                     WordPicker(state.word, state.signed, onSigned = { haptics.tap(); viewModel.onSigned(it) }) { haptics.tap(); viewModel.onWord(it) }
                 }
             }
+            val workingScroll = rememberLazyListState()
+            // Typing or reusing an answer returns to the current value. Browsing history alone
+            // leaves the scroll position untouched.
+            LaunchedEffect(state, tape.size, prefs.programmerShowBits) { workingScroll.scrollToItem(0) }
             val readout: @Composable (Modifier) -> Unit = { modifier ->
-                Column(modifier.padding(horizontal = 12.dp), verticalArrangement = Arrangement.Bottom) {
-                    // The number and what's above it; the board below keeps a fixed size, pinned over
-                    // the keys, so nothing jumps as lines come and go. The tape gives way first.
-                    Column(Modifier.weight(1f).fillMaxWidth().clipToBounds(), verticalArrangement = Arrangement.Bottom) {
-                    val muted = MaterialTheme.colorScheme.onSurfaceVariant
-                    val mono = TextStyle(fontFamily = GoogleSansFlex, fontSize = 20.sp, textAlign = TextAlign.End)
-                    // Earlier calculations, newest at the bottom, in today's base; tap one to go on from its answer.
-                    val earlier = if (state.resultShown && state.expression != null) tape.dropLast(1) else tape
-                    LazyColumn(
-                        reverseLayout = true,
-                        horizontalAlignment = Alignment.End,
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
-                            // Older lines fade out under the top bar instead of being sliced off.
-                            .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
-                            .drawWithContent {
-                                drawContent()
-                                drawRect(
-                                    Brush.verticalGradient(0f to Color.Transparent, 24.dp.toPx() / size.height.coerceAtLeast(1f) to Color.Black),
-                                    blendMode = BlendMode.DstIn,
-                                )
-                            },
-                    ) {
-                        // What gave the answer, right above it as the calculator does: the newest line
-                        // of the tape, so however long it gets it scrolls with the rest instead of being cut.
-                        val current = state.expression
-                        if (state.resultShown && current != null) item(key = "current") {
-                            Text(
-                                Programmer.display(current, state.base) + " =",
-                                style = mono.copy(fontSize = 24.sp),
-                                color = muted,
-                                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 2.dp),
+                val muted = MaterialTheme.colorScheme.onSurfaceVariant
+                val mono = TextStyle(fontFamily = GoogleSansFlex, fontSize = 20.sp, textAlign = TextAlign.End)
+                val earlier = if (state.resultShown && state.expression != null) tape.dropLast(1) else tape
+                // One working area: history, the current value, alternate base, and bits all scroll
+                // together. Only the header and keypad stay pinned.
+                LazyColumn(
+                    state = workingScroll,
+                    reverseLayout = true,
+                    horizontalAlignment = Alignment.End,
+                    contentPadding = PaddingValues(bottom = 8.dp),
+                    modifier = modifier
+                        .padding(horizontal = 12.dp)
+                        .clipToBounds()
+                        .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+                        .drawWithContent {
+                            drawContent()
+                            // Fade only a clipped history row, never the first line of a long value.
+                            val info = workingScroll.layoutInfo
+                            val top = info.viewportStartOffset
+                            val clippedHistory = info.visibleItemsInfo.any {
+                                it.key != "readout" && it.offset <= top && it.offset + it.size > top
+                            }
+                            val currentOffset = info.visibleItemsInfo.firstOrNull { it.key == "readout" }?.offset
+                            val fadeHeight = currentOffset?.let { (it - top).toFloat().coerceIn(0f, 24.dp.toPx()) } ?: 24.dp.toPx()
+                            if (clippedHistory && fadeHeight > 0f) drawRect(
+                                Brush.verticalGradient(0f to Color.Transparent, fadeHeight / size.height.coerceAtLeast(1f) to Color.Black),
+                                blendMode = BlendMode.DstIn,
                             )
-                        }
-                        items(earlier.asReversed()) { entry ->
-                            val shown = Programmer.inBase(entry.tokens, entry.base, state.base, entry.word, state.signed)
-                            val answer = Programmer.group(Programmer.format(entry.value, state.base, entry.word, state.signed), state.base)
-                            Text(
-                                buildAnnotatedString {
-                                    append(Programmer.display(shown, state.base))
-                                    append(" = ")
-                                    withStyle(SpanStyle(color = MaterialTheme.colorScheme.onSurface)) { append(answer) }
-                                },
-                                style = mono.copy(fontSize = 18.sp),
-                                color = muted,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
+                        },
+                ) {
+                    item(key = "readout") {
+                        Column(Modifier.fillMaxWidth()) {
+                            val current = state.expression
+                            if (state.resultShown && current != null) {
+                                Text(
+                                    Programmer.display(current, state.base) + " =",
+                                    style = mono.copy(fontSize = 24.sp),
+                                    color = muted,
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 2.dp),
+                                )
+                            }
+                            val error = state.error
+                            Row(
+                                verticalAlignment = Alignment.Bottom,
+                                horizontalArrangement = Arrangement.End,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .clickable { haptics.tap(); viewModel.onReuse(entry) }
-                                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                                    .clip(RoundedCornerShape(16.dp))
+                                    // Hold the number to copy it, as typed in this base.
+                                    .combinedClickable(
+                                        interactionSource = null,
+                                        indication = null,
+                                        onClick = {},
+                                        onLongClick = { value?.let { copy(Programmer.format(it, state.base, state.word, state.signed)) } },
+                                    )
+                                    .padding(horizontal = 12.dp),
+                            ) {
+                                // Which base the big number is in, right beside it: 10 in BIN is not ten.
+                                Text(
+                                    state.base.name,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(bottom = 12.dp, end = 8.dp),
+                                )
+                                Box(Modifier.weight(1f, fill = false), contentAlignment = Alignment.BottomEnd) {
+                                if (error != null) {
+                                    Text(
+                                        stringResource(if (error == ProgError.DIVIDE_BY_ZERO) Res.string.error_divide_by_zero else Res.string.error_syntax),
+                                        style = MaterialTheme.typography.titleLarge,
+                                        color = MaterialTheme.colorScheme.error,
+                                    )
+                                } else {
+                                    val text = Programmer.display(state)
+                                    FitText(
+                                        text.ifEmpty { "0" },
+                                        style = TextStyle(
+                                            fontFamily = GoogleSansFlex,
+                                            textAlign = TextAlign.End,
+                                            color = if (text.isEmpty()) muted.copy(alpha = 0.45f) else MaterialTheme.colorScheme.onSurface,
+                                        ),
+                                        maxSize = 52.sp,
+                                        minSize = 20.sp,
+                                        wrapAtMinimum = true,
+                                    )
+                                }
+                                }
+                            }
+                            // Under the number, right-aligned like the calculator: the answer so far while typing
+                            // an operation, then the same value in one other base, tagged as the number is.
+                            val preview = if (!state.resultShown && error == null && Programmer.hasOperation(state)) value else null
+                            val other = if (state.base == Base.DEC) Base.HEX else Base.DEC
+                            if (preview != null) FitText(
+                                "= " + Programmer.group(Programmer.format(preview, state.base, state.word, state.signed), state.base),
+                                style = mono.copy(color = muted),
+                                maxSize = 24.sp,
+                                minSize = 18.sp,
+                                wrapAtMinimum = true,
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
                             )
+                            // Share one utility row: disclosure on the left, alternate base on the right.
+                            // The shorter label saves a whole button row without shrinking either tap target.
+                            val bitsAction = stringResource(if (prefs.programmerShowBits) Res.string.programmer_hide_bits else Res.string.programmer_show_bits)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                            ) {
+                                TextButton(
+                                    onClick = { haptics.tap(); viewModel.onShowBits(!prefs.programmerShowBits) },
+                                    contentPadding = PaddingValues(horizontal = 8.dp),
+                                    modifier = Modifier.heightIn(min = 48.dp).semantics { contentDescription = bitsAction },
+                                ) {
+                                    Text(stringResource(Res.string.programmer_bit_view))
+                                    Icon(
+                                        if (prefs.programmerShowBits) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp),
+                                    )
+                                }
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.End,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(14.dp))
+                                        // Tap to work in that base instead; hold to copy it.
+                                        .combinedClickable(
+                                            enabled = value != null,
+                                            onClick = { haptics.tap(); viewModel.onBase(other) },
+                                            onLongClick = { value?.let { copy(Programmer.format(it, other, state.word, state.signed)) } },
+                                        )
+                                        .heightIn(min = 48.dp)
+                                        .padding(horizontal = 12.dp, vertical = 4.dp),
+                                ) {
+                                    if (value != null && error == null) {
+                                        Text(other.name, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(end = 8.dp))
+                                        FitText(
+                                            Programmer.group(Programmer.format(value, other, state.word, state.signed), other),
+                                            style = TextStyle(fontFamily = GoogleSansFlex, textAlign = TextAlign.End, color = muted),
+                                            maxSize = 20.sp,
+                                            minSize = 16.sp,
+                                            wrapAtMinimum = true,
+                                            modifier = Modifier.weight(1f, fill = false),
+                                        )
+                                    }
+                                }
+                            }
+                            if (prefs.programmerShowBits) {
+                                BitGrid(value ?: 0L, state.word, onCollapse = { haptics.heavy(); viewModel.onShowBits(false) }) {
+                                    haptics.tick(); viewModel.onFlipBit(it)
+                                }
+                            }
                         }
                     }
-                    // The number and its lines, anchored to the bottom: if they ever need more room
-                    // than there is, they run up into the tape's space, never down behind the board.
-                    Column(Modifier.fillMaxWidth().wrapContentHeight(Alignment.Bottom, unbounded = true)) {
-                    val error = state.error
-                    Row(
-                        verticalAlignment = Alignment.Bottom,
-                        horizontalArrangement = Arrangement.End,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
-                            // Hold the number to copy it, as typed in this base.
-                            .combinedClickable(
-                                interactionSource = null,
-                                indication = null,
-                                onClick = {},
-                                onLongClick = { value?.let { copy(Programmer.format(it, state.base, state.word, state.signed)) } },
-                            )
-                            .padding(horizontal = 12.dp),
-                    ) {
-                        // Which base the big number is in, right beside it: 10 in BIN is not ten.
+                    items(earlier.asReversed()) { entry ->
+                        val shown = Programmer.inBase(entry.tokens, entry.base, state.base, entry.word, state.signed)
+                        val answer = Programmer.group(Programmer.format(entry.value, state.base, entry.word, state.signed), state.base)
                         Text(
-                            state.base.name,
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(bottom = 12.dp, end = 8.dp),
+                            buildAnnotatedString {
+                                append(Programmer.display(shown, state.base))
+                                append(" = ")
+                                withStyle(SpanStyle(color = MaterialTheme.colorScheme.onSurface)) { append(answer) }
+                            },
+                            style = mono.copy(fontSize = 18.sp),
+                            color = muted,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable { haptics.tap(); viewModel.onReuse(entry) }
+                                .padding(horizontal = 12.dp, vertical = 6.dp),
                         )
-                        Box(Modifier.weight(1f, fill = false), contentAlignment = Alignment.BottomEnd) {
-                        if (error != null) {
-                            Text(
-                                stringResource(if (error == ProgError.DIVIDE_BY_ZERO) Res.string.error_divide_by_zero else Res.string.error_syntax),
-                                style = MaterialTheme.typography.titleLarge,
-                                color = MaterialTheme.colorScheme.error,
-                            )
-                        } else {
-                            val text = Programmer.display(state)
-                            FitText(
-                                text.ifEmpty { "0" },
-                                style = TextStyle(
-                                    fontFamily = GoogleSansFlex,
-                                    textAlign = TextAlign.End,
-                                    color = if (text.isEmpty()) muted.copy(alpha = 0.45f) else MaterialTheme.colorScheme.onSurface,
-                                ),
-                                maxSize = 52.sp,
-                                minSize = 20.sp,
-                            )
-                        }
-                        }
                     }
-                    // Under the number, right-aligned like the calculator: the answer so far while typing
-                    // an operation, then the same value in one other base, tagged as the number is.
-                    val preview = if (!state.resultShown && error == null && Programmer.hasOperation(state)) value else null
-                    val other = if (state.base == Base.DEC) Base.HEX else Base.DEC
-                    if (preview != null) Text(
-                        "= " + Programmer.group(Programmer.format(preview, state.base, state.word, state.signed), state.base),
-                        style = mono.copy(fontSize = 24.sp),
-                        color = muted,
-                        maxLines = 1,
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
-                    )
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.End,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(14.dp))
-                            // Tap to work in that base instead; hold to copy it.
-                            .combinedClickable(
-                                enabled = value != null,
-                                onClick = { haptics.tap(); viewModel.onBase(other) },
-                                onLongClick = { value?.let { copy(Programmer.format(it, other, state.word, state.signed)) } },
-                            )
-                            .padding(horizontal = 12.dp)
-                            .height(28.dp),
-                    ) {
-                        if (value != null && error == null) {
-                            Text(other.name, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(end = 8.dp))
-                            Text(
-                                Programmer.group(Programmer.format(value, other, state.word, state.signed), other),
-                                style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 20.sp),
-                                color = muted,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
-                    }
-                    }
-                    }
-                    Spacer(Modifier.height(4.dp))
-                    BitGrid(value ?: 0L, state.word) { haptics.tick(); viewModel.onFlipBit(it) }
-                    Spacer(Modifier.height(8.dp))
                 }
             }
             val keys: @Composable (Modifier) -> Unit = { modifier ->
-                ProgrammerKeypad(state.base, haptics, viewModel::onKey, modifier)
+                ProgrammerKeypad(state.base, haptics, viewModel::onKey, modifier, prefs.reduceMotion)
             }
             if (landscape) {
                 Row(Modifier.fillMaxSize()) {
@@ -413,7 +454,8 @@ fun ProgrammerScreen(
  * row's ends. Tap one to flip it.
  */
 @Composable
-private fun BitGrid(value: Long, word: WordSize, modifier: Modifier = Modifier, onFlip: (Int) -> Unit) {
+private fun BitGrid(value: Long, word: WordSize, modifier: Modifier = Modifier, onCollapse: () -> Unit, onFlip: (Int) -> Unit) {
+    val collapseDescription = stringResource(Res.string.programmer_hide_bits)
     val colors = MaterialTheme.colorScheme
     val rows = (word.bits + 15) / 16
     // Rows above the highest set bit step back, so the bits in use stand out; the lowest row never does.
@@ -447,6 +489,7 @@ private fun BitGrid(value: Long, word: WordSize, modifier: Modifier = Modifier, 
                                 if (index >= count) { Spacer(Modifier.weight(1f)); continue }
                                 val bit = high - index
                                 val on = (value ushr bit) and 1L == 1L
+                                val description = stringResource(Res.string.programmer_bit_description, bit, if (on) 1 else 0)
                                 val fill by animateColorAsState(if (on) colors.primary else colors.surfaceContainerHigh, label = "bit")
                                 Box(
                                     contentAlignment = Alignment.Center,
@@ -455,7 +498,12 @@ private fun BitGrid(value: Long, word: WordSize, modifier: Modifier = Modifier, 
                                         .fillMaxHeight()
                                         .clip(RoundedCornerShape(5.dp))
                                         .background(fill)
-                                        .clickable { onFlip(bit) },
+                                        .semantics { contentDescription = description }
+                                        .combinedClickable(
+                                            onClick = { onFlip(bit) },
+                                            onLongClickLabel = collapseDescription,
+                                            onLongClick = onCollapse,
+                                        ),
                                 ) {
                                     Text(if (on) "1" else "0", style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 11.sp), color = if (on) colors.onPrimary else colors.onSurfaceVariant)
                                 }
@@ -509,7 +557,14 @@ private fun WordPicker(word: WordSize, signed: Boolean, onSigned: (Boolean) -> U
     var open by remember { mutableStateOf(false) }
     Box {
         TextButton(onClick = { open = true }) {
-            Text(stringResource(Res.string.programmer_bits, word.bits))
+            Column(horizontalAlignment = Alignment.End) {
+                Text(stringResource(Res.string.programmer_bits, word.bits))
+                Text(
+                    stringResource(if (signed) Res.string.programmer_signed else Res.string.programmer_unsigned),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             Icon(Icons.Rounded.ArrowDropDown, contentDescription = stringResource(Res.string.programmer_word_size), modifier = Modifier.size(20.dp))
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
@@ -543,7 +598,7 @@ private data class PKey(val key: ProgKey, val tone: Tone, val label: String = ke
  * have step back.
  */
 @Composable
-private fun ProgrammerKeypad(base: Base, haptics: Haptics, onKey: (ProgKey) -> Unit, modifier: Modifier) {
+private fun ProgrammerKeypad(base: Base, haptics: Haptics, onKey: (ProgKey) -> Unit, modifier: Modifier, reduceMotion: Boolean) {
     val rows = listOf(
         listOf(PKey(ProgKey.AND, Tone.Function), PKey(ProgKey.OR, Tone.Function), PKey(ProgKey.XOR, Tone.Function), PKey(ProgKey.NOT, Tone.Function), PKey(ProgKey.MOD, Tone.Function)),
         listOf(PKey(ProgKey.A, Tone.Hex), PKey(ProgKey.SHL, Tone.Function, up = ProgKey.ROL), PKey(ProgKey.SHR, Tone.Function, up = ProgKey.ROR), PKey(ProgKey.CLEAR, Tone.Clear, "AC"), PKey(ProgKey.DELETE, Tone.Function)),
@@ -555,21 +610,28 @@ private fun ProgrammerKeypad(base: Base, haptics: Haptics, onKey: (ProgKey) -> U
     )
     val gap = 6.dp
     // A–F only mean something in hex: elsewhere their column folds away and the pad widens.
-    val hex by animateFloatAsState(if (base == Base.HEX) 1f else 0f, spring(stiffness = Spring.StiffnessMediumLow), label = "hex")
+    val hex by animateFloatAsState(if (base == Base.HEX) 1f else 0f, if (reduceMotion) snap() else spring(stiffness = Spring.StiffnessMediumLow), label = "hex")
     val rotateLeft = stringResource(Res.string.programmer_rotate_left)
     val rotateRight = stringResource(Res.string.programmer_rotate_right)
     Column(verticalArrangement = Arrangement.spacedBy(gap), modifier = modifier.padding(horizontal = gap * 2, vertical = gap)) {
         rows.forEachIndexed { r, row ->
             // The bitwise row is a little shorter: words, not digits.
-            Row(horizontalArrangement = Arrangement.spacedBy(gap), modifier = Modifier.weight(if (r == 0) 0.75f else 1f)) {
-                row.forEach { spec ->
-                    if (spec.tone == Tone.Hex && hex < 0.02f) return@forEach
-                    val digit = spec.key.digit
-                    val enabled = digit == null || digit < base.radix
-                    val shown = if (spec.tone == Tone.Hex) spec.copy(weight = spec.weight * hex) else spec
-                    // Shifts flick up to rotate: ROL on <<, ROR on >>.
-                    val up = spec.up?.let { key -> Hint(key.text, if (key == ProgKey.ROL) rotateLeft else rotateRight) { onKey(key) } }
-                    ProgKeyCell(shown, enabled, haptics, onKey, up, if (spec.tone == Tone.Hex) hex else 1f)
+            Row(modifier = Modifier.weight(if (r == 0) 0.75f else 1f)) {
+                row.forEachIndexed cell@ { index, spec ->
+                    if (spec.tone == Tone.Hex && hex < 0.001f) return@cell
+                    // Stable identity keeps digits from inheriting a fading hex key's state.
+                    key(spec.key) {
+                        if (index > 0) {
+                            val gapScale = if (index == 1 && row.first().tone == Tone.Hex) hex.coerceIn(0f, 1f) else 1f
+                            Spacer(Modifier.width(gap * gapScale))
+                        }
+                        val digit = spec.key.digit
+                        val enabled = digit == null || digit < base.radix
+                        val shown = if (spec.tone == Tone.Hex) spec.copy(weight = spec.weight * hex) else spec
+                        // Shifts flick up to rotate: ROL on <<, ROR on >>.
+                        val up = spec.up?.let { key -> Hint(key.text, if (key == ProgKey.ROL) rotateLeft else rotateRight) { onKey(key) } }
+                        ProgKeyCell(shown, enabled, haptics, onKey, up, if (spec.tone == Tone.Hex) hex else 1f)
+                    }
                 }
             }
         }
@@ -606,7 +668,9 @@ private fun RowScope.ProgKeyCell(spec: PKey, enabled: Boolean, haptics: Haptics,
         up = up,
         labelFlicks = up != null,
         showDots = false,
-        modifier = Modifier.weight(spec.weight).fillMaxHeight().graphicsLayer { this.alpha = alpha * fade },
+        modifier = Modifier.weight(spec.weight).fillMaxHeight()
+            .then(if (spec.tone == Tone.Hex) Modifier.clipToBounds() else Modifier)
+            .graphicsLayer { this.alpha = alpha * fade },
     ) {
         if (spec.key == ProgKey.DELETE) {
             Icon(Icons.AutoMirrored.Outlined.Backspace, contentDescription = null, tint = content, modifier = Modifier.size(24.dp))

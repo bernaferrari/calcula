@@ -241,6 +241,10 @@
     <string name="usage_settings_summary">あなたの計算ぶりを、共有できるカードに</string>
     <string name="key_undo">取消</string>
     <string name="key_redo">やり直し</string>
+    <string name="programmer_bit_view">ビット</string>
+    <string name="programmer_show_bits">ビットを表示</string>
+    <string name="programmer_hide_bits">ビットを非表示</string>
+    <string name="programmer_bit_description">ビット %1$d: %2$d</string>
     <string name="gesture_help_title">キーのジェスチャー</string>
     <string name="gesture_help_hint">キーを長押しすると機能が表示されます。</string>
     <string name="gesture_help_body">上にスワイプすると上側の機能、下にスワイプすると下側の機能を使えます。長押しすると両方を確認できます。\n\n数式入力モードでは、削除キーを上にスワイプすると編集を取り消し、下にスワイプするとやり直せます。\n\n計算結果のプレビューをタップして確定します。数式をダブルタップして文字を選択し、関数や括弧を適用できます。\n\n設定でラベル表示を選ぶと、上下の機能が表示されます。このガイドは設定からいつでも開けます。</string>

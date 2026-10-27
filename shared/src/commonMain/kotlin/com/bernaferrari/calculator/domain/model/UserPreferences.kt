@@ -43,6 +43,8 @@ data class UserPreferences(
     val programmerWord: WordSize = WordSize.QWORD,
     /** Decimal in the programmer reads the top bit as a sign. */
     val programmerSigned: Boolean = true,
+    /** The optional interactive bit grid; keep the number and history clear until requested. */
+    val programmerShowBits: Boolean = false,
     /** The programmer's recent calculations, kept between visits. */
     val programmerTape: List<ProgEntry> = emptyList(),
     /** How results are written: as is, or scientific (`1.23E6`) or engineering (`12.3E3`). */

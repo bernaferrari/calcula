@@ -267,10 +267,10 @@ fun <T> ChoiceRow(
 @Composable
 fun PaletteRow(position: SegmentPosition, selected: AppPalette, label: @Composable (AppPalette) -> String, onSelect: (AppPalette) -> Unit) {
     RowSurface(position) {
-        Column(Modifier.fillMaxWidth().selectableGroup().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.fillMaxWidth().selectableGroup().padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(14.dp, Alignment.CenterHorizontally),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 availablePalettes.forEach { palette ->
@@ -317,7 +317,8 @@ fun StyleRow(position: SegmentPosition, palette: AppPalette, selected: ColorStyl
 
 /**
  * A tiny calculator in that style's own key colors (C, the digits, the operators, `=`), so the
- * choice shows how the keypad will look rather than a row of swatches. Its name sits underneath.
+ * choice shows how the keypad will look rather than a row of swatches. Names remain in
+ * accessibility semantics; the preview itself is the visible choice.
  */
 @Composable
 private fun RowScope.StyleKeys(scheme: ColorScheme, selected: Boolean, description: String, onClick: () -> Unit) {
@@ -382,19 +383,12 @@ private fun RowScope.StyleKeys(scheme: ColorScheme, selected: Boolean, descripti
                 }
             }
         }
-        Text(
-            description,
-            style = MaterialTheme.typography.labelMedium,
-            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            modifier = Modifier.padding(top = 4.dp),
-        )
     }
 }
 
 /** ChangeDetection's swatch: the change of shape, not only color, shows which one is chosen. */
 @Composable
-private fun PaletteSwatch(colors: List<Color>, selected: Boolean, description: String, onClick: () -> Unit, icon: ImageVector? = null, size: Dp = 46.dp) {
+private fun PaletteSwatch(colors: List<Color>, selected: Boolean, description: String, onClick: () -> Unit, icon: ImageVector? = null, size: Dp = 48.dp) {
     val haptics = LocalHapticFeedback.current
     val interactions = remember { MutableInteractionSource() }
     val bouncy = motionSpec(spring<Dp>(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium))
