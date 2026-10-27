@@ -21,7 +21,7 @@ args = parser.parse_args()
 if not re.fullmatch(r'[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*', args.locale):
     parser.error('Invalid locale')
 sys.path.insert(0, str(HERE / 'studio'))
-from uitree import set_app_locale, write_sidecar
+from uitree import nodes_from_xml, set_app_locale, write_sidecar
 if not args.serial.startswith('emulator-'):
     parser.error('Use a disposable emulator, not a personal device.')
 adb = shutil.which('adb') or str(Path(os.environ.get('ANDROID_HOME', Path.home() / 'Library/Android/sdk')) / 'platform-tools/adb')
@@ -79,10 +79,16 @@ try:
             display=re.search(r'Display (\d+) \(HWC display 0\)',shell('dumpsys','SurfaceFlinger','--display-id').decode()).group(1)
             pixels=run('exec-out','screencap','-p','-d',display)
             width=int.from_bytes(pixels[16:20],'big');height=int.from_bytes(pixels[20:24],'big')
-            if (width,height)!=dimensions: raise RuntimeError(f'Wrong capture size: {group}')
+            if (width,height)!=dimensions: raise RuntimeError(f'Wrong capture size: {group}: got {width}x{height}, expected {dimensions[0]}x{dimensions[1]}')
             file=HERE/args.locale/'raw'/group/f"{slide['id']}.png"
             shell('uiautomator','dump','--compressed','/sdcard/calcula-layout.xml')
             xml=shell('cat','/sdcard/calcula-layout.xml')
+            nodes=nodes_from_xml(xml)
+            if not any(node.get('pkg') == package for node in nodes) or any(
+                node.get('pkg') == 'android' and ("isn't responding" in node.get('text', '') or 'keeps stopping' in node.get('text', ''))
+                for node in nodes
+            ):
+                raise RuntimeError(f'Unexpected screen or system error in {group}/{slide["id"]}; capture discarded')
             file.parent.mkdir(parents=True,exist_ok=True);file.write_bytes(pixels)
             write_sidecar(file, xml, width, height)
             records.append({'file':str(file.relative_to(HERE)), 'sha256':hashlib.sha256(pixels).hexdigest(),
