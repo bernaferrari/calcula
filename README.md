@@ -62,16 +62,4 @@ History gets its own pane on tablets and foldables, keeping previous calculation
 
 No ads, accounts, or tracking. Calculations run on your device. Read the [Privacy Policy](PRIVACY.md) for local storage, optional sharing, backups, and deletion controls.
 
-## Build it yourself
-
-Calcula is Kotlin Multiplatform with Compose: `shared/` holds the logic and UI, with hosts in `androidApp/`, `iosApp/` and `webApp/`.
-
-```bash
-./gradlew :androidApp:installDebug              # Android
-./gradlew :webApp:wasmJsBrowserDevelopmentRun   # web
-./gradlew :shared:testAndroidHostTest           # tests
-```
-
-Prerequisites, iOS, validation and the store-artwork workflow are in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
-
 Calcula grows out of [Calculator++](https://github.com/serso/android-calculatorpp), Sergey Solovyev's swipe-key calculator. That idea lives on in a new implementation built with Kotlin Multiplatform and Compose.
