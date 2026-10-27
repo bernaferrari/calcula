@@ -13,3 +13,8 @@ calculatorpp.zip
 # Local snapshot of the pre-KMP app, kept for reference (it lives in git history already)
 /old-app/
 .DS_Store
+
+.bundle/
+
+# Signing secrets never go in git
+upload-keystore.properties
