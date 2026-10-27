@@ -18,35 +18,24 @@ header p{margin:26px 0 0;font-size:40px;line-height:1.24;letter-spacing:-.5px;wh
 .callout.crop{z-index:4;box-shadow:0 0 0 1px #22307f14,0 40px 80px -20px #22307f55}
 .key{position:absolute;z-index:7;transform:rotate(-6deg);filter:drop-shadow(0 6px 10px #22307f22) drop-shadow(0 30px 40px #22307f44)}.key svg{display:block;width:100%;height:auto;font-family:Calcula,var(--script-font),sans-serif;font-weight:400}
 
-/* Phone compositions */
-.phone .flick .block{left:-80px;top:560px;width:900px;height:1500px}
-.phone .flick .primary{left:150px;top:600px;width:860px}
-.phone .flick .key{left:40px;top:1260px;width:330px}
-.phone .graphcrop .block{left:40px;top:560px;width:1000px;height:1300px}
-.phone .center .block{left:120px;top:640px;width:840px;height:1400px;border-radius:420px 420px 0 0}
-.phone .center .primary{left:200px;top:600px;width:680px}
-.phone .dark{--paper:#151938;--ink:#ffffff;color:#ffffff}
-.phone .dark .block{left:-200px;top:900px;width:1480px;height:1480px;border-radius:50%;background:#2B3170;box-shadow:none}
-.phone .dark .primary{left:150px;top:560px;width:780px}
-.phone .right .block{left:300px;top:520px;width:900px;height:1500px}
-.phone .right .primary{left:250px;top:600px;width:760px}
-.phone .pair .block{left:60px;top:900px;width:960px;height:1100px}
-.phone .pair .primary{left:60px;top:620px;width:470px}
-.phone .pair .secondary{left:550px;top:720px;width:470px}
-.phone .room .block{left:40px;top:560px;width:1000px;height:900px}
-.phone .room .primary{left:60px;top:640px;width:960px}
-.phone .room .secondary{left:640px;top:1060px;width:360px;z-index:3}
+/* Phone and 7-inch: one system on every card. Copy on top, the same key block in the same place,
+   only its colour changes, and the real app large on it, running off the bottom. */
+.phone .one .block{left:56px;top:580px;width:968px;height:1500px;border-radius:96px}
+.phone .one .primary{left:150px;top:660px;width:780px}
+.phone .flick .key{left:40px;top:1300px;width:320px}
+.phone .pair .primary{left:96px;top:660px;width:430px}
+.phone .pair .secondary{left:554px;top:660px;width:430px}
+.phone .room .primary{left:96px;top:660px;width:888px}
+.phone .room .secondary{left:610px;top:1060px;width:340px;z-index:3}
 
-/* 7-inch */
 .tablet7 h1{font-size:136px}
-.tablet7 .block{left:80px;top:600px;width:1040px;height:1400px}
-.tablet7 .flick .primary{left:150px;top:640px;width:980px}
+.tablet7 .one .block{left:64px;top:600px;width:1072px;height:1500px;border-radius:96px}
+.tablet7 .one .primary{left:140px;top:680px;width:920px}
 .tablet7 .flick .key{left:30px;top:1320px;width:300px}
-.tablet7 .center .primary{left:140px;top:640px;width:920px}
-.tablet7 .pair .primary{left:70px;top:680px;width:540px}
-.tablet7 .pair .secondary{left:590px;top:780px;width:540px}
-.tablet7 .room .primary{left:60px;top:700px;width:1080px}
-.tablet7 .room .secondary{left:740px;top:1140px;width:400px;z-index:3}
+.tablet7 .pair .primary{left:110px;top:680px;width:480px}
+.tablet7 .pair .secondary{left:610px;top:680px;width:480px}
+.tablet7 .room .primary{left:110px;top:680px;width:980px}
+.tablet7 .room .secondary{left:700px;top:1120px;width:380px;z-index:3}
 
 /* 10-inch: copy left, product on a block right */
 .tablet10 header{top:0;bottom:0;left:96px;right:auto;width:600px;display:flex;flex-direction:column;justify-content:center}

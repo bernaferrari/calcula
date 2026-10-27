@@ -2,7 +2,7 @@
   "phone": [
     {
       "feature": "01-every-key",
-      "layout": "flick",
+      "layout": "one flick",
       "vars": {
         "--block": "#F4D94A"
       },
@@ -11,45 +11,16 @@
     },
     {
       "feature": "02-graph",
-      "layout": "graphcrop",
+      "layout": "one",
       "vars": {
         "--block": "#AFC0F5"
       },
       "file": "phone/phone-02-graph.jpg",
-      "callouts": [
-        {
-          "raw": "phone/02-graph.png",
-          "x": 30,
-          "y": 210,
-          "w": 1020,
-          "h": 702,
-          "radius": 40,
-          "place": {
-            "left": 60,
-            "top": 620,
-            "width": 960
-          },
-          "role": "crop"
-        },
-        {
-          "raw": "phone/02-graph.png",
-          "x": 0,
-          "y": 912,
-          "w": 1080,
-          "h": 452,
-          "radius": 40,
-          "place": {
-            "left": 120,
-            "top": 1300,
-            "width": 840
-          },
-          "role": "crop lower"
-        }
-      ]
+      "raw": "phone/02-graph.png"
     },
     {
       "feature": "03-convert",
-      "layout": "center",
+      "layout": "one",
       "vars": {
         "--block": "#9DDCCB"
       },
@@ -58,7 +29,7 @@
     },
     {
       "feature": "05-programmer",
-      "layout": "dark",
+      "layout": "one",
       "vars": {
         "--block": "#2B3170"
       },
@@ -67,7 +38,7 @@
     },
     {
       "feature": "06-statistics",
-      "layout": "right",
+      "layout": "one",
       "vars": {
         "--block": "#F6C27A"
       },
@@ -76,7 +47,7 @@
     },
     {
       "feature": "04-customize",
-      "layout": "pair",
+      "layout": "one pair",
       "vars": {
         "--block": "#EFA9A0"
       },
@@ -94,7 +65,7 @@
     },
     {
       "feature": "05-more-room",
-      "layout": "room",
+      "layout": "one room",
       "vars": {
         "--block": "#BFD8A8"
       },
@@ -114,7 +85,7 @@
   "tablet7": [
     {
       "feature": "01-every-key",
-      "layout": "flick",
+      "layout": "one flick",
       "vars": {
         "--block": "#F4D94A"
       },
@@ -128,7 +99,7 @@
     },
     {
       "feature": "02-graph",
-      "layout": "center",
+      "layout": "one",
       "vars": {
         "--block": "#AFC0F5"
       },
@@ -142,7 +113,7 @@
     },
     {
       "feature": "03-convert",
-      "layout": "pair",
+      "layout": "one pair",
       "vars": {
         "--block": "#9DDCCB"
       },
@@ -160,7 +131,7 @@
     },
     {
       "feature": "04-customize",
-      "layout": "pair",
+      "layout": "one pair",
       "vars": {
         "--block": "#EFA9A0"
       },
@@ -178,7 +149,7 @@
     },
     {
       "feature": "05-more-room",
-      "layout": "room",
+      "layout": "one room",
       "vars": {
         "--block": "#BFD8A8"
       },
