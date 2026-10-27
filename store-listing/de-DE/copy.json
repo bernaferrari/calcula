@@ -1,89 +1,89 @@
 {
   "01-every-key": {
-    "title": "",
-    "body": "",
-    "alt": "",
-    "key": ""
+    "title": "Ein kleiner\nWisch.",
+    "body": "Streiche für die\nwissenschaftliche Funktion.",
+    "alt": "Ein kleiner Wisch. — Streiche für die wissenschaftliche Funktion.",
+    "key": "Ein kleiner Wisch. — Streiche für die wissenschaftliche Funktion."
   },
   "02-graph": {
-    "title": "",
-    "body": "",
-    "alt": ""
+    "title": "Sieh die Kurve\nentstehen.",
+    "body": "Funktionen zeichnen.\nParameter verschieben.",
+    "alt": "Sieh die Kurve entstehen. — Funktionen zeichnen. Parameter verschieben."
   },
   "03-convert": {
-    "title": "",
-    "body": "",
-    "alt": ""
+    "title": "Von °C\nnach °F.",
+    "body": "Einheiten umrechnen,\nwährend du eingibst.",
+    "alt": "Von °C nach °F. — Einheiten umrechnen, während du eingibst."
   },
   "04-customize": {
-    "title": "",
-    "body": "",
-    "alt": ""
+    "title": "Dein Rechner,\ndeine Tasten.",
+    "body": "Deine Farben.\nDeine Kurzbefehle.",
+    "alt": "Dein Rechner, deine Tasten. — Deine Farben. Deine Kurzbefehle."
   },
   "05-more-room": {
-    "title": "",
-    "body": "",
-    "alt": ""
+    "title": "Mehr Platz\nfür mehr.",
+    "body": "Verlauf neben der Rechnung\nauf Tablets und Foldables.",
+    "alt": "Mehr Platz für mehr. — Verlauf neben der Rechnung auf Tablets und Foldables."
   },
   "desktop/01-every-key": {
-    "alt": ""
+    "alt": "Ein kleiner Wisch. — Streiche für die wissenschaftliche Funktion."
   },
   "desktop/02-graph": {
-    "alt": ""
+    "alt": "Sieh die Kurve entstehen. — Funktionen zeichnen. Parameter verschieben."
   },
   "desktop/03-convert": {
-    "alt": ""
+    "alt": "Von °C nach °F. — Einheiten umrechnen, während du eingibst."
   },
   "07-appearance": {
-    "alt": ""
+    "alt": "Dein Rechner, deine Tasten. — Deine Farben. Deine Kurzbefehle."
   },
   "feature-graphic": {
-    "title": "",
-    "body": ""
+    "title": "Ein Wisch.\nViel mehr Mathematik.",
+    "body": "Wissenschaftliche Funktionen mit einem Wisch."
   },
   "app-icon": {
-    "alt": ""
+    "alt": "Ein kleiner Wisch. — Streiche für die wissenschaftliche Funktion."
   },
   "tablet7/01-every-key": {
-    "alt": ""
+    "alt": "Ein kleiner Wisch. — Streiche für die wissenschaftliche Funktion."
   },
   "tablet7/02-graph": {
-    "alt": ""
+    "alt": "Sieh die Kurve entstehen. — Funktionen zeichnen. Parameter verschieben."
   },
   "tablet7/03-convert": {
-    "alt": ""
+    "alt": "Von °C nach °F. — Einheiten umrechnen, während du eingibst."
   },
   "tablet7/04-customize": {
-    "alt": ""
+    "alt": "Dein Rechner, deine Tasten. — Deine Farben. Deine Kurzbefehle."
   },
   "tablet7/05-more-room": {
-    "alt": "",
-    "note": ""
+    "alt": "Mehr Platz für mehr. — Verlauf neben der Rechnung auf Tablets und Foldables.",
+    "note": "Hochformat.\nQuerformat."
   },
   "tablet10/01-every-key": {
-    "alt": ""
+    "alt": "Ein kleiner Wisch. — Streiche für die wissenschaftliche Funktion."
   },
   "tablet10/02-graph": {
-    "alt": ""
+    "alt": "Sieh die Kurve entstehen. — Funktionen zeichnen. Parameter verschieben."
   },
   "tablet10/03-convert": {
-    "alt": ""
+    "alt": "Von °C nach °F. — Einheiten umrechnen, während du eingibst."
   },
   "tablet10/04-customize": {
-    "alt": ""
+    "alt": "Dein Rechner, deine Tasten. — Deine Farben. Deine Kurzbefehle."
   },
   "tablet10/05-more-room": {
-    "alt": "",
-    "note": ""
+    "alt": "Mehr Platz für mehr. — Verlauf neben der Rechnung auf Tablets und Foldables.",
+    "note": "Hochformat.\nQuerformat."
   },
   "05-programmer": {
-    "title": "",
-    "body": "",
-    "alt": ""
+    "title": "Hexadezimal\nim Griff.",
+    "body": "Programmiermodus mit Bits,\nVerschiebungen und Basen.",
+    "alt": "Hexadezimal im Griff. — Programmiermodus mit Bits, Verschiebungen und Basen."
   },
   "06-statistics": {
-    "title": "",
-    "body": "",
-    "alt": ""
+    "title": "Zahlen\nim Überblick.",
+    "body": "Mittelwert, Median und\nStreuung auf einen Blick.",
+    "alt": "Zahlen im Überblick. — Mittelwert, Median und Streuung auf einen Blick."
   }
 }

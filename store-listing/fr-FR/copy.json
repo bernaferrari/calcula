@@ -1,89 +1,89 @@
 {
   "01-every-key": {
-    "title": "",
-    "body": "",
-    "alt": "",
-    "key": ""
+    "title": "Un simple\nglissement.",
+    "body": "Glissez sur une touche pour\nsa fonction scientifique.",
+    "alt": "Un simple glissement. — Glissez sur une touche pour sa fonction scientifique.",
+    "key": "Un simple glissement. — Glissez sur une touche pour sa fonction scientifique."
   },
   "02-graph": {
-    "title": "",
-    "body": "",
-    "alt": ""
+    "title": "Voyez la courbe\nprendre forme.",
+    "body": "Tracez des fonctions et\ndéplacez les paramètres.",
+    "alt": "Voyez la courbe prendre forme. — Tracez des fonctions et déplacez les paramètres."
   },
   "03-convert": {
-    "title": "",
-    "body": "",
-    "alt": ""
+    "title": "De °C\nen °F.",
+    "body": "Convertissez les unités\npendant la saisie.",
+    "alt": "De °C en °F. — Convertissez les unités pendant la saisie."
   },
   "04-customize": {
-    "title": "",
-    "body": "",
-    "alt": ""
+    "title": "À votre image,\ntouche par touche.",
+    "body": "Vos couleurs.\nVos raccourcis.",
+    "alt": "À votre image, touche par touche. — Vos couleurs. Vos raccourcis."
   },
   "05-more-room": {
-    "title": "",
-    "body": "",
-    "alt": ""
+    "title": "Plus de place\npour calculer.",
+    "body": "L’historique à côté du clavier\nsur tablette ou pliable.",
+    "alt": "Plus de place pour calculer. — L’historique à côté du clavier sur tablette ou pliable."
   },
   "desktop/01-every-key": {
-    "alt": ""
+    "alt": "Un simple glissement. — Glissez sur une touche pour sa fonction scientifique."
   },
   "desktop/02-graph": {
-    "alt": ""
+    "alt": "Voyez la courbe prendre forme. — Tracez des fonctions et déplacez les paramètres."
   },
   "desktop/03-convert": {
-    "alt": ""
+    "alt": "De °C en °F. — Convertissez les unités pendant la saisie."
   },
   "07-appearance": {
-    "alt": ""
+    "alt": "À votre image, touche par touche. — Vos couleurs. Vos raccourcis."
   },
   "feature-graphic": {
-    "title": "",
-    "body": ""
+    "title": "Un glissement.\nPlus de maths.",
+    "body": "Les fonctions scientifiques à portée de geste."
   },
   "app-icon": {
-    "alt": ""
+    "alt": "Un simple glissement. — Glissez sur une touche pour sa fonction scientifique."
   },
   "tablet7/01-every-key": {
-    "alt": ""
+    "alt": "Un simple glissement. — Glissez sur une touche pour sa fonction scientifique."
   },
   "tablet7/02-graph": {
-    "alt": ""
+    "alt": "Voyez la courbe prendre forme. — Tracez des fonctions et déplacez les paramètres."
   },
   "tablet7/03-convert": {
-    "alt": ""
+    "alt": "De °C en °F. — Convertissez les unités pendant la saisie."
   },
   "tablet7/04-customize": {
-    "alt": ""
+    "alt": "À votre image, touche par touche. — Vos couleurs. Vos raccourcis."
   },
   "tablet7/05-more-room": {
-    "alt": "",
-    "note": ""
+    "alt": "Plus de place pour calculer. — L’historique à côté du clavier sur tablette ou pliable.",
+    "note": "Portrait.\nPaysage."
   },
   "tablet10/01-every-key": {
-    "alt": ""
+    "alt": "Un simple glissement. — Glissez sur une touche pour sa fonction scientifique."
   },
   "tablet10/02-graph": {
-    "alt": ""
+    "alt": "Voyez la courbe prendre forme. — Tracez des fonctions et déplacez les paramètres."
   },
   "tablet10/03-convert": {
-    "alt": ""
+    "alt": "De °C en °F. — Convertissez les unités pendant la saisie."
   },
   "tablet10/04-customize": {
-    "alt": ""
+    "alt": "À votre image, touche par touche. — Vos couleurs. Vos raccourcis."
   },
   "tablet10/05-more-room": {
-    "alt": "",
-    "note": ""
+    "alt": "Plus de place pour calculer. — L’historique à côté du clavier sur tablette ou pliable.",
+    "note": "Portrait.\nPaysage."
   },
   "05-programmer": {
-    "title": "",
-    "body": "",
-    "alt": ""
+    "title": "L’hexadécimal\nsimplement.",
+    "body": "Mode programmeur : bits,\ndécalages et bases.",
+    "alt": "L’hexadécimal simplement. — Mode programmeur : bits, décalages et bases."
   },
   "06-statistics": {
-    "title": "",
-    "body": "",
-    "alt": ""
+    "title": "Les chiffres\nen résumé.",
+    "body": "Moyenne, médiane et dispersion\nen un coup d’œil.",
+    "alt": "Les chiffres en résumé. — Moyenne, médiane et dispersion en un coup d’œil."
   }
 }

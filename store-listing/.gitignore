@@ -1,3 +1,10 @@
 node_modules/
 *.log
 canvas-probe.png
+
+play-staging/
+.play-api.env
+
+# Other locales' raw captures regenerate from capture-emulator.py
+/*/raw/
+!/en-US/raw/

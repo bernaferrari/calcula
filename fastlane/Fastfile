@@ -1,0 +1,38 @@
+def play_store_options(validate_only:)
+  key = ENV['PLAY_JSON_KEY']
+  UI.user_error!('PLAY_JSON_KEY does not point to a file.') if !key.to_s.empty? && !File.file?(key)
+  options = {
+    package_name: 'com.bernaferrari.calcula',
+    metadata_path: File.expand_path('../store-listing/play-staging', __dir__),
+    skip_upload_apk: true,
+    skip_upload_aab: true,
+    skip_upload_changelogs: true,
+    skip_upload_images: false,
+    skip_upload_screenshots: false,
+    skip_upload_metadata: false,
+    changes_not_sent_for_review: true,
+    rescue_changes_not_sent_for_review: false,
+    validate_only: validate_only
+  }
+  options[:json_key] = key unless key.to_s.empty?
+  options
+end
+
+def prepare_store
+  sh('node', File.expand_path('../store-listing/prepare-all.mjs', __dir__), '--stage')
+end
+
+default_platform(:android)
+platform :android do
+  desc 'Validate all staged listing text and screenshots with Google Play'
+  lane :validate_store do
+    prepare_store
+    upload_to_play_store(**play_store_options(validate_only: true))
+  end
+
+  desc 'Upload all listing text and screenshots; leave changes for review in Play Console'
+  lane :upload_store do
+    prepare_store
+    upload_to_play_store(**play_store_options(validate_only: false))
+  end
+end

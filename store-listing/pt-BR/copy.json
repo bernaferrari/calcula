@@ -1,89 +1,89 @@
 {
   "01-every-key": {
-    "title": "",
-    "body": "",
-    "alt": "",
-    "key": ""
+    "title": "Um simples\ndeslize.",
+    "body": "Deslize a tecla para acessar\na função científica.",
+    "alt": "Calculadora com atalhos científicos por deslize",
+    "key": "Atalho de seno ampliado acima da tecla 7"
   },
   "02-graph": {
-    "title": "",
-    "body": "",
-    "alt": ""
+    "title": "Veja a curva\nganhar forma.",
+    "body": "Trace funções. Ajuste\nos parâmetros.",
+    "alt": "Gráfico de funções com parâmetros ajustáveis"
   },
   "03-convert": {
-    "title": "",
-    "body": "",
-    "alt": ""
+    "title": "De °C\npara °F.",
+    "body": "Converta unidades\nenquanto digita.",
+    "alt": "Conversor de temperatura de Celsius para Fahrenheit"
   },
   "04-customize": {
-    "title": "",
-    "body": "",
-    "alt": ""
+    "title": "Seu jeito,\nsuas teclas.",
+    "body": "Suas cores.\nSeus atalhos.",
+    "alt": "Configurações de aparência e atalhos personalizados"
   },
   "05-more-room": {
-    "title": "",
-    "body": "",
-    "alt": ""
+    "title": "Mais espaço\npara calcular.",
+    "body": "Histórico ao lado das contas\nem tablets e dobráveis.",
+    "alt": "Calculadora em tablet com histórico ao lado"
   },
   "desktop/01-every-key": {
-    "alt": ""
+    "alt": "Calculadora com atalhos científicos"
   },
   "desktop/02-graph": {
-    "alt": ""
+    "alt": "Gráficos com parâmetros interativos"
   },
   "desktop/03-convert": {
-    "alt": ""
+    "alt": "Conversão de Celsius para Fahrenheit"
   },
   "07-appearance": {
-    "alt": ""
+    "alt": "Configurações de aparência e cores"
   },
   "feature-graphic": {
-    "title": "",
-    "body": ""
+    "title": "Um deslize.\nMuito mais matemática.",
+    "body": "Funções científicas a um deslize."
   },
   "app-icon": {
-    "alt": ""
+    "alt": "Ícone do Calcula"
   },
   "tablet7/01-every-key": {
-    "alt": ""
+    "alt": "Calculadora com atalhos científicos por deslize em tablet de 7 polegadas"
   },
   "tablet7/02-graph": {
-    "alt": ""
+    "alt": "Gráfico de funções com parâmetros ajustáveis em tablet de 7 polegadas"
   },
   "tablet7/03-convert": {
-    "alt": ""
+    "alt": "Conversor de temperatura de Celsius para Fahrenheit em tablet de 7 polegadas"
   },
   "tablet7/04-customize": {
-    "alt": ""
+    "alt": "Configurações de aparência e atalhos personalizados em tablet de 7 polegadas"
   },
   "tablet7/05-more-room": {
-    "alt": "",
-    "note": ""
+    "alt": "Calculadora em tablet com histórico ao lado em tablet de 7 polegadas",
+    "note": "Retrato.\nPaisagem."
   },
   "tablet10/01-every-key": {
-    "alt": ""
+    "alt": "Calculadora com atalhos científicos por deslize em tablet de 10 polegadas"
   },
   "tablet10/02-graph": {
-    "alt": ""
+    "alt": "Gráfico de funções com parâmetros ajustáveis em tablet de 10 polegadas"
   },
   "tablet10/03-convert": {
-    "alt": ""
+    "alt": "Conversor de temperatura de Celsius para Fahrenheit em tablet de 10 polegadas"
   },
   "tablet10/04-customize": {
-    "alt": ""
+    "alt": "Configurações de aparência e atalhos personalizados em tablet de 10 polegadas"
   },
   "tablet10/05-more-room": {
-    "alt": "",
-    "note": ""
+    "alt": "Calculadora em tablet com histórico ao lado em tablet de 10 polegadas",
+    "note": "Retrato.\nPaisagem."
   },
   "05-programmer": {
-    "title": "",
-    "body": "",
-    "alt": ""
+    "title": "Hexadecimal\nsem mistério.",
+    "body": "Modo programador com\nbits, deslocamentos e bases.",
+    "alt": "Modo programador em hexadecimal"
   },
   "06-statistics": {
-    "title": "",
-    "body": "",
-    "alt": ""
+    "title": "Números\nem resumo.",
+    "body": "Média, mediana e dispersão\nde relance.",
+    "alt": "Estatísticas de uma lista de números"
   }
 }

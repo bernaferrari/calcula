@@ -1,89 +1,89 @@
 {
   "01-every-key": {
-    "title": "",
-    "body": "",
-    "alt": "",
-    "key": ""
+    "title": "Un pequeño\ndeslizamiento.",
+    "body": "Desliza una tecla para usar\nsu función científica.",
+    "alt": "Un pequeño deslizamiento. — Desliza una tecla para usar su función científica.",
+    "key": "Un pequeño deslizamiento. — Desliza una tecla para usar su función científica."
   },
   "02-graph": {
-    "title": "",
-    "body": "",
-    "alt": ""
+    "title": "Mira cómo\ntoma forma.",
+    "body": "Traza funciones y mueve\nlos parámetros.",
+    "alt": "Mira cómo toma forma. — Traza funciones y mueve los parámetros."
   },
   "03-convert": {
-    "title": "",
-    "body": "",
-    "alt": ""
+    "title": "De °C\na °F.",
+    "body": "Convierte unidades\nmientras escribes.",
+    "alt": "De °C a °F. — Convierte unidades mientras escribes."
   },
   "04-customize": {
-    "title": "",
-    "body": "",
-    "alt": ""
+    "title": "A tu manera,\ntecla a tecla.",
+    "body": "Tus colores.\nTus atajos.",
+    "alt": "A tu manera, tecla a tecla. — Tus colores. Tus atajos."
   },
   "05-more-room": {
-    "title": "",
-    "body": "",
-    "alt": ""
+    "title": "Más espacio\npara calcular.",
+    "body": "Historial junto al teclado\nen tabletas y plegables.",
+    "alt": "Más espacio para calcular. — Historial junto al teclado en tabletas y plegables."
   },
   "desktop/01-every-key": {
-    "alt": ""
+    "alt": "Un pequeño deslizamiento. — Desliza una tecla para usar su función científica."
   },
   "desktop/02-graph": {
-    "alt": ""
+    "alt": "Mira cómo toma forma. — Traza funciones y mueve los parámetros."
   },
   "desktop/03-convert": {
-    "alt": ""
+    "alt": "De °C a °F. — Convierte unidades mientras escribes."
   },
   "07-appearance": {
-    "alt": ""
+    "alt": "A tu manera, tecla a tecla. — Tus colores. Tus atajos."
   },
   "feature-graphic": {
-    "title": "",
-    "body": ""
+    "title": "Un gesto.\nMás matemáticas.",
+    "body": "Funciones científicas con un deslizamiento."
   },
   "app-icon": {
-    "alt": ""
+    "alt": "Un pequeño deslizamiento. — Desliza una tecla para usar su función científica."
   },
   "tablet7/01-every-key": {
-    "alt": ""
+    "alt": "Un pequeño deslizamiento. — Desliza una tecla para usar su función científica."
   },
   "tablet7/02-graph": {
-    "alt": ""
+    "alt": "Mira cómo toma forma. — Traza funciones y mueve los parámetros."
   },
   "tablet7/03-convert": {
-    "alt": ""
+    "alt": "De °C a °F. — Convierte unidades mientras escribes."
   },
   "tablet7/04-customize": {
-    "alt": ""
+    "alt": "A tu manera, tecla a tecla. — Tus colores. Tus atajos."
   },
   "tablet7/05-more-room": {
-    "alt": "",
-    "note": ""
+    "alt": "Más espacio para calcular. — Historial junto al teclado en tabletas y plegables.",
+    "note": "Vertical.\nHorizontal."
   },
   "tablet10/01-every-key": {
-    "alt": ""
+    "alt": "Un pequeño deslizamiento. — Desliza una tecla para usar su función científica."
   },
   "tablet10/02-graph": {
-    "alt": ""
+    "alt": "Mira cómo toma forma. — Traza funciones y mueve los parámetros."
   },
   "tablet10/03-convert": {
-    "alt": ""
+    "alt": "De °C a °F. — Convierte unidades mientras escribes."
   },
   "tablet10/04-customize": {
-    "alt": ""
+    "alt": "A tu manera, tecla a tecla. — Tus colores. Tus atajos."
   },
   "tablet10/05-more-room": {
-    "alt": "",
-    "note": ""
+    "alt": "Más espacio para calcular. — Historial junto al teclado en tabletas y plegables.",
+    "note": "Vertical.\nHorizontal."
   },
   "05-programmer": {
-    "title": "",
-    "body": "",
-    "alt": ""
+    "title": "Hexadecimal,\nsin líos.",
+    "body": "Modo programador con bits,\ndesplazamientos y bases.",
+    "alt": "Hexadecimal, sin líos. — Modo programador con bits, desplazamientos y bases."
   },
   "06-statistics": {
-    "title": "",
-    "body": "",
-    "alt": ""
+    "title": "Números\nen resumen.",
+    "body": "Media, mediana y dispersión\nde un vistazo.",
+    "alt": "Números en resumen. — Media, mediana y dispersión de un vistazo."
   }
 }

@@ -7,7 +7,9 @@
     "studio": "node studio/server.cjs 8790",
     "capture": "python3 capture-emulator.py",
     "capture:build": "../gradlew :androidApp:assembleStoreCapture",
-    "validate": "node render.mjs --validate"
+    "validate": "node render.mjs --validate",
+    "play:prepare": "node prepare-play.mjs",
+    "play:prepare-all": "node prepare-all.mjs"
   },
   "devDependencies": {
     "playwright": "1.62.1",

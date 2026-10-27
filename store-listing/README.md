@@ -108,3 +108,24 @@ Screenshot images now open a shared shadcn gallery dialog with thumbnails, wrapp
 Studio v4.3 refines the project overview, language screens and shared controls with a neutral shadcn theme, keyboard-accessible filter tabs, compact project cards and responsive headers.
 
 The v4.3 project page separates Overview, Galleries and Languages, links to unfinished work, and keeps language counts and actions visible on phones. Narrow workbenches use a device-gallery select, and translation references stack above inputs when space is limited.
+
+## Play upload preflight
+
+`npm run play:prepare -- pt-BR` checks the locale's copy, capture files, layout sidecars and screenshot dimensions. It reports every problem without contacting Google Play. Use `--stage` only after those checks pass to create a numbered fastlane-compatible screenshot tree under `play-staging/<locale>/images/`; staging does not publish or modify Play Console. Tablet artwork is rendered at 16:10; staging fits the complete image inside a 9:16 or 16:9 canvas with a neutral margin, without cropping. Review those staged images before upload.
+
+Before staging, capture the locale, run the strict exporter, and review the contact sheets. A strict export can fail after writing some files, so a failed export must never be treated as ready. The preflight checks presence and dimensions; it cannot prove that exports are fresh or visually correct.
+
+Fastlane's `supply` can upload the staged screenshot folders using a Google Play API service account with access to this app. Account provisioning and API authorization are separate steps; do not put credentials in this repository. See [fastlane's supply documentation](https://docs.fastlane.tools/actions/supply/). Configure and test the credential and the intended review/publishing behavior before running an upload. The preflight does not upload or configure access. It stages listing text, icons, feature graphics, and phone/tablet screenshots, but not desktop assets.
+
+### Bulk text and screenshot upload
+
+Authenticate once with your own Play Console account using `gcloud auth application-default login --scopes=openid,https://www.googleapis.com/auth/userinfo.email,https://www.googleapis.com/auth/cloud-platform,https://www.googleapis.com/auth/androidpublisher`. Fastlane can use these Application Default Credentials without a service-account key. Set an API-enabled quota project with `gcloud auth application-default set-quota-project PROJECT_ID` if Google requires one. After every configured locale has complete listing text, translated copy, captures and Play-compatible screenshots, run:
+
+```sh
+bundle install
+npm --prefix store-listing run play:prepare-all -- --stage
+bundle exec fastlane android validate_store
+bundle exec fastlane android upload_store
+```
+
+Both lanes rerun the all-locale preflight. Validation calls Google without committing an edit; upload replaces the staged listing text and screenshot sets and leaves changes for review in Play Console. Review the generated artwork and confirm the intended changes before upload. Fastlane's supported screenshot categories do not cover the desktop-specific assets in this project; those still require a separate Play Console workflow. The commands do not upload a release bundle.

@@ -1,89 +1,89 @@
 {
   "01-every-key": {
-    "title": "",
-    "body": "",
-    "alt": "",
-    "key": ""
+    "title": "Un piccolo\nscorrimento.",
+    "body": "Scorri un tasto per la sua\nfunzione scientifica.",
+    "alt": "Un piccolo scorrimento. — Scorri un tasto per la sua funzione scientifica.",
+    "key": "Un piccolo scorrimento. — Scorri un tasto per la sua funzione scientifica."
   },
   "02-graph": {
-    "title": "",
-    "body": "",
-    "alt": ""
+    "title": "Guarda la curva\nprendere forma.",
+    "body": "Traccia funzioni e sposta\ni parametri.",
+    "alt": "Guarda la curva prendere forma. — Traccia funzioni e sposta i parametri."
   },
   "03-convert": {
-    "title": "",
-    "body": "",
-    "alt": ""
+    "title": "Da °C\na °F.",
+    "body": "Converti le unità\nmentre scrivi.",
+    "alt": "Da °C a °F. — Converti le unità mentre scrivi."
   },
   "04-customize": {
-    "title": "",
-    "body": "",
-    "alt": ""
+    "title": "A modo tuo,\ntasto per tasto.",
+    "body": "I tuoi colori.\nLe tue scorciatoie.",
+    "alt": "A modo tuo, tasto per tasto. — I tuoi colori. Le tue scorciatoie."
   },
   "05-more-room": {
-    "title": "",
-    "body": "",
-    "alt": ""
+    "title": "Più spazio\nper calcolare.",
+    "body": "Cronologia accanto ai tasti\nsu tablet e pieghevoli.",
+    "alt": "Più spazio per calcolare. — Cronologia accanto ai tasti su tablet e pieghevoli."
   },
   "desktop/01-every-key": {
-    "alt": ""
+    "alt": "Un piccolo scorrimento. — Scorri un tasto per la sua funzione scientifica."
   },
   "desktop/02-graph": {
-    "alt": ""
+    "alt": "Guarda la curva prendere forma. — Traccia funzioni e sposta i parametri."
   },
   "desktop/03-convert": {
-    "alt": ""
+    "alt": "Da °C a °F. — Converti le unità mentre scrivi."
   },
   "07-appearance": {
-    "alt": ""
+    "alt": "A modo tuo, tasto per tasto. — I tuoi colori. Le tue scorciatoie."
   },
   "feature-graphic": {
-    "title": "",
-    "body": ""
+    "title": "Uno scorrimento.\nPiù matematica.",
+    "body": "Funzioni scientifiche con un gesto."
   },
   "app-icon": {
-    "alt": ""
+    "alt": "Un piccolo scorrimento. — Scorri un tasto per la sua funzione scientifica."
   },
   "tablet7/01-every-key": {
-    "alt": ""
+    "alt": "Un piccolo scorrimento. — Scorri un tasto per la sua funzione scientifica."
   },
   "tablet7/02-graph": {
-    "alt": ""
+    "alt": "Guarda la curva prendere forma. — Traccia funzioni e sposta i parametri."
   },
   "tablet7/03-convert": {
-    "alt": ""
+    "alt": "Da °C a °F. — Converti le unità mentre scrivi."
   },
   "tablet7/04-customize": {
-    "alt": ""
+    "alt": "A modo tuo, tasto per tasto. — I tuoi colori. Le tue scorciatoie."
   },
   "tablet7/05-more-room": {
-    "alt": "",
-    "note": ""
+    "alt": "Più spazio per calcolare. — Cronologia accanto ai tasti su tablet e pieghevoli.",
+    "note": "Verticale.\nOrizzontale."
   },
   "tablet10/01-every-key": {
-    "alt": ""
+    "alt": "Un piccolo scorrimento. — Scorri un tasto per la sua funzione scientifica."
   },
   "tablet10/02-graph": {
-    "alt": ""
+    "alt": "Guarda la curva prendere forma. — Traccia funzioni e sposta i parametri."
   },
   "tablet10/03-convert": {
-    "alt": ""
+    "alt": "Da °C a °F. — Converti le unità mentre scrivi."
   },
   "tablet10/04-customize": {
-    "alt": ""
+    "alt": "A modo tuo, tasto per tasto. — I tuoi colori. Le tue scorciatoie."
   },
   "tablet10/05-more-room": {
-    "alt": "",
-    "note": ""
+    "alt": "Più spazio per calcolare. — Cronologia accanto ai tasti su tablet e pieghevoli.",
+    "note": "Verticale.\nOrizzontale."
   },
   "05-programmer": {
-    "title": "",
-    "body": "",
-    "alt": ""
+    "title": "Esadecimale\nsenza problemi.",
+    "body": "Modalità programmatore con\nbit, shift e basi.",
+    "alt": "Esadecimale senza problemi. — Modalità programmatore con bit, shift e basi."
   },
   "06-statistics": {
-    "title": "",
-    "body": "",
-    "alt": ""
+    "title": "Numeri\nin sintesi.",
+    "body": "Media, mediana e dispersione\na colpo d’occhio.",
+    "alt": "Numeri in sintesi. — Media, mediana e dispersione a colpo d’occhio."
   }
 }
