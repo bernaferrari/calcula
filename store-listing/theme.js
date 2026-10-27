@@ -32,7 +32,12 @@ export default {
   art({W, H, index, slides}) {
     const N = slides.length, x0 = -index * W;
     const stops = slides.map((s, k) => `<stop offset="${(k + .5) / N}" stop-color="${s.vars?.['--background'] || '#F1E267'}"/>`).join('');
-    return `<defs><linearGradient id="field" gradientUnits="userSpaceOnUse" x1="${x0}" x2="${x0 + N * W}" y1="0" y2="0">${stops}</linearGradient></defs><rect width="${W}" height="${H}" fill="url(#field)"/>`;
+    // Graph paper: a faint grid in panorama coordinates, so its lines continue across every seam.
+    const cell = Math.round(Math.min(W, H) / 18), major = cell * 5, off = ((x0 % major) + major) % major;
+    const grid = `<pattern id="minor" width="${cell}" height="${cell}" patternUnits="userSpaceOnUse" x="${off}"><path d="M${cell} 0V${cell}H0" fill="none" stroke="#ffffff" stroke-opacity=".16" stroke-width="1.5"/></pattern>` +
+      `<pattern id="major" width="${major}" height="${major}" patternUnits="userSpaceOnUse" x="${off}"><path d="M${major} 0V${major}H0" fill="none" stroke="#ffffff" stroke-opacity=".3" stroke-width="2.5"/></pattern>`;
+    return `<defs><linearGradient id="field" gradientUnits="userSpaceOnUse" x1="${x0}" x2="${x0 + N * W}" y1="0" y2="0">${stops}</linearGradient>${grid}</defs>` +
+      `<rect width="${W}" height="${H}" fill="url(#field)"/><rect width="${W}" height="${H}" fill="url(#minor)"/><rect width="${W}" height="${H}" fill="url(#major)"/>`;
   },
 
   compose({kind, index, slide, main}) {

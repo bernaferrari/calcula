@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-27T06:04:08.980Z",
+  "generatedAt": "2026-10-27T06:05:56.212Z",
   "campaign": "A little flick goes a long way",
   "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
   "assets": [
@@ -7,7 +7,7 @@
       "file": "phone/phone-01-every-key.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 191675,
+      "bytes": 220884,
       "alt": "Calcula with labelled scientific functions; a magnified real sin key explains the flick gesture",
       "sources": [
         "raw/phone/01-every-key.png"
@@ -17,7 +17,7 @@
       "file": "phone/phone-02-graph.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 233376,
+      "bytes": 259081,
       "alt": "A graphing calculator with sine functions, a circle, and movable parameters, backed by a golden sine wave",
       "sources": [
         "raw/phone/02-graph.png"
@@ -27,7 +27,7 @@
       "file": "phone/phone-03-convert.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 169416,
+      "bytes": 182111,
       "alt": "Unit converter showing 22 Celsius as 71.6 Fahrenheit, with the result lifted out",
       "sources": [
         "raw/phone/03-convert.png"
@@ -37,7 +37,7 @@
       "file": "phone/phone-04-programmer.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 196505,
+      "bytes": 211990,
       "alt": "Programmer mode in dark theme showing the hexadecimal value C0 FFEE and its decimal",
       "sources": [
         "raw/phone/05-programmer.png"
@@ -47,7 +47,7 @@
       "file": "phone/phone-05-statistics.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 223211,
+      "bytes": 252054,
       "alt": "Statistics with mean, median, sum, count and standard deviation for eight values",
       "sources": [
         "raw/phone/06-statistics.png"
@@ -57,7 +57,7 @@
       "file": "phone/phone-06-customize.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 310155,
+      "bytes": 342125,
       "alt": "Light appearance settings and custom key assignments, with color swatches and visual style previews",
       "sources": [
         "raw/phone/07-appearance.png",
@@ -68,7 +68,7 @@
       "file": "phone/phone-07-more-room.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 209505,
+      "bytes": 245096,
       "alt": "Calcula on a landscape tablet with history beside the keypad, paired with the phone layout",
       "sources": [
         "raw/tablet10/01-every-key.png",
@@ -79,7 +79,7 @@
       "file": "tablet7/tablet7-01-every-key.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 212437,
+      "bytes": 241093,
       "alt": "Calcula on a 7-inch portrait tablet with history beside the keypad; Enlarged sin shortcut above the 7 key, redrawn from the app key style",
       "sources": [
         "raw/tablet7/01-every-key.png"
@@ -89,7 +89,7 @@
       "file": "tablet7/tablet7-02-graph.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 245369,
+      "bytes": 272417,
       "alt": "Graphing functions and a circle on the 7-inch tablet",
       "sources": [
         "raw/tablet7/02-graph.png"
@@ -99,7 +99,7 @@
       "file": "tablet7/tablet7-03-convert.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 221776,
+      "bytes": 257026,
       "alt": "The 7-inch tablet converting Celsius to Fahrenheit; Programmer with compact Bits controls on the 7-inch tablet",
       "sources": [
         "raw/tablet7/03-convert.png",
@@ -110,7 +110,7 @@
       "file": "tablet7/tablet7-04-customize.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 301822,
+      "bytes": 338896,
       "alt": "Light appearance settings on the 7-inch tablet; Custom key assignments on the 7-inch tablet",
       "sources": [
         "raw/tablet7/07-appearance.png",
@@ -121,7 +121,7 @@
       "file": "tablet7/tablet7-05-more-room.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 238972,
+      "bytes": 275203,
       "alt": "The same 7-inch tablet in landscape with a separate history pane; The 7-inch tablet in portrait",
       "sources": [
         "raw/tablet7/08-calculator-landscape.png",
@@ -132,7 +132,7 @@
       "file": "tablet10/tablet10-01-every-key.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 169094,
+      "bytes": 219360,
       "alt": "Calcula on a 10-inch landscape tablet with history beside the keypad; Enlarged sin shortcut above the 7 key, redrawn from the app key style",
       "sources": [
         "raw/tablet10/01-every-key.png"
@@ -142,7 +142,7 @@
       "file": "tablet10/tablet10-02-graph.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 224022,
+      "bytes": 265322,
       "alt": "Functions, a circle, and interactive parameters on a 10-inch tablet",
       "sources": [
         "raw/tablet10/02-graph.png"
@@ -152,7 +152,7 @@
       "file": "tablet10/tablet10-03-convert.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 167648,
+      "bytes": 214342,
       "alt": "Landscape unit conversion on the 10-inch tablet; The 10-inch tablet in portrait showing Programmer mode",
       "sources": [
         "raw/tablet10/03-convert.png",
@@ -163,7 +163,7 @@
       "file": "tablet10/tablet10-04-customize.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 233937,
+      "bytes": 282292,
       "alt": "Light appearance settings on the 10-inch tablet in portrait; Custom key assignments on the 10-inch tablet in landscape",
       "sources": [
         "raw/tablet10/09-appearance-portrait.png",
@@ -174,7 +174,7 @@
       "file": "tablet10/tablet10-05-more-room.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 182415,
+      "bytes": 224554,
       "alt": "A 10-inch landscape tablet with separate history and calculator panes; The same 10-inch tablet in portrait",
       "sources": [
         "raw/tablet10/01-every-key.png",
@@ -224,7 +224,7 @@
       "file": "graphics/feature-graphic.png",
       "width": 1024,
       "height": 500,
-      "bytes": 61547,
+      "bytes": 67765,
       "sources": [
         "raw/phone/01-every-key.png"
       ]

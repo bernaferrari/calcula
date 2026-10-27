@@ -20,43 +20,21 @@
     },
     {
       "feature": "03-convert",
-      "layout": "single",
+      "layout": "zoomed",
       "vars": {
         "--background": "#B5DED6"
       },
-      "glyph": "°",
       "raw": "phone/03-convert.png",
-      "file": "phone/phone-03-convert.jpg",
-      "callouts": [
-        {
-          "x": 40,
-          "y": 1060,
-          "w": 1000,
-          "h": 360,
-          "mag": 1.12,
-          "radius": 48
-        }
-      ]
+      "file": "phone/phone-03-convert.jpg"
     },
     {
       "feature": "05-programmer",
-      "layout": "single",
+      "layout": "zoomed",
       "vars": {
         "--background": "#9FB3F2"
       },
-      "glyph": "0x",
       "raw": "phone/05-programmer.png",
-      "file": "phone/phone-04-programmer.jpg",
-      "callouts": [
-        {
-          "x": 30,
-          "y": 470,
-          "w": 1020,
-          "h": 450,
-          "mag": 1.08,
-          "radius": 40
-        }
-      ]
+      "file": "phone/phone-04-programmer.jpg"
     },
     {
       "feature": "06-statistics",
