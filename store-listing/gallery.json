@@ -31,7 +31,7 @@
       "feature": "05-programmer",
       "layout": "one",
       "vars": {
-        "--block": "#2B3170"
+        "--block": "#C9B8F2"
       },
       "file": "phone/phone-04-programmer.jpg",
       "raw": "phone/05-programmer.png"
@@ -47,18 +47,18 @@
     },
     {
       "feature": "04-customize",
-      "layout": "one pair",
+      "layout": "stack",
       "vars": {
         "--block": "#EFA9A0"
       },
       "file": "phone/phone-06-customize.jpg",
       "devices": [
         {
-          "raw": "phone/07-appearance.png",
+          "raw": "phone/04-customize.png",
           "role": "primary"
         },
         {
-          "raw": "phone/04-customize.png",
+          "raw": "phone/07-appearance.png",
           "role": "secondary"
         }
       ]

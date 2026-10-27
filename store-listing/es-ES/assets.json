@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-27T14:10:58.583Z",
+  "generatedAt": "2026-10-27T14:13:00.986Z",
   "campaign": "A little flick goes a long way",
   "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
   "assets": [
@@ -37,7 +37,7 @@
       "file": "phone/phone-04-programmer.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 195895,
+      "bytes": 190190,
       "alt": "Programmer mode in dark theme showing the hexadecimal value C0 FFEE and its decimal",
       "sources": [
         "raw/phone/05-programmer.png"
@@ -57,11 +57,11 @@
       "file": "phone/phone-06-customize.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 273327,
+      "bytes": 225231,
       "alt": "Light appearance settings and custom key assignments, with color swatches and visual style previews",
       "sources": [
-        "raw/phone/07-appearance.png",
-        "raw/phone/04-customize.png"
+        "raw/phone/04-customize.png",
+        "raw/phone/07-appearance.png"
       ]
     },
     {

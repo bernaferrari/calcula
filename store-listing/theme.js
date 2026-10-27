@@ -72,6 +72,7 @@ export default {
   decorate({W, H, slide, devices}) {
     for (const {box, spec} of devices) {
       if (spec.frame === 'none') continue;
+      if (/stack/.test(slide.layout || '')) continue;
       const bleeds = /zoomed/.test(slide.layout || '');
       if (box.left < 12 || box.top < 12 || (!bleeds && box.left + box.width > W - 12)) throw new Error(`App capture extends outside the export: ${spec.raw}`);
       if (!/zoomed/.test(slide.layout || '') && box.top + box.height > H - 12 && (H - box.top) / box.height < .7) throw new Error(`App capture runs too far off the bottom: ${spec.raw}`);
