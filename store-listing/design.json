@@ -132,6 +132,14 @@
     }
   ],
   "captureVariants": {
+    "phone": [
+      {
+        "id": "08-programmer-blue",
+        "scene": "programmer",
+        "theme": "light",
+        "palette": "BLUE"
+      }
+    ],
     "tablet7": [
       {
         "id": "08-calculator-landscape",
@@ -164,6 +172,14 @@
         "width": 1200,
         "height": 1920,
         "palette": "AMBER"
+      },
+      {
+        "id": "11-appearance-readme",
+        "scene": "appearance",
+        "width": 1200,
+        "height": 1920,
+        "theme": "light",
+        "palette": "PURPLE"
       }
     ]
   }

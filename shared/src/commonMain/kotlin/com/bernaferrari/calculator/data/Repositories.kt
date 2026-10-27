@@ -29,7 +29,8 @@ private val json = Json {
 /** Settings as one JSON document; unknown or missing fields fall back to defaults. */
 class StoredPreferencesRepository(private val store: StringStore) : PreferencesRepository {
     private val state = MutableStateFlow(
-        store.get(KEY)?.let { runCatching { json.decodeFromString<UserPreferences>(it) }.getOrNull() } ?: UserPreferences(),
+        (store.get(KEY)?.let { runCatching { json.decodeFromString<UserPreferences>(it) }.getOrNull() } ?: UserPreferences())
+            .let { if (it.palette == AppPalette.GRAPHITE) it.copy(palette = AppPalette.INDIGO, colorStyle = ColorStyle.NEUTRAL) else it },
     ).also { UserFunctions.all = it.value.functions }
 
     override fun getUserPreferences(): Flow<UserPreferences> = state

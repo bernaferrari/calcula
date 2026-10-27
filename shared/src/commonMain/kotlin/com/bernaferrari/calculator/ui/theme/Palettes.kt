@@ -14,7 +14,7 @@ import com.materialkolor.material3.dynamicColorScheme
 
 /** The palettes this platform can show, wallpaper first where it exists. */
 val availablePalettes: List<AppPalette>
-    get() = AppPalette.entries.filter { it != AppPalette.WALLPAPER || supportsDynamicColor }
+    get() = AppPalette.entries.filter { it != AppPalette.GRAPHITE && (it != AppPalette.WALLPAPER || supportsDynamicColor) }
 
 /** What a person who never chose gets: their wallpaper where possible, indigo elsewhere. */
 fun AppPalette?.orDefault(): AppPalette = when {

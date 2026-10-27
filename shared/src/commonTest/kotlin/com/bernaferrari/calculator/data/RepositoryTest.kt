@@ -48,4 +48,16 @@ class RepositoryTest {
         assertEquals(3, loaded.decimalPlaces)
         assertTrue(loaded.reduceMotion)
     }
+
+    @Test fun legacyGraphitePreferenceMigratesToNeutralWithoutLosingSettings() = runTest {
+        val store = MemoryStringStore()
+        store.put("preferences", """{"palette":"GRAPHITE","colorStyle":"VIBRANT","decimalPlaces":3}""")
+        val preferences = StoredPreferencesRepository(store)
+        val migrated = preferences.getUserPreferences().first()
+        assertEquals(AppPalette.INDIGO, migrated.palette)
+        assertEquals(ColorStyle.NEUTRAL, migrated.colorStyle)
+        assertEquals(3, migrated.decimalPlaces)
+        preferences.updateReduceMotion(true)
+        assertEquals(migrated.copy(reduceMotion = true), StoredPreferencesRepository(store).getUserPreferences().first())
+    }
 }

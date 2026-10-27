@@ -54,13 +54,41 @@ header p{margin:26px 0 0;font-size:40px;line-height:1.24;letter-spacing:-.5px;wh
 .tablet10 .flick .key{left:640px;top:760px;width:250px}
 .tablet10 .pair .primary{left:770px;top:200px;width:820px}
 .tablet10 .pair .secondary{left:1460px;top:380px;width:360px}
-.tablet10 .customize-pair .primary{left:790px;top:150px;width:520px}
-.tablet10 .customize-pair .secondary{left:1160px;top:420px;width:680px}
+.tablet10 .customize-pair .primary{left:790px;top:230px;width:470px}
+.tablet10 .customize-pair .secondary{left:1320px;top:230px;width:470px}
 .tablet10 .room .primary{left:770px;top:200px;width:1040px}
 .tablet10 .room .secondary{left:1560px;top:500px;width:280px;z-index:3}
 
 .feature .brand{left:52px;top:44px;font-size:24px;gap:10px}.feature .brand img{width:34px;height:34px}.feature header{left:52px;top:125px;right:310px}.feature h1{font-size:80px;line-height:.98;letter-spacing:-3px}.feature header p{font-size:27px;margin-top:25px}.feature .primary{left:760px;top:40px;width:230px}.feature .block{display:none}
 .icon,.icon body,.icon .campaign{background:transparent}.icon .app-icon{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+/* README tools: softly lit color fields, consistent cards, and real app screens. */
+.readme .tools .tools-feature{position:absolute;top:36px;width:744px;height:1188px;overflow:hidden;border-radius:50px;z-index:1}
+.readme .tools .graph-feature{left:36px;background:linear-gradient(155deg,#edf6ff 6%,#cae2ff 56%,#82b5ed);color:#10275f}
+.readme .tools .convert-feature{left:828px;background:linear-gradient(155deg,#f1faf3 6%,#ccebdc 56%,#80c9ac);color:#103b34}
+.readme .tools .programmer-feature{left:1620px;background:linear-gradient(155deg,#f6f1ff 6%,#e1d4fb 56%,#b29ae7);color:#25165f}
+.readme .tools .tools-wave{position:absolute;top:-36px;width:2400px;height:1260px;pointer-events:none}
+.readme .tools .graph-feature .tools-wave{left:-36px}
+.readme .tools .convert-feature .tools-wave{left:-828px}
+.readme .tools .programmer-feature .tools-wave{left:-1620px}
+.readme .tools .tools-wave path{fill:#fff;fill-opacity:.24;stroke:#fff;stroke-opacity:.35;stroke-width:3}
+.readme .tools .tools-title{position:relative;z-index:3;margin:64px 72px 0;font-size:105px;line-height:.98;font-weight:700;letter-spacing:-4px}
+.readme .tools .tools-caption{position:relative;z-index:3;margin:26px 72px 0;font-size:33px;line-height:1.22;color:inherit;opacity:.85}
+.readme .tools .device{top:405px;left:120px;width:520px;transform:rotate(-6deg);background:#fff;box-shadow:0 8px 22px #17265730,0 45px 80px -30px #17265760}
+
+/* Personalization: a pair of generous color fields for two distinct choices. */
+.readme .customize-feature .custom-card{position:absolute;top:36px;width:1140px;height:1188px;overflow:hidden;border-radius:50px;z-index:1}
+.readme .customize-feature .appearance-card{left:40px;color:#33235e;background:linear-gradient(155deg,#f8f2ff 5%,#e6d9f7 55%,#bc9bda)}
+.readme .customize-feature .shortcuts-card{left:1220px;color:#563a16;background:linear-gradient(155deg,#fff8ed 5%,#f9dfbe 55%,#eab476)}
+.readme .customize-feature .custom-wave{position:absolute;top:-36px;width:2400px;height:1260px;pointer-events:none}
+.readme .customize-feature .appearance-card .custom-wave{left:-40px}
+.readme .customize-feature .shortcuts-card .custom-wave{left:-1220px}
+.readme .customize-feature .custom-wave path{fill:#fff;fill-opacity:.24;stroke:#fff;stroke-opacity:.35;stroke-width:3}
+.readme .customize-feature .custom-title{position:relative;z-index:3;margin:64px 80px 0;font-size:106px;line-height:.98;font-weight:700;letter-spacing:-4px}
+.readme .customize-feature .custom-caption{position:relative;z-index:3;margin:24px 80px 0;font-size:34px;line-height:1.2;color:inherit;opacity:.82}
+.readme .customize-feature .device{top:395px;left:285px;width:650px;transform:rotate(-5deg);background:#fff;box-shadow:0 8px 22px #17265724,0 45px 80px -30px #17265755}
+.readme .customize-feature .appearance-card .device{background:#e7d5f2}
+.readme .customize-feature .shortcuts-card .device{background:#f2d8b9}
 
 /* README before and after: the same phone, Calculator++ beside Calcula. Each pair stands on one giant calculator
    key, like the store cards; the original keeps a thin ink ring, Calcula steps forward in its own key-tinted frame. */

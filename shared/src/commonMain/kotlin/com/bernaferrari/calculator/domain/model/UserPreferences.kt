@@ -116,5 +116,6 @@ enum class AppPalette(val seed: Long) {
     ORANGE(0xFFF4511E),
     PINK(0xFFD81B60),
     PURPLE(0xFF8E24AA),
+    /** Retained to read preferences saved before Graphite was removed from the picker. */
     GRAPHITE(0xFF5F6368),
 }

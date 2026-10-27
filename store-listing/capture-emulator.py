@@ -17,7 +17,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--serial', required=True, help='Resizable emulator serial, e.g. emulator-5560')
 parser.add_argument('--locale', default='en-US', help='Per-app language and output folder, e.g. de-DE')
 parser.add_argument('--group', choices=['phone', 'tablet7', 'tablet10', 'desktop'])
+parser.add_argument('--id', help='Capture one configured scene within the selected group')
 args = parser.parse_args()
+if args.id and not args.group:
+    parser.error('--id requires --group')
 if not re.fullmatch(r'[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*', args.locale):
     parser.error('Invalid locale')
 sys.path.insert(0, str(HERE / 'studio'))
@@ -55,6 +58,9 @@ try:
         run('emu','resize-display',mode)
         density=round(profile['density']*160)
         views=[s for s in config['slides'] if group in s['groups']]+config.get('captureVariants',{}).get(group,[])
+        if args.id:
+            views=[s for s in views if s['id'] == args.id]
+            if not views: raise ValueError(f'No capture {args.id} in {group}')
         dimensions=None
         for slide in views:
             target=(slide.get('width',profile.get('captureWidth',profile['width'])),slide.get('height',profile.get('captureHeight',profile['height'])))
@@ -102,6 +108,9 @@ finally:
     shell('wm','size','reset')
     shell('wm','density','reset')
 capture_count=len(records)
+if args.id:
+    print(f'Refreshed {capture_count} screen; the full capture manifest was not changed.')
+    sys.exit(0)
 previous_manifest=HERE/args.locale/'capture-manifest.json'
 if args.group and previous_manifest.exists():
     prior=json.loads(previous_manifest.read_text())

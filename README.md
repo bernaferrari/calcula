@@ -20,13 +20,9 @@
 
 ## Everything under your thumb
 
-<table>
-  <tr>
-    <td width="33%"><img src="store-listing/en-US/phone/phone-02-graph.jpg" alt="Watch it take shape: plotting functions and an equation with a parameter slider"></td>
-    <td width="33%"><img src="store-listing/en-US/phone/phone-03-convert.jpg" alt="From °C to °F: converting 22 Celsius to 71.6 Fahrenheit"></td>
-    <td width="33%"><img src="store-listing/en-US/phone/phone-04-programmer.jpg" alt="Hex, sorted: Programmer mode showing C0 FFEE in hexadecimal and decimal"></td>
-  </tr>
-</table>
+<p align="center">
+  <img src="store-listing/en-US/readme/tools.jpg" width="100%" alt="Calcula graphing functions, converting temperature, and working in hexadecimal">
+</p>
 
 - **Functions on the keys.** Flick up for the function written above a key, down for its partner. Trigonometry, logs, roots, powers, π and more, with no second screen of buttons.
 - **Exact answers.** Decimal arithmetic keeps `0.1 + 0.2` at `0.3`. Percentages work the way you expect: `200 + 10%` gives `220`. Simple fractions appear beside decimal results.
@@ -36,7 +32,7 @@
 ## Make it yours
 
 <p align="center">
-  <img src="store-listing/en-US/tablet10/tablet10-04-customize.jpg" width="100%" alt="Yours, down to the keys: appearance settings and custom key shortcuts on tablets">
+  <img src="store-listing/en-US/readme/customize.jpg" width="100%" alt="Calcula appearance settings and customizable key shortcuts">
 </p>
 
 Choose light or dark, your wallpaper's colors or a color family, and a style you can preview before applying. Keep the function labels, switch to small dots, or hide the hints, and drag the bar above the keys to resize them. When you want more, assign your own key shortcuts, save named memories, define functions such as `tip(x) = x × 0.18`, or switch to reverse Polish notation.

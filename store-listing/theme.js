@@ -36,6 +36,24 @@ export default {
   },
 
   compose({kind, index, slide, main}) {
+    if (slide.layout === 'customize-feature') {
+      main.insertAdjacentHTML('beforeend', `<section class="custom-card appearance-card"><div class="custom-title">A look that<br>feels like you.</div><div class="custom-caption">Colors, themes and styles.</div></section><section class="custom-card shortcuts-card"><div class="custom-title">Your keys.<br>Your rules.</div><div class="custom-caption">Your favorites, a flick away.</div></section>`);
+      for (const name of ['appearance', 'shortcuts']) {
+        const card = main.querySelector(`.${name}-card`);
+        card.insertAdjacentHTML('beforeend', `<svg class="custom-wave" viewBox="0 0 2400 1260" aria-hidden="true"><path d="M0 820 C240 820 350 600 620 650 S980 940 1210 850 S1530 590 1760 650 S2140 935 2400 790 V1260 H0 Z"/></svg>`);
+        card.append(main.querySelector(`.device.${name}`));
+      }
+      return;
+    }
+    if (slide.layout === 'tools') {
+      main.insertAdjacentHTML('beforeend', `<section class="tools-feature graph-feature"><div class="tools-title">Watch it<br>take shape.</div><div class="tools-caption">Plot anything. Drag a parameter.<br>See it move.</div></section><section class="tools-feature convert-feature"><div class="tools-title">From °C<br>to °F.</div><div class="tools-caption">Units, converted<br>as you type.</div></section><section class="tools-feature programmer-feature"><div class="tools-title">Hex,<br>sorted.</div><div class="tools-caption">Programmer mode with<br>bits, shifts and bases.</div></section>`);
+      for (const name of ['graph', 'convert', 'programmer']) {
+        const card = main.querySelector(`.${name}-feature`);
+        card.insertAdjacentHTML('beforeend', `<svg class="tools-wave" viewBox="0 0 2400 1260" aria-hidden="true"><path d="M0 760 C200 600 400 600 600 760 S1000 920 1200 760 S1600 600 1800 760 S2200 920 2400 760 V1260 H0 Z"/></svg>`);
+        card.append(main.querySelector(`.device.${name}`));
+      }
+      return;
+    }
     if (kind === 'icon') {
       main.insertAdjacentHTML('beforeend', '<img class="app-icon" src="../../branding/calcula-icon.svg" alt="Calcula app icon">');
       return;

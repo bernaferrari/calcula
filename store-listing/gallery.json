@@ -221,7 +221,7 @@
           "role": "primary"
         },
         {
-          "raw": "tablet10/04-customize.png",
+          "raw": "tablet7/04-customize.png",
           "role": "secondary"
         }
       ],
@@ -321,6 +321,17 @@
   ],
   "readme": [
     {
+      "feature": "readme-tools",
+      "layout": "tools",
+      "file": "readme/tools.jpg",
+      "alt": "Graph functions, convert units, and work with number bases in Calcula",
+      "devices": [
+        {"raw": "phone/02-graph.png", "role": "graph"},
+        {"raw": "phone/03-convert.png", "role": "convert"},
+        {"raw": "phone/08-programmer-blue.png", "role": "programmer"}
+      ]
+    },
+    {
       "feature": "readme-compare",
       "layout": "compare",
       "file": "readme/before-after.jpg",
@@ -346,6 +357,16 @@
           "role": "after pair2",
           "label": "Calcula"
         }
+      ]
+    },
+    {
+      "feature": "readme-customize",
+      "layout": "customize-feature",
+      "file": "readme/customize.jpg",
+      "alt": "Calcula appearance settings and customizable key shortcuts",
+      "devices": [
+        {"raw": "tablet10/11-appearance-readme.png", "role": "appearance"},
+        {"raw": "tablet7/04-customize.png", "role": "shortcuts"}
       ]
     }
   ]
