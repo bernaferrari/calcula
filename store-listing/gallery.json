@@ -368,6 +368,16 @@
         {"raw": "tablet10/11-appearance-readme.png", "role": "appearance"},
         {"raw": "tablet7/04-customize.png", "role": "shortcuts"}
       ]
+    },
+    {
+      "feature": "readme-big-screen",
+      "layout": "big-screen-feature",
+      "file": "readme/big-screen.jpg",
+      "alt": "Calcula on a landscape tablet, showing history beside the calculator and an expanded graph",
+      "devices": [
+        {"raw": "tablet10/01-every-key.png", "role": "history"},
+        {"raw": "tablet10/02-graph.png", "role": "graph"}
+      ]
     }
   ]
 }

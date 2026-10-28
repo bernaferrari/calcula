@@ -42,8 +42,7 @@ Choose light or dark, your wallpaper's colors or a color family, and a style you
 History gets its own pane on tablets and foldables, keeping previous calculations in view beside your current work.
 
 <p align="center">
-  <img src="store-listing/en-US/tablet10/tablet10-01-every-key.jpg" width="49%" alt="Calcula on a landscape tablet, history beside the calculator">
-  <img src="store-listing/en-US/tablet10/tablet10-02-graph.jpg" width="49%" alt="Graphing on a landscape tablet">
+  <img src="store-listing/en-US/readme/big-screen.jpg" width="100%" alt="Calcula on a landscape tablet with history beside the calculator and an expanded graph">
 </p>
 
 ## A few gestures

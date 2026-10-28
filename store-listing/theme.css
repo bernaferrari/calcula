@@ -90,6 +90,19 @@ header p{margin:26px 0 0;font-size:40px;line-height:1.24;letter-spacing:-.5px;wh
 .readme .customize-feature .appearance-card .device{background:#e7d5f2}
 .readme .customize-feature .shortcuts-card .device{background:#f2d8b9}
 
+/* Large screens: show the tablet layouts large enough to read. */
+.readme .big-screen-feature .big-card{position:absolute;top:36px;width:1140px;height:1188px;overflow:hidden;border-radius:50px;z-index:1}
+.readme .big-screen-feature .history-card{left:40px;color:#553a13;background:linear-gradient(155deg,#fff8e9 5%,#fae6b6 55%,#eac97d)}
+.readme .big-screen-feature .graph-card{left:1220px;color:#10275f;background:linear-gradient(155deg,#edf6ff 5%,#cae2ff 55%,#82b5ed)}
+.readme .big-screen-feature .big-wave{position:absolute;top:-36px;width:2400px;height:1260px;pointer-events:none}
+.readme .big-screen-feature .history-card .big-wave{left:-40px}
+.readme .big-screen-feature .graph-card .big-wave{left:-1220px}
+.readme .big-screen-feature .big-wave path{fill:#fff;fill-opacity:.24;stroke:#fff;stroke-opacity:.35;stroke-width:3}
+.readme .big-screen-feature .big-title{position:relative;z-index:3;margin:64px 80px 0;font-size:106px;line-height:.98;font-weight:700;letter-spacing:-4px}
+.readme .big-screen-feature .big-caption{position:relative;z-index:3;margin:24px 80px 0;font-size:34px;line-height:1.2;color:inherit;opacity:.82}
+.readme .big-screen-feature .device{top:445px;left:80px;width:980px;background:#f5e4c8;box-shadow:0 8px 22px #17265724,0 45px 80px -30px #17265755}
+.readme .big-screen-feature .graph-card .device{background:#d5e0f5}
+
 /* README before and after: the same phone, Calculator++ beside Calcula. Each pair stands on one giant calculator
    key, like the store cards; the original keeps a thin ink ring, Calcula steps forward in its own key-tinted frame. */
 .readme .compare .device{width:450px;top:110px}

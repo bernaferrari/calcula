@@ -28,14 +28,28 @@ function key(main, alt) {
 
 export default {
   // Paper: a faint graph-paper grid in panorama coordinates, so the cards still join when shown together.
-  art({W, H, index}) {
+  art({W, H, index, slide}) {
     const cell = Math.round(Math.min(W, H) / 18), major = cell * 5, x0 = -index * W, off = ((x0 % major) + major) % major;
+    const gap = slide.layout === 'big-screen-feature'
+      ? `<rect x="1180" width="40" height="${H}" fill="#FBF5EA"/><rect x="1180" width="40" height="${H}" fill="url(#gap-minor)"/><rect x="1180" width="40" height="${H}" fill="url(#gap-major)"/>`
+      : '';
     return `<defs><pattern id="minor" width="${cell}" height="${cell}" patternUnits="userSpaceOnUse" x="${off}"><path d="M${cell} 0V${cell}H0" fill="none" stroke="#22307f" stroke-opacity=".05" stroke-width="1.5"/></pattern>` +
-      `<pattern id="major" width="${major}" height="${major}" patternUnits="userSpaceOnUse" x="${off}"><path d="M${major} 0V${major}H0" fill="none" stroke="#22307f" stroke-opacity=".09" stroke-width="2"/></pattern></defs>` +
-      `<rect width="${W}" height="${H}" fill="url(#minor)"/><rect width="${W}" height="${H}" fill="url(#major)"/>`;
+      `<pattern id="major" width="${major}" height="${major}" patternUnits="userSpaceOnUse" x="${off}"><path d="M${major} 0V${major}H0" fill="none" stroke="#22307f" stroke-opacity=".09" stroke-width="2"/></pattern>` +
+      `<pattern id="gap-minor" width="${cell}" height="${cell}" patternUnits="userSpaceOnUse"><path d="M0 ${cell}H${cell}" fill="none" stroke="#22307f" stroke-opacity=".05" stroke-width="1.5"/></pattern>` +
+      `<pattern id="gap-major" width="${major}" height="${major}" patternUnits="userSpaceOnUse"><path d="M0 ${major}H${major}" fill="none" stroke="#22307f" stroke-opacity=".09" stroke-width="2"/></pattern></defs>` +
+      `<rect width="${W}" height="${H}" fill="url(#minor)"/><rect width="${W}" height="${H}" fill="url(#major)"/>${gap}`;
   },
 
   compose({kind, index, slide, main}) {
+    if (slide.layout === 'big-screen-feature') {
+      main.insertAdjacentHTML('beforeend', `<section class="big-card history-card"><div class="big-title">More room<br>to think.</div><div class="big-caption">History beside your work.</div></section><section class="big-card graph-card"><div class="big-title">See the<br>bigger picture.</div><div class="big-caption">More space to explore a graph.</div></section>`);
+      for (const name of ['history', 'graph']) {
+        const card = main.querySelector(`.${name}-card`);
+        card.insertAdjacentHTML('beforeend', `<svg class="big-wave" viewBox="0 0 2400 1260" aria-hidden="true"><path d="M0 850 C220 850 330 615 600 670 S985 955 1210 850 S1530 610 1760 670 S2140 935 2400 790 V1260 H0 Z"/></svg>`);
+        card.append(main.querySelector(`.device.${name}`));
+      }
+      return;
+    }
     if (slide.layout === 'customize-feature') {
       main.insertAdjacentHTML('beforeend', `<section class="custom-card appearance-card"><div class="custom-title">A look that<br>feels like you.</div><div class="custom-caption">Colors, themes and styles.</div></section><section class="custom-card shortcuts-card"><div class="custom-title">Your keys.<br>Your rules.</div><div class="custom-caption">Your favorites, a flick away.</div></section>`);
       for (const name of ['appearance', 'shortcuts']) {
