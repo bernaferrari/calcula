@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-29T21:31:46.510Z",
+  "generatedAt": "2026-10-29T23:22:15.486Z",
   "campaign": "A little flick goes a long way",
   "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
   "assets": [
@@ -57,7 +57,7 @@
       "file": "phone/phone-06-customize.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 223626,
+      "bytes": 223191,
       "alt": "Light appearance settings and custom key assignments, with color swatches and visual style previews",
       "sources": [
         "raw/phone/04-customize.png",
@@ -236,10 +236,22 @@
       "alt": "Calcula app icon"
     },
     {
+      "file": "readme/hero.jpg",
+      "width": 2400,
+      "height": 1260,
+      "bytes": 307116,
+      "alt": "Calcula: programmer mode in hex, the 7 key mid-flick with sin chosen, and the color themes",
+      "sources": [
+        "raw/phone/08-programmer-blue.png",
+        "raw/phone/09-flick.png",
+        "raw/phone/07-appearance.png"
+      ]
+    },
+    {
       "file": "readme/tools.jpg",
       "width": 2400,
       "height": 1260,
-      "bytes": 385485,
+      "bytes": 385222,
       "alt": "Graph functions, convert units, and work with number bases in Calcula",
       "sources": [
         "raw/phone/02-graph.png",
@@ -251,7 +263,7 @@
       "file": "readme/before-after.jpg",
       "width": 2400,
       "height": 1260,
-      "bytes": 353434,
+      "bytes": 351784,
       "alt": "Calculator++ beside Calcula on the same phone: the calculator keypad, and the function plotter",
       "sources": [
         "raw/compare/calculatorpp-calculator.png",
@@ -264,7 +276,7 @@
       "file": "readme/customize.jpg",
       "width": 2400,
       "height": 1260,
-      "bytes": 329067,
+      "bytes": 332176,
       "alt": "Calcula appearance settings and customizable key shortcuts",
       "sources": [
         "raw/tablet10/11-appearance-readme.png",
@@ -275,7 +287,7 @@
       "file": "readme/big-screen.jpg",
       "width": 2400,
       "height": 1260,
-      "bytes": 327053,
+      "bytes": 325903,
       "alt": "Calcula on a landscape tablet, showing history beside the calculator and an expanded graph",
       "sources": [
         "raw/tablet10/01-every-key.png",

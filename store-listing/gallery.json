@@ -325,14 +325,14 @@
       "layout": "hero named",
       "file": "readme/hero.jpg",
       "identity": true,
-      "alt": "Calcula: programmer mode in hex, the keypad with scientific functions on every key, and the color themes",
+      "alt": "Calcula: programmer mode in hex, the 7 key mid-flick with sin chosen, and the color themes",
       "devices": [
         {
           "raw": "phone/08-programmer-blue.png",
           "role": "left"
         },
         {
-          "raw": "phone/01-every-key.png",
+          "raw": "phone/09-flick.png",
           "role": "center"
         },
         {

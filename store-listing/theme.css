@@ -133,9 +133,9 @@ header p{margin:26px 0 0;font-size:40px;line-height:1.24;letter-spacing:-.5px;wh
 .readme .hero .identity small{font-size:38px;font-weight:400;color:var(--hero-ink,#4d3606);opacity:.86}
 .readme .hero .identity small em{font-weight:700}
 .readme .hero .device{background:#fff;box-shadow:0 8px 22px #17265730,0 45px 80px -30px #17265760}
-.readme .hero.named .left{left:264px;top:434px;width:520px;transform:rotate(-6deg)}
-.readme .hero.named .center{left:904px;top:364px;width:520px}
-.readme .hero.named .right{left:1544px;top:434px;width:520px;transform:rotate(6deg)}
+.readme .hero.named .left{left:300px;top:450px;width:500px;transform:rotate(-6deg)}
+.readme .hero.named .center{left:884px;top:262px;width:560px;z-index:3}
+.readme .hero.named .right{left:1528px;top:450px;width:500px;transform:rotate(6deg)}
 /* Variants: a landscape tablet behind two phones, or two phones as a pair. */
 .readme .hero.slate .center{left:420px;top:360px;width:1490px;transform:none;z-index:2}
 .readme .hero.slate .left{left:110px;top:560px;width:430px;transform:rotate(-6deg);z-index:4}
