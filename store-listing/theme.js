@@ -62,9 +62,11 @@ export default {
       return;
     }
     if (slide.identity) {
-      // The name card: one yellow sheet, the app's name on it, three phones rising and the sin key beside them.
-      main.insertAdjacentHTML('afterbegin', `<section class="hero-sheet"><svg class="hero-wave" viewBox="0 0 2400 1260" aria-hidden="true"><path d="M0 860 C220 860 330 640 600 690 S985 965 1210 860 S1530 630 1760 690 S2140 945 2400 800 V1260 H0 Z"/></svg></section>`);
-      key(main, 'The 7 key, with sin a flick away');
+      // The name card is the flick itself: the name on the left, the keypad on the right, and its 7 key
+      // lifted straight up out of its slot, which stays empty, sin showing. The functions a flick away line up under the name.
+      main.insertAdjacentHTML('afterbegin', `<section class="hero-sheet"><svg class="hero-wave" viewBox="0 0 2400 1260" aria-hidden="true"><path d="M0 980 C300 980 420 760 760 820 S1240 1060 1500 940 S1980 700 2400 820 V1260 H0 Z"/></svg></section>`);
+      main.insertAdjacentHTML('beforeend', `<div class="flicks" aria-hidden="true">${['sin', 'cos', 'tan', 'log', 'x²', '√', 'π'].map(f => `<span>${f}</span>`).join('')}</div><div class="flick-slot"></div>`);
+      key(main, 'The 7 key, flicked up for sin');
       return;
     }
     if (slide.layout === 'tools') {

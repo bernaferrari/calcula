@@ -322,22 +322,18 @@
   "readme": [
     {
       "feature": "readme-hero",
-      "layout": "hero named",
+      "layout": "masthead",
       "file": "readme/hero.jpg",
       "identity": true,
-      "alt": "Calcula: a graph, the keypad with scientific functions on every key, and unit conversion",
+      "alt": "Calcula: the sin key flicked up out of the keypad, with a graph of sine behind it",
       "devices": [
         {
           "raw": "phone/02-graph.png",
-          "role": "left"
+          "role": "back"
         },
         {
           "raw": "phone/01-every-key.png",
-          "role": "center"
-        },
-        {
-          "raw": "phone/03-convert.png",
-          "role": "right"
+          "role": "front"
         }
       ]
     },

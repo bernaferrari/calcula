@@ -64,7 +64,7 @@
     "layouts": {
       "stack": false,
       "compare": false,
-      "hero": {
+      "masthead": {
         "visible": 0.5
       }
     }
