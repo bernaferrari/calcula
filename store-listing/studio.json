@@ -63,7 +63,10 @@
     "visible": 0.7,
     "layouts": {
       "stack": false,
-      "compare": false
+      "compare": false,
+      "hero": {
+        "visible": 0.5
+      }
     }
   }
 }

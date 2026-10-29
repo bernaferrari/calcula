@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-29T21:14:37.790Z",
+  "generatedAt": "2026-10-29T21:32:01.888Z",
   "campaign": "A little flick goes a long way",
   "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
   "assets": [
@@ -7,7 +7,7 @@
       "file": "phone/phone-01-every-key.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 241182,
+      "bytes": 240151,
       "alt": "Un pequeño deslizamiento. — Desliza una tecla para usar su función científica.",
       "sources": [
         "raw/phone/01-every-key.png"
@@ -79,7 +79,7 @@
       "file": "tablet7/tablet7-01-every-key.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 252010,
+      "bytes": 250983,
       "alt": "Un pequeño deslizamiento. — Desliza una tecla para usar su función científica.",
       "sources": [
         "raw/tablet7/01-every-key.png"
@@ -131,7 +131,7 @@
       "file": "tablet10/tablet10-01-every-key.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 213835,
+      "bytes": 213336,
       "alt": "Un pequeño deslizamiento. — Desliza una tecla para usar su función científica.",
       "sources": [
         "raw/tablet10/01-every-key.png"
@@ -223,7 +223,7 @@
       "file": "graphics/feature-graphic.png",
       "width": 1024,
       "height": 500,
-      "bytes": 71238,
+      "bytes": 70165,
       "sources": [
         "raw/phone/01-every-key.png"
       ]
@@ -232,7 +232,7 @@
       "file": "graphics/app-icon.png",
       "width": 512,
       "height": 512,
-      "bytes": 44877,
+      "bytes": 56383,
       "alt": "Un pequeño deslizamiento. — Desliza una tecla para usar su función científica."
     }
   ]

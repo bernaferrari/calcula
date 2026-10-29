@@ -10,8 +10,7 @@ function brand(main) {
   const node = document.createElement('div');
   node.className = 'brand';
   node.dataset.checkBounds = '';
-  node.innerHTML = '<img src="../brand/icon.svg" alt="">';
-  node.append(document.createTextNode('Calcula'));
+  node.textContent = 'Calcula';
   main.append(node);
 }
 
@@ -60,6 +59,12 @@ export default {
         card.insertAdjacentHTML('beforeend', `<svg class="custom-wave" viewBox="0 0 2400 1260" aria-hidden="true"><path d="M0 820 C240 820 350 600 620 650 S980 940 1210 850 S1530 590 1760 650 S2140 935 2400 790 V1260 H0 Z"/></svg>`);
         card.append(main.querySelector(`.device.${name}`));
       }
+      return;
+    }
+    if (slide.identity) {
+      // The name card: one yellow sheet, the app's name on it, three phones rising and the sin key beside them.
+      main.insertAdjacentHTML('afterbegin', `<section class="hero-sheet"><svg class="hero-wave" viewBox="0 0 2400 1260" aria-hidden="true"><path d="M0 860 C220 860 330 640 600 690 S985 965 1210 860 S1530 630 1760 690 S2140 945 2400 800 V1260 H0 Z"/></svg></section>`);
+      key(main, 'The 7 key, with sin a flick away');
       return;
     }
     if (slide.layout === 'tools') {

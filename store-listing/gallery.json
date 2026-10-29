@@ -321,14 +321,44 @@
   ],
   "readme": [
     {
+      "feature": "readme-hero",
+      "layout": "hero named",
+      "file": "readme/hero.jpg",
+      "identity": true,
+      "alt": "Calcula: a graph, the keypad with scientific functions on every key, and unit conversion",
+      "devices": [
+        {
+          "raw": "phone/02-graph.png",
+          "role": "left"
+        },
+        {
+          "raw": "phone/01-every-key.png",
+          "role": "center"
+        },
+        {
+          "raw": "phone/03-convert.png",
+          "role": "right"
+        }
+      ]
+    },
+    {
       "feature": "readme-tools",
       "layout": "tools",
       "file": "readme/tools.jpg",
       "alt": "Graph functions, convert units, and work with number bases in Calcula",
       "devices": [
-        {"raw": "phone/02-graph.png", "role": "graph"},
-        {"raw": "phone/03-convert.png", "role": "convert"},
-        {"raw": "phone/08-programmer-blue.png", "role": "programmer"}
+        {
+          "raw": "phone/02-graph.png",
+          "role": "graph"
+        },
+        {
+          "raw": "phone/03-convert.png",
+          "role": "convert"
+        },
+        {
+          "raw": "phone/08-programmer-blue.png",
+          "role": "programmer"
+        }
       ]
     },
     {
@@ -365,8 +395,14 @@
       "file": "readme/customize.jpg",
       "alt": "Calcula appearance settings and customizable key shortcuts",
       "devices": [
-        {"raw": "tablet10/11-appearance-readme.png", "role": "appearance"},
-        {"raw": "tablet7/04-customize.png", "role": "shortcuts"}
+        {
+          "raw": "tablet10/11-appearance-readme.png",
+          "role": "appearance"
+        },
+        {
+          "raw": "tablet7/04-customize.png",
+          "role": "shortcuts"
+        }
       ]
     },
     {
@@ -375,8 +411,14 @@
       "file": "readme/big-screen.jpg",
       "alt": "Calcula on a landscape tablet, showing history beside the calculator and an expanded graph",
       "devices": [
-        {"raw": "tablet10/01-every-key.png", "role": "history"},
-        {"raw": "tablet10/02-graph.png", "role": "graph"}
+        {
+          "raw": "tablet10/01-every-key.png",
+          "role": "history"
+        },
+        {
+          "raw": "tablet10/02-graph.png",
+          "role": "graph"
+        }
       ]
     }
   ]

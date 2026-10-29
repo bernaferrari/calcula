@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-29T21:14:22.421Z",
+  "generatedAt": "2026-10-29T21:31:46.510Z",
   "campaign": "A little flick goes a long way",
   "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
   "assets": [
@@ -7,7 +7,7 @@
       "file": "phone/phone-01-every-key.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 200836,
+      "bytes": 199840,
       "alt": "Calcula with labelled scientific functions; a magnified real sin key explains the flick gesture",
       "sources": [
         "raw/phone/01-every-key.png"
@@ -79,7 +79,7 @@
       "file": "tablet7/tablet7-01-every-key.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 213629,
+      "bytes": 212558,
       "alt": "Calcula on a 7-inch portrait tablet with history beside the keypad; Enlarged sin shortcut above the 7 key, redrawn from the app key style",
       "sources": [
         "raw/tablet7/01-every-key.png"
@@ -131,7 +131,7 @@
       "file": "tablet10/tablet10-01-every-key.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 192895,
+      "bytes": 192394,
       "alt": "Calcula on a 10-inch landscape tablet with history beside the keypad; Enlarged sin shortcut above the 7 key, redrawn from the app key style",
       "sources": [
         "raw/tablet10/01-every-key.png"
@@ -223,7 +223,7 @@
       "file": "graphics/feature-graphic.png",
       "width": 1024,
       "height": 500,
-      "bytes": 66671,
+      "bytes": 65597,
       "sources": [
         "raw/phone/01-every-key.png"
       ]
@@ -232,7 +232,7 @@
       "file": "graphics/app-icon.png",
       "width": 512,
       "height": 512,
-      "bytes": 44877,
+      "bytes": 56383,
       "alt": "Calcula app icon"
     },
     {
