@@ -62,11 +62,25 @@ export default {
       return;
     }
     if (slide.identity) {
-      // The name card is the flick itself: the name on the left, the keypad on the right, and its 7 key
-      // lifted straight up out of its slot, which stays empty, sin showing. The functions a flick away line up under the name.
+      // The name card shows the flick as a gesture: a big 7 key under a fingertip, a swoosh rising to sin
+      // (lit as the chosen function, sin⁻¹ waiting below), and fading copies of the key for the motion.
       main.insertAdjacentHTML('afterbegin', `<section class="hero-sheet"><svg class="hero-wave" viewBox="0 0 2400 1260" aria-hidden="true"><path d="M0 980 C300 980 420 760 760 820 S1240 1060 1500 940 S1980 700 2400 820 V1260 H0 Z"/></svg></section>`);
-      main.insertAdjacentHTML('beforeend', `<div class="flicks" aria-hidden="true">${['sin', 'cos', 'tan', 'log', 'x²', '√', 'π'].map(f => `<span>${f}</span>`).join('')}</div><div class="flick-slot"></div>`);
-      key(main, 'The 7 key, flicked up for sin');
+      const keyFace = '<rect width="300" height="300" rx="78" fill="url(#keyface)"/>';
+      main.insertAdjacentHTML('beforeend', `<figure class="flick" role="img" aria-label="The 7 key flicked up, sin chosen"><svg viewBox="0 0 470 600">
+        <defs><linearGradient id="keyface" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fffaf2"/><stop offset="1" stop-color="#f1e3cf"/></linearGradient>
+          <linearGradient id="speed" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22307f" stop-opacity=".5"/><stop offset="1" stop-color="#22307f" stop-opacity="0"/></linearGradient>
+          <linearGradient id="swoosh" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#22307f" stop-opacity="0"/><stop offset="1" stop-color="#22307f"/></linearGradient>
+          <filter id="blur" x="-20%" y="-40%" width="140%" height="180%"><feGaussianBlur stdDeviation="2 26"/></filter></defs>
+        <g transform="translate(60 210)" opacity=".38" filter="url(#blur)">${keyFace}</g>
+        <g transform="translate(60 120)"><rect width="300" height="300" rx="78" fill="#7a5a00" opacity=".18" transform="translate(0 12)"/>${keyFace}
+          <rect x="80" y="22" width="140" height="66" rx="33" fill="#22307f"/>
+          <text x="150" y="68" font-size="40" font-weight="600" fill="#fbf5ea" text-anchor="middle">sin</text>
+          <text x="150" y="198" font-size="124" fill="#3a3125" text-anchor="middle">7</text>
+          <text x="150" y="268" font-size="30" fill="#8e8375" text-anchor="middle" opacity=".75">sin⁻¹</text></g>
+        ${[120, 210, 300].map((x, i) => `<rect x="${x - 5}" y="${452 + (i % 2) * 18}" width="10" height="${i % 2 ? 80 : 110}" rx="5" fill="url(#speed)"/>`).join('')}
+        <path d="M418 470 C426 380 426 270 418 150" fill="none" stroke="url(#swoosh)" stroke-width="12" stroke-linecap="round"/>
+        <path d="M396 176 L418 142 L440 176" fill="none" stroke="#22307f" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg></figure><p class="flick-caption">Flick up for <b>sin</b>.<br>Down for <b>sin⁻¹</b>.</p>`);
       return;
     }
     if (slide.layout === 'tools') {

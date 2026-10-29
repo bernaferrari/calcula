@@ -123,20 +123,19 @@ header p{margin:26px 0 0;font-size:40px;line-height:1.24;letter-spacing:-.5px;wh
 .device-label.after span{font-size:44px;font-weight:700;letter-spacing:-1.2px;color:var(--ink)}
 
 /* README name card: the flick itself. Name and tagline on the left with the functions a flick away lined up
-   like keys; the keypad on the right with its 7 key lifted out along a dotted arc; a graph of sine behind. */
+   ; the flick drawn as a gesture under it; the real keypad on the right; a graph of sine behind. */
 .readme .masthead .hero-sheet{position:absolute;left:36px;right:36px;top:36px;bottom:-80px;overflow:hidden;border-radius:50px;z-index:0;background:linear-gradient(160deg,#fff6c8 4%,#f7df63 52%,#eabf2c)}
 .readme .masthead .hero-wave{position:absolute;left:-36px;top:-36px;width:2400px;height:1260px}
 .readme .masthead .hero-wave path{fill:#fff;fill-opacity:.24;stroke:#fff;stroke-opacity:.4;stroke-width:3}
-.readme .masthead .identity{left:150px;right:auto;top:300px;justify-content:start;column-gap:36px;color:#22307f}
+.readme .masthead .identity{left:150px;right:auto;top:150px;justify-content:start;column-gap:36px;color:#22307f}
 .readme .masthead .identity img{width:160px;height:160px;border-radius:24%;box-shadow:0 18px 40px -16px #7a5a0099}
 .readme .masthead .identity span{font-size:150px;letter-spacing:-6px}
 .readme .masthead .identity small{font-size:48px;font-weight:400;color:#22307fcc}
 .readme .masthead .identity small em{font-weight:700;color:#22307f}
-.readme .masthead .flicks{position:absolute;left:150px;top:640px;display:flex;gap:18px;z-index:5}
-.readme .masthead .flicks span{display:grid;place-items:center;min-width:104px;height:92px;padding:0 18px;border-radius:26px;background:#fbf5ea;color:#22307f;font-size:40px;box-shadow:inset 0 -5px 0 #22307f14,0 14px 26px -16px #7a5a0099}
-.readme .masthead .flicks span:nth-child(1){background:#22307f;color:#fbf5ea}
 .readme .masthead .device{background:#fff;box-shadow:0 8px 22px #7a5a0030,0 50px 90px -30px #7a5a0080}
 .readme .masthead .back{left:1760px;top:250px;width:520px;transform:rotate(7deg);z-index:2}
 .readme .masthead .front{left:1300px;top:150px;width:600px;z-index:3}
-.readme .masthead .key{left:1304px;top:618px;width:178px;z-index:6;transform:rotate(-4deg)}
-.readme .masthead .flick-slot{position:absolute;left:1329px;top:857px;width:127px;height:117px;border-radius:26px;z-index:4;background:#e6d6c2;box-shadow:inset 0 6px 12px #3a312533}
+.readme .masthead .flick{position:absolute;left:110px;top:400px;width:470px;margin:0;z-index:6;font-family:Calcula,sans-serif}
+.readme .masthead .flick svg{display:block;width:100%;height:auto;filter:drop-shadow(0 30px 40px #7a5a0044)}
+.readme .masthead .flick-caption{position:absolute;left:620px;top:600px;margin:0;z-index:6;font-size:52px;line-height:1.2;color:#22307fcc}
+.readme .masthead .flick-caption b{color:#22307f}
