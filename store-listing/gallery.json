@@ -325,10 +325,10 @@
       "layout": "hero named",
       "file": "readme/hero.jpg",
       "identity": true,
-      "alt": "Calcula: a graph, the keypad with scientific functions on every key, and unit conversion, over a sine wave on graph paper",
+      "alt": "Calcula: programmer mode in hex, the keypad with scientific functions on every key, and the color themes",
       "devices": [
         {
-          "raw": "phone/02-graph.png",
+          "raw": "phone/08-programmer-blue.png",
           "role": "left"
         },
         {
@@ -336,7 +336,7 @@
           "role": "center"
         },
         {
-          "raw": "phone/03-convert.png",
+          "raw": "phone/07-appearance.png",
           "role": "right"
         }
       ]

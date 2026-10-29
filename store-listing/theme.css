@@ -122,12 +122,23 @@ header p{margin:26px 0 0;font-size:40px;line-height:1.24;letter-spacing:-.5px;wh
 .device-label.before span{font-size:40px;font-weight:400;letter-spacing:-.5px;color:#22307fa6}
 .device-label.after span{font-size:44px;font-weight:700;letter-spacing:-1.2px;color:var(--ink)}
 
-/* README header: the name over Calcula's yellow, with y = sin(x) plotted across the card behind three phones. */
-.readme .hero .identity{top:70px;color:#22307f}
-.readme .hero .identity img{width:150px;height:150px;border-radius:24%;box-shadow:0 18px 40px -16px #7a5a00aa}
-.readme .hero .identity span{font-size:136px;letter-spacing:-5px}
-.readme .hero .identity small{font-size:46px;font-weight:400;color:#22307fcc}
-.readme .hero .identity small em{font-weight:700;color:#22307f}
-.readme .hero .device{--bezel:14px;--radius:58px;background:#ffffff;box-shadow:0 10px 24px #17265730,0 60px 100px -40px #17265780}
-.readme .hero.named .left,.readme .hero.named .right{top:510px}
-.readme .hero.named .center{top:400px}
+/* README header: one panel like the README cards (inset, rounded, white wave), the name centred in its ink,
+   three phones tilted and rising the way the cards' phones do. */
+.readme .hero .hero-panel{position:absolute;left:36px;right:36px;top:36px;bottom:36px;overflow:hidden;border-radius:50px;z-index:1;background:var(--hero-bg,linear-gradient(155deg,#fffbe6 5%,#f9e98f 55%,#ebc63f))}
+.readme .hero .hero-wave{position:absolute;left:-36px;top:-36px;width:2400px;height:1260px}
+.readme .hero .hero-wave path{fill:#fff;fill-opacity:.24;stroke:#fff;stroke-opacity:.35;stroke-width:3}
+.readme .hero .identity{top:96px;color:var(--hero-ink,#4d3606)}
+.readme .hero .identity img{width:140px;height:140px;border-radius:24%;box-shadow:0 14px 34px -14px #7a5a00aa}
+.readme .hero .identity span{font-size:118px;letter-spacing:-4.5px}
+.readme .hero .identity small{font-size:38px;font-weight:400;color:var(--hero-ink,#4d3606);opacity:.86}
+.readme .hero .identity small em{font-weight:700}
+.readme .hero .device{background:#fff;box-shadow:0 8px 22px #17265730,0 45px 80px -30px #17265760}
+.readme .hero.named .left{left:264px;top:434px;width:520px;transform:rotate(-6deg)}
+.readme .hero.named .center{left:904px;top:364px;width:520px}
+.readme .hero.named .right{left:1544px;top:434px;width:520px;transform:rotate(6deg)}
+/* Variants: a landscape tablet behind two phones, or two phones as a pair. */
+.readme .hero.slate .center{left:420px;top:360px;width:1490px;transform:none;z-index:2}
+.readme .hero.slate .left{left:110px;top:560px;width:430px;transform:rotate(-6deg);z-index:4}
+.readme .hero.slate .right{left:1800px;top:560px;width:430px;transform:rotate(6deg);z-index:4}
+.readme .hero.duo .left{left:560px;top:380px;width:560px;transform:rotate(-6deg);z-index:3}
+.readme .hero.duo .right{left:1220px;top:430px;width:560px;transform:rotate(6deg);z-index:2}

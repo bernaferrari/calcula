@@ -31,23 +31,6 @@ export default {
 
   // Paper: a faint graph-paper grid in panorama coordinates, so the cards still join when shown together.
   art({W, H, index, slide}) {
-    if (slide.identity) {
-      // The README header: Calcula's paper and grid, and each phone standing on a key in its README panel's colour,
-      // the function it gives written on the cap: f(x) on blue over the graph, sin on yellow over the keypad,
-      // °F on green over the converter.
-      const cell = 60, major = cell * 5;
-      const caps = [['f(x)', 225, 400, 650, 'blue', '#10275f'], ['sin', 860, 285, 680, 'yellow', '#4d3606'], ['°F', 1525, 400, 650, 'green', '#103b34']]
-        .map(([label, x, y, w, tone, ink]) =>
-          `<rect x="${x}" y="${y + 18}" width="${w}" height="${H}" rx="96" fill="${ink}" opacity=".16"/>` +
-          `<rect x="${x}" y="${y}" width="${w}" height="${H}" rx="96" fill="url(#${tone})"/>` +
-          `<text x="${x + w / 2}" y="${y + 74}" font-size="58" font-family="Calcula" font-weight="700" fill="${ink}" text-anchor="middle">${label}</text>`).join('');
-      return `<defs><linearGradient id="blue" x1="0" y1="0" x2=".4" y2="1"><stop offset="0" stop-color="#e6f1ff"/><stop offset=".45" stop-color="#bcd8ff"/><stop offset="1" stop-color="#7fb0ec"/></linearGradient>` +
-        `<linearGradient id="yellow" x1="0" y1="0" x2=".4" y2="1"><stop offset="0" stop-color="#fff6c8"/><stop offset=".45" stop-color="#f8e27a"/><stop offset="1" stop-color="#e9bf35"/></linearGradient>` +
-        `<linearGradient id="green" x1="0" y1="0" x2=".4" y2="1"><stop offset="0" stop-color="#ebf8ef"/><stop offset=".45" stop-color="#c3e8d4"/><stop offset="1" stop-color="#7cc6a7"/></linearGradient>` +
-        `<pattern id="minor" width="${cell}" height="${cell}" patternUnits="userSpaceOnUse"><path d="M${cell} 0V${cell}H0" fill="none" stroke="#22307f" stroke-opacity=".05" stroke-width="1.5"/></pattern>` +
-        `<pattern id="major" width="${major}" height="${major}" patternUnits="userSpaceOnUse"><path d="M${major} 0V${major}H0" fill="none" stroke="#22307f" stroke-opacity=".09" stroke-width="2"/></pattern></defs>` +
-        `<rect width="${W}" height="${H}" fill="#fbf5ea"/><rect width="${W}" height="${H}" fill="url(#minor)"/><rect width="${W}" height="${H}" fill="url(#major)"/>${caps}`;
-    }
     const cell = Math.round(Math.min(W, H) / 18), major = cell * 5, x0 = -index * W, off = ((x0 % major) + major) % major;
     const gap = slide.layout === 'big-screen-feature'
       ? `<rect x="1180" width="40" height="${H}" fill="#FBF5EA"/><rect x="1180" width="40" height="${H}" fill="url(#gap-minor)"/><rect x="1180" width="40" height="${H}" fill="url(#gap-major)"/>`
@@ -78,7 +61,14 @@ export default {
       }
       return;
     }
-    if (slide.identity) return;
+    if (slide.identity) {
+      // The README header follows the README cards exactly: one inset panel in Calcula's yellow with the white wave,
+      // the name centred in the panel's ink, three real phones tilted and rising like the cards' phones.
+      main.insertAdjacentHTML('afterbegin', `<section class="hero-panel"><svg class="hero-wave" viewBox="0 0 2400 1260" aria-hidden="true"><path d="M0 820 C240 820 350 600 620 650 S980 940 1210 850 S1530 590 1760 650 S2140 935 2400 790 V1260 H0 Z"/></svg></section>`);
+      const panel = main.querySelector('.hero-panel');
+      for (const device of main.querySelectorAll('.device')) panel.append(device);
+      return;
+    }
     if (slide.layout === 'tools') {
       main.insertAdjacentHTML('beforeend', `<section class="tools-feature graph-feature"><div class="tools-title">Watch it<br>take shape.</div><div class="tools-caption">Plot anything. Drag a parameter.<br>See it move.</div></section><section class="tools-feature convert-feature"><div class="tools-title">From °C<br>to °F.</div><div class="tools-caption">Units, converted<br>as you type.</div></section><section class="tools-feature programmer-feature"><div class="tools-title">Hex,<br>sorted.</div><div class="tools-caption">Programmer mode with<br>bits, shifts and bases.</div></section>`);
       for (const name of ['graph', 'convert', 'programmer']) {
