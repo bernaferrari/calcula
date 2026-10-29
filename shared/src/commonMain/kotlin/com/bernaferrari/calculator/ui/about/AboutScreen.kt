@@ -111,7 +111,7 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
         Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal))) {
             Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
                 TopBar {
-                IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null) }
+                IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(Res.string.accessibility_back)) }
             }
                 LazyColumn(
                     Modifier.widthIn(max = 600.dp).fillMaxWidth().fadeBottomEdge(bottomInset + 12.dp),

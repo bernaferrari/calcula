@@ -252,4 +252,6 @@
     <string name="gesture_help_hint">Tieni premuto un tasto per vedere le sue funzioni.</string>
     <string name="gesture_help_body">Scorri verso l’alto per la funzione superiore o verso il basso per quella inferiore. Tieni premuto il tasto per vederle entrambe.\n\nScorri sul tasto Cancella verso l’alto per annullare una modifica o verso il basso per ripeterla, in modalità espressione.\n\nTocca l’anteprima del risultato per accettarlo. Tocca due volte l’espressione per selezionare testo e applicare una funzione o parentesi.\n\nScegli le etichette nelle impostazioni per vedere entrambe le direzioni. Puoi riaprire questa guida dalle impostazioni.</string>
     <string name="gesture_help_done">Capito</string>
+    <string name="accessibility_back">Indietro</string>
+    <string name="accessibility_more_options">Altre opzioni</string>
 </resources>

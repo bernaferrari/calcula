@@ -94,7 +94,7 @@ export function FlickKeypad() {
       return;
     }
     setShown(null);
-    setText((t) => apply(t, insert));
+    setText((t) => apply(shown && /^[0-9.(πe√∛]|^(sin|cos|tan|log|ln|abs)/.test(insert) ? "" : t, insert));
   };
 
   return (

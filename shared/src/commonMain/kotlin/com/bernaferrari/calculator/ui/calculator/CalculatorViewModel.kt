@@ -163,7 +163,7 @@ class CalculatorViewModel(
             functions = prefs.functions,
             flicks = FlickCatalog.resolve(prefs.flicks, prefs.functions),
             rpn = prefs.rpn,
-            stack = rpn.stack.mapIndexed { i, v -> if (i == 0 && rpn.entry != null) rpn.entry else NumberFormatter.format(v) },
+            stack = rpn.stack.mapIndexed { i, v -> if (i == 0 && rpn.entry != null) rpn.entry else Calculator.formatResult(v, prefs.decimalPlaces, prefs.notation) },
             entering = rpn.entry != null,
         ).let { if (prefs.rpn) it.copy(error = rpn.error) else it }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), CalculatorUiState(text = calc.value.editor.text))
@@ -207,7 +207,11 @@ class CalculatorViewModel(
         pendingKeys.clear(); pendingFlicks = 0; pendingCalculations = 0
         val now = kotlin.time.Clock.System.now().toEpochMilliseconds()
         val day = now / 86_400_000L
-        viewModelScope.launch { preferences.update { it.copy(usage = it.usage.plus(keys, flicks, calculations, day, now)) } }
+        // ViewModel clearing cancels viewModelScope before onCleared runs. This final write
+        // needs its own lifetime, including if a repository implementation suspends.
+        kotlinx.coroutines.CoroutineScope(Dispatchers.Main.immediate).launch(start = kotlinx.coroutines.CoroutineStart.UNDISPATCHED) {
+            preferences.update { it.copy(usage = it.usage.plus(keys, flicks, calculations, day, now)) }
+        }
     }
 
     override fun onCleared() {
@@ -315,8 +319,8 @@ class CalculatorViewModel(
     fun onInsertText(text: String) {
         if (settings.value.rpn) {
             // RPN has no expression to type into: a constant goes on the stack, a function applies to x.
-            val value = CalcEngine.evaluateOrNull(if (text.endsWith("(")) text + (Rpn.x(rpn.value)?.toPlainString() ?: "0") + ")" else text) ?: return
-            setRpnState(Rpn.pushNumber(if (text.endsWith("(")) rpn.value.copy(stack = rpn.value.stack.drop(1), entry = null, lift = false) else rpn.value, Calculator.formatResult(value, AUTO_DECIMALS)))
+            val value = CalcEngine.evaluateOrNull(if (text.endsWith("(")) text + (Rpn.x(rpn.value)?.toPlainString() ?: "0") + ")" else text, calc.value.angleUnit) ?: return
+            setRpnState(Rpn.pushNumber(if (text.endsWith("(")) rpn.value.copy(entry = null, lift = false) else rpn.value, Calculator.formatResult(value, AUTO_DECIMALS)))
             return
         }
         setState(Calculator.insertText(calc.value, text))

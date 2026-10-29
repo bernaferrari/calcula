@@ -252,4 +252,6 @@
     <string name="gesture_help_hint">Taste gedrückt halten, um ihre Funktionen zu sehen.</string>
     <string name="gesture_help_body">Nach oben wischen für die obere Funktion, nach unten für die untere. Taste gedrückt halten, um beide zu sehen.\n\nAuf der Löschtaste nach oben wischen, um eine Bearbeitung rückgängig zu machen, nach unten zum Wiederholen. Dies gilt im Ausdrucksmodus.\n\nAuf die Ergebnisvorschau tippen, um sie zu übernehmen. Den Ausdruck doppelt antippen, um Text auszuwählen und eine Funktion oder Klammern anzuwenden.\n\nBeschriftungen in den Einstellungen zeigen beide Richtungen. Diese Hilfe kann dort jederzeit geöffnet werden.</string>
     <string name="gesture_help_done">Verstanden</string>
+    <string name="accessibility_back">Zurück</string>
+    <string name="accessibility_more_options">Weitere Optionen</string>
 </resources>

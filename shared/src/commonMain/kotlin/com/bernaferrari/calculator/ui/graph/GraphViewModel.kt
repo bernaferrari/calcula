@@ -187,7 +187,7 @@ class GraphViewModel(private val store: GraphStore) : ViewModel() {
             it.copy(functions = listOf(GraphFunction(Editor())), active = 0)
         } else {
             val functions = it.functions.filterIndexed { i, _ -> i != index }
-            it.copy(functions = functions, active = it.active.coerceAtMost(functions.lastIndex).let { a -> if (index < it.active) a - 1 else a }.coerceAtLeast(0))
+            it.copy(functions = functions, active = (if (index < it.active) it.active - 1 else it.active).coerceIn(0, functions.lastIndex))
         }
     }
 

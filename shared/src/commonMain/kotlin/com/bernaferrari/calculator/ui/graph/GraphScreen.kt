@@ -125,7 +125,7 @@ fun GraphScreen(
             val landscape = maxWidth > maxHeight && (maxHeight < 600.dp || maxWidth >= 840.dp)
             val header: @Composable () -> Unit = {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 4.dp).height(56.dp)) {
-                    IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null) }
+                    IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(Res.string.accessibility_back)) }
                     Text(stringResource(Res.string.graph_title), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
                     IconButton(onClick = { haptics.tap(); libraryOpen = true }) {
                         Icon(Icons.Outlined.History, contentDescription = stringResource(Res.string.graph_open_library), tint = MaterialTheme.colorScheme.onSurfaceVariant)

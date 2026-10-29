@@ -93,7 +93,7 @@ fun UsageScreen(onNavigateBack: () -> Unit) {
         Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars)) {
             Box(Modifier.weight(1f).fillMaxWidth()) {
             TopBar {
-                IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null) }
+                IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(Res.string.accessibility_back)) }
                 Text(stringResource(Res.string.menu_usage), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
             }
             Column(

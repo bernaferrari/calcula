@@ -252,4 +252,6 @@
     <string name="gesture_help_hint">Maintenez une touche pour voir ses fonctions.</string>
     <string name="gesture_help_body">Glissez vers le haut pour la fonction supérieure, ou vers le bas pour la fonction inférieure. Maintenez la touche pour voir les deux.\n\nGlissez la touche Effacer vers le haut pour annuler une modification, ou vers le bas pour la rétablir, en mode expression.\n\nTouchez l’aperçu du résultat pour le valider. Touchez deux fois l’expression pour sélectionner du texte et appliquer une fonction ou des parenthèses.\n\nChoisissez les libellés dans les paramètres pour voir les deux directions. Ce guide reste accessible dans les paramètres.</string>
     <string name="gesture_help_done">Compris</string>
+    <string name="accessibility_back">Retour</string>
+    <string name="accessibility_more_options">Plus d’options</string>
 </resources>

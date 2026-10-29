@@ -97,10 +97,10 @@ fun CustomizeKeysScreen(onNavigateBack: () -> Unit, viewModel: SettingsViewModel
     Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.containerTransform("settings", isScreen = true).fillMaxSize()) {
         Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars)) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.statusBarsPadding().padding(horizontal = 4.dp).height(56.dp).fillMaxWidth()) {
-                IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null) }
+                IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(Res.string.accessibility_back)) }
                 Text(stringResource(Res.string.settings_customize_keys), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
                 Box {
-                    IconButton(onClick = { haptics.tap(); menu = true }) { Icon(Icons.Rounded.MoreVert, contentDescription = null) }
+                    IconButton(onClick = { haptics.tap(); menu = true }) { Icon(Icons.Rounded.MoreVert, contentDescription = stringResource(Res.string.accessibility_more_options)) }
                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                         DropdownMenuItem(
                             text = { Text(stringResource(Res.string.customize_export)) },

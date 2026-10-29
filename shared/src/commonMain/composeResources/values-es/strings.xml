@@ -252,4 +252,6 @@
     <string name="gesture_help_hint">Mantén pulsada una tecla para ver sus funciones.</string>
     <string name="gesture_help_body">Desliza una tecla hacia arriba para usar la función superior o hacia abajo para usar la inferior. Mantenla pulsada para ver ambas.\n\nDesliza la tecla de borrar hacia arriba para deshacer o hacia abajo para rehacer una edición en el modo de expresiones.\n\nToca la vista previa del resultado para aceptarlo. Toca dos veces la expresión para seleccionar texto y aplicar una función o paréntesis.\n\nElige Etiquetas en Ajustes para ver ambas direcciones. Puedes volver a abrir esta guía desde Ajustes.</string>
     <string name="gesture_help_done">Entendido</string>
+    <string name="accessibility_back">Atrás</string>
+    <string name="accessibility_more_options">Más opciones</string>
 </resources>

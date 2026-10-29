@@ -55,6 +55,7 @@ object UserFunctions {
                 if (depth > 0) j++
             }
             val argument = text.substring(start, j.coerceAtMost(text.length))
+            if (argument.isBlank()) throw CalcException(CalcError.SYNTAX)
             out.append('(').append(substitute(fn.body, argument)).append(')')
             i = if (j < text.length) j + 1 else text.length
         }

@@ -20,7 +20,7 @@ export function format(value: number): string {
   if (Object.is(value, -0)) value = 0;
   const rounded = Number.parseFloat(value.toPrecision(12));
   const text = Math.abs(rounded) >= 1e12 || (rounded !== 0 && Math.abs(rounded) < 1e-9) ? rounded.toExponential(6) : String(rounded);
-  return text.replace("-", "−");
+  return text.replace("e", "E").replace("-", "−");
 }
 
 const FUNCTIONS = ["sin⁻¹", "cos⁻¹", "tan⁻¹", "sin", "cos", "tan", "log", "abs", "ln"] as const;
@@ -28,6 +28,7 @@ const RAD = Math.PI / 180;
 
 class Parser {
   private i = 0;
+  private percent = false;
   constructor(private readonly s: string) {}
 
   end() {
@@ -39,8 +40,8 @@ class Parser {
   expression(): number {
     let v = this.term();
     for (;;) {
-      if (this.eat("+")) v += this.term();
-      else if (this.eat("−")) v -= this.term();
+      if (this.eat("+")) { const r = this.term(); v += this.percent ? v * r : r; }
+      else if (this.eat("−")) { const r = this.term(); v -= this.percent ? v * r : r; }
       else return v;
     }
   }
@@ -48,10 +49,10 @@ class Parser {
   private term(): number {
     let v = this.unary();
     for (;;) {
-      if (this.eat("×")) v *= this.unary();
-      else if (this.eat("÷")) v /= this.unary();
+      if (this.eat("×")) { v *= this.unary(); this.percent = false; }
+      else if (this.eat("÷")) { v /= this.unary(); this.percent = false; }
       // 2π, 3(4), 2sin(30): side by side means multiply.
-      else if (this.startsPrimary()) v *= this.power();
+      else if (this.startsPrimary()) { v *= this.power(); this.percent = false; }
       else return v;
     }
   }
@@ -68,14 +69,15 @@ class Parser {
   }
 
   private postfix(): number {
+    let percent = false;
     let v = this.primary();
     for (;;) {
       if (this.eat("²")) v = v ** 2;
       else if (this.eat("³")) v = v ** 3;
       else if (this.eat("⁻¹")) v = 1 / v;
-      else if (this.eat("%")) v = v / 100;
+      else if (this.eat("%")) { v /= 100; percent = true; }
       else if (this.eat("!")) v = factorial(v);
-      else return v;
+      else { this.percent = percent; return v; }
     }
   }
 
@@ -91,10 +93,10 @@ class Parser {
       }
     }
     if (this.eat("e")) return Math.E;
-    const match = /^(\d+\.?\d*|\.\d+)/.exec(this.s.slice(this.i));
+    const match = /^(\d+\.?\d*|\.\d+)(?:E[+−-]?\d+)?/.exec(this.s.slice(this.i));
     if (!match) throw new Error("expected a number");
     this.i += match[0].length;
-    return Number.parseFloat(match[0]);
+    return Number.parseFloat(match[0].replace("−", "-"));
   }
 
   /** The inside of a parenthesis; its `)` may still be missing at the end. */
@@ -124,7 +126,7 @@ function apply(name: (typeof FUNCTIONS)[number], x: number): number {
   switch (name) {
     case "sin": return Math.sin(x * RAD);
     case "cos": return Math.cos(x * RAD);
-    case "tan": return Math.tan(x * RAD);
+    case "tan": return Math.abs(Math.cos(x * RAD)) < 1e-15 ? Number.NaN : Math.tan(x * RAD);
     case "sin⁻¹": return Math.asin(x) / RAD;
     case "cos⁻¹": return Math.acos(x) / RAD;
     case "tan⁻¹": return Math.atan(x) / RAD;

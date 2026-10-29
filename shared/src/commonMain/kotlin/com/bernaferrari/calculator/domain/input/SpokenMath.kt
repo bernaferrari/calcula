@@ -24,5 +24,6 @@ object SpokenMath {
             // A spoken thousands separator ("1,200") is not a decimal point.
             .replace(Regex("(?<=\\d),(?=\\d{3}(\\D|$))"), "")
             .replace(" ", "")
+            .replace(Regex("(?<=\\d)e(?=[+−]?\\d)"), "E")
     }
 }

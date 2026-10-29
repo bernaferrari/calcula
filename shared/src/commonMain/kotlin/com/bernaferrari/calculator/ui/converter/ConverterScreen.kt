@@ -139,7 +139,7 @@ fun ConverterScreen(
         val landscape = maxWidth > maxHeight && (maxHeight < 600.dp || maxWidth >= 840.dp)
         val header: @Composable () -> Unit = {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.statusBarsPadding().padding(horizontal = 4.dp).height(56.dp)) {
-                    IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null) }
+                    IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(Res.string.accessibility_back)) }
                     Text(stringResource(Res.string.menu_unit_converter), style = MaterialTheme.typography.titleLarge)
                 }
         }

@@ -72,7 +72,7 @@ object Programmer {
             ProgKey.EQUALS -> {
                 // A number on its own has nothing to work out.
                 if (s.tokens.isEmpty() || s.resultShown || !hasOperation(s)) return s
-                when (val r = evaluate(close(s.tokens), s.base, s.word)) {
+                when (val r = evaluate(close(s.tokens), s.base, s.word, s.signed)) {
                     is Result.Value -> s.copy(tokens = tokensFor(r.value, s.base, s.word, s.signed), resultShown = true, expression = close(s.tokens))
                     is Result.Failed -> s.copy(error = r.error)
                 }
@@ -160,7 +160,7 @@ object Programmer {
         var tokens = state.tokens
         while (tokens.isNotEmpty() && (tokens.last() in BINARY || tokens.last() in PREFIX || tokens.last() == "(")) tokens = tokens.dropLast(1)
         if (tokens.isEmpty()) return null
-        return (evaluate(close(tokens), state.base, state.word) as? Result.Value)?.value
+        return (evaluate(close(tokens), state.base, state.word, state.signed) as? Result.Value)?.value
     }
 
     /** How the expression reads: operators spaced out, a minus hugging its number. */
@@ -239,8 +239,8 @@ object Programmer {
 
     private class Fail(val error: ProgError) : Exception()
 
-    private fun evaluate(tokens: List<String>, base: Base, word: WordSize): Result = try {
-        val p = Parser(tokens, base, word)
+    private fun evaluate(tokens: List<String>, base: Base, word: WordSize, signed: Boolean): Result = try {
+        val p = Parser(tokens, base, word, signed)
         val v = p.or()
         if (p.pos != tokens.size) throw Fail(ProgError.SYNTAX)
         Result.Value(v)
@@ -249,10 +249,11 @@ object Programmer {
     }
 
     /** C's precedence: OR < XOR < AND < shifts < + − < × ÷ mod < NOT and minus. */
-    private class Parser(val tokens: List<String>, val base: Base, val word: WordSize) {
+    private class Parser(val tokens: List<String>, val base: Base, val word: WordSize, val signed: Boolean) {
         var pos = 0
         fun peek() = tokens.getOrNull(pos)
         fun w(v: Long) = wrap(v, word)
+        fun unsigned(v: Long): ULong = v.toULong() and (if (word.bits == 64) ULong.MAX_VALUE else (1uL shl word.bits) - 1uL)
 
         fun or(): Long { var v = xor(); while (peek() == "OR") { pos++; v = w(v or xor()) }; return v }
         fun xor(): Long { var v = and(); while (peek() == "XOR") { pos++; v = w(v xor and()) }; return v }
@@ -264,7 +265,7 @@ object Programmer {
                 val n = add()
                 v = when (op) {
                     "<<" -> w(v shl n.toInt().coerceIn(0, 63))
-                    ">>" -> w(v shr n.toInt().coerceIn(0, 63))
+                    ">>" -> w(if (signed) v shr n.toInt().coerceIn(0, 63) else (v.toULong() and (if (word.bits == 64) ULong.MAX_VALUE else (1uL shl word.bits) - 1uL)).shr(n.toInt().coerceIn(0, 63)).toLong())
                     // Rotations wrap around the word: what leaves one end comes back at the other.
                     else -> rotate(v, if (op == "ROL") n else -n)
                 }
@@ -294,7 +295,7 @@ object Programmer {
                 val op = tokens[pos++]
                 val r = unary()
                 if (op != "×" && r == 0L) throw Fail(ProgError.DIVIDE_BY_ZERO)
-                v = w(when (op) { "×" -> v * r; "÷" -> v / r; else -> v % r })
+                v = w(when (op) { "×" -> v * r; "÷" -> if (signed) v / r else unsigned(v).div(unsigned(r)).toLong(); else -> if (signed) v % r else unsigned(v).rem(unsigned(r)).toLong() })
             }
             return v
         }

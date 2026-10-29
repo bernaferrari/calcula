@@ -249,4 +249,6 @@
     <string name="gesture_help_hint">长按按键可查看其功能。</string>
     <string name="gesture_help_body">向上滑动使用上方功能，向下滑动使用下方功能。长按可先查看两种功能。\n\n在表达式输入模式下，在删除键上向上滑动可撤销编辑，向下滑动可重做。\n\n点按结果预览以确认。双击表达式选择文本，然后应用函数或括号。\n\n在设置中选择标签，即可显示两个方向的功能。您随时可以从设置重新打开本指南。</string>
     <string name="gesture_help_done">知道了</string>
+    <string name="accessibility_back">返回</string>
+    <string name="accessibility_more_options">更多选项</string>
 </resources>

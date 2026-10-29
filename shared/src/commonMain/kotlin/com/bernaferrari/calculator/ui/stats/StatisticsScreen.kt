@@ -152,7 +152,7 @@ fun StatisticsScreen(
             Column(Modifier.widthIn(max = 560.dp).fillMaxSize()) {
                 Box(Modifier.weight(1f).fillMaxWidth()) {
                 TopBar {
-                    IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null) }
+                    IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(Res.string.accessibility_back)) }
                     Text(stringResource(Res.string.menu_statistics), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
                     TextButton(onClick = { haptics.heavy(); viewModel.onClear() }, enabled = state.values.isNotEmpty() || state.entry.isNotEmpty()) {
                         Text(stringResource(Res.string.stats_clear))

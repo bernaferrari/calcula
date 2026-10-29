@@ -331,6 +331,7 @@ private fun FunctionEditor(
     val trial = if (text.isEmpty()) null else runCatching {
         CalcEngine.evaluateOrNull(UserFunctions.expand("$shownName(10)", functions + draft))
     }.getOrNull()
+    val validBody = text.isNotBlank() && runCatching { com.bernaferrari.calculator.domain.math.Plot.compile(UserFunctions.expand("$shownName(x)", functions + draft)) != null }.getOrDefault(false)
     val scheme = MaterialTheme.colorScheme
     val editBody = {
         naming = false
@@ -379,7 +380,7 @@ private fun FunctionEditor(
                 )
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                     TextButton(onClick = onCancel) { Text(stringResource(Res.string.function_cancel)) }
-                    TextButton(onClick = { onSave(UserFunction(name, text)) }, enabled = validName && trial != null) {
+                    TextButton(onClick = { onSave(UserFunction(name, text)) }, enabled = validName && validBody) {
                         Text(stringResource(Res.string.function_save))
                     }
                 }
@@ -391,7 +392,7 @@ private fun FunctionEditor(
                 when (key) {
                     Key.CLEAR -> body = Editor()
                     // `=` finishes the function, like Save.
-                    Key.EQUALS -> if (validName && trial != null) onSave(UserFunction(name, text)) else haptics.reject()
+                    Key.EQUALS -> if (validName && validBody) onSave(UserFunction(name, text)) else haptics.reject()
                     else -> body = Calculator.press(CalcState(editor = body, angleUnit = AngleUnit.RADIANS), key).first.editor
                 }
             }

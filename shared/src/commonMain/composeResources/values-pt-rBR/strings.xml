@@ -254,4 +254,6 @@
     <string name="gesture_help_hint">Segure uma tecla para ver suas funções.</string>
     <string name="gesture_help_body">Deslize uma tecla para cima para usar a função superior ou para baixo para usar a inferior. Segure a tecla para ver ambas antes de escolher.\n\nDeslize a tecla de apagar para cima para desfazer ou para baixo para refazer uma edição. Esses atalhos se aplicam ao modo de expressões.\n\nToque na prévia do resultado para aceitá-lo. Toque duas vezes na expressão para selecionar texto e aplicar uma função ou parênteses à seleção.\n\nEscolha Rótulos nas configurações para ver as duas direções. Este guia está sempre disponível nas configurações.</string>
     <string name="gesture_help_done">Entendi</string>
+    <string name="accessibility_back">Voltar</string>
+    <string name="accessibility_more_options">Mais opções</string>
 </resources>

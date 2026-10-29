@@ -238,7 +238,7 @@ fun ProgrammerScreen(
             val keypadHeight = (maxHeight * 0.52f).coerceIn(340.dp, 500.dp)
             val header: @Composable () -> Unit = {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.statusBarsPadding().padding(horizontal = 4.dp).height(56.dp).fillMaxWidth()) {
-                    IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null) }
+                    IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(Res.string.accessibility_back)) }
                     // The bases live up here beside the word size, so the readout below keeps its room
                     // for the number and its bits.
                     BaseSelector(state.base, Modifier.weight(1f)) { haptics.tap(); viewModel.onBase(it) }

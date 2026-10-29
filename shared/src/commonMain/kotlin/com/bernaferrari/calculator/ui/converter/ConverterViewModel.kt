@@ -71,7 +71,7 @@ class ConverterViewModel(private val saved: SavedStateHandle) : ViewModel() {
         val s = _state.value
         if (s.topActive == top) return
         val carried = if (top) s.topText else s.bottomText
-        set(s.copy(topActive = top, input = carried.takeUnless { 'E' in it }.orEmpty()))
+        set(s.copy(topActive = top, input = carried))
     }
 
     fun onDigit(digit: Char) = edit { input ->

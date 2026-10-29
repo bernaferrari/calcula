@@ -154,7 +154,7 @@ fun SettingsScreen(
         // On wide screens the list keeps a readable width, centred.
         Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
         TopBar {
-            IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null) }
+            IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(Res.string.accessibility_back)) }
             Text(stringResource(Res.string.settings_title), style = MaterialTheme.typography.titleLarge)
         }
         // A plain scrolling column, not a lazy list: settings is short, and keeping every row
