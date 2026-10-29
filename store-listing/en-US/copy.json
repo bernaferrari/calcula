@@ -87,6 +87,7 @@
     "alt": "Statistics with mean, median, sum, count and standard deviation for eight values"
   },
   "readme-hero": {
-    "tagline": "Flick a key. *Get a function.*"
+    "title": "Flick a key.\n*Get a function.*",
+    "body": "Every scientific function is written\non its key. A flick away."
   }
 }

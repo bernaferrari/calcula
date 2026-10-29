@@ -322,20 +322,9 @@
   "readme": [
     {
       "feature": "readme-hero",
-      "layout": "masthead",
+      "layout": "keypad",
       "file": "readme/hero.jpg",
-      "identity": true,
-      "alt": "Calcula: the sin key flicked up out of the keypad, with a graph of sine behind it",
-      "devices": [
-        {
-          "raw": "phone/02-graph.png",
-          "role": "back"
-        },
-        {
-          "raw": "phone/01-every-key.png",
-          "role": "front"
-        }
-      ]
+      "alt": "Calcula's keypad up close: every key carries its scientific functions, and the 7 key is flicked up for sin"
     },
     {
       "feature": "readme-tools",
