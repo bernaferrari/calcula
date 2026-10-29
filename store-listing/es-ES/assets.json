@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-27T14:13:56.934Z",
+  "generatedAt": "2026-10-29T18:49:12.164Z",
   "campaign": "A little flick goes a long way",
   "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
   "assets": [
@@ -7,8 +7,8 @@
       "file": "phone/phone-01-every-key.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 201808,
-      "alt": "Calcula with labelled scientific functions; a magnified real sin key explains the flick gesture",
+      "bytes": 241138,
+      "alt": "Un pequeño deslizamiento. — Desliza una tecla para usar su función científica.",
       "sources": [
         "raw/phone/01-every-key.png"
       ]
@@ -17,8 +17,8 @@
       "file": "phone/phone-02-graph.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 240470,
-      "alt": "A graphing calculator with sine functions, a circle, and movable parameters, backed by a golden sine wave",
+      "bytes": 243234,
+      "alt": "Mira cómo toma forma. — Traza funciones y mueve los parámetros.",
       "sources": [
         "raw/phone/02-graph.png"
       ]
@@ -27,8 +27,8 @@
       "file": "phone/phone-03-convert.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 165135,
-      "alt": "Unit converter showing 22 Celsius as 71.6 Fahrenheit, with the result lifted out",
+      "bytes": 168654,
+      "alt": "De °C a °F. — Convierte unidades mientras escribes.",
       "sources": [
         "raw/phone/03-convert.png"
       ]
@@ -37,8 +37,8 @@
       "file": "phone/phone-04-programmer.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 190190,
-      "alt": "Programmer mode in dark theme showing the hexadecimal value C0 FFEE and its decimal",
+      "bytes": 214654,
+      "alt": "Hexadecimal, sin líos. — Modo programador con bits, desplazamientos y bases.",
       "sources": [
         "raw/phone/05-programmer.png"
       ]
@@ -47,8 +47,8 @@
       "file": "phone/phone-05-statistics.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 222696,
-      "alt": "Statistics with mean, median, sum, count and standard deviation for eight values",
+      "bytes": 225973,
+      "alt": "Números en resumen. — Media, mediana y dispersión de un vistazo.",
       "sources": [
         "raw/phone/06-statistics.png"
       ]
@@ -57,8 +57,8 @@
       "file": "phone/phone-06-customize.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 225077,
-      "alt": "Light appearance settings and custom key assignments, with color swatches and visual style previews",
+      "bytes": 223223,
+      "alt": "A tu manera, tecla a tecla. — Tus colores. Tus atajos.",
       "sources": [
         "raw/phone/04-customize.png",
         "raw/phone/07-appearance.png"
@@ -68,8 +68,8 @@
       "file": "phone/phone-07-more-room.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 219059,
-      "alt": "Calcula on a landscape tablet with history beside the keypad, paired with the phone layout",
+      "bytes": 234962,
+      "alt": "Más espacio para calcular. — Historial junto al teclado en tabletas y plegables.",
       "sources": [
         "raw/tablet10/01-every-key.png",
         "raw/phone/01-every-key.png"
@@ -79,8 +79,8 @@
       "file": "tablet7/tablet7-01-every-key.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 214857,
-      "alt": "Calcula on a 7-inch portrait tablet with history beside the keypad; Enlarged sin shortcut above the 7 key, redrawn from the app key style",
+      "bytes": 251978,
+      "alt": "Un pequeño deslizamiento. — Desliza una tecla para usar su función científica.",
       "sources": [
         "raw/tablet7/01-every-key.png"
       ]
@@ -89,8 +89,8 @@
       "file": "tablet7/tablet7-02-graph.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 248827,
-      "alt": "Graphing functions and a circle on the 7-inch tablet",
+      "bytes": 250709,
+      "alt": "Mira cómo toma forma. — Traza funciones y mueve los parámetros.",
       "sources": [
         "raw/tablet7/02-graph.png"
       ]
@@ -99,8 +99,8 @@
       "file": "tablet7/tablet7-03-convert.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 169221,
-      "alt": "The 7-inch tablet converting Celsius to Fahrenheit; Programmer with compact Bits controls on the 7-inch tablet",
+      "bytes": 171335,
+      "alt": "De °C a °F. — Convierte unidades mientras escribes.",
       "sources": [
         "raw/tablet7/03-convert.png"
       ]
@@ -109,8 +109,8 @@
       "file": "tablet7/tablet7-04-customize.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 250950,
-      "alt": "Light appearance settings on the 7-inch tablet; Custom key assignments on the 7-inch tablet",
+      "bytes": 252967,
+      "alt": "A tu manera, tecla a tecla. — Tus colores. Tus atajos.",
       "sources": [
         "raw/tablet7/07-appearance.png",
         "raw/tablet7/04-customize.png"
@@ -120,8 +120,8 @@
       "file": "tablet7/tablet7-05-more-room.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 237783,
-      "alt": "The same 7-inch tablet in landscape with a separate history pane; The 7-inch tablet in portrait",
+      "bytes": 254113,
+      "alt": "Más espacio para calcular. — Historial junto al teclado en tabletas y plegables.",
       "sources": [
         "raw/tablet7/08-calculator-landscape.png",
         "raw/tablet7/01-every-key.png"
@@ -131,8 +131,8 @@
       "file": "tablet10/tablet10-01-every-key.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 193138,
-      "alt": "Calcula on a 10-inch landscape tablet with history beside the keypad; Enlarged sin shortcut above the 7 key, redrawn from the app key style",
+      "bytes": 213824,
+      "alt": "Un pequeño deslizamiento. — Desliza una tecla para usar su función científica.",
       "sources": [
         "raw/tablet10/01-every-key.png"
       ]
@@ -141,8 +141,8 @@
       "file": "tablet10/tablet10-02-graph.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 236980,
-      "alt": "Functions, a circle, and interactive parameters on a 10-inch tablet",
+      "bytes": 235115,
+      "alt": "Mira cómo toma forma. — Traza funciones y mueve los parámetros.",
       "sources": [
         "raw/tablet10/02-graph.png"
       ]
@@ -151,8 +151,8 @@
       "file": "tablet10/tablet10-03-convert.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 175960,
-      "alt": "Landscape unit conversion on the 10-inch tablet; The 10-inch tablet in portrait showing Programmer mode",
+      "bytes": 176561,
+      "alt": "De °C a °F. — Convierte unidades mientras escribes.",
       "sources": [
         "raw/tablet10/03-convert.png",
         "raw/tablet10/08-programmer-portrait.png"
@@ -162,19 +162,19 @@
       "file": "tablet10/tablet10-04-customize.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 237001,
-      "alt": "Light appearance settings on the 10-inch tablet in portrait; Custom key assignments on the 10-inch tablet in landscape",
+      "bytes": 248094,
+      "alt": "A tu manera, tecla a tecla. — Tus colores. Tus atajos.",
       "sources": [
         "raw/tablet10/09-appearance-portrait.png",
-        "raw/tablet10/04-customize.png"
+        "raw/tablet7/04-customize.png"
       ]
     },
     {
       "file": "tablet10/tablet10-05-more-room.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 207635,
-      "alt": "A 10-inch landscape tablet with separate history and calculator panes; The same 10-inch tablet in portrait",
+      "bytes": 214557,
+      "alt": "Más espacio para calcular. — Historial junto al teclado en tabletas y plegables.",
       "sources": [
         "raw/tablet10/01-every-key.png",
         "raw/tablet10/10-calculator-portrait.png"
@@ -184,8 +184,8 @@
       "file": "desktop/desktop-01-every-key.jpg",
       "width": 1920,
       "height": 1080,
-      "bytes": 105610,
-      "alt": "Calcula with labelled scientific flick shortcuts and a live answer preview",
+      "bytes": 106434,
+      "alt": "Un pequeño deslizamiento. — Desliza una tecla para usar su función científica.",
       "sources": [
         "raw/desktop/01-every-key.png"
       ]
@@ -194,8 +194,8 @@
       "file": "desktop/desktop-02-graph.jpg",
       "width": 1920,
       "height": 1080,
-      "bytes": 186028,
-      "alt": "Functions, a circle, and interactive parameter controls in Calcula",
+      "bytes": 187274,
+      "alt": "Mira cómo toma forma. — Traza funciones y mueve los parámetros.",
       "sources": [
         "raw/desktop/02-graph.png"
       ]
@@ -204,8 +204,8 @@
       "file": "desktop/desktop-03-convert.jpg",
       "width": 1920,
       "height": 1080,
-      "bytes": 88000,
-      "alt": "Calcula converting 22 degrees Celsius to Fahrenheit",
+      "bytes": 90889,
+      "alt": "De °C a °F. — Convierte unidades mientras escribes.",
       "sources": [
         "raw/desktop/03-convert.png"
       ]
@@ -214,7 +214,7 @@
       "file": "desktop/desktop-07-appearance.jpg",
       "width": 1920,
       "height": 1080,
-      "bytes": 107490,
+      "bytes": 116493,
       "sources": [
         "raw/desktop/07-appearance.png"
       ]
@@ -223,7 +223,7 @@
       "file": "graphics/feature-graphic.png",
       "width": 1024,
       "height": 500,
-      "bytes": 66140,
+      "bytes": 70693,
       "sources": [
         "raw/phone/01-every-key.png"
       ]
@@ -232,8 +232,8 @@
       "file": "graphics/app-icon.png",
       "width": 512,
       "height": 512,
-      "bytes": 17012,
-      "alt": "Calcula app icon"
+      "bytes": 17081,
+      "alt": "Un pequeño deslizamiento. — Desliza una tecla para usar su función científica."
     }
   ]
 }

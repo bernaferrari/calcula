@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-27T14:13:57.003Z",
+  "generatedAt": "2026-10-29T18:51:24.237Z",
   "campaign": "A little flick goes a long way",
   "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
   "assets": [
@@ -7,8 +7,8 @@
       "file": "phone/phone-01-every-key.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 201571,
-      "alt": "Calcula with labelled scientific functions; a magnified real sin key explains the flick gesture",
+      "bytes": 231631,
+      "alt": "輕輕一滑， 功能更多。 — 滑動按鍵即可使用 科學函數。",
       "sources": [
         "raw/phone/01-every-key.png"
       ]
@@ -17,8 +17,8 @@
       "file": "phone/phone-02-graph.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 240973,
-      "alt": "A graphing calculator with sine functions, a circle, and movable parameters, backed by a golden sine wave",
+      "bytes": 241485,
+      "alt": "讓曲線 呈現眼前。 — 繪製函數，拖動 參數查看變化。",
       "sources": [
         "raw/phone/02-graph.png"
       ]
@@ -27,8 +27,8 @@
       "file": "phone/phone-03-convert.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 165377,
-      "alt": "Unit converter showing 22 Celsius as 71.6 Fahrenheit, with the result lifted out",
+      "bytes": 165932,
+      "alt": "從 °C 到 °F。 — 輸入的同時 換算單位。",
       "sources": [
         "raw/phone/03-convert.png"
       ]
@@ -37,8 +37,8 @@
       "file": "phone/phone-04-programmer.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 190460,
-      "alt": "Programmer mode in dark theme showing the hexadecimal value C0 FFEE and its decimal",
+      "bytes": 218090,
+      "alt": "輕鬆處理 十六進位。 — 程式設計模式支援位元、 位移和進位。",
       "sources": [
         "raw/phone/05-programmer.png"
       ]
@@ -47,8 +47,8 @@
       "file": "phone/phone-05-statistics.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 224140,
-      "alt": "Statistics with mean, median, sum, count and standard deviation for eight values",
+      "bytes": 233338,
+      "alt": "數字統計， 一目瞭然。 — 快速查看平均值、 中位數和分散程度。",
       "sources": [
         "raw/phone/06-statistics.png"
       ]
@@ -57,8 +57,8 @@
       "file": "phone/phone-06-customize.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 226000,
-      "alt": "Light appearance settings and custom key assignments, with color swatches and visual style previews",
+      "bytes": 235175,
+      "alt": "你的鍵盤， 你的風格。 — 你的顏色。 你的捷徑。",
       "sources": [
         "raw/phone/04-customize.png",
         "raw/phone/07-appearance.png"
@@ -68,8 +68,8 @@
       "file": "phone/phone-07-more-room.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 219005,
-      "alt": "Calcula on a landscape tablet with history beside the keypad, paired with the phone layout",
+      "bytes": 225406,
+      "alt": "更多空間， 更多計算。 — 平板和摺疊螢幕上 歷史紀錄與鍵盤並排。",
       "sources": [
         "raw/tablet10/01-every-key.png",
         "raw/phone/01-every-key.png"
@@ -79,8 +79,8 @@
       "file": "tablet7/tablet7-01-every-key.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 215012,
-      "alt": "Calcula on a 7-inch portrait tablet with history beside the keypad; Enlarged sin shortcut above the 7 key, redrawn from the app key style",
+      "bytes": 246684,
+      "alt": "輕輕一滑， 功能更多。 — 滑動按鍵即可使用 科學函數。",
       "sources": [
         "raw/tablet7/01-every-key.png"
       ]
@@ -89,8 +89,8 @@
       "file": "tablet7/tablet7-02-graph.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 249319,
-      "alt": "Graphing functions and a circle on the 7-inch tablet",
+      "bytes": 251506,
+      "alt": "讓曲線 呈現眼前。 — 繪製函數，拖動 參數查看變化。",
       "sources": [
         "raw/tablet7/02-graph.png"
       ]
@@ -99,8 +99,8 @@
       "file": "tablet7/tablet7-03-convert.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 168882,
-      "alt": "The 7-inch tablet converting Celsius to Fahrenheit; Programmer with compact Bits controls on the 7-inch tablet",
+      "bytes": 169979,
+      "alt": "從 °C 到 °F。 — 輸入的同時 換算單位。",
       "sources": [
         "raw/tablet7/03-convert.png"
       ]
@@ -109,8 +109,8 @@
       "file": "tablet7/tablet7-04-customize.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 252554,
-      "alt": "Light appearance settings on the 7-inch tablet; Custom key assignments on the 7-inch tablet",
+      "bytes": 260783,
+      "alt": "你的鍵盤， 你的風格。 — 你的顏色。 你的捷徑。",
       "sources": [
         "raw/tablet7/07-appearance.png",
         "raw/tablet7/04-customize.png"
@@ -120,8 +120,8 @@
       "file": "tablet7/tablet7-05-more-room.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 238169,
-      "alt": "The same 7-inch tablet in landscape with a separate history pane; The 7-inch tablet in portrait",
+      "bytes": 247083,
+      "alt": "更多空間， 更多計算。 — 平板和摺疊螢幕上 歷史紀錄與鍵盤並排。",
       "sources": [
         "raw/tablet7/08-calculator-landscape.png",
         "raw/tablet7/01-every-key.png"
@@ -131,8 +131,8 @@
       "file": "tablet10/tablet10-01-every-key.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 193469,
-      "alt": "Calcula on a 10-inch landscape tablet with history beside the keypad; Enlarged sin shortcut above the 7 key, redrawn from the app key style",
+      "bytes": 218544,
+      "alt": "輕輕一滑， 功能更多。 — 滑動按鍵即可使用 科學函數。",
       "sources": [
         "raw/tablet10/01-every-key.png"
       ]
@@ -141,8 +141,8 @@
       "file": "tablet10/tablet10-02-graph.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 234904,
-      "alt": "Functions, a circle, and interactive parameters on a 10-inch tablet",
+      "bytes": 236489,
+      "alt": "讓曲線 呈現眼前。 — 繪製函數，拖動 參數查看變化。",
       "sources": [
         "raw/tablet10/02-graph.png"
       ]
@@ -151,8 +151,8 @@
       "file": "tablet10/tablet10-03-convert.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 176235,
-      "alt": "Landscape unit conversion on the 10-inch tablet; The 10-inch tablet in portrait showing Programmer mode",
+      "bytes": 175926,
+      "alt": "從 °C 到 °F。 — 輸入的同時 換算單位。",
       "sources": [
         "raw/tablet10/03-convert.png",
         "raw/tablet10/08-programmer-portrait.png"
@@ -162,19 +162,19 @@
       "file": "tablet10/tablet10-04-customize.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 233501,
-      "alt": "Light appearance settings on the 10-inch tablet in portrait; Custom key assignments on the 10-inch tablet in landscape",
+      "bytes": 254852,
+      "alt": "你的鍵盤， 你的風格。 — 你的顏色。 你的捷徑。",
       "sources": [
         "raw/tablet10/09-appearance-portrait.png",
-        "raw/tablet10/04-customize.png"
+        "raw/tablet7/04-customize.png"
       ]
     },
     {
       "file": "tablet10/tablet10-05-more-room.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 205924,
-      "alt": "A 10-inch landscape tablet with separate history and calculator panes; The same 10-inch tablet in portrait",
+      "bytes": 213458,
+      "alt": "更多空間， 更多計算。 — 平板和摺疊螢幕上 歷史紀錄與鍵盤並排。",
       "sources": [
         "raw/tablet10/01-every-key.png",
         "raw/tablet10/10-calculator-portrait.png"
@@ -184,8 +184,8 @@
       "file": "desktop/desktop-01-every-key.jpg",
       "width": 1920,
       "height": 1080,
-      "bytes": 105610,
-      "alt": "Calcula with labelled scientific flick shortcuts and a live answer preview",
+      "bytes": 105239,
+      "alt": "輕輕一滑， 功能更多。 — 滑動按鍵即可使用 科學函數。",
       "sources": [
         "raw/desktop/01-every-key.png"
       ]
@@ -194,8 +194,8 @@
       "file": "desktop/desktop-02-graph.jpg",
       "width": 1920,
       "height": 1080,
-      "bytes": 186028,
-      "alt": "Functions, a circle, and interactive parameter controls in Calcula",
+      "bytes": 185647,
+      "alt": "讓曲線 呈現眼前。 — 繪製函數，拖動 參數查看變化。",
       "sources": [
         "raw/desktop/02-graph.png"
       ]
@@ -204,8 +204,8 @@
       "file": "desktop/desktop-03-convert.jpg",
       "width": 1920,
       "height": 1080,
-      "bytes": 88000,
-      "alt": "Calcula converting 22 degrees Celsius to Fahrenheit",
+      "bytes": 87616,
+      "alt": "從 °C 到 °F。 — 輸入的同時 換算單位。",
       "sources": [
         "raw/desktop/03-convert.png"
       ]
@@ -214,7 +214,7 @@
       "file": "desktop/desktop-07-appearance.jpg",
       "width": 1920,
       "height": 1080,
-      "bytes": 107490,
+      "bytes": 115260,
       "sources": [
         "raw/desktop/07-appearance.png"
       ]
@@ -223,7 +223,7 @@
       "file": "graphics/feature-graphic.png",
       "width": 1024,
       "height": 500,
-      "bytes": 66133,
+      "bytes": 69236,
       "sources": [
         "raw/phone/01-every-key.png"
       ]
@@ -232,8 +232,8 @@
       "file": "graphics/app-icon.png",
       "width": 512,
       "height": 512,
-      "bytes": 17012,
-      "alt": "Calcula app icon"
+      "bytes": 17081,
+      "alt": "輕輕一滑， 功能更多。 — 滑動按鍵即可使用 科學函數。"
     }
   ]
 }
