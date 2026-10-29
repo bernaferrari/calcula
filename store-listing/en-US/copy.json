@@ -85,5 +85,8 @@
     "title": "Numbers,\nsummed up.",
     "body": "Mean, median and spread\nat a glance.",
     "alt": "Statistics with mean, median, sum, count and standard deviation for eight values"
+  },
+  "readme-hero": {
+    "tagline": "Flick a key. *Get a function.*"
   }
 }

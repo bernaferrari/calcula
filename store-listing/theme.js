@@ -31,6 +31,22 @@ export default {
 
   // Paper: a faint graph-paper grid in panorama coordinates, so the cards still join when shown together.
   art({W, H, index, slide}) {
+    if (slide.identity) {
+      // The README header: Calcula's yellow, graph paper, and y = sin(x) plotted across the whole card in the
+      // graph screen's own colors, with its peaks and zeros marked like the app marks points.
+      const cell = 60, ox = W / 2, oy = 470, unit = 165, amp = 140;
+      const xs = Array.from({length: 121}, (_, i) => -W / 2 - 60 + i * (W + 120) / 120);
+      const pts = xs.map(x => `${(ox + x).toFixed(1)},${(oy - amp * Math.sin(x / unit)).toFixed(1)}`).join(' ');
+      const marks = [];
+      for (let k = -9; k <= 9; k++) { const x = k * Math.PI / 2 * unit; if (Math.abs(x) < W / 2 - 40) marks.push(`<circle cx="${ox + x}" cy="${oy - amp * Math.sin(k * Math.PI / 2)}" r="15" fill="#fffbea" stroke="#d9640b" stroke-width="7"/>`); }
+      return `<defs><linearGradient id="field" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3b8"/><stop offset=".55" stop-color="#f8de62"/><stop offset="1" stop-color="#efc93a"/></linearGradient>` +
+        `<pattern id="minor" width="${cell}" height="${cell}" patternUnits="userSpaceOnUse" x="${ox % cell}" y="${oy % cell}"><path d="M${cell} 0V${cell}H0" fill="none" stroke="#7a5a00" stroke-opacity=".07" stroke-width="1.5"/></pattern>` +
+        `<pattern id="major" width="${cell * 5}" height="${cell * 5}" patternUnits="userSpaceOnUse" x="${ox % (cell * 5)}" y="${oy % (cell * 5)}"><path d="M${cell * 5} 0V${cell * 5}H0" fill="none" stroke="#7a5a00" stroke-opacity=".12" stroke-width="2.5"/></pattern></defs>` +
+        `<rect width="${W}" height="${H}" fill="url(#field)"/><rect width="${W}" height="${H}" fill="url(#minor)"/><rect width="${W}" height="${H}" fill="url(#major)"/>` +
+        `<path d="M0 ${oy}H${W}" stroke="#4d3606" stroke-opacity=".22" stroke-width="3"/>` +
+        `<polyline points="${pts}" fill="none" stroke="#ffffff" stroke-opacity=".55" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>` +
+        `<polyline points="${pts}" fill="none" stroke="#495f8b" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>` + marks.join('');
+    }
     const cell = Math.round(Math.min(W, H) / 18), major = cell * 5, x0 = -index * W, off = ((x0 % major) + major) % major;
     const gap = slide.layout === 'big-screen-feature'
       ? `<rect x="1180" width="40" height="${H}" fill="#FBF5EA"/><rect x="1180" width="40" height="${H}" fill="url(#gap-minor)"/><rect x="1180" width="40" height="${H}" fill="url(#gap-major)"/>`
@@ -61,19 +77,7 @@ export default {
       }
       return;
     }
-    if (slide.layout === 'flick-pair') {
-      // The README header, in the same panels as the rest: the feature graphic's two lines, each over a tilted phone.
-      // The sin key rises off the keypad on the first, like the first store card.
-      main.insertAdjacentHTML('beforeend', `<section class="pair-card flick-card"><div class="pair-title">A little<br>flick.</div><div class="pair-caption">Flick a key up for its scientific twin.</div></section><section class="pair-card graph-card"><div class="pair-title">A lot<br>more math.</div><div class="pair-caption">Graphs, units, bases and stats.</div></section>`);
-      for (const name of ['flick', 'graph']) {
-        const card = main.querySelector(`.${name}-card`);
-        card.insertAdjacentHTML('beforeend', `<svg class="pair-wave" viewBox="0 0 2400 1260" aria-hidden="true"><path d="M0 830 C220 830 330 600 600 655 S985 945 1210 840 S1530 600 1760 655 S2140 925 2400 780 V1260 H0 Z"/></svg>`);
-        card.append(main.querySelector(`.device.${name}`));
-      }
-      key(main, 'The 7 key, with sin a flick away');
-      main.querySelector('.flick-card').append(main.querySelector('.key'));
-      return;
-    }
+    if (slide.identity) return;
     if (slide.layout === 'tools') {
       main.insertAdjacentHTML('beforeend', `<section class="tools-feature graph-feature"><div class="tools-title">Watch it<br>take shape.</div><div class="tools-caption">Plot anything. Drag a parameter.<br>See it move.</div></section><section class="tools-feature convert-feature"><div class="tools-title">From °C<br>to °F.</div><div class="tools-caption">Units, converted<br>as you type.</div></section><section class="tools-feature programmer-feature"><div class="tools-title">Hex,<br>sorted.</div><div class="tools-caption">Programmer mode with<br>bits, shifts and bases.</div></section>`);
       for (const name of ['graph', 'convert', 'programmer']) {

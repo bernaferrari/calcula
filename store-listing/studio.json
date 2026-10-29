@@ -64,8 +64,8 @@
     "layouts": {
       "stack": false,
       "compare": false,
-      "flick-pair": {
-        "visible": 0.55
+      "hero": {
+        "visible": 0.5
       }
     }
   }

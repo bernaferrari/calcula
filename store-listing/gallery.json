@@ -322,17 +322,22 @@
   "readme": [
     {
       "feature": "readme-hero",
-      "layout": "flick-pair",
+      "layout": "hero named",
       "file": "readme/hero.jpg",
-      "alt": "A little flick: the keypad with the sin key flicked off the 7. A lot more math: a graph of sine and a circle",
+      "identity": true,
+      "alt": "Calcula: a graph, the keypad with scientific functions on every key, and unit conversion, over a sine wave on graph paper",
       "devices": [
         {
-          "raw": "phone/01-every-key.png",
-          "role": "flick"
+          "raw": "phone/02-graph.png",
+          "role": "left"
         },
         {
-          "raw": "phone/02-graph.png",
-          "role": "graph"
+          "raw": "phone/01-every-key.png",
+          "role": "center"
+        },
+        {
+          "raw": "phone/03-convert.png",
+          "role": "right"
         }
       ]
     },
