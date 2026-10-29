@@ -10,7 +10,7 @@ function brand(main) {
   const node = document.createElement('div');
   node.className = 'brand';
   node.dataset.checkBounds = '';
-  node.innerHTML = '<img src="../../branding/calcula-icon.svg" alt="">';
+  node.innerHTML = '<img src="../brand/icon.svg" alt="">';
   node.append(document.createTextNode('Calcula'));
   main.append(node);
 }
@@ -72,7 +72,7 @@ export default {
       return;
     }
     if (kind === 'icon') {
-      main.insertAdjacentHTML('beforeend', '<img class="app-icon" src="../../branding/calcula-icon.svg" alt="Calcula app icon">');
+      main.insertAdjacentHTML('beforeend', '<img class="app-icon" src="../brand/icon.svg" alt="Calcula app icon">');
       return;
     }
     if (!slide.title) return;

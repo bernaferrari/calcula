@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="branding/calcula-icon.svg" width="88" alt="Calcula icon">
+  <img src="store-listing/brand/icon.svg" width="88" alt="Calcula icon">
 </p>
 
 <h1 align="center">Calcula</h1>

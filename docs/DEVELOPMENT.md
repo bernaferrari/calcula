@@ -1,51 +1,74 @@
 # Developing Calcula
 
+A Kotlin Multiplatform app: one Compose UI and calculator engine in `shared/`, hosted by `androidApp/` (Android), `iosApp/` (Xcode) and `webApp/` (Wasm in the browser). `androidApp/` is the app on Google Play.
 
-The running app is Kotlin Multiplatform: `shared/` contains the domain logic and Compose UI,
-`androidApp/` is the Android host, `iosApp/` is the Xcode host, and `webApp/` is the Wasm host.
-The separate `web/` directory is a Next.js project, not the shared calculator runtime.
+[README](../README.md) · [Privacy](../PRIVACY.md) · [Store listing](../store-listing/README.md)
 
-## Prerequisites
-
-- Use the checked-in Gradle wrapper. Its daemon toolchain is JetBrains JDK 21; Android bytecode targets Java 17.
-- Install the Android SDK matching `compileSdk` in `androidApp/build.gradle.kts` (currently API 37, minor API 2).
-  Point `sdk.dir` in your untracked `local.properties` at that SDK, or configure `ANDROID_HOME`.
-- iOS builds require macOS, Xcode, its command-line tools, and an installed iOS simulator runtime.
-- Gradle provisions the Node runtime for the Wasm build. The first build needs network access for dependencies.
-
-## Run
+## Quick start
 
 ```bash
-# Build Android; installDebug also installs onto a connected emulator/device.
-./gradlew :androidApp:assembleDebug
+git clone https://github.com/bernaferrari/calcula.git
+cd calcula
 ./gradlew :androidApp:installDebug
-
-# Run the shared Compose calculator in a browser.
-./gradlew :webApp:wasmJsBrowserDevelopmentRun
 ```
 
-For iOS, open `iosApp/iosApp.xcodeproj`, select the `iosApp` scheme and a simulator, then Run.
-Device installation additionally requires your own signing team in Xcode.
+## What you need
 
-## Validate changes
+| Tool | Version | Notes |
+| --- | --- | --- |
+| JDK | 21 (JetBrains) | Gradle daemon toolchain in `gradle/gradle-daemon-jvm.properties`, downloaded automatically. Android code targets Java 17. |
+| Gradle | 9.8.1 | Use `./gradlew`; the wrapper pins it. |
+| Android SDK | API 37, minor 2 | `compileSdk` in `androidApp/build.gradle.kts`. Set `sdk.dir` in `local.properties` or `ANDROID_HOME`. |
+| Xcode | current | iOS only, on macOS, with an iOS simulator runtime. |
+| Node.js | any LTS | Only for `store-listing/` and `web/`. Gradle provisions its own Node for the Wasm build. |
+
+## Run it
+
+| Target | Command |
+| --- | --- |
+| Android | `./gradlew :androidApp:installDebug` |
+| Web (Wasm) | `./gradlew :webApp:wasmJsBrowserDevelopmentRun` |
+| iOS | Open `iosApp/iosApp.xcodeproj`, pick the `iosApp` scheme and a simulator, Run. A real device needs your own signing team. |
+
+## Where things live
+
+| Path | What's there |
+| --- | --- |
+| `shared/src/commonMain/` | Engine, state, persistence and every Compose screen |
+| `shared/src/commonMain/.../ui/graph/` | Graph: `GraphScreen` (layout), `GraphControls` (functions, parameters), `GraphCanvas` (gestures), `GraphDrawing` (plot, thumbnails, export), `GraphKeypadResize` |
+| `shared/src/commonTest/`, `androidHostTest/` | Shared tests; JVM-only BigDecimal differential tests |
+| `androidApp/` | Android host, Glance widget, and the `storeCapture` build type |
+| `iosApp/` | Xcode project and the iOS widget |
+| `webApp/` | Wasm browser host |
+| `web/` | Separate Next.js landing page (pnpm), not the calculator runtime |
+| `store-listing/` | Play listing text, screenshots and icon sources |
+| `fastlane/`, `scripts/setup-play-api.sh` | Play listing upload and API setup |
+
+## Before you push
 
 ```bash
-# Common tests plus JVM-only differential checks against java.math.BigDecimal.
 ./gradlew :shared:testAndroidHostTest
-
-# Verify shared code compiles for the other platforms.
 ./gradlew :shared:compileKotlinWasmJs :shared:compileKotlinIosSimulatorArm64
 ```
 
-`shared/build/reports/tests/testAndroidHostTest/index.html` contains the test report.
-The suite covers expression evaluation, history delete/undo, persisted preferences, calculator
-state restoration, and decimal arithmetic. Decimal differential tests use a fixed random seed
-so failures are reproducible. UI checks should include large fonts, reduced motion, both flick
-directions, history undo after a new calculation, and graph pan/zoom/trace/export.
+There is no CI, so these checks are local only. The tests cover evaluation, history delete and undo, preferences, state restore and decimal arithmetic; the differential tests use a fixed seed, so failures reproduce. The report is at `shared/build/reports/tests/testAndroidHostTest/index.html`.
 
-Graph UI code is grouped by responsibility: `GraphScreen` coordinates layout, `GraphControls`
-edits functions and parameters, `GraphCanvas` handles plot gestures, `GraphDrawing` renders the
-plot and shared thumbnails/export primitives, and `GraphKeypadResize` handles resizing.
+Nothing checks the UI. When you change it, try large fonts, reduced motion, both flick directions, history undo after a new calculation, and graph pan, zoom, trace and export.
 
+## Store screenshots and icon
 
-Localized store artwork is maintained in [Screenshot Studio](../store-listing/README.md): shared layout in `store-listing/gallery.json`, words in `store-listing/<locale>/copy.json`, and native captures plus UI layout files in `store-listing/<locale>/raw/`. The editor compares languages and saves copy; strict export rejects English fallbacks and unresolved callouts. English remains the README image source.
+Screenshot Studio lives in `store-listing/studio/`. It's synced from `~/Documents/screenshot-studio`, so never edit it here.
+
+- The `storeCapture` build type (`./gradlew :androidApp:assembleStoreCapture`, package `com.bernaferrari.calcula.storecapture`) installs beside the real app. `StoreCaptureActivity` seeds fictional calculations and opens each scene by intent.
+- `node store-listing/studio/recapture.cjs` builds, installs and captures phone, tablet7, tablet10 and desktop in en-US, de-DE, es-ES and pt-BR, then exports. It runs on the capture emulator `CAPTURE_SERIAL` (default `emulator-5578`), never a personal phone. Narrow it with a locale (`de-DE`), `--profile phone`, `--no-build` or `--no-capture`.
+- Export only: `cd store-listing && node render.mjs --locale en-US`. It writes the listing text, runs the studio exporter and checks every asset. Run `npm ci` in `store-listing/` once first.
+- Live editor: `node store-listing/studio/server.cjs`.
+- Icon: layers in `store-listing/brand/*.svg`, targets in `brand/icon.json` (Android mipmaps, `brand/icon.svg`, `web/app/icon.svg`, the iOS `app-icon-1024.png` and the store icon). Regenerate all of them with `PLAYWRIGHT_MODULE=… node store-listing/studio/icon.cjs`.
+
+## Good to know
+
+- The application id is `com.bernaferrari.calcula`; the Kotlin namespace is still `com.bernaferrari.calculator`. The old Calculator++ listing is a different app, so nothing carries over from it.
+- Release signing is not in Gradle. `upload-keystore.properties` is gitignored; never commit it or any keystore.
+- The Gradle root project is still named `CalculatorPlusPlus`.
+- Run capture and the `store-listing/verify-programmer-*.py` checks only on a disposable emulator. They change emulator settings, and leave the normal app's data alone.
+- `app/`, `old-app/` and the `*reference-ui/` folders are untracked local leftovers, not part of the build.

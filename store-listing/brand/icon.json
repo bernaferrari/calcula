@@ -1,8 +1,7 @@
 {
   "android": {"res": "androidApp/src/main/res"},
   "files": [
-    {"path": "branding/calcula-icon.svg", "shape": "square", "scale": 0.667},
-    {"path": "branding/calcula-icon-ios.svg", "shape": "square", "scale": 0.867},
+    {"path": "store-listing/brand/icon.svg", "shape": "square", "scale": 0.667},
     {"path": "web/app/icon.svg", "shape": "square", "scale": 0.667},
     {"path": "iosApp/iosApp/Assets.xcassets/AppIcon.appiconset/app-icon-1024.png", "size": 1024, "shape": "square", "scale": 0.867, "opaque": true},
     {"path": "store-listing/brand/icon.png", "size": 512, "shape": "square", "scale": 0.667}
