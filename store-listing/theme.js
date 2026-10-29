@@ -32,15 +32,21 @@ export default {
   // Paper: a faint graph-paper grid in panorama coordinates, so the cards still join when shown together.
   art({W, H, index, slide}) {
     if (slide.identity) {
-      // The README header: plain honey, and each phone stands on one of Calcula's keys, its function written at the
-      // top of the cap like every key in the app: f(x) over the graph, sin over the keypad, °F over the converter.
-      const caps = [['f(x)', 225, 400, 650], ['sin', 860, 280, 680], ['°F', 1525, 400, 650]].map(([label, x, y, w]) =>
-        `<rect x="${x}" y="${y + 16}" width="${w}" height="${H}" rx="96" fill="#9a7410" opacity=".16"/>` +
-        `<rect x="${x}" y="${y}" width="${w}" height="${H}" rx="96" fill="url(#cap)"/>` +
-        `<text x="${x + w / 2}" y="${y + 58}" font-size="40" font-family="Calcula" font-weight="600" fill="#6e7fc8" text-anchor="middle">${label}</text>`).join('');
-      return `<defs><linearGradient id="field" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fffae4"/><stop offset=".55" stop-color="#fbecb0"/><stop offset="1" stop-color="#f2d878"/></linearGradient>` +
-        `<linearGradient id="cap" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fffaf0"/><stop offset=".5" stop-color="#f6ead6"/></linearGradient></defs>` +
-        `<rect width="${W}" height="${H}" fill="url(#field)"/>${caps}`;
+      // The README header: Calcula's paper and grid, and each phone standing on a key in its README panel's colour,
+      // the function it gives written on the cap: f(x) on blue over the graph, sin on yellow over the keypad,
+      // °F on green over the converter.
+      const cell = 60, major = cell * 5;
+      const caps = [['f(x)', 225, 400, 650, 'blue', '#10275f'], ['sin', 860, 285, 680, 'yellow', '#4d3606'], ['°F', 1525, 400, 650, 'green', '#103b34']]
+        .map(([label, x, y, w, tone, ink]) =>
+          `<rect x="${x}" y="${y + 18}" width="${w}" height="${H}" rx="96" fill="${ink}" opacity=".16"/>` +
+          `<rect x="${x}" y="${y}" width="${w}" height="${H}" rx="96" fill="url(#${tone})"/>` +
+          `<text x="${x + w / 2}" y="${y + 74}" font-size="58" font-family="Calcula" font-weight="700" fill="${ink}" text-anchor="middle">${label}</text>`).join('');
+      return `<defs><linearGradient id="blue" x1="0" y1="0" x2=".4" y2="1"><stop offset="0" stop-color="#e6f1ff"/><stop offset=".45" stop-color="#bcd8ff"/><stop offset="1" stop-color="#7fb0ec"/></linearGradient>` +
+        `<linearGradient id="yellow" x1="0" y1="0" x2=".4" y2="1"><stop offset="0" stop-color="#fff6c8"/><stop offset=".45" stop-color="#f8e27a"/><stop offset="1" stop-color="#e9bf35"/></linearGradient>` +
+        `<linearGradient id="green" x1="0" y1="0" x2=".4" y2="1"><stop offset="0" stop-color="#ebf8ef"/><stop offset=".45" stop-color="#c3e8d4"/><stop offset="1" stop-color="#7cc6a7"/></linearGradient>` +
+        `<pattern id="minor" width="${cell}" height="${cell}" patternUnits="userSpaceOnUse"><path d="M${cell} 0V${cell}H0" fill="none" stroke="#22307f" stroke-opacity=".05" stroke-width="1.5"/></pattern>` +
+        `<pattern id="major" width="${major}" height="${major}" patternUnits="userSpaceOnUse"><path d="M${major} 0V${major}H0" fill="none" stroke="#22307f" stroke-opacity=".09" stroke-width="2"/></pattern></defs>` +
+        `<rect width="${W}" height="${H}" fill="#fbf5ea"/><rect width="${W}" height="${H}" fill="url(#minor)"/><rect width="${W}" height="${H}" fill="url(#major)"/>${caps}`;
     }
     const cell = Math.round(Math.min(W, H) / 18), major = cell * 5, x0 = -index * W, off = ((x0 % major) + major) % major;
     const gap = slide.layout === 'big-screen-feature'

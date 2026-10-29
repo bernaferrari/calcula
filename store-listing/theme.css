@@ -128,6 +128,6 @@ header p{margin:26px 0 0;font-size:40px;line-height:1.24;letter-spacing:-.5px;wh
 .readme .hero .identity span{font-size:136px;letter-spacing:-5px}
 .readme .hero .identity small{font-size:46px;font-weight:400;color:#22307fcc}
 .readme .hero .identity small em{font-weight:700;color:#22307f}
-.readme .hero .device{--bezel:14px;--radius:58px;background:#fffbea;box-shadow:inset 0 0 0 2px #fff6d0,0 10px 24px #7a5a0033,0 60px 100px -40px #7a5a00aa}
-.readme .hero.named .left,.readme .hero.named .right{top:480px}
-.readme .hero.named .center{top:370px}
+.readme .hero .device{--bezel:14px;--radius:58px;background:#ffffff;box-shadow:0 10px 24px #17265730,0 60px 100px -40px #17265780}
+.readme .hero.named .left,.readme .hero.named .right{top:510px}
+.readme .hero.named .center{top:400px}
