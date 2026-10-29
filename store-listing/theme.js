@@ -40,10 +40,10 @@ export default {
         ['√', 2150, 140, 180, 12, 0], ['log', 1840, 290, 130, -8, 3], ['eˣ', 2280, 470, 120, -14, 5]];
       const blurs = [...new Set(keys.map(k => k[5]).filter(Boolean))].map(b => `<filter id="soft${b}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="${b}"/></filter>`).join('');
       const caps = keys.map(([label, x, y, s, r, b]) => `<g transform="translate(${x} ${y}) rotate(${r})"${b ? ` filter="url(#soft${b})" opacity="${(1 - b / 12).toFixed(2)}"` : ''}>` +
-        `<rect x="${-s / 2}" y="${-s / 2 + s * .06}" width="${s}" height="${s}" rx="${s * .26}" fill="#b8860b" opacity=".22"/>` +
+        `<rect x="${-s / 2}" y="${-s / 2 + s * .06}" width="${s}" height="${s}" rx="${s * .26}" fill="#9a7410" opacity=".22"/>` +
         `<rect x="${-s / 2}" y="${-s / 2}" width="${s}" height="${s}" rx="${s * .26}" fill="#fffaf0"/>` +
         `<text y="${s * .16}" font-size="${s * (label.length > 2 ? .36 : .46)}" font-family="Calcula" font-weight="600" fill="#22307f" text-anchor="middle">${label}</text></g>`).join('');
-      return `<defs><linearGradient id="field" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3b8"/><stop offset=".55" stop-color="#f8de62"/><stop offset="1" stop-color="#efc93a"/></linearGradient>${blurs}</defs>` +
+      return `<defs><linearGradient id="field" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fffae4"/><stop offset=".55" stop-color="#fbecb0"/><stop offset="1" stop-color="#f2d878"/></linearGradient>${blurs}</defs>` +
         `<rect width="${W}" height="${H}" fill="url(#field)"/>${caps}`;
     }
     const cell = Math.round(Math.min(W, H) / 18), major = cell * 5, x0 = -index * W, off = ((x0 % major) + major) % major;
