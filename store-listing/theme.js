@@ -32,20 +32,13 @@ export default {
   // Paper: a faint graph-paper grid in panorama coordinates, so the cards still join when shown together.
   art({W, H, index, slide}) {
     if (slide.identity) {
-      // The README header: Calcula's yellow, graph paper, and y = sin(x) plotted across the whole card in the
-      // graph screen's own colors, with its peaks and zeros marked like the app marks points.
-      const cell = 60, ox = W / 2, oy = 470, unit = 165, amp = 140;
-      const xs = Array.from({length: 121}, (_, i) => -W / 2 - 60 + i * (W + 120) / 120);
-      const pts = xs.map(x => `${(ox + x).toFixed(1)},${(oy - amp * Math.sin(x / unit)).toFixed(1)}`).join(' ');
-      const marks = [];
-      for (let k = -9; k <= 9; k++) { const x = k * Math.PI / 2 * unit; if (Math.abs(x) < W / 2 - 40) marks.push(`<circle cx="${ox + x}" cy="${oy - amp * Math.sin(k * Math.PI / 2)}" r="15" fill="#fffbea" stroke="#d9640b" stroke-width="7"/>`); }
-      return `<defs><linearGradient id="field" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3b8"/><stop offset=".55" stop-color="#f8de62"/><stop offset="1" stop-color="#efc93a"/></linearGradient>` +
-        `<pattern id="minor" width="${cell}" height="${cell}" patternUnits="userSpaceOnUse" x="${ox % cell}" y="${oy % cell}"><path d="M${cell} 0V${cell}H0" fill="none" stroke="#7a5a00" stroke-opacity=".07" stroke-width="1.5"/></pattern>` +
-        `<pattern id="major" width="${cell * 5}" height="${cell * 5}" patternUnits="userSpaceOnUse" x="${ox % (cell * 5)}" y="${oy % (cell * 5)}"><path d="M${cell * 5} 0V${cell * 5}H0" fill="none" stroke="#7a5a00" stroke-opacity=".12" stroke-width="2.5"/></pattern></defs>` +
-        `<rect width="${W}" height="${H}" fill="url(#field)"/><rect width="${W}" height="${H}" fill="url(#minor)"/><rect width="${W}" height="${H}" fill="url(#major)"/>` +
-        `<path d="M0 ${oy}H${W}" stroke="#4d3606" stroke-opacity=".22" stroke-width="3"/>` +
-        `<polyline points="${pts}" fill="none" stroke="#ffffff" stroke-opacity=".55" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>` +
-        `<polyline points="${pts}" fill="none" stroke="#495f8b" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>` + marks.join('');
+      // The README header: Calcula's yellow and one soft sine wave across the card, nothing else.
+      const ox = W / 2, oy = 470, unit = 165, amp = 140;
+      const pts = Array.from({length: 121}, (_, i) => -W / 2 - 60 + i * (W + 120) / 120)
+        .map(x => `${(ox + x).toFixed(1)},${(oy - amp * Math.sin(x / unit)).toFixed(1)}`).join(' ');
+      return `<defs><linearGradient id="field" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3b8"/><stop offset=".55" stop-color="#f8de62"/><stop offset="1" stop-color="#efc93a"/></linearGradient></defs>` +
+        `<rect width="${W}" height="${H}" fill="url(#field)"/>` +
+        `<polyline points="${pts}" fill="none" stroke="#ffffff" stroke-opacity=".6" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>`;
     }
     const cell = Math.round(Math.min(W, H) / 18), major = cell * 5, x0 = -index * W, off = ((x0 % major) + major) % major;
     const gap = slide.layout === 'big-screen-feature'
