@@ -32,18 +32,14 @@ export default {
   // Paper: a faint graph-paper grid in panorama coordinates, so the cards still join when shown together.
   art({W, H, index, slide}) {
     if (slide.identity) {
-      // The README header: Calcula's yellow with its scientific keys floating around the name, near ones sharp,
-      // far ones small and soft, the functions that sit a flick away on every key.
-      const keys = [
-        // [label, x, y, size, rotation, blur]
-        ['sin', 250, 150, 190, -12, 0], ['π', 560, 300, 120, 10, 3], ['x²', 120, 470, 130, 8, 5],
-        ['√', 2150, 140, 180, 12, 0], ['log', 1840, 290, 130, -8, 3], ['eˣ', 2280, 470, 120, -14, 5]];
-      const blurs = [...new Set(keys.map(k => k[5]).filter(Boolean))].map(b => `<filter id="soft${b}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="${b}"/></filter>`).join('');
-      const caps = keys.map(([label, x, y, s, r, b]) => `<g transform="translate(${x} ${y}) rotate(${r})"${b ? ` filter="url(#soft${b})" opacity="${(1 - b / 12).toFixed(2)}"` : ''}>` +
-        `<rect x="${-s / 2}" y="${-s / 2 + s * .06}" width="${s}" height="${s}" rx="${s * .26}" fill="#9a7410" opacity=".22"/>` +
-        `<rect x="${-s / 2}" y="${-s / 2}" width="${s}" height="${s}" rx="${s * .26}" fill="#fffaf0"/>` +
-        `<text y="${s * .16}" font-size="${s * (label.length > 2 ? .36 : .46)}" font-family="Calcula" font-weight="600" fill="#22307f" text-anchor="middle">${label}</text></g>`).join('');
-      return `<defs><linearGradient id="field" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fffae4"/><stop offset=".55" stop-color="#fbecb0"/><stop offset="1" stop-color="#f2d878"/></linearGradient>${blurs}</defs>` +
+      // The README header: plain honey, and each phone stands on one of Calcula's keys, its function written at the
+      // top of the cap like every key in the app: f(x) over the graph, sin over the keypad, °F over the converter.
+      const caps = [['f(x)', 225, 400, 650], ['sin', 860, 280, 680], ['°F', 1525, 400, 650]].map(([label, x, y, w]) =>
+        `<rect x="${x}" y="${y + 16}" width="${w}" height="${H}" rx="96" fill="#9a7410" opacity=".16"/>` +
+        `<rect x="${x}" y="${y}" width="${w}" height="${H}" rx="96" fill="url(#cap)"/>` +
+        `<text x="${x + w / 2}" y="${y + 58}" font-size="40" font-family="Calcula" font-weight="600" fill="#6e7fc8" text-anchor="middle">${label}</text>`).join('');
+      return `<defs><linearGradient id="field" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fffae4"/><stop offset=".55" stop-color="#fbecb0"/><stop offset="1" stop-color="#f2d878"/></linearGradient>` +
+        `<linearGradient id="cap" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fffaf0"/><stop offset=".5" stop-color="#f6ead6"/></linearGradient></defs>` +
         `<rect width="${W}" height="${H}" fill="url(#field)"/>${caps}`;
     }
     const cell = Math.round(Math.min(W, H) / 18), major = cell * 5, x0 = -index * W, off = ((x0 % major) + major) % major;
