@@ -27,6 +27,9 @@ function key(main, alt) {
 }
 
 export default {
+  // The graph paper runs across the store strips' seams.
+  continuous: ['phone', 'tablet7', 'tablet10'],
+
   // Paper: a faint graph-paper grid in panorama coordinates, so the cards still join when shown together.
   art({W, H, index, slide}) {
     const cell = Math.round(Math.min(W, H) / 18), major = cell * 5, x0 = -index * W, off = ((x0 % major) + major) % major;
@@ -87,33 +90,6 @@ export default {
       glyph.setAttribute('aria-hidden', 'true');
       glyph.textContent = slide.glyph;
       main.append(glyph);
-    }
-  },
-
-  /** Frames follow the captured pixels: the bezel and corner radius scale with the frame width. */
-  layout({main}) {
-    for (const node of main.querySelectorAll('.device:not(.device-frame-none)')) {
-      if (main.classList.contains('compare')) break;
-      const image = node.querySelector('img'), width = node.clientWidth, landscape = image.naturalWidth > image.naturalHeight;
-      node.style.setProperty('--bezel', `${Math.round(width * (landscape ? .011 : .022))}px`);
-      node.style.setProperty('--radius', `${width * (landscape ? .03 : .075)}px`);
-    }
-  },
-
-  // App frames keep their real status bar and sides inside the export. They may run off the
-  // bottom edge, but most of each view stays visible.
-  decorate({W, H, slide, devices}) {
-    if (slide.layout === 'compare') {
-      // Each name sits just under its screen.
-      for (const label of devices[0].node.parentElement.querySelectorAll('.device-label')) label.style.setProperty('--h', `${devices[0].box.height}px`);
-      return;
-    }
-    for (const {box, spec} of devices) {
-      if (spec.frame === 'none') continue;
-      if (/stack/.test(slide.layout || '')) continue;
-      const bleeds = /zoomed/.test(slide.layout || '');
-      if (box.left < 12 || box.top < 12 || (!bleeds && box.left + box.width > W - 12)) throw new Error(`App capture extends outside the export: ${spec.raw}`);
-      if (!/zoomed/.test(slide.layout || '') && box.top + box.height > H - 12 && (H - box.top) / box.height < .7) throw new Error(`App capture runs too far off the bottom: ${spec.raw}`);
     }
   }
 };

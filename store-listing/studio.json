@@ -40,5 +40,30 @@
       }
     ],
     "export": "cd store-listing && node render.mjs --locale {locale}"
+  },
+  "frames": {
+    "phone": {
+      "bezel": 0.022,
+      "radius": 0.075
+    },
+    "tablet": {
+      "bezel": 0.022,
+      "radius": 0.075
+    },
+    "landscape": {
+      "bezel": 0.011,
+      "radius": 0.03
+    },
+    "fixed": [
+      "compare"
+    ]
+  },
+  "bounds": {
+    "margin": 12,
+    "visible": 0.7,
+    "layouts": {
+      "stack": false,
+      "compare": false
+    }
   }
 }

@@ -118,6 +118,6 @@ header p{margin:26px 0 0;font-size:40px;line-height:1.24;letter-spacing:-.5px;wh
 .readme .compare .pair2.after{left:1800px}
 .readme .compare .device.before::before{content:'';position:absolute;z-index:-1;left:-50px;top:-50px;width:1050px;height:1140px;border-radius:98px;
   background:var(--key);box-shadow:inset 0 -18px 0 #00000014}
-.readme .compare .device-label{transform:translateY(calc(var(--h) + 30px));display:flex;justify-content:center}
+.readme .compare .device-label{transform:translateY(calc(var(--tallest-device) + 30px));display:flex;justify-content:center}
 .device-label.before span{font-size:40px;font-weight:400;letter-spacing:-.5px;color:#22307fa6}
 .device-label.after span{font-size:44px;font-weight:700;letter-spacing:-1.2px;color:var(--ink)}
