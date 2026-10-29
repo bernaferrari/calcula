@@ -1,0 +1,5 @@
+Calcula combina operaciones cotidianas y funciones científicas en un teclado personalizable. Desliza una tecla para acceder a seno, coseno, logaritmos, raíces y más.
+
+Ve los resultados al escribir, reutiliza el historial, traza gráficas y convierte unidades. Personaliza colores y teclas y usa constantes, memorias y los modos de programación, estadística o RPN. El diseño se adapta a móviles y tabletas, y el widget mantiene la calculadora a mano.
+
+Sin anuncios, cuentas ni seguimiento. Tus cálculos permanecen en el dispositivo.

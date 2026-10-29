@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-29T18:49:12.164Z",
+  "generatedAt": "2026-10-29T21:14:37.790Z",
   "campaign": "A little flick goes a long way",
   "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
   "assets": [
@@ -7,7 +7,7 @@
       "file": "phone/phone-01-every-key.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 241138,
+      "bytes": 241182,
       "alt": "Un pequeño deslizamiento. — Desliza una tecla para usar su función científica.",
       "sources": [
         "raw/phone/01-every-key.png"
@@ -17,7 +17,7 @@
       "file": "phone/phone-02-graph.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 243234,
+      "bytes": 243214,
       "alt": "Mira cómo toma forma. — Traza funciones y mueve los parámetros.",
       "sources": [
         "raw/phone/02-graph.png"
@@ -27,7 +27,7 @@
       "file": "phone/phone-03-convert.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 168654,
+      "bytes": 168694,
       "alt": "De °C a °F. — Convierte unidades mientras escribes.",
       "sources": [
         "raw/phone/03-convert.png"
@@ -37,7 +37,7 @@
       "file": "phone/phone-04-programmer.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 214654,
+      "bytes": 214687,
       "alt": "Hexadecimal, sin líos. — Modo programador con bits, desplazamientos y bases.",
       "sources": [
         "raw/phone/05-programmer.png"
@@ -47,7 +47,7 @@
       "file": "phone/phone-05-statistics.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 225973,
+      "bytes": 225951,
       "alt": "Números en resumen. — Media, mediana y dispersión de un vistazo.",
       "sources": [
         "raw/phone/06-statistics.png"
@@ -68,7 +68,7 @@
       "file": "phone/phone-07-more-room.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 234962,
+      "bytes": 235018,
       "alt": "Más espacio para calcular. — Historial junto al teclado en tabletas y plegables.",
       "sources": [
         "raw/tablet10/01-every-key.png",
@@ -79,7 +79,7 @@
       "file": "tablet7/tablet7-01-every-key.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 251978,
+      "bytes": 252010,
       "alt": "Un pequeño deslizamiento. — Desliza una tecla para usar su función científica.",
       "sources": [
         "raw/tablet7/01-every-key.png"
@@ -120,7 +120,7 @@
       "file": "tablet7/tablet7-05-more-room.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 254113,
+      "bytes": 254129,
       "alt": "Más espacio para calcular. — Historial junto al teclado en tabletas y plegables.",
       "sources": [
         "raw/tablet7/08-calculator-landscape.png",
@@ -131,7 +131,7 @@
       "file": "tablet10/tablet10-01-every-key.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 213824,
+      "bytes": 213835,
       "alt": "Un pequeño deslizamiento. — Desliza una tecla para usar su función científica.",
       "sources": [
         "raw/tablet10/01-every-key.png"
@@ -141,7 +141,7 @@
       "file": "tablet10/tablet10-02-graph.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 235115,
+      "bytes": 235104,
       "alt": "Mira cómo toma forma. — Traza funciones y mueve los parámetros.",
       "sources": [
         "raw/tablet10/02-graph.png"
@@ -151,7 +151,7 @@
       "file": "tablet10/tablet10-03-convert.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 176561,
+      "bytes": 176576,
       "alt": "De °C a °F. — Convierte unidades mientras escribes.",
       "sources": [
         "raw/tablet10/03-convert.png",
@@ -162,7 +162,7 @@
       "file": "tablet10/tablet10-04-customize.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 248094,
+      "bytes": 247977,
       "alt": "A tu manera, tecla a tecla. — Tus colores. Tus atajos.",
       "sources": [
         "raw/tablet10/09-appearance-portrait.png",
@@ -173,7 +173,7 @@
       "file": "tablet10/tablet10-05-more-room.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 214557,
+      "bytes": 214457,
       "alt": "Más espacio para calcular. — Historial junto al teclado en tabletas y plegables.",
       "sources": [
         "raw/tablet10/01-every-key.png",
@@ -223,7 +223,7 @@
       "file": "graphics/feature-graphic.png",
       "width": 1024,
       "height": 500,
-      "bytes": 70693,
+      "bytes": 71238,
       "sources": [
         "raw/phone/01-every-key.png"
       ]
@@ -232,7 +232,7 @@
       "file": "graphics/app-icon.png",
       "width": 512,
       "height": 512,
-      "bytes": 17081,
+      "bytes": 44877,
       "alt": "Un pequeño deslizamiento. — Desliza una tecla para usar su función científica."
     }
   ]

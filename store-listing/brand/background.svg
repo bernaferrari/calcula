@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108">
-  <!-- Calcula's indigo. -->
-  <rect width="108" height="108" fill="#4F46E5"/>
+  <!-- Calcula's yellow, the field behind every store card. -->
+  <defs><linearGradient id="field" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F8E166"/><stop offset="1" stop-color="#EBC42B"/></linearGradient></defs>
+  <rect width="108" height="108" fill="url(#field)"/>
 </svg>

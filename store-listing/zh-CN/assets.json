@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-29T18:51:10.001Z",
+  "generatedAt": "2026-10-29T21:15:20.503Z",
   "campaign": "A little flick goes a long way",
   "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
   "assets": [
@@ -7,7 +7,7 @@
       "file": "phone/phone-01-every-key.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 229267,
+      "bytes": 229269,
       "alt": "轻轻一滑， 功能更多。 — 滑动按键即可使用 科学函数。",
       "sources": [
         "raw/phone/01-every-key.png"
@@ -17,7 +17,7 @@
       "file": "phone/phone-02-graph.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 236352,
+      "bytes": 236304,
       "alt": "让曲线 呈现眼前。 — 绘制函数，拖动 参数查看变化。",
       "sources": [
         "raw/phone/02-graph.png"
@@ -27,7 +27,7 @@
       "file": "phone/phone-03-convert.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 162978,
+      "bytes": 162970,
       "alt": "从 °C 到 °F。 — 输入的同时 换算单位。",
       "sources": [
         "raw/phone/03-convert.png"
@@ -37,7 +37,7 @@
       "file": "phone/phone-04-programmer.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 209979,
+      "bytes": 209980,
       "alt": "轻松处理 十六进制。 — 程序员模式支持位、 移位和进制。",
       "sources": [
         "raw/phone/05-programmer.png"
@@ -47,7 +47,7 @@
       "file": "phone/phone-05-statistics.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 228921,
+      "bytes": 228874,
       "alt": "数字统计， 一目了然。 — 快速查看平均值、 中位数和离散程度。",
       "sources": [
         "raw/phone/06-statistics.png"
@@ -68,7 +68,7 @@
       "file": "phone/phone-07-more-room.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 221822,
+      "bytes": 221879,
       "alt": "更多空间， 更多计算。 — 平板和折叠屏上 历史记录与键盘并排。",
       "sources": [
         "raw/tablet10/01-every-key.png",
@@ -79,7 +79,7 @@
       "file": "tablet7/tablet7-01-every-key.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 243130,
+      "bytes": 243164,
       "alt": "轻轻一滑， 功能更多。 — 滑动按键即可使用 科学函数。",
       "sources": [
         "raw/tablet7/01-every-key.png"
@@ -120,7 +120,7 @@
       "file": "tablet7/tablet7-05-more-room.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 243606,
+      "bytes": 243665,
       "alt": "更多空间， 更多计算。 — 平板和折叠屏上 历史记录与键盘并排。",
       "sources": [
         "raw/tablet7/08-calculator-landscape.png",
@@ -131,7 +131,7 @@
       "file": "tablet10/tablet10-01-every-key.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 215507,
+      "bytes": 215617,
       "alt": "轻轻一滑， 功能更多。 — 滑动按键即可使用 科学函数。",
       "sources": [
         "raw/tablet10/01-every-key.png"
@@ -141,7 +141,7 @@
       "file": "tablet10/tablet10-02-graph.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 232745,
+      "bytes": 232734,
       "alt": "让曲线 呈现眼前。 — 绘制函数，拖动 参数查看变化。",
       "sources": [
         "raw/tablet10/02-graph.png"
@@ -151,7 +151,7 @@
       "file": "tablet10/tablet10-03-convert.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 173925,
+      "bytes": 173938,
       "alt": "从 °C 到 °F。 — 输入的同时 换算单位。",
       "sources": [
         "raw/tablet10/03-convert.png",
@@ -162,7 +162,7 @@
       "file": "tablet10/tablet10-04-customize.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 254129,
+      "bytes": 254037,
       "alt": "你的键盘， 你的风格。 — 你的颜色。 你的快捷方式。",
       "sources": [
         "raw/tablet10/09-appearance-portrait.png",
@@ -173,7 +173,7 @@
       "file": "tablet10/tablet10-05-more-room.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 210751,
+      "bytes": 210689,
       "alt": "更多空间， 更多计算。 — 平板和折叠屏上 历史记录与键盘并排。",
       "sources": [
         "raw/tablet10/01-every-key.png",
@@ -223,7 +223,7 @@
       "file": "graphics/feature-graphic.png",
       "width": 1024,
       "height": 500,
-      "bytes": 67178,
+      "bytes": 67735,
       "sources": [
         "raw/phone/01-every-key.png"
       ]
@@ -232,7 +232,7 @@
       "file": "graphics/app-icon.png",
       "width": 512,
       "height": 512,
-      "bytes": 17081,
+      "bytes": 44877,
       "alt": "轻轻一滑， 功能更多。 — 滑动按键即可使用 科学函数。"
     }
   ]

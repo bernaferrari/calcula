@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-29T18:50:55.816Z",
+  "generatedAt": "2026-10-29T21:15:03.487Z",
   "campaign": "A little flick goes a long way",
   "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
   "assets": [
@@ -7,7 +7,7 @@
       "file": "phone/phone-01-every-key.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 218300,
+      "bytes": 218386,
       "alt": "ひと振りで、 もっと。 — キーをフリックして 関数にアクセス。",
       "sources": [
         "raw/phone/01-every-key.png"
@@ -17,7 +17,7 @@
       "file": "phone/phone-02-graph.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 237315,
+      "bytes": 237291,
       "alt": "曲線が 見えてくる。 — 関数を描き、 パラメータを調整。",
       "sources": [
         "raw/phone/02-graph.png"
@@ -27,7 +27,7 @@
       "file": "phone/phone-03-convert.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 166287,
+      "bytes": 166291,
       "alt": "°Cから °Fへ。 — 入力しながら 単位を変換。",
       "sources": [
         "raw/phone/03-convert.png"
@@ -37,7 +37,7 @@
       "file": "phone/phone-04-programmer.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 216448,
+      "bytes": 216436,
       "alt": "16進数も 思いのまま。 — ビット、シフト、基数を プログラマーモードで。",
       "sources": [
         "raw/phone/05-programmer.png"
@@ -47,7 +47,7 @@
       "file": "phone/phone-05-statistics.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 227969,
+      "bytes": 227968,
       "alt": "数字を ひとまとめ。 — 平均、中央値、ばらつきを ひと目で確認。",
       "sources": [
         "raw/phone/06-statistics.png"
@@ -68,7 +68,7 @@
       "file": "phone/phone-07-more-room.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 215251,
+      "bytes": 215269,
       "alt": "広がる 計算スペース。 — タブレットでは 履歴を横に表示。",
       "sources": [
         "raw/tablet10/01-every-key.png",
@@ -79,7 +79,7 @@
       "file": "tablet7/tablet7-01-every-key.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 232617,
+      "bytes": 232594,
       "alt": "ひと振りで、 もっと。 — キーをフリックして 関数にアクセス。",
       "sources": [
         "raw/tablet7/01-every-key.png"
@@ -120,7 +120,7 @@
       "file": "tablet7/tablet7-05-more-room.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 238349,
+      "bytes": 238294,
       "alt": "広がる 計算スペース。 — タブレットでは 履歴を横に表示。",
       "sources": [
         "raw/tablet7/08-calculator-landscape.png",
@@ -131,7 +131,7 @@
       "file": "tablet10/tablet10-01-every-key.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 203155,
+      "bytes": 203321,
       "alt": "ひと振りで、 もっと。 — キーをフリックして 関数にアクセス。",
       "sources": [
         "raw/tablet10/01-every-key.png"
@@ -141,7 +141,7 @@
       "file": "tablet10/tablet10-02-graph.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 230018,
+      "bytes": 230056,
       "alt": "曲線が 見えてくる。 — 関数を描き、 パラメータを調整。",
       "sources": [
         "raw/tablet10/02-graph.png"
@@ -151,7 +151,7 @@
       "file": "tablet10/tablet10-03-convert.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 177185,
+      "bytes": 177242,
       "alt": "°Cから °Fへ。 — 入力しながら 単位を変換。",
       "sources": [
         "raw/tablet10/03-convert.png",
@@ -162,7 +162,7 @@
       "file": "tablet10/tablet10-04-customize.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 238441,
+      "bytes": 238334,
       "alt": "キーまで 自分らしく。 — 好きな色。 好きなショートカット。",
       "sources": [
         "raw/tablet10/09-appearance-portrait.png",
@@ -173,7 +173,7 @@
       "file": "tablet10/tablet10-05-more-room.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 195380,
+      "bytes": 195392,
       "alt": "広がる 計算スペース。 — タブレットでは 履歴を横に表示。",
       "sources": [
         "raw/tablet10/01-every-key.png",
@@ -223,7 +223,7 @@
       "file": "graphics/feature-graphic.png",
       "width": 1024,
       "height": 500,
-      "bytes": 73784,
+      "bytes": 74336,
       "sources": [
         "raw/phone/01-every-key.png"
       ]
@@ -232,7 +232,7 @@
       "file": "graphics/app-icon.png",
       "width": 512,
       "height": 512,
-      "bytes": 17081,
+      "bytes": 44877,
       "alt": "ひと振りで、 もっと。 — キーをフリックして 関数にアクセス。"
     }
   ]

@@ -1,0 +1,5 @@
+Calcula verbindet alltägliche Berechnungen mit wissenschaftlichen Funktionen. Streiche auf einer Taste, um Sinus, Kosinus, Logarithmen und weitere Funktionen zu verwenden.
+
+Sieh Ergebnisse während der Eingabe, nutze den Verlauf erneut, zeichne Graphen und rechne Einheiten um. Passe Farben und Tasten an und verwende Konstanten, Speicher, den Programmierer-, Statistik- oder RPN-Modus. Das Layout passt sich Smartphones und Tablets an; ein Widget hält den Rechner griffbereit.
+
+Ohne Werbung, Konto oder Tracking. Deine Berechnungen bleiben auf dem Gerät.

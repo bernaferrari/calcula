@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-29T18:51:24.237Z",
+  "generatedAt": "2026-10-29T21:15:29.323Z",
   "campaign": "A little flick goes a long way",
   "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
   "assets": [
@@ -7,7 +7,7 @@
       "file": "phone/phone-01-every-key.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 231631,
+      "bytes": 231690,
       "alt": "輕輕一滑， 功能更多。 — 滑動按鍵即可使用 科學函數。",
       "sources": [
         "raw/phone/01-every-key.png"
@@ -17,7 +17,7 @@
       "file": "phone/phone-02-graph.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 241485,
+      "bytes": 241443,
       "alt": "讓曲線 呈現眼前。 — 繪製函數，拖動 參數查看變化。",
       "sources": [
         "raw/phone/02-graph.png"
@@ -27,7 +27,7 @@
       "file": "phone/phone-03-convert.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 165932,
+      "bytes": 165956,
       "alt": "從 °C 到 °F。 — 輸入的同時 換算單位。",
       "sources": [
         "raw/phone/03-convert.png"
@@ -37,7 +37,7 @@
       "file": "phone/phone-04-programmer.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 218090,
+      "bytes": 218097,
       "alt": "輕鬆處理 十六進位。 — 程式設計模式支援位元、 位移和進位。",
       "sources": [
         "raw/phone/05-programmer.png"
@@ -47,7 +47,7 @@
       "file": "phone/phone-05-statistics.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 233338,
+      "bytes": 233367,
       "alt": "數字統計， 一目瞭然。 — 快速查看平均值、 中位數和分散程度。",
       "sources": [
         "raw/phone/06-statistics.png"
@@ -68,7 +68,7 @@
       "file": "phone/phone-07-more-room.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 225406,
+      "bytes": 225404,
       "alt": "更多空間， 更多計算。 — 平板和摺疊螢幕上 歷史紀錄與鍵盤並排。",
       "sources": [
         "raw/tablet10/01-every-key.png",
@@ -79,7 +79,7 @@
       "file": "tablet7/tablet7-01-every-key.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 246684,
+      "bytes": 246743,
       "alt": "輕輕一滑， 功能更多。 — 滑動按鍵即可使用 科學函數。",
       "sources": [
         "raw/tablet7/01-every-key.png"
@@ -120,7 +120,7 @@
       "file": "tablet7/tablet7-05-more-room.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 247083,
+      "bytes": 247146,
       "alt": "更多空間， 更多計算。 — 平板和摺疊螢幕上 歷史紀錄與鍵盤並排。",
       "sources": [
         "raw/tablet7/08-calculator-landscape.png",
@@ -131,7 +131,7 @@
       "file": "tablet10/tablet10-01-every-key.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 218544,
+      "bytes": 218653,
       "alt": "輕輕一滑， 功能更多。 — 滑動按鍵即可使用 科學函數。",
       "sources": [
         "raw/tablet10/01-every-key.png"
@@ -141,7 +141,7 @@
       "file": "tablet10/tablet10-02-graph.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 236489,
+      "bytes": 236438,
       "alt": "讓曲線 呈現眼前。 — 繪製函數，拖動 參數查看變化。",
       "sources": [
         "raw/tablet10/02-graph.png"
@@ -151,7 +151,7 @@
       "file": "tablet10/tablet10-03-convert.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 175926,
+      "bytes": 175990,
       "alt": "從 °C 到 °F。 — 輸入的同時 換算單位。",
       "sources": [
         "raw/tablet10/03-convert.png",
@@ -162,7 +162,7 @@
       "file": "tablet10/tablet10-04-customize.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 254852,
+      "bytes": 254784,
       "alt": "你的鍵盤， 你的風格。 — 你的顏色。 你的捷徑。",
       "sources": [
         "raw/tablet10/09-appearance-portrait.png",
@@ -173,7 +173,7 @@
       "file": "tablet10/tablet10-05-more-room.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 213458,
+      "bytes": 213442,
       "alt": "更多空間， 更多計算。 — 平板和摺疊螢幕上 歷史紀錄與鍵盤並排。",
       "sources": [
         "raw/tablet10/01-every-key.png",
@@ -223,7 +223,7 @@
       "file": "graphics/feature-graphic.png",
       "width": 1024,
       "height": 500,
-      "bytes": 69236,
+      "bytes": 69782,
       "sources": [
         "raw/phone/01-every-key.png"
       ]
@@ -232,7 +232,7 @@
       "file": "graphics/app-icon.png",
       "width": 512,
       "height": 512,
-      "bytes": 17081,
+      "bytes": 44877,
       "alt": "輕輕一滑， 功能更多。 — 滑動按鍵即可使用 科學函數。"
     }
   ]

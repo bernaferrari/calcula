@@ -1,0 +1,5 @@
+Calcula réunit les calculs du quotidien et les fonctions scientifiques dans un clavier personnalisable. Faites glisser une touche pour accéder au sinus, au cosinus, aux logarithmes, aux racines et plus encore.
+
+Voyez les résultats pendant la saisie, réutilisez l’historique, tracez des graphiques et convertissez des unités. Personnalisez les couleurs et les touches, et utilisez les constantes, mémoires et modes programmation, statistiques ou RPN. La mise en page s’adapte aux téléphones et tablettes ; un widget garde la calculatrice à portée de main.
+
+Sans publicité, compte ni suivi. Vos calculs restent sur l’appareil.

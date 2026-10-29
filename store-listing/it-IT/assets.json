@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-29T18:50:39.192Z",
+  "generatedAt": "2026-10-29T21:14:53.961Z",
   "campaign": "A little flick goes a long way",
   "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
   "assets": [
@@ -7,7 +7,7 @@
       "file": "phone/phone-01-every-key.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 230827,
+      "bytes": 230865,
       "alt": "Un piccolo scorrimento. — Scorri un tasto per la sua funzione scientifica.",
       "sources": [
         "raw/phone/01-every-key.png"
@@ -17,7 +17,7 @@
       "file": "phone/phone-02-graph.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 251553,
+      "bytes": 251578,
       "alt": "Guarda la curva prendere forma. — Traccia funzioni e sposta i parametri.",
       "sources": [
         "raw/phone/02-graph.png"
@@ -27,7 +27,7 @@
       "file": "phone/phone-03-convert.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 159848,
+      "bytes": 159867,
       "alt": "Da °C a °F. — Converti le unità mentre scrivi.",
       "sources": [
         "raw/phone/03-convert.png"
@@ -37,7 +37,7 @@
       "file": "phone/phone-04-programmer.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 220179,
+      "bytes": 220160,
       "alt": "Esadecimale senza problemi. — Modalità programmatore con bit, shift e basi.",
       "sources": [
         "raw/phone/05-programmer.png"
@@ -47,7 +47,7 @@
       "file": "phone/phone-05-statistics.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 218584,
+      "bytes": 218625,
       "alt": "Numeri in sintesi. — Media, mediana e dispersione a colpo d’occhio.",
       "sources": [
         "raw/phone/06-statistics.png"
@@ -68,7 +68,7 @@
       "file": "phone/phone-07-more-room.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 227682,
+      "bytes": 227688,
       "alt": "Più spazio per calcolare. — Cronologia accanto ai tasti su tablet e pieghevoli.",
       "sources": [
         "raw/tablet10/01-every-key.png",
@@ -79,7 +79,7 @@
       "file": "tablet7/tablet7-01-every-key.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 242776,
+      "bytes": 242838,
       "alt": "Un piccolo scorrimento. — Scorri un tasto per la sua funzione scientifica.",
       "sources": [
         "raw/tablet7/01-every-key.png"
@@ -120,7 +120,7 @@
       "file": "tablet7/tablet7-05-more-room.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 248367,
+      "bytes": 248392,
       "alt": "Più spazio per calcolare. — Cronologia accanto ai tasti su tablet e pieghevoli.",
       "sources": [
         "raw/tablet7/08-calculator-landscape.png",
@@ -131,7 +131,7 @@
       "file": "tablet10/tablet10-01-every-key.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 213253,
+      "bytes": 213357,
       "alt": "Un piccolo scorrimento. — Scorri un tasto per la sua funzione scientifica.",
       "sources": [
         "raw/tablet10/01-every-key.png"
@@ -141,7 +141,7 @@
       "file": "tablet10/tablet10-02-graph.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 230992,
+      "bytes": 231053,
       "alt": "Guarda la curva prendere forma. — Traccia funzioni e sposta i parametri.",
       "sources": [
         "raw/tablet10/02-graph.png"
@@ -151,7 +151,7 @@
       "file": "tablet10/tablet10-03-convert.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 172461,
+      "bytes": 172442,
       "alt": "Da °C a °F. — Converti le unità mentre scrivi.",
       "sources": [
         "raw/tablet10/03-convert.png",
@@ -162,7 +162,7 @@
       "file": "tablet10/tablet10-04-customize.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 243698,
+      "bytes": 243618,
       "alt": "A modo tuo, tasto per tasto. — I tuoi colori. Le tue scorciatoie.",
       "sources": [
         "raw/tablet10/09-appearance-portrait.png",
@@ -173,7 +173,7 @@
       "file": "tablet10/tablet10-05-more-room.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 208239,
+      "bytes": 208168,
       "alt": "Più spazio per calcolare. — Cronologia accanto ai tasti su tablet e pieghevoli.",
       "sources": [
         "raw/tablet10/01-every-key.png",
@@ -223,7 +223,7 @@
       "file": "graphics/feature-graphic.png",
       "width": 1024,
       "height": 500,
-      "bytes": 69860,
+      "bytes": 70420,
       "sources": [
         "raw/phone/01-every-key.png"
       ]
@@ -232,7 +232,7 @@
       "file": "graphics/app-icon.png",
       "width": 512,
       "height": 512,
-      "bytes": 17081,
+      "bytes": 44877,
       "alt": "Un piccolo scorrimento. — Scorri un tasto per la sua funzione scientifica."
     }
   ]

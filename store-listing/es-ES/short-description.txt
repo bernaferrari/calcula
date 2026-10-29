@@ -1,0 +1,1 @@
+Calculadora científica con gráficas, historial y conversión de unidades
