@@ -32,13 +32,19 @@ export default {
   // Paper: a faint graph-paper grid in panorama coordinates, so the cards still join when shown together.
   art({W, H, index, slide}) {
     if (slide.identity) {
-      // The README header: Calcula's yellow and one soft sine wave across the card, nothing else.
-      const ox = W / 2, oy = 470, unit = 165, amp = 140;
-      const pts = Array.from({length: 121}, (_, i) => -W / 2 - 60 + i * (W + 120) / 120)
-        .map(x => `${(ox + x).toFixed(1)},${(oy - amp * Math.sin(x / unit)).toFixed(1)}`).join(' ');
-      return `<defs><linearGradient id="field" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3b8"/><stop offset=".55" stop-color="#f8de62"/><stop offset="1" stop-color="#efc93a"/></linearGradient></defs>` +
-        `<rect width="${W}" height="${H}" fill="url(#field)"/>` +
-        `<polyline points="${pts}" fill="none" stroke="#ffffff" stroke-opacity=".6" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>`;
+      // The README header: Calcula's yellow with its scientific keys floating around the name, near ones sharp,
+      // far ones small and soft, the functions that sit a flick away on every key.
+      const keys = [
+        // [label, x, y, size, rotation, blur]
+        ['sin', 250, 150, 190, -12, 0], ['π', 560, 300, 120, 10, 3], ['x²', 120, 470, 130, 8, 5],
+        ['√', 2150, 140, 180, 12, 0], ['log', 1840, 290, 130, -8, 3], ['eˣ', 2280, 470, 120, -14, 5]];
+      const blurs = [...new Set(keys.map(k => k[5]).filter(Boolean))].map(b => `<filter id="soft${b}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="${b}"/></filter>`).join('');
+      const caps = keys.map(([label, x, y, s, r, b]) => `<g transform="translate(${x} ${y}) rotate(${r})"${b ? ` filter="url(#soft${b})" opacity="${(1 - b / 12).toFixed(2)}"` : ''}>` +
+        `<rect x="${-s / 2}" y="${-s / 2 + s * .06}" width="${s}" height="${s}" rx="${s * .26}" fill="#b8860b" opacity=".22"/>` +
+        `<rect x="${-s / 2}" y="${-s / 2}" width="${s}" height="${s}" rx="${s * .26}" fill="#fffaf0"/>` +
+        `<text y="${s * .16}" font-size="${s * (label.length > 2 ? .36 : .46)}" font-family="Calcula" font-weight="600" fill="#22307f" text-anchor="middle">${label}</text></g>`).join('');
+      return `<defs><linearGradient id="field" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3b8"/><stop offset=".55" stop-color="#f8de62"/><stop offset="1" stop-color="#efc93a"/></linearGradient>${blurs}</defs>` +
+        `<rect width="${W}" height="${H}" fill="url(#field)"/>${caps}`;
     }
     const cell = Math.round(Math.min(W, H) / 18), major = cell * 5, x0 = -index * W, off = ((x0 % major) + major) % major;
     const gap = slide.layout === 'big-screen-feature'
