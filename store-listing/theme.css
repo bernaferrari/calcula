@@ -122,25 +122,17 @@ header p{margin:26px 0 0;font-size:40px;line-height:1.24;letter-spacing:-.5px;wh
 .device-label.before span{font-size:40px;font-weight:400;letter-spacing:-.5px;color:#22307fa6}
 .device-label.after span{font-size:44px;font-weight:700;letter-spacing:-1.2px;color:var(--ink)}
 
-/* README header: the keypad up close. Keys are the capture's, redrawn: 243 x 226 at 15 apart, scaled 1.2 and
-   tilted, on the keypad's own surface, running off the right and bottom. The 7 key is mid-flick. */
-.readme .keypad{background:#fbf5ea}
-.readme .keypad header{left:140px;top:420px;right:auto;width:960px}
-.readme .keypad h1{font-size:150px;line-height:.98;letter-spacing:-5px;color:#22307f}
-.readme .keypad h1 em{font-style:normal;color:#22307f;background:linear-gradient(177deg,transparent 40%,#f4d94a 41%,#f4d94a 71%,transparent 72%);padding:0 .06em;margin:0 -.06em}
-.readme .keypad header p{margin-top:44px;font-size:46px;line-height:1.25;color:#22307fbf}
-.readme .keypad .name{position:absolute;left:140px;top:270px;display:flex;align-items:center;gap:22px;font-size:54px;font-weight:700;letter-spacing:-1.5px;color:#22307f;z-index:6}
-.readme .keypad .name img{width:92px;height:92px;border-radius:24%;box-shadow:0 12px 30px -14px #7a5a0099}
-.readme .keypad .pad{position:absolute;left:1180px;top:170px;width:1080px;padding:30px;display:grid;grid-template-columns:repeat(4,243px);grid-auto-rows:226px;gap:15px;
-  background:#fff8f3;border-radius:64px;transform:rotate(-7deg) scale(1.2);transform-origin:0 0;box-shadow:0 40px 90px -40px #3a312566,inset 0 0 0 2px #f0e0ce;z-index:2}
-.readme .keypad .k{position:relative;border-radius:48px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:16px 0 14px;color:#3a3125}
-.readme .keypad .k b{font-size:84px;font-weight:400;line-height:1}
-.readme .keypad .k small{font-size:30px;line-height:1;color:#8e8375;min-height:30px}
-.readme .keypad .fn{background:#f0e0ce}.readme .keypad .num{background:#f4e6d6}.readme .keypad .op{background:#f9debb}
-.readme .keypad .eq{background:#7c581c;color:#fff}
-.readme .keypad .fn b,.readme .keypad .op b{font-size:72px}
-.readme .keypad .slot{background:#e4cfb6;box-shadow:inset 0 14px 22px #3a312545,inset 0 0 0 2px #d9c2a6}.readme .keypad .slot>*{visibility:hidden}
-.readme .keypad .ghost,.readme .keypad .lifted{position:absolute;left:30px;top:271px;width:243px;height:226px;box-sizing:border-box}
-.readme .keypad .ghost{transform:translateY(-118px);height:290px;border-radius:48px;background:linear-gradient(#f4e6d600,#f4e6d6cc 55%,#f4e6d600);filter:none;z-index:3}.readme .keypad .ghost>*{visibility:hidden}
-.readme .keypad .lifted{transform:translate(-8px,-150px) rotate(-6deg) scale(1.08);z-index:4;box-shadow:0 14px 24px #3a312533,0 60px 80px -30px #3a312577;background:linear-gradient(#fffaf2,#f1e3cf)}
-.readme .keypad .lifted{justify-content:center;gap:6px;overflow:hidden}.readme .keypad .lifted .lit{color:#fbf5ea;background:#22307f;border-radius:44px;padding:10px 34px 14px;font-size:64px;font-weight:600;line-height:1;transform:translateY(-4px)}.readme .keypad .lifted .away{font-size:58px;opacity:.32;transform:translateY(18px);filter:blur(1.2px)}
+/* README header: the two lines of the feature graphic as two panels, like the other README cards. */
+.readme .flick-pair .pair-card{position:absolute;top:36px;width:1140px;height:1188px;overflow:hidden;border-radius:50px;z-index:1}
+.readme .flick-pair .flick-card{left:40px;color:#4d3606;background:linear-gradient(155deg,#fffbe6 5%,#f9e98f 55%,#ebc63f)}
+.readme .flick-pair .graph-card{left:1220px;color:#10275f;background:linear-gradient(155deg,#edf6ff 5%,#cae2ff 55%,#82b5ed)}
+.readme .flick-pair .pair-wave{position:absolute;top:-36px;width:2400px;height:1260px;pointer-events:none}
+.readme .flick-pair .flick-card .pair-wave{left:-40px}
+.readme .flick-pair .graph-card .pair-wave{left:-1220px}
+.readme .flick-pair .pair-wave path{fill:#fff;fill-opacity:.24;stroke:#fff;stroke-opacity:.35;stroke-width:3}
+.readme .flick-pair .pair-title{position:relative;z-index:3;margin:64px 80px 0;font-size:118px;line-height:.96;font-weight:700;letter-spacing:-4.5px}
+.readme .flick-pair .pair-caption{position:relative;z-index:3;margin:26px 80px 0;font-size:36px;line-height:1.2;opacity:.82}
+.readme .flick-pair .device{top:470px;width:560px;background:#fff;box-shadow:0 8px 22px #17265730,0 45px 80px -30px #17265760}
+.readme .flick-pair .flick{left:430px;top:400px;transform:rotate(-6deg)}
+.readme .flick-pair .graph{left:320px;transform:rotate(6deg)}
+.readme .flick-pair .key{left:140px;top:820px;width:300px}

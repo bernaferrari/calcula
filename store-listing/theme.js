@@ -61,19 +61,17 @@ export default {
       }
       return;
     }
-    if (slide.layout === 'keypad') {
-      // The README header is Calcula's keypad up close, redrawn from the capture's labels and colors and
-      // bleeding off the card, with the 7 key caught mid-flick: lifted out of its slot with a trail where it was;
-      // on its face sin slides up into the middle and the 7 is pushed down and fades, as the flick swaps them. The icon and name sit above the headline.
-      const keys = [
-        ['fn', '', 'C', ''], ['fn', '', '%', ''], ['fn', 'undo', '⌫', 'redo'], ['op', '1/x', '÷', ''],
-        ['num', 'sin', '7', 'sin⁻¹'], ['num', 'cos', '8', 'cos⁻¹'], ['num', 'tan', '9', 'tan⁻¹'], ['op', 'xʸ', '×', 'ʸ√x'],
-        ['num', 'ln', '4', 'eˣ'], ['num', 'log', '5', '10ˣ'], ['num', 'π', '6', 'e'], ['op', '', '−', ''],
-        ['num', 'x!', '1', '|x|'], ['num', 'x²', '2', '√'], ['num', 'x³', '3', '∛'], ['op', '', '+', ''],
-        ['fn', '', '( )', ''], ['num', '00', '0', ''], ['num', '', '.', ''], ['eq', '', '=', '']];
-      const grid = keys.map(([kind, up, label, down], i) => `<div class="k ${kind}${i === 4 ? ' slot' : ''}"><small>${up}</small><b>${label}</b><small>${down}</small></div>`).join('');
-      main.insertAdjacentHTML('beforeend', `<div class="pad">${grid}<div class="k num ghost" aria-hidden="true"><small>sin</small><b>7</b><small>sin⁻¹</small></div><div class="k num lifted"><span class="lit">sin</span><b class="away">7</b></div></div>` +
-        `<div class="name"><img src="../brand/icon.svg" alt="">Calcula</div>`);
+    if (slide.layout === 'flick-pair') {
+      // The README header, in the same panels as the rest: the feature graphic's two lines, each over a tilted phone.
+      // The sin key rises off the keypad on the first, like the first store card.
+      main.insertAdjacentHTML('beforeend', `<section class="pair-card flick-card"><div class="pair-title">A little<br>flick.</div><div class="pair-caption">Flick a key up for its scientific twin.</div></section><section class="pair-card graph-card"><div class="pair-title">A lot<br>more math.</div><div class="pair-caption">Graphs, units, bases and stats.</div></section>`);
+      for (const name of ['flick', 'graph']) {
+        const card = main.querySelector(`.${name}-card`);
+        card.insertAdjacentHTML('beforeend', `<svg class="pair-wave" viewBox="0 0 2400 1260" aria-hidden="true"><path d="M0 830 C220 830 330 600 600 655 S985 945 1210 840 S1530 600 1760 655 S2140 925 2400 780 V1260 H0 Z"/></svg>`);
+        card.append(main.querySelector(`.device.${name}`));
+      }
+      key(main, 'The 7 key, with sin a flick away');
+      main.querySelector('.flick-card').append(main.querySelector('.key'));
       return;
     }
     if (slide.layout === 'tools') {
