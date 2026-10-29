@@ -38,6 +38,7 @@ for (const code of locales) {
   const locale = resolve(here, code), copy = await read(resolve(locale, 'copy.json'), {});
   const assets = [];
   for (const kind of Object.keys(galleries)) {
+    if (profiles[kind].defaultLocaleOnly && code !== defaultLocale) continue;  // README art is rendered once
     const {width, height} = profiles[kind];
     for (const [i, layout] of cardsFor(galleries, kind).entries()) {
       const {card} = withCopy(layout, kind, copy, defaultCopy);

@@ -20,5 +20,25 @@
     "tablet10": "tablet10/contact-sheet-joined.jpg",
     "desktop": false
   },
-  "supersample": 2
+  "supersample": 2,
+  "capture": {
+    "build": "./gradlew :androidApp:assembleStoreCapture -q",
+    "runs": [
+      {
+        "profiles": [
+          "phone",
+          "tablet7",
+          "tablet10",
+          "desktop"
+        ],
+        "locales": [
+          "en-US",
+          "de-DE",
+          "es-ES",
+          "pt-BR"
+        ]
+      }
+    ],
+    "export": "cd store-listing && node render.mjs --locale {locale}"
+  }
 }

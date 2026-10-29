@@ -28,17 +28,16 @@ To change only the artwork, render again. Recapture when the app UI, sample data
 
 ## Recapture everything
 
-Start a disposable **Resizable (Experimental)** Android emulator with gesture navigation. Build the current source, then pass its exact emulator serial:
+Start the shared **Resizable (Experimental)** emulator (`emulator-5578`), then from the repository root:
 
 ```sh
-./gradlew :androidApp:assembleStoreCapture
-cd store-listing
-python3 capture-emulator.py --serial emulator-5560
+node store-listing/studio/recapture.cjs                   # build, capture en-US, de-DE, es-ES, pt-BR, export every language
+node store-listing/studio/recapture.cjs de-DE --no-build  # one language
 ```
 
-The script installs the fresh APK, switches between phone, tablet, and desktop display modes, and captures every scene in `design.json` with `adb exec-out screencap`. It selects the emulator’s primary display explicitly. Android demo mode fixes the real System UI clock at 9:41, hides notifications, and shows full connectivity and battery icons. It resets demo mode around each resize so Android does not duplicate connectivity icons. Capture provenance, source commit, APK hash, dimensions, and image hashes are written to `en-US/capture-manifest.json`. To refresh the README's blue programmer screen alone, use `--group phone --id 08-programmer-blue`; a single-scene capture leaves the full manifest unchanged.
+`studio.json` → `capture` lists the build, the device groups and the captured languages; the emulator plumbing is the studio's `capture.py`. `capture-emulator.py` installs the fresh APK, switches between phone, tablet, and desktop display modes, and captures every scene in `design.json` with `adb exec-out screencap`. It selects the emulator’s primary display explicitly. Android demo mode fixes the real System UI clock at 9:41, hides notifications, and shows full connectivity and battery icons. It resets demo mode around each resize so Android does not duplicate connectivity icons. Capture provenance, source commit, APK hash, dimensions, and image hashes are written to `en-US/capture-manifest.json`. To refresh the README's blue programmer screen alone, use `python3 store-listing/capture-emulator.py --profile phone --id 08-programmer-blue`; a single-scene capture leaves the full manifest unchanged.
 
-Raw phone captures are 1080 × 2340 at 400 dpi, placed in 1080 × 1920 campaign canvases. The 7-inch portrait captures are 1200 × 1920 at 320 dpi, 10-inch landscape captures are 1920 × 1200 at 240 dpi, and desktop-sized captures are 1920 × 1080 at 200 dpi. `captureWidth` and `captureHeight` can differ from the export canvas dimensions. `--group phone`, `--group tablet7`, `--group tablet10`, or `--group desktop` limits a diagnostic run; a full run refreshes the complete manifest.
+Raw phone captures are 1080 × 2340 at 400 dpi, placed in 1080 × 1920 campaign canvases. The 7-inch portrait captures are 1200 × 1920 at 320 dpi, 10-inch landscape captures are 1920 × 1200 at 240 dpi, and desktop-sized captures are 1920 × 1080 at 200 dpi. `captureWidth` and `captureHeight` can differ from the export canvas dimensions. `--profile phone`, `tablet7`, `tablet10` or `desktop` limits a diagnostic run; a full run refreshes the complete manifest.
 
 ## Preview the sequence
 
