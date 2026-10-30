@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-30T03:35:54.019Z",
+  "generatedAt": "2026-10-30T03:39:40.774Z",
   "campaign": "A little flick goes a long way",
   "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
   "assets": [
@@ -232,7 +232,7 @@
       "file": "graphics/app-icon.png",
       "width": 512,
       "height": 512,
-      "bytes": 196093,
+      "bytes": 196138,
       "alt": "Ein kleiner Wisch. — Streiche für die wissenschaftliche Funktion."
     }
   ]
