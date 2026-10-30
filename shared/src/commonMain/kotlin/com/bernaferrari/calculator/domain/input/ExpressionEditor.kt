@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.domain.input
 
+import com.bernaferrari.calculator.domain.math.Tokenizer
 import com.bernaferrari.calculator.domain.math.UserFunctions
 
 /** An expression being typed, with the cursor as an index into [text]. */
@@ -18,7 +19,7 @@ object ExpressionEditor {
     private const val PREFIX_FUNCTIONS = "√∛"
 
     /** Names that are inserted as `name(` and deleted as a unit, the person's own included. */
-    private val BUILT_IN = listOf("sin⁻¹", "cos⁻¹", "tan⁻¹", "sinh", "cosh", "tanh", "sin", "cos", "tan", "log", "abs", "ln")
+    private val BUILT_IN = Tokenizer.FUNCTIONS
     private val FUNCTIONS: List<String>
         get() = (BUILT_IN + UserFunctions.all.map { it.name }).sortedByDescending { it.length }
 

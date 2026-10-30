@@ -20,6 +20,16 @@ class PlotTest {
         near(6.0, at("2(x+1)", 2.0))
     }
 
+    @Test fun stepsAndReciprocalsFromTheLibrary() {
+        near(-3.0, at("floor(x)", -2.5))
+        near(3.0, at("ceil(x)", 2.1))
+        near(-1.0, at("sgn(x)", -0.5))
+        near(3.0, at("round(x)", 2.5))
+        near(5.0, at("log₂(x)", 32.0))
+        near(2.0, at("sec(x)", 60.0, AngleUnit.DEGREES))
+        near(1.0, at("tanh⁻¹(tanh(x))", 1.0))
+    }
+
     @Test fun functionsAndConstants() {
         near(0.0, at("sin(x)", 0.0))
         near(1.0, at("sin(x)", 90.0, AngleUnit.DEGREES))

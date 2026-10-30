@@ -176,6 +176,12 @@
     <string name="library_constants">常数</string>
     <string name="library_functions">函数</string>
     <string name="library_memory">存储</string>
+    <string name="library_more">更多</string>
+    <string name="library_more_functions">更多函数</string>
+    <string name="library_more_hyperbolic">双曲函数</string>
+    <string name="library_more_trigonometry">三角函数</string>
+    <string name="library_more_rounding">取整</string>
+    <string name="library_more_logarithms">对数</string>
     <string name="library_search">搜索常数</string>
     <string name="constants_math">数学</string>
     <string name="constants_physics">物理</string>

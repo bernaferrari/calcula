@@ -82,6 +82,7 @@ import com.bernaferrari.calculator.ui.calculator.DisplayFormatter
 import com.bernaferrari.calculator.domain.input.Calculator
 import com.bernaferrari.calculator.domain.math.MathContext
 import com.bernaferrari.calculator.domain.math.Decimal
+import com.bernaferrari.calculator.domain.math.UserFunction
 import com.bernaferrari.calculator.ui.theme.orDefault
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -114,6 +115,8 @@ class SettingsViewModel(
     fun setPalette(palette: AppPalette) = save { updatePalette(palette) }
     fun setColorStyle(style: ColorStyle) = save { updateColorStyle(style) }
     fun setGraphKeypadScale(scale: Float) = save { updateGraphKeypadScale(scale) }
+    fun saveFunction(function: UserFunction) = save { update { p -> p.copy(functions = p.functions.filter { it.name != function.name } + function) } }
+    fun deleteFunction(name: String) = save { update { p -> p.copy(functions = p.functions.filter { it.name != name }) } }
     fun setAngleUnit(unit: AngleUnit) = save { updateAngleUnit(unit) }
     fun setDecimalPlaces(places: Int) = save { updateDecimalPlaces(places) }
     fun setDecimalSeparator(separator: DecimalSeparator) = save { updateDecimalSeparator(separator) }

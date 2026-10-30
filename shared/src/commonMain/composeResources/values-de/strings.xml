@@ -176,6 +176,12 @@
     <string name="library_constants">Konstanten</string>
     <string name="library_functions">Funktionen</string>
     <string name="library_memory">Speicher</string>
+    <string name="library_more">Mehr</string>
+    <string name="library_more_functions">Weitere Funktionen</string>
+    <string name="library_more_hyperbolic">Hyperbolisch</string>
+    <string name="library_more_trigonometry">Trigonometrie</string>
+    <string name="library_more_rounding">Runden</string>
+    <string name="library_more_logarithms">Logarithmen</string>
     <string name="library_search">Konstanten suchen</string>
     <string name="constants_math">Mathematik</string>
     <string name="constants_physics">Physik</string>

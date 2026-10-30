@@ -21,9 +21,12 @@ internal sealed interface Token {
  * ASCII aliases (`-`, `*`, `/`) are accepted too so pasted text works.
  */
 internal object Tokenizer {
-    /** Longest names first so `sinh` wins over `sin` and `sin⁻¹` over `sin`. */
+    /**
+     * Longest names first so `sinh⁻¹` wins over `sinh`, `sinh` over `sin` and `log₂` over `log`. None
+     * may start with `e`, `x` or `y`: those read as the constant and the variables before any name.
+     */
     val FUNCTIONS = listOf(
-        "sin⁻¹", "cos⁻¹", "tan⁻¹", "sinh", "cosh", "tanh", "sin", "cos", "tan", "log", "abs", "ln",
+        "sinh⁻¹", "cosh⁻¹", "tanh⁻¹", "sin⁻¹", "cos⁻¹", "tan⁻¹", "floor", "round", "sinh", "cosh", "tanh", "ceil", "log₂", "sin", "cos", "tan", "sec", "csc", "cot", "sgn", "log", "abs", "ln",
     )
 
     /** The graph's slider parameters, in the order they are handed out. */

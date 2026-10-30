@@ -176,6 +176,12 @@
     <string name="library_constants">常數</string>
     <string name="library_functions">函數</string>
     <string name="library_memory">記憶</string>
+    <string name="library_more">更多</string>
+    <string name="library_more_functions">更多函數</string>
+    <string name="library_more_hyperbolic">雙曲函數</string>
+    <string name="library_more_trigonometry">三角函數</string>
+    <string name="library_more_rounding">取整</string>
+    <string name="library_more_logarithms">對數</string>
     <string name="library_search">搜尋常數</string>
     <string name="constants_math">數學</string>
     <string name="constants_physics">物理</string>

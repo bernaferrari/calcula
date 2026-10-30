@@ -222,6 +222,17 @@ private class PlotParser(private val tokens: List<Token>, private val angle: Ang
         "ln" -> Field { x, y -> ln(a.at(x, y)) }
         "log" -> Field { x, y -> log10(a.at(x, y)) }
         "abs" -> Field { x, y -> abs(a.at(x, y)) }
+        "sinh⁻¹" -> Field { x, y -> kotlin.math.asinh(a.at(x, y)) }
+        "cosh⁻¹" -> Field { x, y -> kotlin.math.acosh(a.at(x, y)) }
+        "tanh⁻¹" -> Field { x, y -> kotlin.math.atanh(a.at(x, y)) }
+        "sec" -> Field { x, y -> 1.0 / cos(a.at(x, y) * toRadians) }
+        "csc" -> Field { x, y -> 1.0 / sin(a.at(x, y) * toRadians) }
+        "cot" -> Field { x, y -> 1.0 / tan(a.at(x, y) * toRadians) }
+        "floor" -> Field { x, y -> floor(a.at(x, y)) }
+        "ceil" -> Field { x, y -> kotlin.math.ceil(a.at(x, y)) }
+        "round" -> Field { x, y -> a.at(x, y).let { v -> if (v < 0) -floor(-v + 0.5) else floor(v + 0.5) } }
+        "sgn" -> Field { x, y -> kotlin.math.sign(a.at(x, y)) }
+        "log₂" -> Field { x, y -> kotlin.math.log2(a.at(x, y)) }
         else -> throw CalcException(CalcError.SYNTAX)
     }
 

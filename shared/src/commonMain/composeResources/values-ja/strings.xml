@@ -176,6 +176,12 @@
     <string name="library_constants">定数</string>
     <string name="library_functions">関数</string>
     <string name="library_memory">メモリ</string>
+    <string name="library_more">その他</string>
+    <string name="library_more_functions">その他の関数</string>
+    <string name="library_more_hyperbolic">双曲線関数</string>
+    <string name="library_more_trigonometry">三角関数</string>
+    <string name="library_more_rounding">丸め</string>
+    <string name="library_more_logarithms">対数</string>
     <string name="library_search">定数を検索</string>
     <string name="constants_math">数学</string>
     <string name="constants_physics">物理</string>

@@ -18,6 +18,29 @@ class CalcEngineTest {
         }
     }
 
+    @Test fun moreFunctionsFromTheLibrary() {
+        assertEquals("−3", eval("floor(−2.5)"))
+        assertEquals("3", eval("ceil(2.1)"))
+        assertEquals("3", eval("round(2.5)"))
+        assertEquals("−3", eval("round(−2.5)"))
+        assertEquals("−1", eval("sgn(−7)"))
+        assertEquals("0", eval("sgn(0)"))
+        assertEquals("10", eval("log₂(1024)"))
+        assertEquals("2", eval("sec(60)"))
+        assertEquals("2", eval("csc(30)"))
+        assertEquals("0", eval("cot(90)"))
+        assertEquals("0", eval("sinh⁻¹(0)"))
+        assertEquals("0", eval("cosh⁻¹(1)"))
+        assertEquals("0", eval("tanh⁻¹(0)"))
+        assertError("cosh⁻¹(0.5)", CalcError.DOMAIN)
+        assertError("tanh⁻¹(1)", CalcError.DOMAIN)
+        assertError("csc(0)", CalcError.DOMAIN)
+        assertError("log₂(0)", CalcError.DOMAIN)
+        // The longer names still win over their prefixes, and the old ones keep working.
+        assertEquals("2", eval("log(100)"))
+        assertEquals("0", eval("sinh(0)"))
+    }
+
     @Test fun arithmetic() {
         assertEquals("3", eval("1+2"))
         assertEquals("0.3", eval("0.1+0.2"))

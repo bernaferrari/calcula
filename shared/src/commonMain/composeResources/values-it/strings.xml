@@ -176,6 +176,12 @@
     <string name="library_constants">Costanti</string>
     <string name="library_functions">Funzioni</string>
     <string name="library_memory">Memoria</string>
+    <string name="library_more">Altro</string>
+    <string name="library_more_functions">Altre funzioni</string>
+    <string name="library_more_hyperbolic">Iperboliche</string>
+    <string name="library_more_trigonometry">Trigonometria</string>
+    <string name="library_more_rounding">Arrotondamento</string>
+    <string name="library_more_logarithms">Logaritmi</string>
     <string name="library_search">Cerca costanti</string>
     <string name="constants_math">Matematica</string>
     <string name="constants_physics">Fisica</string>

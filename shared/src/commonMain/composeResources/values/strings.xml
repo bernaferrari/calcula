@@ -180,6 +180,12 @@
     <string name="library_constants">Constants</string>
     <string name="library_functions">Functions</string>
     <string name="library_memory">Memory</string>
+    <string name="library_more">More</string>
+    <string name="library_more_functions">More functions</string>
+    <string name="library_more_hyperbolic">Hyperbolic</string>
+    <string name="library_more_trigonometry">Trigonometry</string>
+    <string name="library_more_rounding">Rounding</string>
+    <string name="library_more_logarithms">Logarithms</string>
     <string name="library_search">Search constants</string>
     <string name="constants_math">Math</string>
     <string name="constants_physics">Physics</string>

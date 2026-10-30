@@ -90,6 +90,14 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.stringResource
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.material.icons.rounded.MoreHoriz
+import com.bernaferrari.calculator.ui.library.LibrarySheet
+import com.bernaferrari.calculator.ui.library.LibraryTab
 
 /**
  * Graphs, Calcula style: the plot on top with pinch, pan and a hold-to-trace finger, the
@@ -118,6 +126,8 @@ fun GraphScreen(
     val exportFont = GoogleSansFlex
     val scheme = MaterialTheme.colorScheme
     var layer by rememberSaveable { mutableStateOf(FunctionLayer.Off) }
+    // The functions beyond the keys, the constants and your own: the calculator's library, for plotting.
+    var moreOpen by rememberSaveable { mutableStateOf(false) }
 
     Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.containerTransform("graph", isScreen = true).fillMaxSize()) {
         BoxWithConstraints(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal))) {
@@ -208,6 +218,12 @@ fun GraphScreen(
                         },
                     ) {
                         LayerSwitch(layer) { haptics.tap(); layer = it }
+                        // With ƒ on, the rest of the functions are one more tap away.
+                        AnimatedVisibility(layer != FunctionLayer.Off, enter = fadeIn() + expandHorizontally(), exit = fadeOut() + shrinkHorizontally()) {
+                            IconButton(onClick = { haptics.tap(); moreOpen = true }) {
+                                Icon(Icons.Rounded.MoreHoriz, contentDescription = stringResource(Res.string.library_more_functions))
+                            }
+                        }
                         Spacer(Modifier.weight(1f))
                         if (state.canAdd) {
                             TextButton(onClick = { haptics.tap(); viewModel.onAdd() }) {
@@ -300,6 +316,26 @@ fun GraphScreen(
                     keys(Modifier.fillMaxWidth().height(keypad))
                 }
             }
+        }
+        if (moreOpen) {
+            LibrarySheet(
+                initialTab = LibraryTab.MORE,
+                tabs = listOf(LibraryTab.MORE, LibraryTab.CONSTANTS, LibraryTab.FUNCTIONS),
+                memories = emptyList(),
+                functions = prefs.functions,
+                formatter = formatter,
+                haptics = haptics,
+                onInsert = { viewModel.onInsertText(it); if (layer == FunctionLayer.Once) layer = FunctionLayer.Off },
+                onRecallMemory = {},
+                onStoreMemory = {},
+                canStore = false,
+                onDeleteMemory = {},
+                onRenameMemory = { _, _ -> },
+                onSaveFunction = settings::saveFunction,
+                onDeleteFunction = settings::deleteFunction,
+                onDismiss = { moreOpen = false },
+                hints = prefs.hints,
+            )
         }
         if (libraryOpen) {
             GraphLibrarySheet(

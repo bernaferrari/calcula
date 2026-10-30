@@ -165,6 +165,11 @@ class GraphViewModel(private val store: GraphStore) : ViewModel() {
         }
     }
 
+    /** Drops a function call or a constant from the library at the cursor. */
+    fun onInsertText(text: String) = editActive { editor ->
+        Calculator.insertText(CalcState(editor = editor, angleUnit = AngleUnit.RADIANS), text).editor
+    }
+
     /** Types a parameter's letter where the cursor is, e.g. from its slider. */
     fun onInsertParameter(name: Char) = editActive { ExpressionEditor.insertRaw(it, name.toString()) }
 

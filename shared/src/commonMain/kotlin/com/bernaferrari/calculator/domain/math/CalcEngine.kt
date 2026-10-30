@@ -195,6 +195,29 @@ object CalcEngine {
                 exactLog10(x) ?: fromDouble(ln(x) / kotlin.math.ln(10.0))
             }
             "abs" -> x.abs()
+            "sinh⁻¹" -> fromDouble(kotlin.math.asinh(x.toDouble()))
+            "cosh⁻¹" -> {
+                if (x < Decimal(1)) throw CalcException(CalcError.DOMAIN)
+                fromDouble(kotlin.math.acosh(x.toDouble()))
+            }
+            "tanh⁻¹" -> {
+                if (x.abs() >= Decimal(1)) throw CalcException(CalcError.DOMAIN)
+                fromDouble(kotlin.math.atanh(x.toDouble()))
+            }
+            // The reciprocals keep the exact zeros and poles of their sine and cosine.
+            "sec" -> reciprocal(applyFunction("cos", x))
+            "csc" -> reciprocal(applyFunction("sin", x))
+            // cos ÷ sin rather than 1 ÷ tan, so cot(90°) is exactly 0 instead of a pole.
+            "cot" -> applyFunction("cos", x).let { c -> applyFunction("sin", x).let { s -> if (s.signum() == 0) throw CalcException(CalcError.DOMAIN) else c.divide(s, MC) } }
+            // Rounding stays exact on the decimal itself: floor(−2.5) is −3, round(2.5) is 3.
+            "floor" -> whole(x, up = false)
+            "ceil" -> whole(x, up = true)
+            "round" -> x.setScale(0, RoundingMode.HALF_UP)
+            "sgn" -> Decimal(x.signum())
+            "log₂" -> {
+                if (x.signum() <= 0) throw CalcException(CalcError.DOMAIN)
+                fromDouble(ln(x) / kotlin.math.ln(2.0))
+            }
             else -> throw CalcException(CalcError.SYNTAX)
         }
 
@@ -224,6 +247,22 @@ object CalcEngine {
             val cos = kotlin.math.cos(toRadians(x))
             if (abs(cos) < 1e-15) throw CalcException(CalcError.DOMAIN)
             return trig(x) { kotlin.math.tan(it) }
+        }
+
+        private fun reciprocal(x: Decimal): Decimal {
+            if (x.signum() == 0) throw CalcException(CalcError.DOMAIN)
+            return Decimal(1).divide(x, MC)
+        }
+
+        /** The integer at or below [x] (or at or above, when [up]), without leaving decimals. */
+        private fun whole(x: Decimal, up: Boolean): Decimal {
+            val truncated = x.setScale(0, RoundingMode.DOWN)
+            if (truncated.compareTo(x) == 0) return truncated
+            return when {
+                !up && x.signum() < 0 -> truncated.subtract(Decimal(1))
+                up && x.signum() > 0 -> truncated.add(Decimal(1))
+                else -> truncated
+            }
         }
 
         private fun inverseTrig(x: Decimal, f: (Double) -> Double): Decimal {

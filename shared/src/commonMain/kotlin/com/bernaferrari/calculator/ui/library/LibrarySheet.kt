@@ -118,7 +118,7 @@ import com.bernaferrari.calculator.ui.theme.GoogleSansFlex
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
-enum class LibraryTab { CONSTANTS, FUNCTIONS, MEMORY }
+enum class LibraryTab { MORE, CONSTANTS, FUNCTIONS, MEMORY }
 
 /**
  * Everything worth keeping at hand, in one sheet: constants of science, functions you wrote,
@@ -142,14 +142,17 @@ fun LibrarySheet(
     onDeleteFunction: (String) -> Unit,
     onDismiss: () -> Unit,
     hints: FlickHints = FlickHints.DOTS,
+    /** The tabs this screen offers: the graph has no memory, for one. */
+    tabs: List<LibraryTab> = LibraryTab.entries,
 ) {
     var tab by remember { mutableStateOf(initialTab) }
     val take: (String) -> Unit = { haptics.tap(); onInsert(it); onDismiss() }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.fillMaxWidth().fillMaxHeight(0.86f)) {
-            Tabs(tab) { haptics.tap(); tab = it }
+            Tabs(tab, tabs) { haptics.tap(); tab = it }
             AnimatedContent(tab, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "tab", modifier = Modifier.weight(1f)) { current ->
                 when (current) {
+                    LibraryTab.MORE -> MoreTab(take)
                     LibraryTab.CONSTANTS -> ConstantsTab(formatter, take)
                     LibraryTab.FUNCTIONS -> FunctionsTab(functions, formatter, haptics, onPick = { take("${it.name}(") }, onSave = onSaveFunction, onDelete = onDeleteFunction, hints = hints)
                     LibraryTab.MEMORY -> MemoryTab(
@@ -167,18 +170,18 @@ fun LibrarySheet(
 }
 
 @Composable
-private fun Tabs(selected: LibraryTab, onSelect: (LibraryTab) -> Unit) {
+private fun Tabs(selected: LibraryTab, tabs: List<LibraryTab>, onSelect: (LibraryTab) -> Unit) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
     ) {
-        LibraryTab.entries.forEachIndexed { index, tab ->
+        tabs.forEachIndexed { index, tab ->
             ToggleButton(
                 checked = tab == selected,
                 onCheckedChange = { if (it) onSelect(tab) },
                 shapes = when (index) {
                     0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                    LibraryTab.entries.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                    tabs.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
                     else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                 },
                 colors = ToggleButtonDefaults.colors(
@@ -192,6 +195,7 @@ private fun Tabs(selected: LibraryTab, onSelect: (LibraryTab) -> Unit) {
                 Text(
                     stringResource(
                         when (tab) {
+                            LibraryTab.MORE -> Res.string.library_more
                             LibraryTab.CONSTANTS -> Res.string.library_constants
                             LibraryTab.FUNCTIONS -> Res.string.library_functions
                             LibraryTab.MEMORY -> Res.string.library_memory
