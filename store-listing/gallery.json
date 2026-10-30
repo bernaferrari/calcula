@@ -322,22 +322,30 @@
   "readme": [
     {
       "feature": "readme-hero",
-      "layout": "hero named",
+      "layout": "hero named five",
       "file": "readme/hero.jpg",
       "identity": true,
-      "alt": "Calcula: programmer mode in hex, the 7 key mid-flick with sin chosen, and the color themes",
+      "alt": "Calcula: a graph, the unit converter, the 7 key mid-flick with sin chosen, programmer mode in hex, and the color themes",
       "devices": [
         {
-          "raw": "phone/08-programmer-blue.png",
-          "role": "left"
+          "raw": "phone/02-graph.png",
+          "role": "p1"
+        },
+        {
+          "raw": "phone/03-convert.png",
+          "role": "p2"
         },
         {
           "raw": "phone/09-flick.png",
-          "role": "center"
+          "role": "p3"
+        },
+        {
+          "raw": "phone/08-programmer-blue.png",
+          "role": "p4"
         },
         {
           "raw": "phone/07-appearance.png",
-          "role": "right"
+          "role": "p5"
         }
       ]
     },

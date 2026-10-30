@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-29T21:32:24.158Z",
+  "generatedAt": "2026-10-30T02:37:18.414Z",
   "campaign": "A little flick goes a long way",
   "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
   "assets": [
@@ -17,7 +17,7 @@
       "file": "phone/phone-02-graph.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 237291,
+      "bytes": 236748,
       "alt": "曲線が 見えてくる。 — 関数を描き、 パラメータを調整。",
       "sources": [
         "raw/phone/02-graph.png"
@@ -27,7 +27,7 @@
       "file": "phone/phone-03-convert.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 166291,
+      "bytes": 165735,
       "alt": "°Cから °Fへ。 — 入力しながら 単位を変換。",
       "sources": [
         "raw/phone/03-convert.png"
@@ -37,7 +37,7 @@
       "file": "phone/phone-04-programmer.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 216436,
+      "bytes": 217727,
       "alt": "16進数も 思いのまま。 — ビット、シフト、基数を プログラマーモードで。",
       "sources": [
         "raw/phone/05-programmer.png"
@@ -57,7 +57,7 @@
       "file": "phone/phone-06-customize.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 216649,
+      "bytes": 216212,
       "alt": "キーまで 自分らしく。 — 好きな色。 好きなショートカット。",
       "sources": [
         "raw/phone/04-customize.png",
@@ -151,7 +151,7 @@
       "file": "tablet10/tablet10-03-convert.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 177242,
+      "bytes": 176353,
       "alt": "°Cから °Fへ。 — 入力しながら 単位を変換。",
       "sources": [
         "raw/tablet10/03-convert.png",

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-29T21:31:54.313Z",
+  "generatedAt": "2026-10-30T02:36:45.032Z",
   "campaign": "A little flick goes a long way",
   "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
   "assets": [
@@ -37,7 +37,7 @@
       "file": "phone/phone-04-programmer.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 213703,
+      "bytes": 215464,
       "alt": "Hexadezimal im Griff. — Programmiermodus mit Bits, Verschiebungen und Basen.",
       "sources": [
         "raw/phone/05-programmer.png"
@@ -151,7 +151,7 @@
       "file": "tablet10/tablet10-03-convert.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 186197,
+      "bytes": 185318,
       "alt": "Von °C nach °F. — Einheiten umrechnen, während du eingibst.",
       "sources": [
         "raw/tablet10/03-convert.png",

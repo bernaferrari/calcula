@@ -1,5 +1,7 @@
 package com.bernaferrari.calculator.ui.programmer
 
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.input.key.utf16CodePoint
@@ -17,6 +19,10 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.snap
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.max
+import androidx.compose.ui.unit.min
 import com.bernaferrari.calculator.ui.calculator.Hint
 import com.bernaferrari.calculator.domain.programmer.ProgEntry
 import androidx.compose.ui.graphics.BlendMode
@@ -126,6 +132,7 @@ import com.bernaferrari.calculator.ui.calculator.rememberHaptics
 import com.bernaferrari.calculator.ui.containerTransform
 import com.bernaferrari.calculator.ui.settings.SettingsViewModel
 import com.bernaferrari.calculator.ui.theme.GoogleSansFlex
+import kotlin.math.abs
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -178,6 +185,10 @@ class ProgrammerViewModel(private val preferences: PreferencesRepository = AppGr
 
     fun onShowBits(show: Boolean) {
         viewModelScope.launch { preferences.update { it.copy(programmerShowBits = show) } }
+    }
+
+    fun onKeypadScale(scale: Float) {
+        viewModelScope.launch { preferences.update { it.copy(programmerKeypadScale = scale) } }
     }
 
     fun onWord(word: WordSize) {
@@ -235,7 +246,25 @@ fun ProgrammerScreen(
             SnackbarHost(snackbar, Modifier.align(Alignment.Center).zIndex(1f))
             val landscape = maxWidth > maxHeight && maxHeight < 600.dp
             // The readout needs room for the answer, the bits and the bases; the keys get the rest.
-            val keypadHeight = (maxHeight * 0.52f).coerceIn(340.dp, 500.dp)
+            // Dragging the row above the keys resizes them, as on the calculator, within these limits.
+            val defaultKeypad = (maxHeight * 0.52f).coerceIn(340.dp, 500.dp)
+            val minKeypad = max(300.dp, defaultKeypad * 0.8f)
+            val maxKeypad = max(defaultKeypad, min(maxHeight * 0.68f, 640.dp))
+            var dragKeypad by remember { mutableStateOf<Dp?>(null) }
+            val keypadHeight = dragKeypad ?: (defaultKeypad * prefs.programmerKeypadScale).coerceIn(minKeypad, maxKeypad)
+            // The saved size has caught up with the finger: hand the height back to it.
+            LaunchedEffect(prefs.programmerKeypadScale) { dragKeypad = null }
+            val resize = Modifier.keypadDrag(
+                height = keypadHeight,
+                limits = minKeypad..maxKeypad,
+                home = defaultKeypad,
+                onHeight = { dragKeypad = it },
+                onTick = haptics::tick,
+                onDone = { height ->
+                    val scale = height / defaultKeypad
+                    if (scale == prefs.programmerKeypadScale) dragKeypad = null else viewModel.onKeypadScale(scale)
+                },
+            )
             val header: @Composable () -> Unit = {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.statusBarsPadding().padding(horizontal = 4.dp).height(56.dp).fillMaxWidth()) {
                     IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(Res.string.accessibility_back)) }
@@ -340,7 +369,6 @@ fun ProgrammerScreen(
                             // Under the number, right-aligned like the calculator: the answer so far while typing
                             // an operation, then the same value in one other base, tagged as the number is.
                             val preview = if (!state.resultShown && error == null && Programmer.hasOperation(state)) value else null
-                            val other = if (state.base == Base.DEC) Base.HEX else Base.DEC
                             if (preview != null) FitText(
                                 "= " + Programmer.group(Programmer.format(preview, state.base, state.word, state.signed), state.base),
                                 style = mono.copy(color = muted),
@@ -349,53 +377,6 @@ fun ProgrammerScreen(
                                 wrapAtMinimum = true,
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
                             )
-                            // Share one utility row: disclosure on the left, alternate base on the right.
-                            // The shorter label saves a whole button row without shrinking either tap target.
-                            val bitsAction = stringResource(if (prefs.programmerShowBits) Res.string.programmer_hide_bits else Res.string.programmer_show_bits)
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                            ) {
-                                TextButton(
-                                    onClick = { haptics.tap(); viewModel.onShowBits(!prefs.programmerShowBits) },
-                                    contentPadding = PaddingValues(horizontal = 8.dp),
-                                    modifier = Modifier.heightIn(min = 48.dp).semantics { contentDescription = bitsAction },
-                                ) {
-                                    Text(stringResource(Res.string.programmer_bit_view))
-                                    Icon(
-                                        if (prefs.programmerShowBits) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(18.dp),
-                                    )
-                                }
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.End,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .clip(RoundedCornerShape(14.dp))
-                                        // Tap to work in that base instead; hold to copy it.
-                                        .combinedClickable(
-                                            enabled = value != null,
-                                            onClick = { haptics.tap(); viewModel.onBase(other) },
-                                            onLongClick = { value?.let { copy(Programmer.format(it, other, state.word, state.signed)) } },
-                                        )
-                                        .heightIn(min = 48.dp)
-                                        .padding(horizontal = 12.dp, vertical = 4.dp),
-                                ) {
-                                    if (value != null && error == null) {
-                                        Text(other.name, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(end = 8.dp))
-                                        FitText(
-                                            Programmer.group(Programmer.format(value, other, state.word, state.signed), other),
-                                            style = TextStyle(fontFamily = GoogleSansFlex, textAlign = TextAlign.End, color = muted),
-                                            maxSize = 20.sp,
-                                            minSize = 16.sp,
-                                            wrapAtMinimum = true,
-                                            modifier = Modifier.weight(1f, fill = false),
-                                        )
-                                    }
-                                }
-                            }
                             if (prefs.programmerShowBits) {
                                 BitGrid(value ?: 0L, state.word, onCollapse = { haptics.heavy(); viewModel.onShowBits(false) }) {
                                     haptics.tick(); viewModel.onFlipBit(it)
@@ -425,6 +406,58 @@ fun ProgrammerScreen(
                     }
                 }
             }
+            val utility: @Composable (Modifier) -> Unit = { modifier ->
+                val error = state.error
+                val muted = MaterialTheme.colorScheme.onSurfaceVariant
+                val other = if (state.base == Base.DEC) Base.HEX else Base.DEC
+            // One utility row pinned on the keypad, like the calculator's tool row: the bits disclosure on the
+            // left, the value in one other base on the right. Drag it to resize the keypad.
+            val bitsAction = stringResource(if (prefs.programmerShowBits) Res.string.programmer_hide_bits else Res.string.programmer_show_bits)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 12.dp),
+            ) {
+                TextButton(
+                    onClick = { haptics.tap(); viewModel.onShowBits(!prefs.programmerShowBits) },
+                    contentPadding = PaddingValues(horizontal = 8.dp),
+                    modifier = Modifier.heightIn(min = 48.dp).semantics { contentDescription = bitsAction },
+                ) {
+                    Text(stringResource(Res.string.programmer_bit_view))
+                    Icon(
+                        if (prefs.programmerShowBits) Icons.Rounded.ExpandMore else Icons.Rounded.ExpandLess,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(14.dp))
+                        // Tap to work in that base instead; hold to copy it.
+                        .combinedClickable(
+                            enabled = value != null,
+                            onClick = { haptics.tap(); viewModel.onBase(other) },
+                            onLongClick = { value?.let { copy(Programmer.format(it, other, state.word, state.signed)) } },
+                        )
+                        .heightIn(min = 48.dp)
+                        .padding(horizontal = 12.dp, vertical = 4.dp),
+                ) {
+                    if (value != null && error == null) {
+                        Text(other.name, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(end = 8.dp))
+                        FitText(
+                            Programmer.group(Programmer.format(value, other, state.word, state.signed), other),
+                            style = TextStyle(fontFamily = GoogleSansFlex, textAlign = TextAlign.End, color = muted),
+                            maxSize = 20.sp,
+                            minSize = 16.sp,
+                            wrapAtMinimum = true,
+                            modifier = Modifier.weight(1f, fill = false),
+                        )
+                    }
+                }
+            }
+            }
             val keys: @Composable (Modifier) -> Unit = { modifier ->
                 ProgrammerKeypad(state.base, haptics, viewModel::onKey, modifier, prefs.reduceMotion)
             }
@@ -433,6 +466,7 @@ fun ProgrammerScreen(
                     Column(Modifier.weight(0.5f).fillMaxHeight().padding(bottom = bottomInset)) {
                         header()
                         readout(Modifier.weight(1f).fillMaxWidth())
+                        utility(Modifier)
                     }
                     keys(Modifier.weight(0.5f).fillMaxHeight().statusBarsPadding().padding(top = 8.dp, bottom = bottomInset + 8.dp))
                 }
@@ -441,7 +475,8 @@ fun ProgrammerScreen(
                     Column(Modifier.widthIn(max = 560.dp).fillMaxSize()) {
                         header()
                         readout(Modifier.weight(1f).fillMaxWidth())
-                        keys(Modifier.fillMaxWidth().height(keypadHeight + bottomInset).padding(top = 8.dp, bottom = bottomInset))
+                        utility(resize)
+                        keys(Modifier.fillMaxWidth().height(keypadHeight + bottomInset).padding(bottom = bottomInset))
                     }
                 }
             }
@@ -591,6 +626,72 @@ private fun WordPicker(word: WordSize, signed: Boolean, onSigned: (Boolean) -> U
 private enum class Tone { Digit, Hex, Function, Operator, Equals, Clear }
 
 private data class PKey(val key: ProgKey, val tone: Tone, val label: String = key.text, val weight: Float = 1f, val up: ProgKey? = null)
+
+/**
+ * Drag the row above the keypad to resize it, as on the calculator: the keys follow the finger, catch
+ * for a moment at their default size, and give a little past the limits so the end is felt.
+ */
+@Composable
+private fun Modifier.keypadDrag(
+    height: Dp,
+    limits: ClosedRange<Dp>,
+    home: Dp,
+    onHeight: (Dp) -> Unit,
+    onTick: () -> Unit,
+    onDone: (Dp) -> Unit,
+): Modifier {
+    // The gesture outlives recompositions; it reads today's sizes, not the first frame's.
+    val currentHeight by rememberUpdatedState(height)
+    val currentLimits by rememberUpdatedState(limits)
+    val currentHome by rememberUpdatedState(home)
+    val currentDone by rememberUpdatedState(onDone)
+    return pointerInput(Unit) {
+        var start = 0f
+        var offset = 0f
+        var atHome = false
+        var atLimit = false
+        var current = 0.dp
+        val settle = {
+            val range = currentLimits
+            val settled = current.coerceIn(range.start, range.endInclusive)
+            onHeight(settled)
+            settled
+        }
+        detectVerticalDragGestures(
+            onDragStart = {
+                start = currentHeight.toPx()
+                offset = 0f
+                current = currentHeight
+                atHome = false
+                atLimit = false
+            },
+            onVerticalDrag = { change, dy ->
+                change.consume()
+                offset += dy
+                val wanted = start - offset
+                val min = currentLimits.start.toPx()
+                val max = currentLimits.endInclusive.toPx()
+                val homePx = currentHome.toPx()
+                val nearHome = abs(wanted - homePx) < 3.dp.toPx()
+                if (nearHome && !atHome) onTick()
+                atHome = nearHome
+                val limited = wanted <= min || wanted >= max
+                if (limited && !atLimit) onTick()
+                atLimit = limited
+                val shown = when {
+                    nearHome -> homePx
+                    wanted < min -> min + (wanted - min) * 0.15f
+                    wanted > max -> max + (wanted - max) * 0.15f
+                    else -> wanted
+                }
+                current = shown.toDp()
+                onHeight(current)
+            },
+            onDragEnd = { currentDone(settle()) },
+            onDragCancel = { settle() },
+        )
+    }
+}
 
 /**
  * Five columns: the hex digits down the left, the decimal pad in the middle, operators on the

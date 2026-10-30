@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-29T21:32:01.888Z",
+  "generatedAt": "2026-10-30T02:36:53.983Z",
   "campaign": "A little flick goes a long way",
   "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
   "assets": [
@@ -37,7 +37,7 @@
       "file": "phone/phone-04-programmer.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 214687,
+      "bytes": 216393,
       "alt": "Hexadecimal, sin líos. — Modo programador con bits, desplazamientos y bases.",
       "sources": [
         "raw/phone/05-programmer.png"
@@ -151,7 +151,7 @@
       "file": "tablet10/tablet10-03-convert.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 176576,
+      "bytes": 175810,
       "alt": "De °C a °F. — Convierte unidades mientras escribes.",
       "sources": [
         "raw/tablet10/03-convert.png",

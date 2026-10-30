@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-29T21:32:09.357Z",
+  "generatedAt": "2026-10-30T02:37:02.386Z",
   "campaign": "A little flick goes a long way",
   "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
   "assets": [
@@ -17,7 +17,7 @@
       "file": "phone/phone-02-graph.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 262742,
+      "bytes": 262201,
       "alt": "Voyez la courbe prendre forme. — Tracez des fonctions et déplacez les paramètres.",
       "sources": [
         "raw/phone/02-graph.png"
@@ -27,7 +27,7 @@
       "file": "phone/phone-03-convert.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 167630,
+      "bytes": 167078,
       "alt": "De °C en °F. — Convertissez les unités pendant la saisie.",
       "sources": [
         "raw/phone/03-convert.png"
@@ -37,7 +37,7 @@
       "file": "phone/phone-04-programmer.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 221929,
+      "bytes": 223109,
       "alt": "L’hexadécimal simplement. — Mode programmeur : bits, décalages et bases.",
       "sources": [
         "raw/phone/05-programmer.png"
@@ -57,7 +57,7 @@
       "file": "phone/phone-06-customize.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 228203,
+      "bytes": 227748,
       "alt": "Votre style, vos touches. — Vos couleurs. Vos raccourcis.",
       "sources": [
         "raw/phone/04-customize.png",
@@ -151,7 +151,7 @@
       "file": "tablet10/tablet10-03-convert.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 177374,
+      "bytes": 176470,
       "alt": "De °C en °F. — Convertissez les unités pendant la saisie.",
       "sources": [
         "raw/tablet10/03-convert.png",

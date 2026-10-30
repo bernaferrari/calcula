@@ -45,6 +45,8 @@ data class UserPreferences(
     val programmerSigned: Boolean = true,
     /** The optional interactive bit grid; keep the number and history clear until requested. */
     val programmerShowBits: Boolean = false,
+    /** The programmer keypad's size, as a share of its default height: set by dragging the row above it. */
+    val programmerKeypadScale: Float = 1f,
     /** The programmer's recent calculations, kept between visits. */
     val programmerTape: List<ProgEntry> = emptyList(),
     /** How results are written: as is, or scientific (`1.23E6`) or engineering (`12.3E3`). */

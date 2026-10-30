@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-29T21:32:47.146Z",
+  "generatedAt": "2026-10-30T02:37:42.609Z",
   "campaign": "A little flick goes a long way",
   "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
   "assets": [
@@ -17,7 +17,7 @@
       "file": "phone/phone-02-graph.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 241443,
+      "bytes": 240911,
       "alt": "讓曲線 呈現眼前。 — 繪製函數，拖動 參數查看變化。",
       "sources": [
         "raw/phone/02-graph.png"
@@ -27,7 +27,7 @@
       "file": "phone/phone-03-convert.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 165956,
+      "bytes": 165410,
       "alt": "從 °C 到 °F。 — 輸入的同時 換算單位。",
       "sources": [
         "raw/phone/03-convert.png"
@@ -37,7 +37,7 @@
       "file": "phone/phone-04-programmer.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 218097,
+      "bytes": 219307,
       "alt": "輕鬆處理 十六進位。 — 程式設計模式支援位元、 位移和進位。",
       "sources": [
         "raw/phone/05-programmer.png"
@@ -57,7 +57,7 @@
       "file": "phone/phone-06-customize.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 235175,
+      "bytes": 234759,
       "alt": "你的鍵盤， 你的風格。 — 你的顏色。 你的捷徑。",
       "sources": [
         "raw/phone/04-customize.png",
@@ -151,7 +151,7 @@
       "file": "tablet10/tablet10-03-convert.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 175990,
+      "bytes": 175186,
       "alt": "從 °C 到 °F。 — 輸入的同時 換算單位。",
       "sources": [
         "raw/tablet10/03-convert.png",

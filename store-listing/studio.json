@@ -66,6 +66,9 @@
       "compare": false,
       "hero": {
         "visible": 0.5
+      },
+      "five": {
+        "visible": 0.4
       }
     }
   }

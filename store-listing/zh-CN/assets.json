@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-29T21:32:39.449Z",
+  "generatedAt": "2026-10-30T02:37:33.816Z",
   "campaign": "A little flick goes a long way",
   "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
   "assets": [
@@ -17,7 +17,7 @@
       "file": "phone/phone-02-graph.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 236304,
+      "bytes": 235776,
       "alt": "让曲线 呈现眼前。 — 绘制函数，拖动 参数查看变化。",
       "sources": [
         "raw/phone/02-graph.png"
@@ -27,7 +27,7 @@
       "file": "phone/phone-03-convert.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 162970,
+      "bytes": 162411,
       "alt": "从 °C 到 °F。 — 输入的同时 换算单位。",
       "sources": [
         "raw/phone/03-convert.png"
@@ -37,7 +37,7 @@
       "file": "phone/phone-04-programmer.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 209980,
+      "bytes": 211177,
       "alt": "轻松处理 十六进制。 — 程序员模式支持位、 移位和进制。",
       "sources": [
         "raw/phone/05-programmer.png"
@@ -57,7 +57,7 @@
       "file": "phone/phone-06-customize.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 233887,
+      "bytes": 233490,
       "alt": "你的键盘， 你的风格。 — 你的颜色。 你的快捷方式。",
       "sources": [
         "raw/phone/04-customize.png",
@@ -151,7 +151,7 @@
       "file": "tablet10/tablet10-03-convert.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 173938,
+      "bytes": 173035,
       "alt": "从 °C 到 °F。 — 输入的同时 换算单位。",
       "sources": [
         "raw/tablet10/03-convert.png",

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-29T23:22:15.486Z",
+  "generatedAt": "2026-10-30T02:36:37.359Z",
   "campaign": "A little flick goes a long way",
   "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
   "assets": [
@@ -17,7 +17,7 @@
       "file": "phone/phone-02-graph.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 240739,
+      "bytes": 240241,
       "alt": "A graphing calculator with sine functions, a circle, and movable parameters, backed by a golden sine wave",
       "sources": [
         "raw/phone/02-graph.png"
@@ -27,7 +27,7 @@
       "file": "phone/phone-03-convert.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 165379,
+      "bytes": 164847,
       "alt": "Unit converter showing 22 Celsius as 71.6 Fahrenheit, with the result lifted out",
       "sources": [
         "raw/phone/03-convert.png"
@@ -37,7 +37,7 @@
       "file": "phone/phone-04-programmer.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 190392,
+      "bytes": 191593,
       "alt": "Programmer mode in dark theme showing the hexadecimal value C0 FFEE and its decimal",
       "sources": [
         "raw/phone/05-programmer.png"
@@ -151,7 +151,7 @@
       "file": "tablet10/tablet10-03-convert.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 175542,
+      "bytes": 174755,
       "alt": "Landscape unit conversion on the 10-inch tablet; The 10-inch tablet in portrait showing Programmer mode",
       "sources": [
         "raw/tablet10/03-convert.png",
@@ -239,11 +239,13 @@
       "file": "readme/hero.jpg",
       "width": 2400,
       "height": 1260,
-      "bytes": 307116,
-      "alt": "Calcula: programmer mode in hex, the 7 key mid-flick with sin chosen, and the color themes",
+      "bytes": 382871,
+      "alt": "Calcula: a graph, the unit converter, the 7 key mid-flick with sin chosen, programmer mode in hex, and the color themes",
       "sources": [
-        "raw/phone/08-programmer-blue.png",
+        "raw/phone/02-graph.png",
+        "raw/phone/03-convert.png",
         "raw/phone/09-flick.png",
+        "raw/phone/08-programmer-blue.png",
         "raw/phone/07-appearance.png"
       ]
     },
@@ -251,7 +253,7 @@
       "file": "readme/tools.jpg",
       "width": 2400,
       "height": 1260,
-      "bytes": 385222,
+      "bytes": 384861,
       "alt": "Graph functions, convert units, and work with number bases in Calcula",
       "sources": [
         "raw/phone/02-graph.png",
@@ -263,7 +265,7 @@
       "file": "readme/before-after.jpg",
       "width": 2400,
       "height": 1260,
-      "bytes": 351784,
+      "bytes": 351535,
       "alt": "Calculator++ beside Calcula on the same phone: the calculator keypad, and the function plotter",
       "sources": [
         "raw/compare/calculatorpp-calculator.png",

@@ -142,3 +142,14 @@ header p{margin:26px 0 0;font-size:40px;line-height:1.24;letter-spacing:-.5px;wh
 .readme .hero.slate .right{left:1800px;top:560px;width:430px;transform:rotate(6deg);z-index:4}
 .readme .hero.duo .left{left:560px;top:380px;width:560px;transform:rotate(-6deg);z-index:3}
 .readme .hero.duo .right{left:1220px;top:430px;width:560px;transform:rotate(6deg);z-index:2}
+/* The header as one fan: the real flick in the middle, the graph and themes tucked behind its edges. */
+.readme .hero.fan2 .center{left:870px;top:250px;width:620px;z-index:4;transform:none}
+.readme .hero.fan2 .left{left:360px;top:400px;width:560px;z-index:3;transform:rotate(-8deg)}
+.readme .hero.fan2 .right{left:1440px;top:400px;width:560px;z-index:3;transform:rotate(8deg)}
+/* The header's five phones in a gentle arc rising to the real flick at the centre. */
+.readme .five .device{width:430px;background:#fff;box-shadow:0 8px 22px #17265730,0 45px 80px -30px #17265760}
+.readme .five .p1{left:150px;top:520px;transform:rotate(-12deg);z-index:1}
+.readme .five .p2{left:560px;top:420px;transform:rotate(-6deg);z-index:2}
+.readme .five .p3{left:970px;top:370px;transform:none;z-index:3}
+.readme .five .p4{left:1380px;top:420px;transform:rotate(6deg);z-index:2}
+.readme .five .p5{left:1790px;top:520px;transform:rotate(12deg);z-index:1}

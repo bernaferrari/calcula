@@ -11,6 +11,12 @@ class UserPreferencesTest {
         assertEquals(true, Json.decodeFromString<UserPreferences>(Json.encodeToString(chosen)).programmerShowBits)
     }
 
+    @Test fun programmerKeypadSizeDefaultsToOneAndIsRemembered() {
+        assertEquals(1f, Json.decodeFromString<UserPreferences>("{}").programmerKeypadScale)
+        val chosen = UserPreferences(programmerKeypadScale = 1.2f)
+        assertEquals(1.2f, Json.decodeFromString<UserPreferences>(Json.encodeToString(chosen)).programmerKeypadScale)
+    }
+
     @Test fun labelsRemainTheDefault() {
         assertEquals(FlickHints.LABELS, UserPreferences().hints)
     }
