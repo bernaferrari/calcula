@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108">
-  <!-- Calcula's yellow, the field behind every store card. -->
-  <defs><linearGradient id="field" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F8E166"/><stop offset="1" stop-color="#EBC42B"/></linearGradient></defs>
+  <!-- Calcula's yellow, lit from above. -->
+  <defs><radialGradient id="field" cx=".5" cy=".3" r=".9"><stop offset="0" stop-color="#FBE57A"/><stop offset=".6" stop-color="#F2D04A"/><stop offset="1" stop-color="#E6BB2A"/></radialGradient></defs>
   <rect width="108" height="108" fill="url(#field)"/>
 </svg>

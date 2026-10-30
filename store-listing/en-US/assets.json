@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-30T03:28:15.220Z",
+  "generatedAt": "2026-10-30T03:35:46.503Z",
   "campaign": "A little flick goes a long way",
   "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
   "assets": [
@@ -232,14 +232,14 @@
       "file": "graphics/app-icon.png",
       "width": 512,
       "height": 512,
-      "bytes": 132828,
+      "bytes": 196093,
       "alt": "Calcula app icon"
     },
     {
       "file": "readme/hero.jpg",
       "width": 2400,
       "height": 1260,
-      "bytes": 382689,
+      "bytes": 382172,
       "alt": "Calcula: a graph, the unit converter, the 7 key mid-flick with sin chosen, programmer mode in hex, and the color themes",
       "sources": [
         "raw/phone/02-graph.png",
