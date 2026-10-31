@@ -158,6 +158,12 @@ fun ConverterScreen(
                             onCheckedChange = { checked ->
                                 if (checked) { haptics.tap(); viewModel.onCategory(category) }
                             },
+                            colors = ToggleButtonDefaults.colors(
+                                checkedContainerColor = MaterialTheme.colorScheme.primary,
+                                checkedContentColor = MaterialTheme.colorScheme.onPrimary,
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            ),
                         ) {
                             Text(stringResource(category.title()))
                         }
@@ -363,10 +369,10 @@ private fun UnitGrid(units: List<MeasureUnit>, selected: MeasureUnit, haptics: H
                         // Picking the current unit also closes the picker without clearing it.
                         onCheckedChange = { haptics.tap(); onPick(unit) },
                         colors = ToggleButtonDefaults.colors(
-                            checkedContainerColor = colors.primary,
-                            checkedContentColor = colors.onPrimary,
-                            containerColor = colors.surfaceContainerHigh,
-                            contentColor = colors.onSurface,
+                            checkedContainerColor = MaterialTheme.colorScheme.primary,
+                            checkedContentColor = MaterialTheme.colorScheme.onPrimary,
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         ),
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                         modifier = Modifier.weight(1f).fillMaxHeight(),

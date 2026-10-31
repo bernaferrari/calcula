@@ -249,7 +249,8 @@ fun <T> ChoiceRow(
                         modifier = Modifier.weight(width).heightIn(min = 48.dp),
                     ) {
                         optionIcon?.let {
-                            Icon(it(option), contentDescription = null, modifier = Modifier.size(18.dp))
+                            // The chosen option trades its icon for a check, as in every app of the family.
+                            Icon(if (option == selected) Icons.Rounded.Check else it(option), contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(8.dp))
                         }
                         Text(labels[index], maxLines = 1, softWrap = false)
