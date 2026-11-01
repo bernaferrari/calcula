@@ -5,7 +5,7 @@
   "scripts": {
     "render": "node render.mjs",
     "studio": "npx screenshot-studio studio 8790",
-    "capture": "npx screenshot-studio recapture --no-build --no-export",
+    "capture": "npx screenshot-studio tour",
     "capture:build": "../gradlew :androidApp:assembleStoreCapture",
     "validate": "node render.mjs --validate",
     "play:prepare": "node prepare-play.mjs",

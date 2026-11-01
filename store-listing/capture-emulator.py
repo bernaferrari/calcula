@@ -3,8 +3,7 @@
 
 `npx screenshot-studio recapture` builds the storeCapture build and runs this per language and
 device group. Run alone after `./gradlew :androidApp:assembleStoreCapture`:
-npx screenshot-studio recapture --no-build --no-export [--profile phone] [de-DE], or for one scene, with the
-studio folder on PYTHONPATH: python3 store-listing/capture-emulator.py --profile phone --id 02-graph
+npx screenshot-studio tour [--profile phone] [--id 02-graph] [--locale de-DE]
 
 Scenes and device groups come from design.json; each scene is started by intent, so there is no tapping.
 The emulator plumbing (display mode, size and density, demo-mode status bar, screencap checks, layout
