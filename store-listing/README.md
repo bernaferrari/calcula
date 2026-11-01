@@ -4,7 +4,7 @@ The README and Play Store use the same image set: current production Android scr
 
 ## Edit the artwork
 
-The artwork runs on [Screenshot Studio](studio/), the shared template used by all of these apps (master copy in `~/Documents/screenshot-studio`; never edit `studio/` here, sync it from there). The studio provides the editor, card format, headline markup, frames, and exporter checks; Calcula provides:
+The artwork runs on [Screenshot Studio](https://github.com/bernaferrari/screenshot-studio) (`npx screenshot-studio`), the shared studio used by all of these apps; Calcula keeps no copy of it. The studio provides the editor, card format, headline markup, frames, and exporter checks; Calcula provides:
 
 | Change | Source |
 | --- | --- |
@@ -31,17 +31,17 @@ To change only the artwork, render again. Recapture when the app UI, sample data
 Start the shared **Resizable (Experimental)** emulator (`emulator-5578`), then from the repository root:
 
 ```sh
-node store-listing/studio/recapture.cjs                   # build, capture en-US, de-DE, es-ES, pt-BR, export every language
-node store-listing/studio/recapture.cjs de-DE --no-build  # one language
+npx screenshot-studio recapture                   # build, capture en-US, de-DE, es-ES, pt-BR, export every language
+npx screenshot-studio recapture de-DE --no-build  # one language
 ```
 
-`studio.json` → `capture` lists the build, the device groups and the captured languages; the emulator plumbing is the studio's `capture.py`. `capture-emulator.py` installs the fresh APK, switches between phone, tablet, and desktop display modes, and captures every scene in `design.json` with `adb exec-out screencap`. It selects the emulator’s primary display explicitly. Android demo mode fixes the real System UI clock at 9:41, hides notifications, and shows full connectivity and battery icons. It resets demo mode around each resize so Android does not duplicate connectivity icons. Capture provenance, source commit, APK hash, dimensions, and image hashes are written to `en-US/capture-manifest.json`. To refresh the README's blue programmer screen alone, use `python3 store-listing/capture-emulator.py --profile phone --id 08-programmer-blue`; a single-scene capture leaves the full manifest unchanged.
+`studio.json` → `capture` lists the build, the device groups and the captured languages; the emulator plumbing is the studio's `capture.py`. `capture-emulator.py` installs the fresh APK, switches between phone, tablet, and desktop display modes, and captures every scene in `design.json` with `adb exec-out screencap`. It selects the emulator’s primary display explicitly. Android demo mode fixes the real System UI clock at 9:41, hides notifications, and shows full connectivity and battery icons. It resets demo mode around each resize so Android does not duplicate connectivity icons. Capture provenance, source commit, APK hash, dimensions, and image hashes are written to `en-US/capture-manifest.json`. To refresh the README's blue programmer screen alone, run the tour with the studio's folder on `PYTHONPATH` (where its `capture.py` lives): `PYTHONPATH=<screenshot-studio>/studio python3 store-listing/capture-emulator.py --profile phone --id 08-programmer-blue`; a single-scene capture leaves the full manifest unchanged.
 
 Raw phone captures are 1080 × 2340 at 400 dpi, placed in 1080 × 1920 campaign canvases. The 7-inch portrait captures are 1200 × 1920 at 320 dpi, 10-inch landscape captures are 1920 × 1200 at 240 dpi, and desktop-sized captures are 1920 × 1080 at 200 dpi. `captureWidth` and `captureHeight` can differ from the export canvas dimensions. `--profile phone`, `tablet7`, `tablet10` or `desktop` limits a diagnostic run; a full run refreshes the complete manifest.
 
 ## Preview the sequence
 
-Run `node studio/server.cjs 8790` from this directory and open `http://127.0.0.1:8790/store-listing/studio/`. The editor shows every device gallery live from the source files, joined edge to edge or spaced like Play, and can switch to the exported images. Refresh after editing.
+Run `npx screenshot-studio studio 8790` (or `npm run studio`) and open `http://127.0.0.1:8790/store-listing/studio/`. The editor shows every device gallery live from the source files, joined edge to edge or spaced like Play, and can switch to the exported images. Refresh after editing.
 
 ## Render and validate
 
@@ -84,13 +84,13 @@ Nothing in this workflow uploads or publishes assets. `upload-status.json` recor
 
 ## Localized screenshots (Studio v4.3)
 
-`gallery.json` is shared layout; `<locale>/copy.json` contains only words. Add or refresh a language with `node store-listing/studio/locales.cjs --init de-DE` from the repository root (existing words are preserved). `node store-listing/studio/locales.cjs` reports copy, capture and layout coverage. Other supported languages are scaffolded as drafts with empty fields.
+`gallery.json` is shared layout; `<locale>/copy.json` contains only words. Add or refresh a language with `npx screenshot-studio locales --init de-DE` (existing words are preserved). `npx screenshot-studio locales` reports copy, capture and layout coverage. Other supported languages are scaffolded as drafts with empty fields.
 
 Capture English first, then pass `--locale de-DE` to the capture script. It sets only the isolated capture app's language, verifies Android's language setting, writes images and `*.nodes.json` UI trees under `<locale>/raw/`, and resets the app language afterwards. Use only the dedicated `StudioCapture` emulator (`emulator-5566`); no physical phone or another session's emulator. Sample names and other fictional content remain English.
 
-Open the editor with `node store-listing/studio/server.cjs 8790`. Use **Cards**, **Languages**, and **Copy**; Copy saves directly to the selected language's file (Cmd/Ctrl+Enter also saves). Pick callouts on English captures; matching localized layout nodes move them. Headline copy shrinks to fit down to 72%, with script-specific font fallbacks.
+Open the editor with `npx screenshot-studio studio`. Use **Cards**, **Languages**, and **Copy**; Copy saves directly to the selected language's file (Cmd/Ctrl+Enter also saves). Pick callouts on English captures; matching localized layout nodes move them. Headline copy shrinks to fit down to 72%, with script-specific font fallbacks.
 
-Render one completed language with `node store-listing/studio/export.cjs --locale de-DE --strict` (set `PLAYWRIGHT_MODULE` if needed). `--kind phone` limits the gallery. Missing words or images borrow English and are flagged. A callout that cannot follow its UI element is flagged too; `--strict` rejects those three conditions. Draft locales should fail strict checks until translated and captured. README images continue to use English assets. Nothing is uploaded or published by this workflow.
+Render one completed language with `npx screenshot-studio export --locale de-DE --strict`; `npx screenshot-studio check` checks every file in a second. `--kind phone` limits the gallery. Missing words or images borrow English and are flagged. A callout that cannot follow its UI element is flagged too; `--strict` rejects those three conditions. Draft locales should fail strict checks until translated and captured. README images continue to use English assets. Nothing is uploaded or published by this workflow.
 
 ### Multiple projects
 
@@ -100,7 +100,7 @@ Project and view navigation now updates in place, preserving the sidebar and rec
 
 The editor includes searchable language coverage, copy-completion filters and expandable previews. Copy supports search, missing-field filtering, card navigation and field status; English reference editing uses one column. On narrow screens, Preview opens the saved artwork in a dialog. The gallery includes Previous/Next scroll controls.
 
-Studio v4 uses React and official shadcn/ui components throughout, including the expandable Sidebar and mobile Sheet drawer. The sidebar footer offers Light, Dark and System appearance; Cmd/Ctrl+K searches projects. Interface source lives in the master repository’s `ui/src/`; run `npm ci` and `npm run build` there before syncing. This app receives the compiled local bundle and still starts with the same Node server command.
+Studio v4 uses React and official shadcn/ui components throughout, including the expandable Sidebar and mobile Sheet drawer. The sidebar footer offers Light, Dark and System appearance; Cmd/Ctrl+K searches projects. The interface comes compiled with the `screenshot-studio` package.
 
 Screenshot images now open a shared shadcn gallery dialog with thumbnails, wrapping arrows, keyboard/swipe navigation, Fit and 1:1 zoom, panning and explicit original/download actions. Live cards preserve their language and device. Escape returns focus to the clicked image; browsing does not save or change copy.
 

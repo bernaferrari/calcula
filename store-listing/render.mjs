@@ -1,19 +1,21 @@
 /** Store listing for Calcula: copy files, artwork through Screenshot Studio, and an ordered upload manifest. */
-import {readFile, writeFile, stat} from 'node:fs/promises';
+import {writeFile, stat} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
-import {resolve, dirname} from 'node:path';
+import {resolve, dirname, join} from 'node:path';
+import {homedir} from 'node:os';
 import {parseArgs} from 'node:util';
 import {createRequire} from 'node:module';
-import {cardsFor, devicesFor, outputFile, withCopy} from './studio/gallery.js';
 const require = createRequire(import.meta.url), sharp = require('sharp');
+// Screenshot Studio comes from the package (npx screenshot-studio); its CLI is also its library.
+const studio = process.env.SCREENSHOT_STUDIO || join(homedir(), 'Documents/screenshot-studio/studio/studio.cjs');
+const {cardsFor, devicesFor, outputFile, withCopy, loadListing, readJson} = require(studio);
 
 const {values: args} = parseArgs({options: {validate: {type: 'boolean'}, group: {type: 'string'}, locale: {type: 'string'}, 'text-only': {type: 'boolean'}}});
 const here = dirname(fileURLToPath(import.meta.url));
-const read = async (file, fallback) => { try { return JSON.parse(await readFile(file, 'utf8')); } catch (error) { if (fallback !== undefined && error.code === 'ENOENT') return fallback; throw error; } };
-const config = await read(resolve(here, 'studio.json'));
-const defaultLocale = config.defaultLocale || 'en-US';
-const locales = args.locale ? [args.locale] : config.locales || [defaultLocale];
+const read = async (file, fallback) => readJson(file, fallback);
+const {galleries, profiles, defaultLocale, locales: configured} = loadListing(here);
+const locales = args.locale ? [args.locale] : configured;
 // Store copy (title and descriptions) per locale; a locale without listing.json keeps the default listing in Play.
 for (const code of locales) {
   const listing = await read(resolve(here, code, 'listing.json'), null);
@@ -25,11 +27,9 @@ for (const code of locales) {
 }
 if (args['text-only']) process.exit(0);
 
-const galleries = await read(resolve(here, 'gallery.json'));
-const profiles = await read(resolve(here, 'profiles.json'));
 if (args.group && !galleries[args.group]) throw Error('Unknown export group');
 if (cardsFor(galleries, 'phone').length > 8) throw Error('Google Play shows at most eight phone screenshots.');
-if (!args.validate) execFileSync(process.execPath, [resolve(here, 'studio/export.cjs'), ...(args.group ? ['--kind', args.group] : []), ...(args.locale ? ['--locale', args.locale] : [])], {stdio: 'inherit'});
+if (!args.validate) execFileSync(process.execPath, [studio, 'export', '--listing', here, ...(args.group ? ['--kind', args.group] : []), ...(args.locale ? ['--locale', args.locale] : [])], {stdio: 'inherit'});
 
 // Every asset is checked and listed in upload order, per locale, even after a partial render.
 const defaultCopy = await read(resolve(here, defaultLocale, 'copy.json'), {});

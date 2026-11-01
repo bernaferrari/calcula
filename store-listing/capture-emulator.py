@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Capture production Android screens, including the real System UI, in an isolated package.
 
-`node store-listing/studio/recapture.cjs` builds the storeCapture build and runs this per language and
+`npx screenshot-studio recapture` builds the storeCapture build and runs this per language and
 device group. Run alone after `./gradlew :androidApp:assembleStoreCapture`:
-python3 store-listing/capture-emulator.py [--profile phone] [--id 02-graph] [--locale de-DE]
+npx screenshot-studio recapture --no-build --no-export [--profile phone] [de-DE], or for one scene, with the
+studio folder on PYTHONPATH: python3 store-listing/capture-emulator.py --profile phone --id 02-graph
 
 Scenes and device groups come from design.json; each scene is started by intent, so there is no tapping.
 The emulator plumbing (display mode, size and density, demo-mode status bar, screencap checks, layout
@@ -15,10 +16,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+from capture import Device, parser
+
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
-sys.path.insert(0, str(HERE / 'studio'))
-from capture import Device, parser  # noqa: E402
 
 parser = parser(__doc__)
 parser.add_argument('--id', help='Capture one configured scene within the selected --profile')

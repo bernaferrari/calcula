@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "render": "node render.mjs",
-    "studio": "node studio/server.cjs 8790",
-    "capture": "python3 capture-emulator.py",
+    "studio": "npx screenshot-studio studio 8790",
+    "capture": "npx screenshot-studio recapture --no-build --no-export",
     "capture:build": "../gradlew :androidApp:assembleStoreCapture",
     "validate": "node render.mjs --validate",
     "play:prepare": "node prepare-play.mjs",

@@ -2,8 +2,13 @@
 // Validate a locale and stage images for fastlane without touching Play Console.
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import {homedir} from 'node:os';
+import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
 import sharp from 'sharp';
+// Screenshot Studio comes from the package (npx screenshot-studio); its CLI is also its library.
+const studio = process.env.SCREENSHOT_STUDIO || path.join(homedir(), 'Documents/screenshot-studio/studio/studio.cjs');
+const {cardsFor, devicesFor, outputFile, nodesFile, readJson} = createRequire(import.meta.url)(studio);
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -13,7 +18,7 @@ if (!locale || args.includes('--help')) {
   console.log('Usage: npm run play:prepare -- <locale> [--stage]\nChecks translation coverage and source images; stages tablet artwork on 9:16 or 16:9 canvases. --stage writes a fastlane metadata directory only after every check passes.');
   process.exit(locale ? 0 : 1);
 }
-const read = async p => JSON.parse(await fs.readFile(p, 'utf8'));
+const read = async p => readJson(p);
 const config = await read(path.join(root, 'studio.json'));
 if (!config.locales.includes(locale)) throw new Error(`Unknown locale: ${locale}`);
 const base = await read(path.join(root, config.defaultLocale, 'copy.json'));
@@ -30,7 +35,6 @@ for (const [key, fields] of Object.entries(base)) for (const field of Object.key
   if (!copy[key]?.[field]?.trim()) errors.push(`Missing translation: ${key}.${field}`);
 }
 const gallery = await read(path.join(root, 'gallery.json'));
-const {cardsFor, devicesFor, outputFile, nodesFile} = await import('./studio/gallery.js');
 const files = [];
 const names = {phone:'phoneScreenshots', tablet7:'sevenInchScreenshots', tablet10:'tenInchScreenshots'};
 for (const kind of Object.keys(names)) {
