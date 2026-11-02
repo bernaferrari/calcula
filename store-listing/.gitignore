@@ -5,6 +5,6 @@ canvas-probe.png
 play-staging/
 .play-api.env
 
-# Other locales' raw captures regenerate from capture-emulator.py
+# Other locales' raw captures regenerate from capture.tour.mjs
 /*/raw/
 !/en-US/raw/

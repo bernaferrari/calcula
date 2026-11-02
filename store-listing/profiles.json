@@ -14,6 +14,7 @@
     "height": 1920,
     "captureWidth": 1200,
     "captureHeight": 1920,
+    "captureDensity": 320,
     "frame": "tablet",
     "label": "7\u2033 tablet"
   },
@@ -22,6 +23,7 @@
     "height": 1200,
     "captureWidth": 1920,
     "captureHeight": 1200,
+    "captureDensity": 240,
     "frame": "tablet",
     "label": "10\u2033 tablet"
   },
@@ -30,6 +32,7 @@
     "height": 1080,
     "captureWidth": 1920,
     "captureHeight": 1080,
+    "captureDensity": 200,
     "frame": "none",
     "label": "Desktop"
   },

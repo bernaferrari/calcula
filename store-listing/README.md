@@ -15,7 +15,7 @@ The artwork runs on [Screenshot Studio](https://github.com/bernaferrari/screensh
 | Panorama wave, frame scaling, brand, notes, and the enlarged sin key | `theme.js` |
 | App scene palettes and capture sizes for the emulator | `design.json` → `slides`, `captureDefaults`, `profiles` |
 | Sample calculations and scene setup | `../androidApp/src/storeCapture/kotlin/com/bernaferrari/calculator/StoreCaptureActivity.kt` |
-| Capture settings and device sizes | `capture-emulator.py` and `design.json` → `profiles` |
+| Capture settings and device sizes | `capture.tour.mjs` and `design.json` → `profiles` |
 | Store descriptions | `en-US/listing.json` |
 
 The isolated `storeCapture` build uses the package `com.bernaferrari.calcula.storecapture`. Its sample data and exported capture activity are excluded from normal debug and release builds. It does not touch the installed Calcula app’s data. Every scene renders the production screen; no UI or system bars are painted into the images.
@@ -35,7 +35,7 @@ npx screenshot-studio recapture                   # build, capture en-US, de-DE,
 npx screenshot-studio recapture de-DE --no-build  # one language
 ```
 
-`studio.json` → `capture` lists the build, the device groups and the captured languages; the emulator plumbing is the studio's `capture.py`. `capture-emulator.py` installs the fresh APK, switches between phone, tablet, and desktop display modes, and captures every scene in `design.json` with `adb exec-out screencap`. It selects the emulator’s primary display explicitly. Android demo mode fixes the real System UI clock at 9:41, hides notifications, and shows full connectivity and battery icons. It resets demo mode around each resize so Android does not duplicate connectivity icons. Capture provenance, source commit, APK hash, dimensions, and image hashes are written to `en-US/capture-manifest.json`. To refresh the README's blue programmer screen alone, use `npx screenshot-studio tour --profile phone --id 08-programmer-blue`; a single-scene capture leaves the full manifest unchanged.
+`studio.json` → `capture` lists the build, the device groups and the captured languages; the studio sets the emulator up (display size and density, demo mode, app language) and puts it back. `capture.tour.mjs` installs the fresh APK, switches between phone, tablet, and desktop display modes, and captures every scene in `design.json` with `adb exec-out screencap`. Android demo mode fixes the real System UI clock at 9:41, hides notifications, and shows full connectivity and battery icons; it is reset around each resize so Android does not duplicate connectivity icons. Capture provenance, source commit, APK hash, dimensions, and image hashes are written to `en-US/capture-manifest.json`. To refresh the README's blue programmer screen alone, use `npx screenshot-studio tour --profile phone --only 08-programmer-blue`; the manifest updates that capture's entry and keeps the others.
 
 Raw phone captures are 1080 × 2340 at 400 dpi, placed in 1080 × 1920 campaign canvases. The 7-inch portrait captures are 1200 × 1920 at 320 dpi, 10-inch landscape captures are 1920 × 1200 at 240 dpi, and desktop-sized captures are 1920 × 1080 at 200 dpi. `captureWidth` and `captureHeight` can differ from the export canvas dimensions. `--profile phone`, `tablet7`, `tablet10` or `desktop` limits a diagnostic run; a full run refreshes the complete manifest.
 
