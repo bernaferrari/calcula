@@ -39,7 +39,7 @@ export default {
       // Every group starts on its display mode's size; alternate orientations get their own size and status bar.
       if (size !== `${width}x${height}`) { await d.resize(width, height, density); size = `${width}x${height}`; }
       const {theme, palette, style} = {...design.captureDefaults, ...slide};
-      await d.launch({wait: 2500, extras: {scene: slide.scene, theme, palette, style}});
+      await d.launch({extras: {scene: slide.scene, theme, palette, style}});
       const file = await d.shot(slide.id, {settle: 0});
       if (file) records.push({file, sha256: sha256(path.join(here, file)), scene: slide.scene, palette, width, height, densityDpi: density});
     }
