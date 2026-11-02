@@ -27,7 +27,7 @@ function key(main, alt) {
 
 export default {
   // The graph paper runs across the store strips' seams.
-  continuous: ['phone', 'tablet7', 'tablet10'],
+  continuous: ['phone', 'tablet7', 'tablet10', 'showcase'],
 
   // Paper: a faint graph-paper grid in panorama coordinates, so the cards still join when shown together.
   art({W, H, index, slide}) {

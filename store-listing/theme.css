@@ -20,13 +20,13 @@ header p{margin:26px 0 0;font-size:40px;line-height:1.24;letter-spacing:-.5px;wh
 
 /* Phone and 7-inch: one system on every card. Copy on top, the same key block in the same place,
    only its colour changes, and the real app large on it, running off the bottom. */
-.phone .one .block{left:56px;top:580px;width:968px;height:1500px;border-radius:96px}
-.phone .one .primary{left:150px;top:660px;width:780px}
-.phone .flick .key{left:40px;top:1300px;width:320px}
-.phone .pair .primary{left:96px;top:660px;width:430px}
-.phone .pair .secondary{left:554px;top:660px;width:430px}
-.phone .room .primary{left:96px;top:660px;width:888px}
-.phone .room .secondary{left:610px;top:1060px;width:340px;z-index:3}
+:is(.phone,.showcase) .one .block{left:56px;top:580px;width:968px;height:1500px;border-radius:96px}
+:is(.phone,.showcase) .one .primary{left:150px;top:660px;width:780px}
+:is(.phone,.showcase) .flick .key{left:40px;top:1300px;width:320px}
+:is(.phone,.showcase) .pair .primary{left:96px;top:660px;width:430px}
+:is(.phone,.showcase) .pair .secondary{left:554px;top:660px;width:430px}
+:is(.phone,.showcase) .room .primary{left:96px;top:660px;width:888px}
+:is(.phone,.showcase) .room .secondary{left:610px;top:1060px;width:340px;z-index:3}
 
 .tablet7 h1{font-size:136px}
 .tablet7 .one .block{left:64px;top:600px;width:1072px;height:1500px;border-radius:96px}
@@ -38,11 +38,11 @@ header p{margin:26px 0 0;font-size:40px;line-height:1.24;letter-spacing:-.5px;wh
 .tablet7 .room .secondary{left:700px;top:1120px;width:380px;z-index:3}
 
 /* Customize: one phone hanging from the top, one rising from the bottom, the copy between them. */
-.phone .stack .block{left:56px;top:-120px;width:968px;height:2160px;border-radius:96px}
-.phone .stack header{top:700px;text-align:center}
-.phone .stack header p{margin-left:auto;margin-right:auto}
-.phone .stack .primary{left:240px;top:-700px;width:600px}
-.phone .stack .secondary{left:240px;top:1180px;width:600px}
+:is(.phone,.showcase) .stack .block{left:56px;top:-120px;width:968px;height:2160px;border-radius:96px}
+:is(.phone,.showcase) .stack header{top:700px;text-align:center}
+:is(.phone,.showcase) .stack header p{margin-left:auto;margin-right:auto}
+:is(.phone,.showcase) .stack .primary{left:240px;top:-700px;width:600px}
+:is(.phone,.showcase) .stack .secondary{left:240px;top:1180px;width:600px}
 
 /* 10-inch: copy left, product on a block right */
 .tablet10 header{top:0;bottom:0;left:96px;right:auto;width:600px;display:flex;flex-direction:column;justify-content:center}

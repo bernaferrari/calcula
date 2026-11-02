@@ -16,7 +16,7 @@
     "captureHeight": 1920,
     "captureDensity": 320,
     "frame": "tablet",
-    "label": "7\u2033 tablet"
+    "label": "7″ tablet"
   },
   "tablet10": {
     "width": 1920,
@@ -25,7 +25,7 @@
     "captureHeight": 1200,
     "captureDensity": 240,
     "frame": "tablet",
-    "label": "10\u2033 tablet"
+    "label": "10″ tablet"
   },
   "desktop": {
     "width": 1920,
@@ -54,5 +54,11 @@
     "frame": "phone",
     "label": "README",
     "defaultLocaleOnly": true
+  },
+  "showcase": {
+    "width": 1080,
+    "height": 1920,
+    "frame": "phone",
+    "label": "README showcase"
   }
 }

@@ -1,0 +1,100 @@
+{
+  "source": "adb exec-out screencap from the Android Resizable_Experimental emulator",
+  "locale": "zh-CN",
+  "commit": "fa1f7ef63390322e06cef9824fb91afa64a354ff",
+  "apkSha256": "f4c66aced6c4a83a46619b22b84d426e6f83360169948cb6b8652269af9544cd",
+  "serial": "emulator-5578",
+  "systemUi": "real status bar with 09:41 clock; full battery/Wi-Fi; gesture navigation pill",
+  "captures": [
+    {
+      "file": "zh-CN/raw/phone/01-every-key.png",
+      "sha256": "3142059597839430c1bb7cc3e6517afa2e96922febe6562838257f7d69bc685d",
+      "scene": "calculator",
+      "palette": "AMBER",
+      "width": 1080,
+      "height": 2340,
+      "densityDpi": 400
+    },
+    {
+      "file": "zh-CN/raw/phone/02-graph.png",
+      "sha256": "8985a58c278c2840171f8452e8855e76d2ac70f8aee8f5e2a3b98e9ce11bb487",
+      "scene": "graph",
+      "palette": "BLUE",
+      "width": 1080,
+      "height": 2340,
+      "densityDpi": 400
+    },
+    {
+      "file": "zh-CN/raw/phone/03-convert.png",
+      "sha256": "ee62f44f1369d407090e1225bf3044ddb8460825de6311d005f3c783a859931f",
+      "scene": "converter",
+      "palette": "BLUE",
+      "width": 1080,
+      "height": 2340,
+      "densityDpi": 400
+    },
+    {
+      "file": "zh-CN/raw/phone/04-customize.png",
+      "sha256": "e94e24f4b7fcfbdabc37fedb93a35028724b6bdbf85bcaf9aadedec351e2b957",
+      "scene": "customize",
+      "palette": "AMBER",
+      "width": 1080,
+      "height": 2340,
+      "densityDpi": 400
+    },
+    {
+      "file": "zh-CN/raw/phone/05-programmer.png",
+      "sha256": "343c30b0c30d7f50502ad5f29f6188493cc6955ff3eb84a9c9c3fcd53e3c24e7",
+      "scene": "programmer",
+      "palette": "TEAL",
+      "width": 1080,
+      "height": 2340,
+      "densityDpi": 400
+    },
+    {
+      "file": "zh-CN/raw/phone/06-statistics.png",
+      "sha256": "2531ae03e4bd586a56ff27e572d42a68ab797be5c62f1a886504d0324b9c8dbf",
+      "scene": "statistics",
+      "palette": "AMBER",
+      "width": 1080,
+      "height": 2340,
+      "densityDpi": 400
+    },
+    {
+      "file": "zh-CN/raw/phone/07-appearance.png",
+      "sha256": "8c67e63f9142b1b43b9906ab2478bd0b872a29412e731d3662c61562e056d499",
+      "scene": "appearance",
+      "palette": "PURPLE",
+      "width": 1080,
+      "height": 2340,
+      "densityDpi": 400
+    },
+    {
+      "file": "zh-CN/raw/phone/08-programmer-blue.png",
+      "sha256": "786e775ddeb59ac9de8b6a756c7d393ef82549d48fcdb538ba8d8cbfd9ba81f6",
+      "scene": "programmer",
+      "palette": "BLUE",
+      "width": 1080,
+      "height": 2340,
+      "densityDpi": 400
+    },
+    {
+      "file": "zh-CN/raw/phone/10-graph-amber.png",
+      "sha256": "f8eb3f83eb127ade5601284d47cd732c6e44f17019e56ec8c1fe02cfaed72f93",
+      "scene": "graph",
+      "palette": "AMBER",
+      "width": 1080,
+      "height": 2340,
+      "densityDpi": 400
+    },
+    {
+      "file": "zh-CN/raw/phone/11-convert-amber.png",
+      "sha256": "56bc9d60e589e83bb4ebdd3caa16d36d0419f11674ffadd977625f4d1534e5b9",
+      "scene": "converter",
+      "palette": "AMBER",
+      "width": 1080,
+      "height": 2340,
+      "densityDpi": 400
+    }
+  ]
+}

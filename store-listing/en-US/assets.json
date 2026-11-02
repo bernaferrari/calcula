@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-30T03:46:20.676Z",
+  "generatedAt": "2026-11-02T17:28:42.377Z",
   "campaign": "A little flick goes a long way",
   "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
   "assets": [
@@ -7,7 +7,7 @@
       "file": "phone/phone-01-every-key.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 199840,
+      "bytes": 200337,
       "alt": "Calcula with labelled scientific functions; a magnified real sin key explains the flick gesture",
       "sources": [
         "raw/phone/01-every-key.png"
@@ -27,7 +27,7 @@
       "file": "phone/phone-03-convert.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 164847,
+      "bytes": 165629,
       "alt": "Unit converter showing 22 Celsius as 71.6 Fahrenheit, with the result lifted out",
       "sources": [
         "raw/phone/03-convert.png"
@@ -47,7 +47,7 @@
       "file": "phone/phone-05-statistics.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 222947,
+      "bytes": 222462,
       "alt": "Statistics with mean, median, sum, count and standard deviation for eight values",
       "sources": [
         "raw/phone/06-statistics.png"
@@ -57,7 +57,7 @@
       "file": "phone/phone-06-customize.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 223191,
+      "bytes": 222920,
       "alt": "Light appearance settings and custom key assignments, with color swatches and visual style previews",
       "sources": [
         "raw/phone/04-customize.png",
@@ -68,7 +68,7 @@
       "file": "phone/phone-07-more-room.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 218572,
+      "bytes": 218630,
       "alt": "Calcula on a landscape tablet with history beside the keypad, paired with the phone layout",
       "sources": [
         "raw/tablet10/01-every-key.png",
@@ -294,6 +294,36 @@
       "sources": [
         "raw/tablet10/01-every-key.png",
         "raw/tablet10/02-graph.png"
+      ]
+    },
+    {
+      "file": "showcase/01-every-key.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 200337,
+      "alt": "Calcula with labelled scientific functions; a magnified real sin key explains the flick gesture",
+      "sources": [
+        "raw/phone/01-every-key.png"
+      ]
+    },
+    {
+      "file": "showcase/02-graph.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 244059,
+      "alt": "A graphing calculator with sine functions, a circle, and movable parameters, backed by a golden sine wave",
+      "sources": [
+        "raw/phone/10-graph-amber.png"
+      ]
+    },
+    {
+      "file": "showcase/03-convert.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 170047,
+      "alt": "Unit converter showing 22 Celsius as 71.6 Fahrenheit, with the result lifted out",
+      "sources": [
+        "raw/phone/11-convert-amber.png"
       ]
     }
   ]

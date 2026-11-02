@@ -138,6 +138,18 @@
         "scene": "programmer",
         "theme": "light",
         "palette": "BLUE"
+      },
+      {
+        "id": "10-graph-amber",
+        "scene": "graph",
+        "theme": "light",
+        "palette": "AMBER"
+      },
+      {
+        "id": "11-convert-amber",
+        "scene": "converter",
+        "theme": "light",
+        "palette": "AMBER"
       }
     ],
     "tablet7": [

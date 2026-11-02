@@ -430,5 +430,34 @@
         }
       ]
     }
+  ],
+  "showcase": [
+    {
+      "feature": "01-every-key",
+      "layout": "one flick",
+      "vars": {
+        "--block": "#F4D94A"
+      },
+      "file": "showcase/01-every-key.jpg",
+      "raw": "phone/01-every-key.png"
+    },
+    {
+      "feature": "02-graph",
+      "layout": "one",
+      "vars": {
+        "--block": "#F6C27A"
+      },
+      "file": "showcase/02-graph.jpg",
+      "raw": "phone/10-graph-amber.png"
+    },
+    {
+      "feature": "03-convert",
+      "layout": "one",
+      "vars": {
+        "--block": "#EFA9A0"
+      },
+      "file": "showcase/03-convert.jpg",
+      "raw": "phone/11-convert-amber.png"
+    }
   ]
 }
