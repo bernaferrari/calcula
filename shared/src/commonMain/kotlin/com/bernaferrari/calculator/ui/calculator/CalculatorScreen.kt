@@ -182,11 +182,12 @@ fun CalculatorScreen(
     val shareText = rememberTextSharer()
     // The whole history as plain text, oldest first, notes above their calculations.
     val shareHistory: () -> Unit = {
-        shareText(
-            state.history.reversed().joinToString("\n\n") { entry ->
+        scope.launch {
+            val history = viewModel.historyForExport()
+            shareText(history.reversed().joinToString("\n\n") { entry ->
                 listOfNotNull(entry.note, formatter.format(entry.expression, 0, null).text.text + " = " + formatter.number(entry.result)).joinToString("\n")
-            },
-        )
+            })
+        }
     }
 
     val copy: (String) -> Unit = { raw ->

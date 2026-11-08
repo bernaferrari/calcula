@@ -13,6 +13,7 @@ import com.bernaferrari.calculator.domain.input.Editor
 import com.bernaferrari.calculator.domain.input.ExpressionEditor
 import com.bernaferrari.calculator.domain.input.Key
 import com.bernaferrari.calculator.domain.math.Curve
+import com.bernaferrari.calculator.domain.math.UserFunctions
 import com.bernaferrari.calculator.domain.model.AngleUnit
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -52,12 +53,13 @@ data class GraphState(
     val viewport: Viewport = Viewport(),
     /** Every slider ever made, so a letter deleted and typed again comes back where it was. */
     val parameters: Map<Char, Parameter> = emptyMap(),
+    val compilation: GraphCompilation = GraphCompilation(),
 ) {
     val activeFunction: GraphFunction get() = functions[active.coerceIn(0, functions.lastIndex)]
     val canAdd: Boolean get() = functions.size < MAX_FUNCTIONS && functions.none { it.text.isBlank() }
 
     /** The parameters the functions use right now, each with a slider. */
-    val used: List<Char> = functions.flatMap { Curve.parameters(it.text) }.distinct().sorted()
+    val used: List<Char> get() = compilation.resolve(functions, parameters).first
 
     /** The letter the keypad hands out next, or null once all four are in use. */
     val nextParameter: Char? = PARAMETERS.firstOrNull { it !in used }
@@ -65,15 +67,29 @@ data class GraphState(
     fun parameter(name: Char): Parameter = parameters[name] ?: Parameter()
 
     /** Each function compiled with the sliders' current values; null while blank or incomplete. */
-    val curves: List<Curve?> = run {
-        val values = used.associateWith { parameter(it).value }
-        functions.map { if (it.text.isBlank()) null else Curve.compile(it.text, AngleUnit.RADIANS, values) }
-    }
+    val curves: List<Curve?> get() = compilation.resolve(functions, parameters).second
 
     /** Mid-equation (`x² + y²` with no `=` yet, or nothing after it): unfinished rather than wrong. */
     fun pending(index: Int): Boolean {
         val text = functions[index].text
         return curves[index] == null && (('y' in text && '=' !in text) || text.split('=').any { it.isBlank() })
+    }
+}
+
+/** One cached compilation per graph; viewport, cursor and active-row changes reuse it. */
+class GraphCompilation {
+    private var key: Triple<List<String>, Map<Char, Parameter>, List<com.bernaferrari.calculator.domain.math.UserFunction>>? = null
+    private var result: Pair<List<Char>, List<Curve?>> = emptyList<Char>() to emptyList()
+
+    fun resolve(functions: List<GraphFunction>, parameters: Map<Char, Parameter>): Pair<List<Char>, List<Curve?>> {
+        val next = Triple(functions.map { it.text }, parameters, UserFunctions.all)
+        if (key != next) {
+            val used = next.first.flatMap { Curve.parameters(it) }.distinct().sorted()
+            val values = used.associateWith { parameters[it]?.value ?: 1.0 }
+            result = used to next.first.map { if (it.isBlank()) null else Curve.compile(it, AngleUnit.RADIANS, values) }
+            key = next
+        }
+        return result
     }
 }
 
@@ -240,7 +256,7 @@ class GraphViewModel(private val store: GraphStore) : ViewModel() {
         fun snap(value: Double, p: Parameter): Double {
             val step = stepFor(p)
             val snapped = (round(value / step) * step).coerceIn(p.min, p.max)
-            return if (abs(snapped) < step / 2) 0.0 else snapped
+            return if (0.0 in p.min..p.max && abs(snapped) < step / 2) 0.0 else snapped
         }
     }
 }

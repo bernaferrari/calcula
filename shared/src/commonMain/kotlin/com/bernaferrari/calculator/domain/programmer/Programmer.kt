@@ -150,7 +150,13 @@ object Programmer {
     /** Changes the word size: numbers are cut down to fit, as the hardware would. */
     fun withWord(state: ProgState, word: WordSize): ProgState = state.copy(
         word = word,
-        tokens = state.tokens.flatMap { t -> if (isNumber(t)) tokensFor(wrap(parse(t, state.base, state.word) ?: 0L, word), state.base, word, state.signed) else listOf(t) },
+        tokens = inBase(state.tokens, state.base, Base.HEX, state.word, state.signed).flatMap { t ->
+            if (isNumber(t)) {
+                val value = parse(t, Base.HEX, state.word) ?: 0L
+                val extended = if (state.signed || state.word.bits == 64) value else value and ((1L shl state.word.bits) - 1)
+                tokensFor(wrap(extended, word), state.base, word, state.signed)
+            } else listOf(t)
+        },
         expression = null,
         error = null,
     )
@@ -240,6 +246,12 @@ object Programmer {
     private class Fail(val error: ProgError) : Exception()
 
     private fun evaluate(tokens: List<String>, base: Base, word: WordSize, signed: Boolean): Result = try {
+        if (tokens.size > 256) throw Fail(ProgError.SYNTAX)
+        var depth = 0
+        for (token in tokens) {
+            if (token == "(" && ++depth > 32) throw Fail(ProgError.SYNTAX)
+            if (token == ")") depth--
+        }
         val p = Parser(tokens, base, word, signed)
         val v = p.or()
         if (p.pos != tokens.size) throw Fail(ProgError.SYNTAX)
@@ -264,8 +276,8 @@ object Programmer {
                 val op = tokens[pos++]
                 val n = add()
                 v = when (op) {
-                    "<<" -> w(v shl n.toInt().coerceIn(0, 63))
-                    ">>" -> w(if (signed) v shr n.toInt().coerceIn(0, 63) else (v.toULong() and (if (word.bits == 64) ULong.MAX_VALUE else (1uL shl word.bits) - 1uL)).shr(n.toInt().coerceIn(0, 63)).toLong())
+                    "<<" -> w(v shl n.coerceIn(0L, 63L).toInt())
+                    ">>" -> w(if (signed) v shr n.coerceIn(0L, 63L).toInt() else (v.toULong() and (if (word.bits == 64) ULong.MAX_VALUE else (1uL shl word.bits) - 1uL)).shr(n.coerceIn(0L, 63L).toInt()).toLong())
                     // Rotations wrap around the word: what leaves one end comes back at the other.
                     else -> rotate(v, if (op == "ROL") n else -n)
                 }

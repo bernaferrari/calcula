@@ -104,7 +104,8 @@ class StatisticsViewModel(private val preferences: PreferencesRepository = AppGr
         } else {
             val previous = current.values.lastOrNull() ?: return
             save(current.values.dropLast(1))
-            _state.value = _state.value.copy(entry = previous)
+            val editable = previous.replace('−', '-').toDecimalOrNull()?.stripTrailingZeros()?.toPlainString()?.replace('-', '−') ?: previous
+            _state.value = _state.value.copy(entry = editable)
         }
     }
 

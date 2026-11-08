@@ -246,6 +246,10 @@ class CalculatorViewModel(
         val current = rpn.value.copy(angleUnit = calc.value.angleUnit, decimalPlaces = calc.value.decimalPlaces, notation = calc.value.notation)
         if (key == Key.CLEAR && current.stack.isEmpty()) return
         val (next, outcome) = Rpn.press(current, key)
+        onRpnOutcome(next, outcome)
+    }
+
+    private fun onRpnOutcome(next: RpnState, outcome: RpnOutcome) {
         setRpnState(next)
         when (outcome) {
             is RpnOutcome.Evaluated -> viewModelScope.launch {
@@ -319,8 +323,14 @@ class CalculatorViewModel(
     fun onInsertText(text: String) {
         if (settings.value.rpn) {
             // RPN has no expression to type into: a constant goes on the stack, a function applies to x.
-            val value = CalcEngine.evaluateOrNull(if (text.endsWith("(")) text + (Rpn.x(rpn.value)?.toPlainString() ?: "0") + ")" else text, calc.value.angleUnit) ?: return
-            setRpnState(Rpn.pushNumber(if (text.endsWith("(")) rpn.value.copy(entry = null, lift = false) else rpn.value, Calculator.formatResult(value, AUTO_DECIMALS)))
+            if (text.endsWith("(")) {
+                val current = rpn.value.copy(angleUnit = calc.value.angleUnit, decimalPlaces = calc.value.decimalPlaces, notation = calc.value.notation)
+                val (next, outcome) = Rpn.applyFunction(current, text.dropLast(1))
+                onRpnOutcome(next, outcome)
+            } else {
+                val value = CalcEngine.evaluateOrNull(text, calc.value.angleUnit) ?: return
+                setRpnState(Rpn.pushNumber(rpn.value, NumberFormatter.exact(value)))
+            }
             return
         }
         setState(Calculator.insertText(calc.value, text))
@@ -355,7 +365,7 @@ class CalculatorViewModel(
         val editor = calc.value.editor
         val next = ExpressionEditor.nudge(editor, direction)
         if (next.cursor == editor.cursor) return false
-        setState(calc.value.copy(editor = next, selection = null), record = false)
+        setState(calc.value.copy(editor = next, resultShown = false, selection = null), record = false)
         return true
     }
 
@@ -364,7 +374,7 @@ class CalculatorViewModel(
         val editor = calc.value.editor
         val target = if (direction < 0) 0 else editor.text.length
         if (target == editor.cursor) return false
-        setState(calc.value.copy(editor = editor.copy(cursor = target), selection = null), record = false)
+        setState(calc.value.copy(editor = editor.copy(cursor = target), resultShown = false, selection = null), record = false)
         return true
     }
 
@@ -380,7 +390,7 @@ class CalculatorViewModel(
 
     /** Brings an old calculation back for editing. */
     fun onEditExpression(entry: CalculationHistory) {
-        setState(calc.value.copy(editor = Editor(entry.expression), resultShown = false, error = null))
+        setState(calc.value.copy(editor = Editor(entry.expression), selection = null, resultShown = false, error = null))
     }
 
     private val _removed = MutableSharedFlow<List<CalculationHistory>>(extraBufferCapacity = 4)
@@ -404,6 +414,8 @@ class CalculatorViewModel(
             _removed.emit(listOf(entry))
         }
     }
+
+    suspend fun historyForExport(): List<CalculationHistory> = historyRepository.getAllHistory().first()
 
     fun onClearHistory() {
         viewModelScope.launch {
@@ -455,7 +467,7 @@ class CalculatorViewModel(
 
     private fun setRpnState(next: RpnState) {
         rpn.value = next
-        savedState["rpn_stack"] = next.stack.map { it.toPlainString() }.toTypedArray()
+        savedState["rpn_stack"] = next.stack.map { NumberFormatter.exact(it).replace('−', '-') }.toTypedArray()
         savedState["rpn_entry"] = next.entry
         savedState["rpn_lift"] = next.lift
     }

@@ -19,7 +19,7 @@ import kotlin.test.*
 class ReviewAuditTest {
     private val models = ViewModelStore()
     @BeforeTest fun setup() { Dispatchers.setMain(UnconfinedTestDispatcher()) }
-    @AfterTest fun cleanup() { models.clear(); UserFunctions.all = emptyList(); Dispatchers.resetMain() }
+    @AfterTest fun cleanup() = runTest { models.clearAndAwait(); UserFunctions.all = emptyList(); Dispatchers.resetMain() }
 
     @Test fun customRpnFunctionPreservesY() = runTest {
         val store = MemoryStringStore()

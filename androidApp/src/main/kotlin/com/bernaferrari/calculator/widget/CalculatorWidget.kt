@@ -54,6 +54,7 @@ import com.bernaferrari.calculator.ui.calculator.separators
 import kotlinx.coroutines.flow.first
 
 private val TEXT = stringPreferencesKey("text")
+private val REPEAT_TAIL = stringPreferencesKey("repeat_tail")
 private val RESULT = booleanPreferencesKey("result")
 private val ERROR = booleanPreferencesKey("error")
 private val KEY = ActionParameters.Key<String>("key")
@@ -70,12 +71,12 @@ class CalculatorWidget : GlanceAppWidget() {
         val prefs = AppGraph.preferences.getUserPreferences().first()
         val formatter = DisplayFormatter(prefs.decimalSeparator.separators())
         provideContent {
-            GlanceTheme { Content(formatter, prefs.angleUnit, prefs.decimalPlaces) }
+            GlanceTheme { Content(formatter, prefs.angleUnit, prefs.decimalPlaces, prefs.notation) }
         }
     }
 
     @Composable
-    private fun Content(formatter: DisplayFormatter, angle: com.bernaferrari.calculator.domain.model.AngleUnit, decimals: Int) {
+    private fun Content(formatter: DisplayFormatter, angle: com.bernaferrari.calculator.domain.model.AngleUnit, decimals: Int, notation: com.bernaferrari.calculator.domain.model.Notation) {
         val state = currentState<Preferences>()
         val text = state[TEXT].orEmpty()
         val resultShown = state[RESULT] ?: false
@@ -87,7 +88,7 @@ class CalculatorWidget : GlanceAppWidget() {
         ) {
             // The display; tapping it opens the app.
             val shown = if (text.isEmpty()) "0" else formatter.format(text, 0, null).text.text
-            val preview = if (resultShown || state[ERROR] == true) null else Calculator.preview(text, angle, decimals)?.let(formatter::number)
+            val preview = if (resultShown || state[ERROR] == true) null else Calculator.preview(text, angle, decimals, notation)?.let(formatter::number)
             Column(
                 GlanceModifier.fillMaxWidth().defaultWeight().padding(horizontal = 12.dp, vertical = 4.dp).clickable(actionStartActivity<MainActivity>()),
                 horizontalAlignment = Alignment.End,
@@ -175,8 +176,11 @@ class KeyAction : ActionCallback {
                 resultShown = state[RESULT] ?: false,
                 angleUnit = prefs.angleUnit,
                 decimalPlaces = prefs.decimalPlaces,
+                notation = prefs.notation,
+                repeatTail = state[REPEAT_TAIL],
             )
             val (next, outcome) = Calculator.press(current, key)
+            next.repeatTail?.let { state[REPEAT_TAIL] = it } ?: state.remove(REPEAT_TAIL)
             state[TEXT] = next.editor.text
             state[RESULT] = next.resultShown
             state[ERROR] = next.error != null

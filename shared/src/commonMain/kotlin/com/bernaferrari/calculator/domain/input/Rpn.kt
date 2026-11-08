@@ -5,6 +5,7 @@ import com.bernaferrari.calculator.domain.math.CalcEngine
 import com.bernaferrari.calculator.domain.math.CalcError
 import com.bernaferrari.calculator.domain.math.CalcException
 import com.bernaferrari.calculator.domain.math.Decimal
+import com.bernaferrari.calculator.domain.math.NumberFormatter
 import com.bernaferrari.calculator.domain.model.AUTO_DECIMALS
 import com.bernaferrari.calculator.domain.model.AngleUnit
 
@@ -46,7 +47,7 @@ object Rpn {
                 val x = c.stack.firstOrNull() ?: Decimal.ZERO
                 c.copy(stack = listOf(x) + c.stack.ifEmpty { listOf(Decimal.ZERO) }, lift = false) to RpnOutcome.None
             }
-            Key.CLEAR -> RpnState(angleUnit = s.angleUnit, decimalPlaces = s.decimalPlaces) to RpnOutcome.Cleared
+            Key.CLEAR -> RpnState(angleUnit = s.angleUnit, decimalPlaces = s.decimalPlaces, notation = s.notation) to RpnOutcome.Cleared
             Key.DELETE -> delete(s) to RpnOutcome.None
             Key.PARENS -> commit(s).let { c -> c.copy(stack = swap(c.stack), lift = true) } to RpnOutcome.None
             Key.LPAREN -> commit(s).let { c -> c.copy(stack = c.stack.drop(1) + c.stack.take(1), lift = true) } to RpnOutcome.None
@@ -64,6 +65,13 @@ object Rpn {
             }
             else -> s to RpnOutcome.None
         }
+    }
+
+    /** The library uses the same operation path as a keypad function. */
+    fun applyFunction(state: RpnState, function: String): Pair<RpnState, RpnOutcome> {
+        val current = commit(state.copy(error = null))
+        val x = current.stack.firstOrNull() ?: Decimal.ZERO
+        return run(current, "$function(${text(x)})", consumed = 1)
     }
 
     /** Puts a number (a result from the tape, memory) on the stack. */
@@ -157,9 +165,9 @@ object Rpn {
     private fun parse(text: String): Decimal =
         Decimal(text.replace('−', '-').let { if (it.endsWith(".")) it.dropLast(1) else it }.ifEmpty { "0" }.let { if (it == "-") "0" else it })
 
-    /** A value as an operand in the expression language: plain, negatives in parentheses. */
+    /** Exact, compact operand text, with negatives parenthesized. */
     private fun text(d: Decimal): String {
-        val plain = Calculator.formatResult(d, AUTO_DECIMALS).let { if (d.precision() > 15) d.stripTrailingZeros().toPlainString().replace('-', '−') else it }
+        val plain = NumberFormatter.exact(d)
         return if (plain.startsWith("−")) "($plain)" else plain
     }
 

@@ -79,6 +79,14 @@ object KeyPoints {
             val y = f.at(x)
             if (y.isFinite() && abs(y) < scale * 1e-6) roots += x
         }
+        // Even-multiplicity roots touch zero without changing sign.
+        for (i in 1 until xs.lastIndex) {
+            val a = abs(ys[i - 1]); val b = abs(ys[i]); val c = abs(ys[i + 1])
+            if (!a.isFinite() || !b.isFinite() || !c.isFinite() || b > a || b > c || (b == a && b == c)) continue
+            val x = turn(Plot { abs(f.at(it)) }, xs[i - 1], xs[i + 1], max = false)
+            val y = f.at(x)
+            if (y.isFinite() && abs(y) < scale * 1e-12) roots += x
+        }
         if (ys.last() == 0.0) roots += xs.last()
         return roots
     }

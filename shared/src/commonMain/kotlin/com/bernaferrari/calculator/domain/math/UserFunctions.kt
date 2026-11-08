@@ -24,6 +24,7 @@ object UserFunctions {
         name.length in 2..8 && name.all { it in 'a'..'z' } && name !in reserved && name !in taken
 
     fun expand(text: String, functions: List<UserFunction> = all): String {
+        ExpressionLimits.check(text)
         if (functions.isEmpty()) return text
         val ordered = functions.sortedByDescending { it.name.length }
         var current = text
@@ -32,6 +33,7 @@ object UserFunctions {
             if (next == current) return current
             current = next
         }
+        if (expandOnce(current, ordered) == current) return current
         throw CalcException(CalcError.SYNTAX)
     }
 
@@ -56,17 +58,27 @@ object UserFunctions {
             }
             val argument = text.substring(start, j.coerceAtMost(text.length))
             if (argument.isBlank()) throw CalcException(CalcError.SYNTAX)
-            out.append('(').append(substitute(fn.body, argument)).append(')')
+            ExpressionLimits.check(fn.body)
+            val body = substitute(fn.body, argument, functions)
+            if (out.length + body.length + 2 > ExpressionLimits.MAX_LENGTH) throw CalcException(CalcError.SYNTAX)
+            out.append('(').append(body).append(')')
             i = if (j < text.length) j + 1 else text.length
         }
         return out.toString()
     }
 
-    /** Puts the argument in place of each standalone x of the body. */
-    private fun substitute(body: String, argument: String): String = buildString {
-        body.forEachIndexed { k, c ->
-            val standalone = c == 'x' && body.getOrNull(k - 1) !in 'a'..'z' && body.getOrNull(k + 1) !in 'a'..'z'
-            if (standalone) append('(').append(argument.ifEmpty { "0" }).append(')') else append(c)
+    /** Variables can multiply implicitly (`xx`, `xsin(x)`); function names stay intact. */
+    private fun substitute(body: String, argument: String, functions: List<UserFunction>): String {
+        val names = (Tokenizer.FUNCTIONS + functions.map { it.name }).sortedByDescending { it.length }
+        return buildString {
+            var i = 0
+            while (i < body.length) {
+                val name = names.firstOrNull { body.startsWith("$it(", i) }
+                val replacement = name ?: if (body[i] == 'x') "($argument)" else body[i].toString()
+                if (length + replacement.length > ExpressionLimits.MAX_LENGTH) throw CalcException(CalcError.SYNTAX)
+                append(replacement)
+                i += name?.length ?: 1
+            }
         }
     }
 }

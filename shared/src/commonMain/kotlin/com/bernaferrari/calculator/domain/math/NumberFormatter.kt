@@ -2,6 +2,9 @@ package com.bernaferrari.calculator.domain.math
 
 
 object NumberFormatter {
+    /** Compact expression text without discarding any significant digits. */
+    fun exact(value: Decimal): String = format(value, value.precision())
+
     /**
      * Formats a result in the expression language, so it can be inserted back into an expression.
      * Rounds to [significantDigits] (which hides Double noise like 0.49999999999999994) and switches

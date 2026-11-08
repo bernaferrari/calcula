@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { evaluate, format } from "@/lib/calc";
 
 type Alt = { label: string; insert: string };
@@ -125,6 +125,8 @@ function Key({ spec, onPress, isInert }: { spec: Spec; onPress: (insert: string)
   const [open, setOpen] = useState(false);
   const [pressed, setPressed] = useState(false);
   const flicks = spec.up || spec.down;
+  const suppressClick = useRef(false);
+  useEffect(() => () => { if (hold.current) clearTimeout(hold.current); }, []);
 
   const reset = () => {
     start.current = null;
@@ -144,11 +146,17 @@ function Key({ spec, onPress, isInert }: { spec: Spec; onPress: (insert: string)
   }[spec.tone];
 
   return (
+    <div className="relative">
     <button
       type="button"
       aria-label={spec.label + (spec.up ? `, flick up for ${spec.up.label}` : "") + (spec.down ? `, flick down for ${spec.down.label}` : "")}
-      className={`relative h-[62px] touch-none rounded-[22px] text-[26px] outline-none transition-[transform,border-radius] duration-200 ease-[var(--ease-out)] focus-visible:ring-2 focus-visible:ring-primary ${tone} ${pressed ? "scale-[0.96] rounded-[31px]" : ""}`}
+      className={`relative w-full h-[62px] touch-none rounded-[22px] text-[26px] outline-none transition-[transform,border-radius] duration-200 ease-[var(--ease-out)] focus-visible:ring-2 focus-visible:ring-primary ${tone} ${pressed ? "scale-[0.96] rounded-[31px]" : ""}`}
+      onClick={() => {
+        if (!suppressClick.current) onPress(spec.insert);
+        suppressClick.current = false;
+      }}
       onPointerDown={(e) => {
+        suppressClick.current = false;
         e.currentTarget.setPointerCapture(e.pointerId);
         start.current = e.clientY;
         setPressed(true);
@@ -163,14 +171,15 @@ function Key({ spec, onPress, isInert }: { spec: Spec; onPress: (insert: string)
       onPointerUp={() => {
         if (pick === "up" && spec.up && !isInert(spec.up.insert)) onPress(spec.up.insert);
         else if (pick === "down" && spec.down && !isInert(spec.down.insert)) onPress(spec.down.insert);
-        else if (!pick && !open) onPress(spec.insert);
+        suppressClick.current = pick != null || open;
         reset();
       }}
       onPointerCancel={reset}
       onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
+        const alt = e.key === "ArrowUp" ? spec.up : e.key === "ArrowDown" ? spec.down : undefined;
+        if (alt) {
           e.preventDefault();
-          onPress(spec.insert);
+          if (!isInert(alt.insert)) onPress(alt.insert);
         }
       }}
     >
@@ -184,6 +193,18 @@ function Key({ spec, onPress, isInert }: { spec: Spec; onPress: (insert: string)
         </>
       )}
     </button>
+    {flicks && (
+      <div className="sr-only focus-within:not-sr-only focus-within:absolute focus-within:z-20 focus-within:rounded-xl focus-within:bg-surface focus-within:p-2">
+        {[spec.up, spec.down].map((alt, i) => alt && (
+          <button key={i} type="button" disabled={isInert(alt.insert)} onClick={() => onPress(alt.insert)}
+            className="min-h-11 min-w-11 rounded-lg p-2 focus-visible:ring-2 focus-visible:ring-primary"
+            aria-label={`${alt.label}, alternative for ${spec.label}`}>
+            {alt.label}
+          </button>
+        ))}
+      </div>
+    )}
+    </div>
   );
 }
 

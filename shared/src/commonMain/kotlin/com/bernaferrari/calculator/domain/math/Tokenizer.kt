@@ -35,9 +35,11 @@ internal object Tokenizer {
     fun tokenize(raw: String): List<Token> {
         // The person's own functions are rewritten into what they mean first.
         val input = UserFunctions.expand(raw)
+        ExpressionLimits.check(input)
         val tokens = mutableListOf<Token>()
         var i = 0
         while (i < input.length) {
+            if (tokens.size >= 256) throw CalcException(CalcError.SYNTAX)
             val c = input[i]
             when {
                 c.isWhitespace() || c == ',' -> i++
@@ -97,6 +99,7 @@ internal object Tokenizer {
     }
 
     private fun parseNumber(text: String): Decimal {
+        if (text.substringBefore('E').none { it in '0'..'9' }) throw CalcException(CalcError.SYNTAX)
         val normalized = text.replace('−', '-').let { if (it.startsWith(".")) "0$it" else it }
         if (normalized.count { it == '.' } > 1) throw CalcException(CalcError.SYNTAX)
         return try {

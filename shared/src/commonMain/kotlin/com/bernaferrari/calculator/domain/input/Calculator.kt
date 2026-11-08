@@ -115,7 +115,7 @@ object Calculator {
             }
             in WRAP_POSTFIX -> {
                 val suffix = edit(Editor("1"), key, state.inverse).text.removePrefix("1")
-                put((if (isPlainNumber(inner) || isWrapped(inner)) inner else "($inner)") + suffix)
+                put((if ((isPlainNumber(inner) && !inner.startsWith("−")) || isWrapped(inner)) inner else "($inner)") + suffix)
             }
             else -> press(state.copy(editor = ExpressionEditor.replaceRange(state.editor, start, end, ""), resultShown = false), key)
         }
@@ -153,8 +153,10 @@ object Calculator {
 
     /** Puts a number (a previous result) at the cursor, replacing a just-shown result. */
     fun insertNumber(state: CalcState, number: String): CalcState {
-        val editor = if (state.resultShown) Editor() else state.editor
-        return state.copy(editor = ExpressionEditor.insertNumber(editor, number), resultShown = false, error = null)
+        val editor = if (state.resultShown) Editor() else state.selection?.let {
+            ExpressionEditor.replaceRange(state.editor, it.start, it.end, "")
+        } ?: state.editor
+        return state.copy(editor = ExpressionEditor.insertNumber(editor, number), resultShown = false, error = null, selection = null)
     }
 
     /** Puts text (a constant's value, a function's `name(`) at the cursor, replacing a just-shown result. */
@@ -162,7 +164,7 @@ object Calculator {
         val number = isPlainNumber(text)
         if (number) return insertNumber(state, text)
         val editor = if (state.resultShown) Editor() else state.editor
-        return state.copy(editor = ExpressionEditor.insertRaw(editor, text), resultShown = false, error = null, selection = null)
+        return state.copy(editor = ExpressionEditor.insertRaw(state.selection?.let { ExpressionEditor.replaceRange(editor, it.start, it.end, "") } ?: editor, text), resultShown = false, error = null, selection = null)
     }
 
     /** The value shown under the expression while typing, or null when it would add nothing. */
@@ -179,10 +181,10 @@ object Calculator {
     }
 
     fun isPlainNumber(text: String): Boolean {
-        val body = text.removePrefix("−")
-        if (body.isEmpty()) return text.isEmpty()
-        return Tokenizer.numberEnd(body, 0) == body.length
+        return text.isEmpty() || PLAIN_NUMBER.matches(text)
     }
+
+    private val PLAIN_NUMBER = Regex("""−?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:E[+−-]?[0-9]+)?""")
 
     private val CONTINUING_KEYS = setOf(
         Key.PLUS, Key.MINUS, Key.TIMES, Key.DIVIDE, Key.PERCENT, Key.POWER, Key.FACTORIAL, Key.SQUARE, Key.RPAREN,
@@ -199,7 +201,9 @@ object Calculator {
         return try {
             val value = CalcEngine.evaluate(closed, state.angleUnit)
             val result = formatResult(value, state.decimalPlaces, state.notation)
-            val fraction = Fractions.worthShowing(value)?.let(Fractions::format)
+            // Explicit rounding can change the value, so its original fraction would contradict the display.
+            val fraction = if (state.decimalPlaces >= 0 && CalcEngine.evaluate(result) != value) null
+                else Fractions.worthShowing(value)?.let(Fractions::format)
             state.copy(editor = Editor(result), resultShown = true, error = null, repeatTail = repeatTail(closed), fraction = fraction) to
                 Outcome.Evaluated(closed, result)
         } catch (e: CalcException) {

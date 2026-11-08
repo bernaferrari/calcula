@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import com.bernaferrari.calculator.clearAndAwait
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModelStore
 import com.bernaferrari.calculator.data.*
@@ -19,9 +20,14 @@ class CalculatorViewModelTest {
     private val preferences = StoredPreferencesRepository(store)
     private val history = StoredHistoryRepository(store)
     @BeforeTest fun setUp() { Dispatchers.setMain(UnconfinedTestDispatcher()) }
-    @AfterTest fun tearDown() { models.clear(); Dispatchers.resetMain() }
+    @AfterTest fun tearDown() = runTest { models.clearAndAwait(); Dispatchers.resetMain() }
     private fun vm(saved: SavedStateHandle = SavedStateHandle()) = CalculatorViewModel(history, preferences, saved).also { models.put("vm${count++}", it) }
     private fun snapshot(saved: SavedStateHandle) = SavedStateHandle(saved.keys().associateWith { saved.get<Any?>(it) })
+
+    @Test fun exportIncludesEntriesBeyondDisplayLimit() = runTest {
+        repeat(250) { history.insertCalculation(CalculationHistory(expression = "$it+1", result = "${it + 1}")) }
+        assertEquals(250, vm().historyForExport().size)
+    }
 
     @Test fun repeatedEqualsSurvivesRecreation() = runTest {
         val saved = SavedStateHandle()

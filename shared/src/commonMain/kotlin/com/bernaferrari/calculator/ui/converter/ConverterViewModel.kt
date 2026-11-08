@@ -44,7 +44,7 @@ class ConverterViewModel(private val saved: SavedStateHandle) : ViewModel() {
         if (category == _state.value.category) return
         val (top, bottom) = Units.defaults(category)
         // The number stays; only what it means changes.
-        set(ConverterState(category, top, bottom, input = _state.value.input.ifEmpty { "1" }))
+        set(ConverterState(category, top, bottom, input = _state.value.input.ifEmpty { "1" }, topActive = _state.value.topActive))
     }
 
     fun onUnit(top: Boolean, unit: MeasureUnit) = _state.update {
@@ -91,7 +91,10 @@ class ConverterViewModel(private val saved: SavedStateHandle) : ViewModel() {
 
     fun onNegate() = edit { if (it.startsWith("−")) it.drop(1) else "−$it" }
 
-    private fun edit(change: (String) -> String) = set(_state.value.let { it.copy(input = change(it.input)) })
+    private fun editable(text: String): String =
+        if ('E' in text || 'e' in text) text.replace('−', '-').toDecimalOrNull()?.stripTrailingZeros()?.toPlainString()?.replace('-', '−') ?: text else text
+
+    private fun edit(change: (String) -> String) = set(_state.value.let { it.copy(input = change(editable(it.input))) })
 
     private fun set(state: ConverterState) {
         _state.value = state
@@ -112,8 +115,8 @@ class ConverterViewModel(private val saved: SavedStateHandle) : ViewModel() {
         val (top, bottom) = Units.defaults(category)
         return ConverterState(
             category = category,
-            top = saved.get<String>("top")?.let(Units::byId) ?: top,
-            bottom = saved.get<String>("bottom")?.let(Units::byId) ?: bottom,
+            top = saved.get<String>("top")?.let(Units::byId)?.takeIf { it.category == category } ?: top,
+            bottom = saved.get<String>("bottom")?.let(Units::byId)?.takeIf { it.category == category } ?: bottom,
             input = saved["input"] ?: "1",
             topActive = saved["topActive"] ?: true,
         )

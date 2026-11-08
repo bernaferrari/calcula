@@ -42,7 +42,9 @@ object ExpressionEditor {
         var end = e.cursor
         while (end < e.text.length && (e.text[end].isDigit() || e.text[end] == '.')) end++
         val number = e.text.substring(start, end)
-        if ('.' in number || e.text.getOrNull(start - 1) == 'E') return e
+        val before = e.text.getOrNull(start - 1)
+        val exponent = before == 'E' || (before != null && before in "+−-" && e.text.getOrNull(start - 2) == 'E')
+        if ('.' in number || exponent) return e
         return insert(e, if (e.left?.isDigit() == true) "." else "0.")
     }
 

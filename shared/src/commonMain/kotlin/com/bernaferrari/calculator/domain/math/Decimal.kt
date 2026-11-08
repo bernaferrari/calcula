@@ -198,6 +198,7 @@ class Decimal private constructor(val unscaled: BigInteger, val scale: Int) : Co
         }
 
         private fun parse(raw: String): Decimal {
+            require(raw.length <= 20_032) { "Number too long" }
             val text = raw.trim()
             require(text.isNotEmpty()) { "Empty number" }
             val e = text.indexOfFirst { it == 'e' || it == 'E' }
@@ -209,8 +210,13 @@ class Decimal private constructor(val unscaled: BigInteger, val scale: Int) : Co
             val digits = if (dot >= 0) body.removeRange(dot, dot + 1) else body
             require(digits.isNotEmpty() && digits.all { it in '0'..'9' }) { "Not a number: $raw" }
             val fraction = if (dot >= 0) body.length - dot - 1 else 0
+            val parsedScale = fraction.toLong() - exponent.toLong()
+            val significant = digits.trimStart('0')
+            val magnitude = significant.length.toLong() - parsedScale - 1
+            // Bound the represented value, so 100E-10002 and 1E-10000 are both valid.
+            require(parsedScale in -20_000L..20_000L && (significant.isEmpty() || magnitude in -10_000L..10_000L)) { "Exponent out of range" }
             val unscaled = BigInteger.parseString(digits, 10).let { if (negative) it.negate() else it }
-            return Decimal(unscaled, fraction - exponent)
+            return Decimal(unscaled, parsedScale.toInt())
         }
     }
 }
