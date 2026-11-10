@@ -6,12 +6,12 @@ import com.ionspin.kotlin.bignum.integer.BigInteger
 
 /** Decimal trig with explicit range-reduction and series error. */
 internal class DecimalTrig(private val context: MathContext, private val checkpoint: () -> Unit) {
-    private val work = MathContext(context.precision + 12)
+    private val work = context.withPrecision(context.precision + 12)
     private val outward = MathContext(12, RoundingMode.UP)
     private val zero = number(0)
     private val one = number(1)
     private val two = number(2)
-    private var refinedPi: Pair<Int, Value>? = null
+    private val constants = context.constants ?: DecimalConstants(checkpoint)
 
     fun circular(name: String, input: Value, angle: AngleUnit): Value {
         val reduction = reduce(input, angle)
@@ -49,9 +49,9 @@ internal class DecimalTrig(private val context: MathContext, private val checkpo
                 if (name == "cos⁻¹") {
                     // acos(x) = 2 atan(sqrt((1−x)/(1+x))) for x >= 0.
                     val principal = atan(root(quotient(gap, sum))).multiply(two, work)
-                    if (input.v.signum() < 0) pi(work).add(principal.negate(), work) else principal
+                    if (input.v.signum() < 0) constants.pi(work).add(principal.negate(), work) else principal
                 } else if (magnitude == Decimal.ONE && input.exact) {
-                    val halfPi = pi(work).divide(two, work)
+                    val halfPi = constants.pi(work).divide(two, work)
                     if (input.v.signum() < 0) halfPi.negate() else halfPi
                 } else {
                     atan(quotient(input, root(gap.multiply(sum, work))))
@@ -60,7 +60,7 @@ internal class DecimalTrig(private val context: MathContext, private val checkpo
             else -> throw CalcException(CalcError.SYNTAX)
         }
         val converted = if (angle == AngleUnit.RADIANS) result
-            else result.multiply(number(180), work).divide(pi(work), work)
+            else result.multiply(number(180), work).divide(constants.pi(work), work)
         return CalcEngine.roundedValue(converted.v, converted.error, context)
     }
 
@@ -127,16 +127,16 @@ internal class DecimalTrig(private val context: MathContext, private val checkpo
             val degrees = symbolicRemainder ?: Value(degreeRemainder(input.v), error = input.error, symbolic = null)
             val quarter = degrees.v.divide(Decimal(90), work).setScale(0, RoundingMode.HALF_UP)
             val remainder = degrees.add(number(quarter.multiply(Decimal(-90))), work)
-            val radians = remainder.multiply(pi(work), work).divide(number(180), work)
+            val radians = remainder.multiply(constants.pi(work), work).divide(number(180), work)
             return Reduction(quarterIndex(quarter), radians)
         }
 
-        val radians = symbolicRemainder?.multiply(pi(work), work) ?: input
+        val radians = symbolicRemainder?.multiply(constants.pi(work), work) ?: input
         val integerDigits = (radians.v.precision().toLong() - radians.v.scale()).coerceAtLeast(0)
         val precision = work.precision + integerDigits
         if (precision > MAX_REDUCTION_PRECISION) throw CalcException(CalcError.PRECISION_LIMIT)
         val reduction = MathContext(precision.toInt())
-        val halfPi = pi(reduction).divide(two, reduction)
+        val halfPi = constants.pi(reduction).divide(two, reduction)
         val quarter = radians.v.divide(halfPi.v, reduction).setScale(0, RoundingMode.HALF_UP)
         val offset = halfPi.multiply(number(quarter), reduction)
         val remainder = radians.add(offset.negate(), reduction)
@@ -173,7 +173,7 @@ internal class DecimalTrig(private val context: MathContext, private val checkpo
             doubling *= 2
         }
         val series = atanSeries(reduced, work).multiply(number(doubling), work)
-        val principal = if (reciprocal) pi(work).divide(two, work).add(series.negate(), work) else series
+        val principal = if (reciprocal) constants.pi(work).divide(two, work).add(series.negate(), work) else series
         val inputError = input.error?.let { radius ->
             if (radius.signum() == 0) Decimal.ZERO
             else if (radius <= magnitude.multiply(Decimal("0.5"))) {
@@ -208,6 +208,7 @@ internal class DecimalTrig(private val context: MathContext, private val checkpo
 
     private fun series(center: Decimal, cosine: Boolean, alternating: Boolean): Value {
         if (center.signum() == 0) return if (cosine) one else zero
+        if (center.abs() >= Decimal("0.01")) return fixedPointSeries(center, cosine, alternating)
         val x = number(center.abs())
         val square = x.multiply(x, work)
         var term = if (cosine) one else x
@@ -228,35 +229,32 @@ internal class DecimalTrig(private val context: MathContext, private val checkpo
         return if (!cosine && center.signum() < 0) result.negate() else result
     }
 
-    private fun pi(precision: MathContext): Value {
-        if (precision.precision <= 170) return CalcEngine.piApproximation
-        refinedPi?.let { (digits, result) -> if (digits >= precision.precision) return result }
-        // Machin's formula, evaluated in fixed point. Integer division floors each
-        // positive term exactly, so each term contributes less than one unit of error.
-        val scale = precision.precision + 8
-        val unit = BigInteger.TEN.pow(scale)
-        fun atanReciprocal(divisor: Int): Pair<BigInteger, Int> {
-            var power = unit / divisor
-            var sum = BigInteger.ZERO
-            var count = 0
-            while (!power.isZero()) {
-                checkpoint()
-                val term = power / (2 * count + 1)
-                if (term.isZero()) break
-                sum = if (count % 2 == 0) sum + term else sum - term
-                count++
-                power /= divisor * divisor
-            }
-            // The alternating tail is below the first omitted term, which is below one unit.
-            return sum to count + 1
+    private fun fixedPointSeries(center: Decimal, cosine: Boolean, alternating: Boolean): Value {
+        val scale = work.precision + 8
+        val unit = SeriesInteger.powerOfTen(scale)
+        val x = SeriesInteger.fromUnscaled(center.abs().setScale(scale, RoundingMode.DOWN).unscaled)
+        val square = x * x / unit
+        var term = if (cosine) unit else x
+        var sum = term
+        var degree = if (cosine) 0 else 1
+        var subtract = alternating
+        var count = 1
+        while (true) {
+            checkpoint()
+            term = term * square / unit / ((degree + 1) * (degree + 2))
+            if (term.isZero()) break
+            sum = if (subtract) sum - term else sum + term
+            if (alternating) subtract = !subtract
+            degree += 2
+            count++
         }
-        val (a, aError) = atanReciprocal(5)
-        val (b, bError) = atanReciprocal(239)
-        val center = Decimal.fromUnscaled(a * 16 - b * 4, scale)
-        val error = Decimal(16 * aError + 4 * bError).scaleByPowerOfTen(-scale)
-        val value = CalcEngine.roundedValue(center, error, precision)
-        refinedPi = precision.precision to value
-        return value
+        // For |x| <= 1, the term ratio is at most 1/2. Rounding x changes
+        // these functions by < 2 units. Each recurrence loses < 1.5 units,
+        // so each term is within 3 units, and the omitted tail is < 6.
+        val magnitude = sum.toDecimal(scale)
+        val signed = if (!cosine && center.signum() < 0) magnitude.negate() else magnitude
+        return Value(signed,
+            error = Decimal(3 * count + 8).scaleByPowerOfTen(-scale), symbolic = null)
     }
 
     private fun root(input: Value): Value {
@@ -282,6 +280,6 @@ internal class DecimalTrig(private val context: MathContext, private val checkpo
     private fun number(value: Decimal): Value = Value(value, symbolic = null)
 
     private companion object {
-        const val MAX_REDUCTION_PRECISION = 1_024
+        const val MAX_REDUCTION_PRECISION = 8_192
     }
 }

@@ -295,20 +295,24 @@ class CalculatorViewModel(
     }
 
     private var detailJob: Job? = null
-    private var detailPrecision = 15
 
     fun onMoreDigits() {
         val snapshot = calc.value
         if (!snapshot.resultShown || Calculator.resultDisplay(snapshot.editor)?.canRefine != true) return
         if (detailJob?.isActive == true || !extended.value.canRequestMore) return
-        detailPrecision *= 2
-        val requested = detailPrecision
+        val previous = extended.value.number
+        val requested = minOf((previous?.significantDigits ?: 0) + 30, CalcEngine.MAX_REFINEMENT_DIGITS)
         detailJob = viewModelScope.launch {
             val result = withContext(evaluationDispatcher) {
                 CalculatorWork.moreDigits(snapshot.editor, requested)
             }
             if (calc.value.editor == snapshot.editor && calc.value.resultShown) {
-                extended.value = ExtendedDisplay(result ?: extended.value.number, result != null && requested < 120)
+                val settledDigits = result?.significantDigits ?: 0
+                val improved = settledDigits > (previous?.significantDigits ?: 15)
+                extended.value = ExtendedDisplay(
+                    if (improved) result else previous,
+                    improved && result?.approximate == true && settledDigits < CalcEngine.MAX_REFINEMENT_DIGITS,
+                )
             }
         }
     }
@@ -568,7 +572,6 @@ class CalculatorViewModel(
         val current = calc.value
         if (current.editor != next.editor || current.resultShown != next.resultShown) {
             detailJob?.cancel()
-            detailPrecision = 15
             extended.value = ExtendedDisplay()
         }
         // Cursor movement alone isn't an undo step.

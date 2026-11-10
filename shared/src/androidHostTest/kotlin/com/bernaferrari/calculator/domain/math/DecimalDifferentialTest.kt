@@ -28,6 +28,19 @@ class DecimalDifferentialTest {
         }
     }
 
+    @Test fun precisionMatchesBigDecimalAroundLargePowersOfTen() {
+        for (exponent in listOf(1, 18, 19, 63, 64, 230, 1024, 4096)) {
+            val power = BigInteger.TEN.pow(exponent)
+            for (offset in -1L..1L) {
+                val coefficient = power.add(BigInteger.valueOf(offset))
+                for (sign in listOf(1, -1)) {
+                    val value = BigDecimal(coefficient.multiply(BigInteger.valueOf(sign.toLong())), exponent / 2)
+                    assertEquals(value.precision(), Decimal(value.toString()).precision(), "10^$exponent offset $offset")
+                }
+            }
+        }
+    }
+
     @Test fun tiesAndExtremeScalesMatchBigDecimal() {
         for (text in listOf("2.5", "3.5", "-2.5", "-3.5", "9.9995", "-9.9995", "1E10000", "1E-10000")) {
             for (mode in RoundingMode.entries) {

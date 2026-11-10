@@ -7,7 +7,7 @@ object NumberFormatter {
 
     /**
      * Formats a result in the expression language, so it can be inserted back into an expression.
-     * Rounds to [significantDigits] (which hides Double noise like 0.49999999999999994) and switches
+     * Rounds to [significantDigits] and switches
      * to `1.5E20` notation outside a readable range.
      */
     fun format(value: Decimal, significantDigits: Int = 15): String {

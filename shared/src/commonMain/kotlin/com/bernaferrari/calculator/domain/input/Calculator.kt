@@ -68,7 +68,7 @@ data class CalcState(
 )
 
 @Serializable
-data class NumericDisplay(val text: String, val approximate: Boolean)
+data class NumericDisplay(val text: String, val approximate: Boolean, val significantDigits: Int? = null)
 
 data class ResultDisplay(val decimal: NumericDisplay, val exactForm: String?, val canRefine: Boolean)
 
@@ -221,20 +221,29 @@ object Calculator {
     fun moreDigits(editor: Editor, digits: Int, checkCancelled: () -> Unit = {}): NumericDisplay? {
         val answer = editor.answer?.value ?: return null
         if (!answer.retryable || answer.error == null || answer.tree == null) return null
-        val requested = digits.coerceIn(15, 120)
+        val requested = digits.coerceIn(16, CalcEngine.MAX_REFINEMENT_DIGITS)
         val refined = try {
             CalcEngine.evaluateValue(Tokenizer.BOUND_ANSWER.toString(), AngleUnit.DEGREES, answer, checkCancelled,
-                displaySettled = { intervalAgrees(it, requested) { value -> NumberFormatter.format(value, requested) } })
+                displaySettled = { settlesAtPrecision(it, requested) },
+                timeBudgetMillis = 2_000, requestedDigits = requested)
         } catch (_: CalcException) {
             return null
         } catch (_: ArithmeticException) {
             return null
         }
-        for (precision in requested downTo 16) {
+        val radius = refined.error ?: return null
+        val available = if (radius.signum() == 0) requested else {
+            val center = refined.v
+            if (center.abs() <= radius) return null
+            // An interval wider than the last significant place cannot round to one result.
+            val span = center.precision() - center.scale() - (radius.precision() - radius.scale())
+            minOf(requested, span + 1)
+        }
+        for (precision in available downTo 16) {
             checkCancelled()
-            if (intervalAgrees(refined, precision) { NumberFormatter.format(it, precision) }) {
+            if (settlesAtPrecision(refined, precision)) {
                 val text = NumberFormatter.format(refined.displayValue, precision)
-                return NumericDisplay(text, !representsExactly(refined, text))
+                return NumericDisplay(text, !representsExactly(refined, text), significantDigits = precision)
             }
         }
         return null
@@ -246,14 +255,19 @@ object Calculator {
     private fun settles(value: CalcEngine.Value, decimals: Int, notation: Notation): Boolean =
         intervalAgrees(value, maxOf(15, decimals + 17)) { formatResult(it, decimals, notation) }
 
-    private fun intervalAgrees(value: CalcEngine.Value, digits: Int, format: (Decimal) -> String): Boolean {
+    private fun settlesAtPrecision(value: CalcEngine.Value, digits: Int): Boolean {
+        val context = MathContext(digits)
+        return intervalAgrees(value, digits) { it.round(context) }
+    }
+
+    private fun <T> intervalAgrees(value: CalcEngine.Value, digits: Int, rounded: (Decimal) -> T): Boolean {
         val radius = value.error ?: return false
         if (radius.signum() == 0) return true
         if (value.v.signum() == 0 || value.v.abs() <= radius) return false
         // Widen tiny radii before aligning scales. The wider interval is still conservative.
         val guard = DecimalError.roundingUnit(value.v, MathContext(digits + 4))
         val width = maxOf(radius, guard)
-        return format(value.v.subtract(width)) == format(value.v.add(width))
+        return rounded(value.v.subtract(width)) == rounded(value.v.add(width))
     }
 
     fun isPlainNumber(text: String): Boolean {

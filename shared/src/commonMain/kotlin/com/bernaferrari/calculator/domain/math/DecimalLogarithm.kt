@@ -8,15 +8,6 @@ internal object DecimalLogarithm {
     private val two = Decimal(2)
     private val outward = MathContext(12, RoundingMode.UP)
 
-    // Truncated at 187 decimal places. Each true constant is within one unit of its last place.
-    private val constantRadius = Decimal("1E-187")
-    val lnTwo = Value(Decimal(
-        "0.6931471805599453094172321214581765680755001343602552541206800094933936219696947156058633269964186875420014810205706857336855202357581305570326707516350759619307275708283714351903070386238",
-    ), error = constantRadius)
-    val lnTen = Value(Decimal(
-        "2.3025850929940456840179914546843642076011014886287729760333279009675726096773524802359972050895982983419677840422862486334095254650828067566662873690987816894829072083255546808437998948262",
-    ), error = constantRadius)
-
     fun natural(input: Value, context: MathContext, checkpoint: () -> Unit): Value {
         val sign = input.v.signum()
         val radius = input.error
@@ -26,7 +17,7 @@ internal object DecimalLogarithm {
         if (sign <= 0) throw CalcException(CalcError.DOMAIN)
         if (input.symbolic == SymbolicNumber.E) return Value(Decimal.ONE)
 
-        val work = MathContext(context.precision + 12)
+        val work = context.withPrecision(context.precision + 12)
         var reduced = input.v
         var decades = 0
         var halvings = 0
@@ -40,9 +31,14 @@ internal object DecimalLogarithm {
             }
         }
 
-        var result = reducedLog(reduced, work, checkpoint)
-        if (halvings != 0) result = result.add(lnTwo.multiply(number(Decimal(halvings)), work), work)
-        if (decades != 0) result = result.add(lnTen.multiply(number(Decimal(decades)), work), work)
+        val constants = context.constants ?: DecimalConstants(checkpoint)
+        var result = when (reduced) {
+            two -> constants.lnTwo(work)
+            half -> constants.lnTwo(work).negate()
+            else -> nearOne(reduced.subtract(Decimal.ONE), work, checkpoint)
+        }
+        if (halvings != 0) result = result.add(constants.lnTwo(work).multiply(number(Decimal(halvings)), work), work)
+        if (decades != 0) result = result.add(constants.lnTen(work).multiply(number(Decimal(decades)), work), work)
 
         // |ln(x) − ln(center)| <= radius / lower, since 1/x decreases on the positive axis.
         val inherited = inputRadius(input)
@@ -54,10 +50,10 @@ internal object DecimalLogarithm {
     fun onePlus(increment: Value, context: MathContext, checkpoint: () -> Unit): Value {
         val radius = increment.error
         if (increment.v.abs() > half || radius == null || radius > Decimal("0.25")) {
-            val work = MathContext(context.precision + 12)
+            val work = context.withPrecision(context.precision + 12)
             return natural(number(Decimal.ONE).add(increment, work), context, checkpoint)
         }
-        val work = MathContext(context.precision + 12)
+        val work = context.withPrecision(context.precision + 12)
         val result = nearOne(increment.v, work, checkpoint)
         // 1 + increment is at least 1/4 throughout this interval.
         val bound = DecimalError.add(result.error, radius.multiply(Decimal(4)))
@@ -75,11 +71,38 @@ internal object DecimalLogarithm {
     }
 
     /** ln(x) = 2 atanh((x−1)/(x+1)). The reduced input is between 1/2 and 2. */
-    private fun reducedLog(x: Decimal, work: MathContext, checkpoint: () -> Unit): Value =
-        nearOne(x.subtract(Decimal.ONE), work, checkpoint)
-
-    private fun nearOne(delta: Decimal, work: MathContext, checkpoint: () -> Unit): Value {
+    internal fun nearOne(delta: Decimal, work: MathContext, checkpoint: () -> Unit): Value {
         if (delta.signum() == 0) return number(Decimal.ZERO)
+        // For very small increments the relative-precision series avoids a huge fixed-point scale.
+        if (delta.abs() < Decimal("0.01")) return tinyLog(delta, work, checkpoint)
+
+        val scale = work.precision + 8
+        val unit = SeriesInteger.powerOfTen(scale)
+        val ratio = delta.abs().divide(two.add(delta), MathContext(scale + 2, RoundingMode.DOWN))
+        val z = SeriesInteger.fromUnscaled(ratio.setScale(scale, RoundingMode.DOWN).unscaled)
+        val square = z * z / unit
+        var power = z
+        var sum = SeriesInteger.zero
+        var index = 1
+        while (true) {
+            checkpoint()
+            val term = power / index
+            if (term.isZero()) break
+            sum += term
+            power = power * square / unit
+            index += 2
+        }
+        // The recurrence at the truncated z loses < 2 units per multiplication
+        // (one from truncating z² and one from division). With ratio <= 1/9, each
+        // power is within 3 units and each term within 4. The omitted tail is
+        // < 5 units before doubling. The initial z truncation adds < 3 units
+        // to ln because the derivative of 2 atanh(z) is <= 9/4.
+        val center = (sum * 2).toDecimal(scale)
+        val error = Decimal(8 * (index / 2) + 16).scaleByPowerOfTen(-scale)
+        return CalcEngine.roundedValue(if (delta.signum() < 0) center.negate() else center, error, work)
+    }
+
+    private fun tinyLog(delta: Decimal, work: MathContext, checkpoint: () -> Unit): Value {
         val denominatorValue = number(two).add(number(delta), work)
         val z = number(delta.abs()).divide(denominatorValue, work)
         val square = z.multiply(z, work)

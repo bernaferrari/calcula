@@ -31,13 +31,8 @@ internal class DomainNeedsPrecision : Exception()
  */
 object CalcEngine {
     internal val MC = MathContext(40, RoundingMode.HALF_EVEN)
-    private val PRECISION_PASSES = listOf(MC, MathContext(80), MathContext(160))
+    internal const val MAX_REFINEMENT_DIGITS = 4_096
 
-    private val PI = Decimal("3.14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534211706798214808651328230664709384460955058223172535940812848111745028410270193852112")
-    private val E = Decimal("2.71828182845904523536028747135266249775724709369995957496696762772407663035354759457138217852516642742746639193200305992181741359662904357290033429526059563073813232862794349076")
-    private val constantRadius = Decimal("1E-175")
-    internal val piApproximation = Value(PI, error = constantRadius)
-    private val eApproximation = Value(E, error = constantRadius)
     private val HUNDRED = Decimal(100)
     private val LIMIT = Decimal.ONE.scaleByPowerOfTen(10_000)
 
@@ -52,6 +47,7 @@ object CalcEngine {
         checkCancelled: () -> Unit = {},
         displaySettled: ((Value) -> Boolean)? = null,
         timeBudgetMillis: Long = 600,
+        requestedDigits: Int? = null,
     ): Value {
         val started = TimeSource.Monotonic.markNow()
         val checkpoint = {
@@ -65,15 +61,20 @@ object CalcEngine {
         val retained = parsed.takeIf { it.fitsBudget() }
         val tree = if (retained != null || answer?.tree == null) parsed else
             Parser(Tokenizer.tokenize(expression, Token.Num(answer.v, answer.error, answer.symbolic)), angleUnit, checkpoint).parseAll()
+        val constants = DecimalConstants(checkpoint)
+        val initialPrecision = requestedDigits?.let { it.coerceIn(16, MAX_REFINEMENT_DIGITS) + 12 } ?: MC.precision
+        val passes = if (requestedDigits == null) listOf(initialPrecision, 80, 160)
+            else listOf(initialPrecision, initialPrecision * 2)
         var last: Value? = null
-        for (context in PRECISION_PASSES) {
+        for (precision in passes) {
+            val context = MathContext(precision, RoundingMode.HALF_EVEN, constants)
             val result = try {
                 Evaluation(context, checkpoint).evaluate(tree)
             } catch (_: DomainNeedsPrecision) {
                 last = null
                 continue
             } catch (e: CalcException) {
-                if (e.error != CalcError.TIME_LIMIT || last == null) throw e
+                if (last == null || (e.error != CalcError.TIME_LIMIT && e.error != CalcError.PRECISION_LIMIT)) throw e
                 break
             }
             if (result.error == null && result.symbolic == null) {
@@ -114,7 +115,7 @@ object CalcEngine {
         val provenExact: Boolean get() = defined && (exact || symbolic != null)
 
         fun signIsKnown(): Boolean =
-            v.signum() != 0 && (symbolic != null || error?.let { v.abs() > it } == true)
+            v.signum() != 0 && (symbolic?.signum() == v.signum() || error?.let { v.abs() > it } == true)
 
         fun negate(): Value = copy(v = v.negate(), symbolic = symbolic?.negate())
 
@@ -147,7 +148,7 @@ object CalcEngine {
     }
 
     private fun valueOf(number: SymbolicNumber, context: MathContext): Value =
-        number.approximation(piApproximation, eApproximation, context)
+        number.approximation(context)
 
     internal fun roundedValue(value: Decimal, error: Decimal?, context: MathContext): Value {
         val rounded = value.round(context)
@@ -347,6 +348,23 @@ object CalcEngine {
         }
 
         private fun binary(node: Expression.Binary, simplifyAdditions: Boolean = true): Value {
+            if (node.op == '^' && node.left == Expression.Constant("e")) {
+                val logarithm = node.right as? Expression.Call
+                if (logarithm?.name == "ln") {
+                    val argument = evaluate(logarithm.input)
+                    if (argument.defined && argument.v.signum() > 0 && argument.signIsKnown()) {
+                        return argument.copy(percent = false)
+                    }
+                }
+            }
+            if (node.op == '+') {
+                val a = squaredTrig(node.left)
+                val b = squaredTrig(node.right)
+                if (a != null && b != null && a.name != b.name && a.angle == b.angle && a.input == b.input) {
+                    val argument = evaluate(a.input)
+                    if (argument.defined) return Value(Decimal.ONE)
+                }
+            }
             val a = evaluate(node.left, simplifyAdditions)
             val b = evaluate(node.right, simplifyAdditions)
             val result = when (node.op) {
@@ -368,6 +386,19 @@ object CalcEngine {
                 else -> true
             }
             return result.copy(defined = defined, retryable = a.retryable && b.retryable && result.retryable)
+        }
+
+        private fun squaredTrig(node: Expression): Expression.Call? {
+            val base = when (node) {
+                is Expression.Unary -> if (node.op == "²") node.input else return null
+                is Expression.Binary -> {
+                    val exponent = node.right as? Expression.Number
+                    if (node.op != '^' || exponent?.value()?.let { it.exact && it.v == Decimal(2) } != true) return null
+                    node.left
+                }
+                else -> return null
+            }
+            return (base as? Expression.Call)?.takeIf { it.name == "sin" || it.name == "cos" }
         }
 
         private fun unary(node: Expression.Unary): Value {
@@ -427,11 +458,15 @@ object CalcEngine {
                 else -> null
             }
             if (exact != null && arg.exact) return Value(exact)
-            if (name == "ln") return DecimalLogarithm.natural(arg, context, checkCancelled)
+            if (name == "ln") {
+                arg.symbolic?.naturalLog()?.let { return symbolicValue(it) }
+                return DecimalLogarithm.natural(arg, context, checkCancelled)
+            }
             if (name == "log" || name == "log₂") {
-                val work = MathContext(context.precision + 8)
+                val work = context.withPrecision(context.precision + 8)
                 val natural = DecimalLogarithm.natural(arg, work, checkCancelled)
-                val base = if (name == "log") DecimalLogarithm.lnTen else DecimalLogarithm.lnTwo
+                val constants = context.constants ?: DecimalConstants(checkCancelled)
+                val base = if (name == "log") constants.lnTen(work) else constants.lnTwo(work)
                 val result = natural.divide(base, work)
                 return roundedValue(result.v, result.error, context).copy(retryable = natural.retryable)
             }
@@ -549,7 +584,7 @@ object CalcEngine {
 
         val negative = base.v.signum() < 0
         val fraction = if (negative) oddDenominator(exponent) ?: throw CalcException(CalcError.DOMAIN) else null
-        val work = MathContext(context.precision + 8)
+        val work = context.withPrecision(context.precision + 8)
         val magnitude = if (negative) base.negate() else base
         val logarithm = DecimalLogarithm.natural(magnitude, work, checkCancelled)
         val argument = logarithm.multiply(exponent, work).copy(retryable = logarithm.retryable && exponent.retryable)
@@ -557,7 +592,7 @@ object CalcEngine {
         return if (fraction != null && !fraction.numerator.rem(BigInteger.TWO).isZero()) result.negate() else result
     }
 
-    private fun integerPower(base: Value, exponent: Decimal, context: MathContext, checkpoint: () -> Unit): Value {
+    internal fun integerPower(base: Value, exponent: Decimal, context: MathContext, checkpoint: () -> Unit): Value {
         val magnitude = base.v.abs()
         if (magnitude == Decimal.ONE && base.exact) {
             val odd = exponent.remainder(Decimal(2)) != Decimal.ZERO
@@ -575,13 +610,13 @@ object CalcEngine {
             val work = MathContext(24)
             val absoluteBase = if (base.v.signum() < 0) base.negate() else base
             val logarithm = DecimalLogarithm.natural(absoluteBase, work, checkpoint)
-            val estimate = logarithm.divide(DecimalLogarithm.lnTen, work).multiply(Value(Decimal(n)), work)
+            val estimate = logarithm.divide((context.constants ?: DecimalConstants(checkpoint)).lnTen(work), work).multiply(Value(Decimal(n)), work)
             val radius = estimate.error ?: throw DomainNeedsPrecision()
             if (estimate.v.subtract(radius) > Decimal(10_050)) throw CalcException(CalcError.OVERFLOW)
             if (estimate.v.add(radius) < Decimal(-10_050)) return underflow()
             if (estimate.v.abs() > Decimal(10_050)) throw DomainNeedsPrecision()
         }
-        val work = MathContext(context.precision + 12)
+        val work = context.withPrecision(context.precision + 12)
         val one = Value(Decimal.ONE, symbolic = null)
         var factor = Value(base.v, error = base.error, symbolic = null)
         var result = one
@@ -613,30 +648,32 @@ object CalcEngine {
         }
 
         // Evaluate a positive reduced argument, then square back and invert for negative inputs.
-        val work = MathContext(context.precision + 12)
+        val work = context.withPrecision(context.precision + 12)
         var argument = input.v.abs()
         var squarings = 0
         while (argument > half) {
             argument = argument.multiply(half)
             squarings++
         }
-        val reduced = Value(argument, symbolic = null)
-        val cutoff = Decimal.ONE.scaleByPowerOfTen(-work.precision)
-        var term = Value(Decimal.ONE, symbolic = null)
-        var total = term
+        val scale = work.precision + 8
+        val unit = SeriesInteger.powerOfTen(scale)
+        val x = if (argument.precision() - argument.scale() <= -scale) SeriesInteger.zero
+            else SeriesInteger.fromUnscaled(argument.setScale(scale, RoundingMode.DOWN).unscaled)
+        var term = unit
+        var sum = unit
         var index = 1
         while (true) {
             checkCancelled()
-            term = term.multiply(reduced, work).divide(Value(Decimal(index), symbolic = null), work)
-            val upper = DecimalError.add(term.v, term.error) ?: error("Unbounded exponential term")
-            if (upper < cutoff) {
-                // On [0, 1/2], each remaining term is at most half its predecessor.
-                total = total.copy(error = DecimalError.add(total.error, upper.multiply(Decimal(2))))
-                break
-            }
-            total = total.add(term, work)
+            term = term * x / unit / index
+            if (term.isZero()) break
+            sum += term
             index++
         }
+        // Each recurrence truncates by < 1 unit, and the term ratio is at most
+        // 1/2. Each stored term is within 2 units. The tail is below 4 units,
+        // and truncating x changes e^x by less than another 2.
+        var total = Value(sum.toDecimal(scale),
+            error = Decimal(2 * index + 6).scaleByPowerOfTen(-scale), symbolic = null)
         repeat(squarings) {
             checkCancelled()
             total = total.multiply(total, work)
@@ -655,7 +692,7 @@ object CalcEngine {
         return positiveRoot(x, 2, context)
     }
 
-    private fun cbrt(x: Decimal, context: MathContext): Decimal {
+    internal fun cbrt(x: Decimal, context: MathContext): Decimal {
         val root = positiveRoot(x.abs(), 3, context)
         return if (x.signum() < 0) root.negate() else root
     }
@@ -691,7 +728,7 @@ object CalcEngine {
         }
         if (next > last) return Value(Decimal(exact))
 
-        val work = MathContext(context.precision + 12)
+        val work = context.withPrecision(context.precision + 12)
         var result = roundedValue(Decimal(exact), Decimal.ZERO, work)
         for (i in next..last) {
             checkCancelled()

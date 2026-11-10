@@ -5,59 +5,80 @@ import com.bernaferrari.calculator.domain.model.AngleUnit
 import com.ionspin.kotlin.bignum.integer.BigInteger
 import kotlin.math.abs
 
-/** A reduced fraction times one supported factor. A null result hands the operation back to Decimal. */
-internal class SymbolicNumber private constructor(
-    val coefficient: Fraction,
-    private val factor: Factor,
-) {
+/** A small sum of reduced rational multiples of supported factors. Null hands an operation to Decimal. */
+@ConsistentCopyVisibility
+internal data class SymbolicNumber private constructor(private val terms: Map<Factor, Fraction>) {
     private sealed interface Factor {
         data object One : Factor
-        data object Pi : Factor
-        data object Euler : Factor
-        data class Root(val radicand: Int) : Factor
+        data class Constant(val pi: Boolean, val power: Int) : Factor
+        data class Root(val radicand: Int, val degree: Int) : Factor
+        data class LogPrime(val prime: Int) : Factor
     }
 
-    val fraction: Fraction? get() = coefficient.takeIf { factor == Factor.One }
+    private val factor get() = terms.keys.singleOrNull() ?: if (isZero) Factor.One else null
+    val fraction: Fraction? get() = if (isZero) ZERO_FRACTION else terms[Factor.One].takeIf { terms.size == 1 }
+    private val coefficient get() = if (isZero) ZERO_FRACTION else terms.values.single()
     private val n get() = coefficient.numerator
     private val d get() = coefficient.denominator
+    private val isZero get() = terms.isEmpty()
 
-    fun negate(): SymbolicNumber = SymbolicNumber(Fraction(n.negate(), d), factor)
+    // All supported factors are positive. A sum of mixed signs needs an interval to decide its sign.
+    fun signum(): Int? {
+        val sign = terms.values.firstOrNull()?.numerator?.signum() ?: return 0
+        return sign.takeIf { terms.values.all { it.numerator.signum() == sign } }
+    }
 
-    fun add(other: SymbolicNumber): SymbolicNumber? = when {
-        n.isZero() -> other
-        other.n.isZero() -> this
-        factor == other.factor -> create(n * other.d + other.n * d, d * other.d, factor)
-        else -> null
+    fun negate(): SymbolicNumber = SymbolicNumber(terms.mapValues { (_, f) -> Fraction(f.numerator.negate(), f.denominator) })
+
+    fun add(other: SymbolicNumber): SymbolicNumber? {
+        if (isZero) return other
+        if (other.isZero) return this
+        val sum = terms.toMutableMap()
+        for ((tag, b) in other.terms) {
+            val a = sum[tag]
+            val coefficient = if (a == null) b else reduce(
+                a.numerator * b.denominator + b.numerator * a.denominator,
+                a.denominator * b.denominator,
+            ) ?: return null
+            if (coefficient.numerator.isZero()) sum.remove(tag) else sum[tag] = coefficient
+        }
+        return fromTerms(sum)
     }
 
     fun multiply(other: SymbolicNumber): SymbolicNumber? {
-        if (n.isZero() || other.n.isZero()) return ZERO
-        val numerator = n * other.n
-        val denominator = d * other.d
-        return when {
-            factor == Factor.One -> create(numerator, denominator, other.factor)
-            other.factor == Factor.One -> create(numerator, denominator, factor)
-            factor is Factor.Root && other.factor is Factor.Root ->
-                rootProduct(numerator, denominator, factor.radicand, other.factor.radicand)
-            else -> null
+        if (isZero || other.isZero) return ZERO
+        var result = ZERO
+        for ((aTag, a) in terms) for ((bTag, b) in other.terms) {
+            val n = a.numerator * b.numerator
+            val d = a.denominator * b.denominator
+            val product = when {
+                aTag == Factor.One -> create(n, d, bTag)
+                bTag == Factor.One -> create(n, d, aTag)
+                aTag is Factor.Root && bTag is Factor.Root && aTag.degree == bTag.degree ->
+                    rootProduct(n, d, aTag, bTag)
+                aTag is Factor.Constant && bTag is Factor.Constant && aTag.pi == bTag.pi ->
+                    constant(n, d, aTag.pi, aTag.power + bTag.power)
+                else -> null
+            } ?: return null
+            result = result.add(product) ?: return null
         }
+        return result
     }
 
     fun divide(other: SymbolicNumber): SymbolicNumber? {
-        if (other.n.isZero()) throw CalcException(CalcError.DIVIDE_BY_ZERO)
-        val numerator = n * other.d
-        val denominator = d * other.n
-        return when {
-            n.isZero() -> ZERO
-            factor == other.factor -> create(numerator, denominator)
-            other.factor == Factor.One -> create(numerator, denominator, factor)
-            other.factor is Factor.Root -> {
-                val reciprocalRoot = create(BigInteger.ONE, BigInteger.fromInt(other.factor.radicand), other.factor)
-                    ?: return null
-                create(numerator, denominator, factor)?.multiply(reciprocalRoot)
+        if (other.isZero) throw CalcException(CalcError.DIVIDE_BY_ZERO)
+        val tag = other.factor ?: return null
+        if (tag == factor) return create(n * other.d, d * other.n)
+        val inverse = when (tag) {
+            Factor.One -> create(other.d, other.n)
+            is Factor.Constant -> constant(other.d, other.n, tag.pi, -tag.power)
+            is Factor.Root -> {
+                val r = tag.radicand.toLong()
+                rootTerm(other.d, other.n * BigInteger.fromLong(r), if (tag.degree == 2) r else r * r, tag.degree)
             }
-            else -> null
-        }
+            is Factor.LogPrime -> null
+        } ?: return null
+        return multiply(inverse)
     }
 
     fun pow(exponent: SymbolicNumber): SymbolicNumber? {
@@ -87,22 +108,54 @@ internal class SymbolicNumber private constructor(
 
     fun squareRoot(): SymbolicNumber? {
         if (factor != Factor.One || n.signum() < 0) return null
-        if (n.isZero()) return ZERO
+        if (isZero) return ZERO
         val a = n.sqrt()
         val b = d.sqrt()
         if (a * a == n && b * b == d) return create(a, b)
-        // sqrt(n/d) = sqrt(n*d)/d. Bound trial division for extracting square factors.
+        // sqrt(n/d) = sqrt(n*d)/d.
         val radicand = n * d
-        if (radicand > BigInteger.fromInt(MAX_RADICAND)) return null
-        return rootProduct(BigInteger.ONE, d, radicand.intValue(), 1)
+        if (radicand > MAX_RADICAND) return null
+        return rootTerm(BigInteger.ONE, d, radicand.longValue(), 2)
     }
 
     fun cubeRoot(): SymbolicNumber? {
         if (factor != Factor.One) return null
         val numerator = integerCubeRoot(n)
         val denominator = integerCubeRoot(d)
-        if (numerator.pow(3) != n || denominator.pow(3) != d) return null
-        return create(numerator, denominator)
+        if (numerator.pow(3) == n && denominator.pow(3) == d) return create(numerator, denominator)
+        // cbrt(n/d) = cbrt(n*d²)/d.
+        val radicand = n.abs() * d * d
+        if (radicand > MAX_RADICAND) return null
+        return rootTerm(BigInteger.fromInt(n.signum()), d, radicand.longValue(), 3)
+    }
+
+    fun naturalLog(): SymbolicNumber? {
+        val tag = factor
+        if (tag is Factor.Constant && !tag.pi && n == d) return fromDecimal(Decimal(tag.power))
+        if (tag != Factor.One || n.signum() <= 0 || n > MAX_RADICAND || d > MAX_RADICAND) return null
+
+        val factors = mutableMapOf<Factor, Fraction>()
+        fun factorize(value: Int, sign: Int) {
+            var rest = value
+            var prime = 2
+            fun record(prime: Int, multiplicity: Int) {
+                factors[Factor.LogPrime(prime)] = Fraction(BigInteger.fromInt(sign * multiplicity), BigInteger.ONE)
+            }
+            while (prime * prime <= rest) {
+                var multiplicity = 0
+                while (rest % prime == 0) {
+                    rest /= prime
+                    multiplicity++
+                }
+                if (multiplicity > 0) record(prime, multiplicity)
+                prime = if (prime == 2) 3 else prime + 2
+            }
+            if (rest > 1) record(rest, 1)
+        }
+        // The rational is reduced, so its numerator and denominator share no prime.
+        factorize(n.intValue(), 1)
+        factorize(d.intValue(), -1)
+        return fromTerms(factors)
     }
 
     private fun integerCubeRoot(value: BigInteger): BigInteger {
@@ -128,13 +181,13 @@ internal class SymbolicNumber private constructor(
             else -> return null
         }
         return if (angle == AngleUnit.DEGREES) create(BigInteger.fromInt(step * 15), BigInteger.ONE)
-        else create(BigInteger.fromInt(step), BigInteger.fromInt(12), Factor.Pi)
+        else create(BigInteger.fromInt(step), BigInteger.fromInt(12), PI_FACTOR)
     }
 
     fun periodicCoefficient(angle: AngleUnit): Fraction? {
         val period = when {
             angle == AngleUnit.DEGREES && factor == Factor.One -> 360
-            angle == AngleUnit.RADIANS && factor == Factor.Pi -> 2
+            angle == AngleUnit.RADIANS && factor == PI_FACTOR -> 2
             else -> return null
         }
         return Fraction(n.rem(d * period), d)
@@ -143,8 +196,8 @@ internal class SymbolicNumber private constructor(
     fun trig(name: String, angle: AngleUnit): SymbolicNumber? {
         val divisor = when {
             angle == AngleUnit.DEGREES && factor == Factor.One -> d * BigInteger.fromInt(180)
-            angle == AngleUnit.RADIANS && factor == Factor.Pi -> d
-            n.isZero() -> d
+            angle == AngleUnit.RADIANS && factor == PI_FACTOR -> d
+            isZero -> d
             else -> return null
         }
         val (steps, remainder) = (n * BigInteger.fromInt(12)).divideAndRemainder(divisor)
@@ -156,71 +209,85 @@ internal class SymbolicNumber private constructor(
             "cos" -> sinStep((step + 6) % 24)
             "tan" -> {
                 val cosine = sinStep((step + 6) % 24) ?: return null
-                if (cosine.n.isZero()) throw CalcException(CalcError.DOMAIN)
+                if (cosine.isZero) throw CalcException(CalcError.DOMAIN)
                 sine?.divide(cosine)
             }
             else -> null
         }
     }
 
-    fun approximation(pi: Value, e: Value, context: MathContext): Value {
-        val work = MathContext(context.precision + 8)
-        val numerator = Value(Decimal(n), symbolic = null)
-        val coefficient = if (d == BigInteger.ONE) numerator
-            else numerator.divide(Value(Decimal(d), symbolic = null), work)
-        val tag = when (val factor = factor) {
-            Factor.One -> {
-                val value = if (d == BigInteger.ONE) coefficient else
-                    CalcEngine.roundedValue(coefficient.v, coefficient.error, context)
-                return value.copy(symbolic = this)
+    fun approximation(context: MathContext): Value {
+        if (fraction?.denominator == BigInteger.ONE) return Value(Decimal(n), symbolic = this)
+        val work = context.withPrecision(context.precision + 8)
+        val constants = context.constants ?: DecimalConstants {}
+        var result = Value(Decimal.ZERO, symbolic = null)
+        for ((factor, fraction) in terms) {
+            constants.check()
+            val numerator = Value(Decimal(fraction.numerator), symbolic = null)
+            val coefficient = if (fraction.denominator == BigInteger.ONE) numerator else
+                numerator.divide(Value(Decimal(fraction.denominator), symbolic = null), work)
+            val term = when (factor) {
+                Factor.One -> coefficient
+                is Factor.Constant -> {
+                    val constant = if (factor.pi) constants.pi(work) else constants.e(work)
+                    val power = if (factor.power == 1) constant else
+                        CalcEngine.integerPower(constant, Decimal(factor.power), work, constants::check)
+                    coefficient.multiply(power, work)
+                }
+                is Factor.Root -> {
+                    val radicand = Decimal(factor.radicand)
+                    val root = if (factor.degree == 2) CalcEngine.sqrt(radicand, work) else CalcEngine.cbrt(radicand, work)
+                    coefficient.multiply(Value(root,
+                        error = DecimalError.root(radicand, Decimal.ZERO, root, factor.degree), symbolic = null), work)
+                }
+                is Factor.LogPrime -> {
+                    val argument = Value(Decimal(factor.prime), symbolic = null)
+                    coefficient.multiply(DecimalLogarithm.natural(argument, work, constants::check), work)
+                }
             }
-            Factor.Pi -> pi
-            Factor.Euler -> e
-            is Factor.Root -> {
-                val radicand = Decimal(factor.radicand)
-                val root = CalcEngine.sqrt(radicand, work)
-                Value(root, error = DecimalError.root(radicand, Decimal.ZERO, root, 2), symbolic = null)
-            }
+            result = result.add(term, work)
         }
-        return coefficient.multiply(tag, context).copy(symbolic = this)
+        return CalcEngine.roundedValue(result.v, result.error, context).copy(symbolic = this)
     }
 
     fun exactText(): String {
-        val tag = when (val f = factor) {
-            Factor.One -> ""
-            Factor.Pi -> "π"
-            Factor.Euler -> "e"
-            is Factor.Root -> "√${f.radicand}"
-        }
-        val sign = if (n.signum() < 0) "−" else ""
-        val magnitude = n.abs()
-        val numerator = if (tag.isNotEmpty() && magnitude == BigInteger.ONE) tag else "$magnitude$tag"
-        return if (d == BigInteger.ONE) "$sign$numerator" else "$sign$numerator⁄$d"
+        if (isZero) return "0"
+        return orderedTerms().mapIndexed { index, (factor, f) ->
+            val tag = when (factor) {
+                Factor.One -> ""
+                is Factor.Constant -> {
+                    val base = if (factor.pi) "π" else "e"
+                    if (factor.power == 1) base else "$base^${factor.power}".replace('-', '−')
+                }
+                is Factor.Root -> "${if (factor.degree == 2) "√" else "∛"}${factor.radicand}"
+                is Factor.LogPrime -> "ln(${factor.prime})"
+            }
+            val sign = if (f.numerator.signum() < 0) "−" else if (index == 0) "" else "+"
+            val magnitude = f.numerator.abs()
+            val numerator = if (tag.isNotEmpty() && magnitude == BigInteger.ONE) tag else "$magnitude$tag"
+            if (f.denominator == BigInteger.ONE) "$sign$numerator" else "$sign$numerator⁄${f.denominator}"
+        }.joinToString("")
     }
 
-    fun save(): String {
-        val tag = when (val f = factor) {
-            Factor.One -> "1"
-            Factor.Pi -> "pi"
-            Factor.Euler -> "e"
-            is Factor.Root -> f.radicand.toString()
-        }
-        return "$n,$d,$tag"
+    fun save(): String = if (isZero) "0,1,1" else orderedTerms().joinToString(";") { (factor, f) ->
+        "${f.numerator},${f.denominator},${tag(factor)}"
     }
 
-    override fun equals(other: Any?): Boolean =
-        other is SymbolicNumber && coefficient == other.coefficient && factor == other.factor
-
-    override fun hashCode(): Int = 31 * coefficient.hashCode() + factor.hashCode()
+    private fun orderedTerms() = terms.entries.sortedBy { tag(it.key) }
 
     companion object {
         internal const val MAX_BITS = 1_024
         private const val MAX_DECIMAL_DIGITS = 309
         private const val MAX_RADICAND = 1_000_000
-        private val ZERO = SymbolicNumber(Fraction(BigInteger.ZERO, BigInteger.ONE), Factor.One)
-        val ONE = SymbolicNumber(Fraction(BigInteger.ONE, BigInteger.ONE), Factor.One)
-        val PI = SymbolicNumber(ONE.coefficient, Factor.Pi)
-        val E = SymbolicNumber(ONE.coefficient, Factor.Euler)
+        private const val MAX_TERMS = 8
+        private val PI_FACTOR = Factor.Constant(pi = true, power = 1)
+        private val E_FACTOR = Factor.Constant(pi = false, power = 1)
+        private val ZERO_FRACTION = Fraction(BigInteger.ZERO, BigInteger.ONE)
+        private val ONE_FRACTION = Fraction(BigInteger.ONE, BigInteger.ONE)
+        private val ZERO = SymbolicNumber(emptyMap())
+        val ONE = SymbolicNumber(mapOf(Factor.One to ONE_FRACTION))
+        val PI = SymbolicNumber(mapOf(PI_FACTOR to ONE_FRACTION))
+        val E = SymbolicNumber(mapOf(E_FACTOR to ONE_FRACTION))
 
         fun fromDecimal(value: Decimal): SymbolicNumber? {
             if (value.signum() == 0) return ZERO
@@ -230,56 +297,105 @@ internal class SymbolicNumber private constructor(
         }
 
         fun restore(saved: String): SymbolicNumber? {
-            val fields = saved.split(',')
-            if (fields.size != 3 || fields.any { it.length > MAX_DECIMAL_DIGITS + 1 }) return null
-            val (numerator, denominator, tag) = fields
-            val factor = when (tag) {
-                "1" -> Factor.One
-                "pi" -> Factor.Pi
-                "e" -> Factor.Euler
-                else -> Factor.Root(tag.toIntOrNull()?.takeIf { it in 2..MAX_RADICAND } ?: return null)
+            val encoded = saved.split(';', limit = MAX_TERMS + 1)
+            if (encoded.size > MAX_TERMS) return null
+            var result = ZERO
+            for (term in encoded) {
+                val fields = term.split(',', limit = 4)
+                if (fields.size != 3 || fields.any { it.length > MAX_DECIMAL_DIGITS + 1 }) return null
+                val (numerator, denominator, encodedTag) = fields
+                val factor = when (encodedTag) {
+                    "1" -> Factor.One
+                    "pi" -> PI_FACTOR
+                    "e" -> E_FACTOR
+                    else -> when {
+                        encodedTag.startsWith("pi^") || encodedTag.startsWith("e^") -> {
+                            val power = encodedTag.substringAfter('^').toIntOrNull()
+                                ?.takeIf { it in -MAX_BITS..MAX_BITS && it != 0 } ?: return null
+                            Factor.Constant(encodedTag.startsWith("pi^"), power)
+                        }
+                        encodedTag.startsWith("ln") -> Factor.LogPrime(parseRadicand(encodedTag.drop(2)) ?: return null)
+                        encodedTag.startsWith("r3_") -> Factor.Root(parseRadicand(encodedTag.drop(3)) ?: return null, 3)
+                        else -> Factor.Root(parseRadicand(encodedTag) ?: return null, 2)
+                    }
+                }
+                val number = runCatching {
+                    val n = BigInteger.parseString(numerator)
+                    val d = BigInteger.parseString(denominator)
+                    if (factor is Factor.Root) rootTerm(n, d, factor.radicand.toLong(), factor.degree)
+                    else create(n, d, factor)
+                }.getOrNull() ?: return null
+                result = result.add(number) ?: return null
             }
-            return runCatching { create(BigInteger.parseString(numerator), BigInteger.parseString(denominator), factor) }.getOrNull()
+            return result
         }
 
+        private fun parseRadicand(text: String): Int? = text.toIntOrNull()?.takeIf { it in 2..MAX_RADICAND }
+
+        private fun tag(factor: Factor): String = when (factor) {
+            Factor.One -> "1"
+            is Factor.Constant -> {
+                val base = if (factor.pi) "pi" else "e"
+                if (factor.power == 1) base else "$base^${factor.power}"
+            }
+            is Factor.Root -> if (factor.degree == 2) factor.radicand.toString() else "r3_${factor.radicand}"
+            is Factor.LogPrime -> "ln${factor.prime}"
+        }
+
+        private fun fromTerms(terms: Map<Factor, Fraction>): SymbolicNumber? =
+            if (terms.size <= MAX_TERMS) SymbolicNumber(terms) else null
+
         private fun create(n: BigInteger, d: BigInteger, factor: Factor = Factor.One): SymbolicNumber? {
+            val coefficient = reduce(n, d) ?: return null
+            return if (coefficient.numerator.isZero()) ZERO else SymbolicNumber(mapOf(factor to coefficient))
+        }
+
+        private fun reduce(n: BigInteger, d: BigInteger): Fraction? {
             if (d.isZero()) return null
-            if (n.isZero()) return ZERO
+            if (n.isZero()) return ZERO_FRACTION
+            if (d == BigInteger.ONE) return Fraction(n, d).takeIf { n.abs().bitLength() <= MAX_BITS }
             val gcd = n.abs().gcd(d.abs())
             val numerator = if (d.signum() < 0) n.negate() / gcd else n / gcd
             val denominator = d.abs() / gcd
             if (numerator.abs().bitLength() > MAX_BITS || denominator.bitLength() > MAX_BITS) return null
-            return SymbolicNumber(Fraction(numerator, denominator), factor)
+            return Fraction(numerator, denominator)
         }
 
-        private fun rootProduct(n: BigInteger, d: BigInteger, a: Int, b: Int): SymbolicNumber? {
-            var radicand = a.toLong() * b
-            var outside = 1
-            // Both incoming roots are square-free. Their common factors become a square.
-            if (b != 1) {
-                var x = a
-                var y = b
-                while (y != 0) {
-                    val rest = x % y
-                    x = y
-                    y = rest
-                }
-                outside = x
-                radicand /= x.toLong() * x
-            } else {
-                var factor = 2
-                while (factor.toLong() * factor <= radicand) {
-                    val square = factor.toLong() * factor
-                    while (radicand % square == 0L) {
-                        radicand /= square
-                        outside *= factor
-                    }
-                    factor++
-                }
+        private fun constant(n: BigInteger, d: BigInteger, pi: Boolean, power: Int): SymbolicNumber? =
+            if (abs(power) > MAX_BITS) null else create(n, d, if (power == 0) Factor.One else Factor.Constant(pi, power))
+
+        private fun rootProduct(n: BigInteger, d: BigInteger, a: Factor.Root, b: Factor.Root): SymbolicNumber? {
+            val radicand = a.radicand.toLong() * b.radicand
+            if (a.degree == 3) return rootTerm(n, d, radicand, 3)
+            // The inputs are square-free. Only their common factors can leave the root.
+            var x = a.radicand
+            var y = b.radicand
+            while (y != 0) {
+                val remainder = x % y
+                x = y
+                y = remainder
             }
-            if (radicand > MAX_RADICAND) return null
-            val tag = if (radicand == 1L) Factor.One else Factor.Root(radicand.toInt())
-            return create(n * BigInteger.fromInt(outside), d, tag)
+            val inside = radicand / (x.toLong() * x)
+            if (inside > MAX_RADICAND) return null
+            return create(n * BigInteger.fromInt(x), d, if (inside == 1L) Factor.One else Factor.Root(inside.toInt(), 2))
+        }
+
+        private fun rootTerm(n: BigInteger, d: BigInteger, radicand: Long, degree: Int): SymbolicNumber? {
+            var inside = radicand
+            var outside = 1L
+            var factor = 2L
+            while (true) {
+                val power = if (degree == 2) factor * factor else factor * factor * factor
+                if (power > inside) break
+                while (inside % power == 0L) {
+                    inside /= power
+                    outside *= factor
+                }
+                factor++
+            }
+            if (inside > MAX_RADICAND) return null
+            val tag = if (inside == 1L) Factor.One else Factor.Root(inside.toInt(), degree)
+            return create(n * BigInteger.fromLong(outside), d, tag)
         }
 
         private fun sinStep(step: Int): SymbolicNumber? {
@@ -288,8 +404,8 @@ internal class SymbolicNumber private constructor(
             val value = when (firstQuadrant) {
                 0 -> ZERO
                 2 -> create(BigInteger.ONE, BigInteger.TWO)
-                3 -> create(BigInteger.ONE, BigInteger.TWO, Factor.Root(2))
-                4 -> create(BigInteger.ONE, BigInteger.TWO, Factor.Root(3))
+                3 -> create(BigInteger.ONE, BigInteger.TWO, Factor.Root(2, 2))
+                4 -> create(BigInteger.ONE, BigInteger.TWO, Factor.Root(3, 2))
                 6 -> ONE
                 else -> null
             }

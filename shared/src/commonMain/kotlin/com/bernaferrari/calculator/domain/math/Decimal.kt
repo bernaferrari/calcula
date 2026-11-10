@@ -5,7 +5,16 @@ import kotlin.math.max
 
 enum class RoundingMode { HALF_EVEN, HALF_UP, DOWN, UP }
 
-data class MathContext(val precision: Int, val roundingMode: RoundingMode = RoundingMode.HALF_EVEN)
+class MathContext internal constructor(
+    val precision: Int,
+    val roundingMode: RoundingMode,
+    internal val constants: DecimalConstants?,
+) {
+    constructor(precision: Int, roundingMode: RoundingMode = RoundingMode.HALF_EVEN) :
+        this(precision, roundingMode, null)
+
+    internal fun withPrecision(digits: Int): MathContext = MathContext(digits, roundingMode, constants)
+}
 
 /**
  * An arbitrary-precision decimal for every platform: `unscaled × 10^−scale`, with the same
@@ -23,7 +32,15 @@ class Decimal private constructor(val unscaled: BigInteger, val scale: Int) : Co
     fun signum(): Int = unscaled.signum()
 
     /** Number of significant digits in the unscaled value (1 for zero). */
-    fun precision(): Int = if (unscaled.isZero()) 1 else unscaled.abs().numberOfDecimalDigits().toInt()
+    fun precision(): Int {
+        if (unscaled.isZero()) return 1
+        val magnitude = unscaled.abs()
+        // A lower bound for log10(2) gives a starting digit count. Compare with an
+        // exact power of ten to handle values on either side of a decimal boundary.
+        var digits = ((magnitude.bitLength() - 1) * 301_029_995L / 1_000_000_000L).toInt() + 1
+        while (magnitude >= pow10(digits)) digits++
+        return digits
+    }
 
     fun scale(): Int = scale
 

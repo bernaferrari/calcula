@@ -240,6 +240,49 @@ class CalcEngineTest {
         }
     }
 
+    @Test fun provesSmallSymbolicSumsAndPowers() {
+        val cases = mapOf(
+            "π×π÷π" to "π",
+            "π^−2×π²" to "1",
+            "e×e÷e^2" to "1",
+            "exp(100)+42−exp(50)²" to "42",
+            "(√2+√3)²−5−2√6" to "0",
+            "∛2×∛2×∛2−2" to "0",
+            "∛(−4)×∛(−2)" to "2",
+            "e^(ln(5))−5" to "0",
+            "ln(8)÷ln(2)−3" to "0",
+            "ln(2)+ln(3)−ln(6)" to "0",
+            "ln(3÷4)+2ln(2)−ln(3)" to "0",
+            "sin(10)²+cos(10)^2−1" to "0",
+        )
+        for ((expression, exactText) in cases) {
+            val result = CalcEngine.evaluateValue(expression, AngleUnit.DEGREES)
+            assertEquals(true, result.provenExact, expression)
+            assertEquals(exactText, result.symbolic?.exactText(), expression)
+        }
+    }
+
+    @Test fun exactRewritesPreserveDomainErrorsAndDistinctArguments() {
+        assertError("e^(ln(0))", CalcError.DOMAIN)
+        assertError("e^(ln(−5))", CalcError.DOMAIN)
+        assertError("sin(1÷0)²+cos(1÷0)²", CalcError.DIVIDE_BY_ZERO)
+        assertError("1÷(ln(2)+ln(3)−ln(6))", CalcError.DIVIDE_BY_ZERO)
+        val distinct = CalcEngine.evaluateValue("sin(10)²+cos(11)²−1", AngleUnit.DEGREES)
+        assertEquals(false, distinct.provenExact)
+        assertEquals(-1, distinct.v.signum())
+        val sumAngle = CalcEngine.evaluateValue("sin(√2+√3)", AngleUnit.DEGREES)
+        assertEquals(false, sumAngle.provenExact)
+        assertEquals(1, sumAngle.v.signum())
+    }
+
+    @Test fun symbolicFormsRoundTripAndReadOldAnswerTags() {
+        val value = CalcEngine.evaluateValue("2√3−π²+∛2+ln(5)", AngleUnit.DEGREES)
+        val symbolic = requireNotNull(value.symbolic)
+        assertEquals(symbolic, SymbolicNumber.restore(symbolic.save()))
+        assertEquals("2√3⁄5", SymbolicNumber.restore("2,5,3")?.exactText())
+        assertEquals("2π", SymbolicNumber.restore("2,1,pi")?.exactText())
+    }
+
     @Test fun largeAnglesAndFactorialsKeepTheirUsefulPrecision() {
         assertEquals(eval("sin(280)"), eval("sin(1E9999)"))
         assertEquals(eval("sin(π÷7)", AngleUnit.RADIANS), eval("sin((10^200+1÷7)×π)", AngleUnit.RADIANS))

@@ -132,7 +132,7 @@ class CalculatorTest {
     }
 
     @Test fun retriesWhenDifferentExponentialTreesLoseDisplayDigits() {
-        val (state, outcome) = Calculator.press(CalcState(editor = Editor("exp(100)+42−exp(50)²")), Key.EQUALS)
+        val (state, outcome) = Calculator.press(CalcState(editor = Editor("exp(110.125)+42−exp(55.0625)²")), Key.EQUALS)
         assertEquals("42", state.editor.text)
         assertEquals(true, (outcome as Outcome.Evaluated).approximate)
     }
@@ -170,9 +170,20 @@ class CalculatorTest {
         val display = Calculator.resultDisplay(third.editor)
         assertEquals(NumericDisplay("0.333333333333333", approximate = true), display?.decimal)
         assertEquals("1⁄3", display?.exactForm)
-        assertEquals(NumericDisplay("0." + "3".repeat(60), approximate = true), Calculator.moreDigits(third.editor, 60))
+        assertEquals(NumericDisplay("0." + "3".repeat(60), approximate = true, significantDigits = 60), Calculator.moreDigits(third.editor, 60))
         val two = type(Key.D1, Key.PLUS, Key.D1, Key.EQUALS)
         assertEquals(NumericDisplay("2", approximate = false), Calculator.resultDisplay(two.editor)?.decimal)
+    }
+
+    @Test fun moreDigitsRefinesBeyondTheOldConstantAndDisplayLimits() {
+        val result = Calculator.press(CalcState(editor = Editor("2^π")), Key.EQUALS).first
+        val restored = Editor(result.editor.text).restoreAnswer(result.editor.saveAnswer())
+        val first = requireNotNull(Calculator.moreDigits(restored, 120))
+        val second = requireNotNull(Calculator.moreDigits(restored, 210))
+        assertEquals(121, first.text.length)
+        assertEquals(211, second.text.length)
+        assertEquals(first.text.dropLast(1), second.text.take(120))
+        assertEquals(true, second.approximate)
     }
 
     @Test fun negativeResultIsParenthesizedForPowers() {
