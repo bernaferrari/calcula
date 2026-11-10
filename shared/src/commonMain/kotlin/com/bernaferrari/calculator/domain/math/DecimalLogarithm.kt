@@ -71,60 +71,11 @@ internal object DecimalLogarithm {
     }
 
     /** ln(x) = 2 atanh((x−1)/(x+1)). The reduced input is between 1/2 and 2. */
-    internal fun nearOne(delta: Decimal, work: MathContext, checkpoint: () -> Unit): Value {
+    private fun nearOne(delta: Decimal, work: MathContext, checkpoint: () -> Unit): Value {
         if (delta.signum() == 0) return number(Decimal.ZERO)
-        // For very small increments the relative-precision series avoids a huge fixed-point scale.
-        if (delta.abs() < Decimal("0.01")) return tinyLog(delta, work, checkpoint)
-
-        val scale = work.precision + 8
-        val unit = SeriesInteger.powerOfTen(scale)
-        val ratio = delta.abs().divide(two.add(delta), MathContext(scale + 2, RoundingMode.DOWN))
-        val z = SeriesInteger.fromUnscaled(ratio.setScale(scale, RoundingMode.DOWN).unscaled)
-        val square = z * z / unit
-        var power = z
-        var sum = SeriesInteger.zero
-        var index = 1
-        while (true) {
-            checkpoint()
-            val term = power / index
-            if (term.isZero()) break
-            sum += term
-            power = power * square / unit
-            index += 2
-        }
-        // The recurrence at the truncated z loses < 2 units per multiplication
-        // (one from truncating z² and one from division). With ratio <= 1/9, each
-        // power is within 3 units and each term within 4. The omitted tail is
-        // < 5 units before doubling. The initial z truncation adds < 3 units
-        // to ln because the derivative of 2 atanh(z) is <= 9/4.
-        val center = (sum * 2).toDecimal(scale)
-        val error = Decimal(8 * (index / 2) + 16).scaleByPowerOfTen(-scale)
-        return CalcEngine.roundedValue(if (delta.signum() < 0) center.negate() else center, error, work)
-    }
-
-    private fun tinyLog(delta: Decimal, work: MathContext, checkpoint: () -> Unit): Value {
-        val denominatorValue = number(two).add(number(delta), work)
-        val z = number(delta.abs()).divide(denominatorValue, work)
-        val square = z.multiply(z, work)
-        val cutoff = z.v.scaleByPowerOfTen(-work.precision)
-        var sum = z
-        var power = z
-        var denominator = 3
-        while (true) {
-            checkpoint()
-            power = power.multiply(square, work)
-            val term = power.divide(number(Decimal(denominator)), work)
-            val upper = checkNotNull(DecimalError.add(term.v, term.error))
-            if (upper < cutoff) {
-                // The omitted terms have ratio at most 1/9. Twice the first term bounds their sum.
-                sum = sum.copy(error = DecimalError.add(sum.error, upper.multiply(two)))
-                break
-            }
-            sum = sum.add(term, work)
-            denominator += 2
-        }
-        val value = sum.multiply(number(two), work)
-        return if (delta.signum() < 0) value.negate() else value
+        val denominator = number(two).add(number(delta), work)
+        val z = number(delta).divide(denominator, work)
+        return OddPowerSeries.evaluate(z, work, alternating = false, checkpoint).multiply(number(two), work)
     }
 
     private fun number(value: Decimal): Value = Value(value, symbolic = null)

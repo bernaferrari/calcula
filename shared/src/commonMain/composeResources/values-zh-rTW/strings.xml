@@ -9,6 +9,8 @@
     <string name="error_syntax">運算式不完整</string>
     <string name="error_overflow">數字過大</string>
     <string name="tape_copy_result">複製結果</string>
+    <string name="tape_copy_decimal">複製小數值</string>
+    <string name="tape_copy_exact">複製精確結果</string>
     <string name="tape_edit">編輯算式</string>
     <string name="tape_delete">刪除</string>
     <string name="copied">已複製</string>

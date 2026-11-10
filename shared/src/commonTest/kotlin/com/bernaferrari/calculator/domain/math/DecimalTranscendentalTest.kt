@@ -188,6 +188,42 @@ class DecimalTranscendentalTest {
         }
     }
 
+    @Test fun seededRootsAndOddPowerSeriesEncloseTheSameResultsAtHigherPrecision() {
+        val random = Random(17321)
+        repeat(24) { index ->
+            val coefficient = random.nextInt(2, 10_000)
+            val exponent = random.nextInt(16, 240)
+            val expression = when (index % 6) {
+                0 -> "tan⁻¹(${coefficient}÷137)"
+                1 -> "tan⁻¹(−${coefficient}E−$exponent)"
+                2 -> "ln(1+${coefficient}E−$exponent)"
+                3 -> "ln(${coefficient}÷137)"
+                4 -> "√(π+${coefficient}E−$exponent)"
+                else -> "∛(−e−${coefficient}E−$exponent)"
+            }
+            val normal = CalcEngine.evaluateValue(expression, AngleUnit.RADIANS, timeBudgetMillis = 4_000)
+            val refined = CalcEngine.evaluateValue(expression, AngleUnit.RADIANS,
+                requestedDigits = 300, timeBudgetMillis = 4_000)
+            val normalRadius = assertNotNull(normal.error, expression)
+            val refinedRadius = assertNotNull(refined.error, expression)
+            assertTrue(normal.v.subtract(refined.v).abs() <= normalRadius.add(refinedRadius), expression)
+            assertTrue(refinedRadius < normalRadius, "$expression did not gain precision")
+        }
+    }
+
+    @Test fun refinementKeepsTheCompletedBatchWhenAHighPrecisionPassTimesOut() {
+        var completed = false
+        val partial = CalcEngine.evaluateValue("tan⁻¹(2)", AngleUnit.RADIANS,
+            checkCancelled = { if (completed) throw CalcException(CalcError.TIME_LIMIT) },
+            displaySettled = { completed = true; false },
+            requestedDigits = 1_000,
+            startingDigits = 120,
+        )
+        assertTrue(completed)
+        assertTrue(partial.v.precision() >= 120)
+        assertTrue(partial.v.precision() < 1_000)
+    }
+
     @Test fun randomizedIntervalsOverlapAtFortyAndOneHundredSixtyDigits() {
         val random = Random(42)
         repeat(18) { index ->

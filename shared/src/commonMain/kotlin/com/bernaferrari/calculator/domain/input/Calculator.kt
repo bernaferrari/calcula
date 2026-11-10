@@ -15,6 +15,7 @@ import com.bernaferrari.calculator.domain.math.Tokenizer
 import com.bernaferrari.calculator.domain.math.Fractions
 import com.bernaferrari.calculator.domain.model.AUTO_DECIMALS
 import com.bernaferrari.calculator.domain.model.AngleUnit
+import com.bernaferrari.calculator.domain.model.CalculationHistory
 
 enum class Key {
     D0, D1, D2, D3, D4, D5, D6, D7, D8, D9, DOT,
@@ -218,14 +219,24 @@ object Calculator {
             approximate && answer.retryable && answer.error != null && answer.tree != null)
     }
 
-    fun moreDigits(editor: Editor, digits: Int, checkCancelled: () -> Unit = {}): NumericDisplay? {
+    internal fun exactResultForCopy(entry: CalculationHistory): String? {
+        val exact = entry.exactResult
+            ?: resultDisplay(Editor(entry.result).restoreAnswer(Editor.withoutTree(entry.resultOperand)))?.exactForm
+        return exact?.replace('⁄', '/')
+    }
+
+    fun moreDigits(editor: Editor, digits: Int, afterDigits: Int = 15, checkCancelled: () -> Unit = {}): NumericDisplay? {
         val answer = editor.answer?.value ?: return null
         if (!answer.retryable || answer.error == null || answer.tree == null) return null
         val requested = digits.coerceIn(16, CalcEngine.MAX_REFINEMENT_DIGITS)
+        val previous = afterDigits.coerceIn(15, requested)
+        val additional = requested - previous
+        val first = if (additional <= 120) requested
+            else maxOf(120, previous + minOf(500, additional / 2))
         val refined = try {
             CalcEngine.evaluateValue(Tokenizer.BOUND_ANSWER.toString(), AngleUnit.DEGREES, answer, checkCancelled,
                 displaySettled = { settlesAtPrecision(it, requested) },
-                timeBudgetMillis = 2_000, requestedDigits = requested)
+                timeBudgetMillis = 2_000, requestedDigits = requested, startingDigits = first)
         } catch (_: CalcException) {
             return null
         } catch (_: ArithmeticException) {
@@ -239,7 +250,7 @@ object Calculator {
             val span = center.precision() - center.scale() - (radius.precision() - radius.scale())
             minOf(requested, span + 1)
         }
-        for (precision in available downTo 16) {
+        for (precision in available downTo previous + 1) {
             checkCancelled()
             if (settlesAtPrecision(refined, precision)) {
                 val text = NumberFormatter.format(refined.displayValue, precision)

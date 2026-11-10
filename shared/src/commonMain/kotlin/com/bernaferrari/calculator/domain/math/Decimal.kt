@@ -1,6 +1,5 @@
 package com.bernaferrari.calculator.domain.math
 
-import com.ionspin.kotlin.bignum.integer.BigInteger
 import kotlin.math.max
 
 enum class RoundingMode { HALF_EVEN, HALF_UP, DOWN, UP }
@@ -218,7 +217,7 @@ class Decimal private constructor(val unscaled: BigInteger, val scale: Int) : Co
         val TEN = Decimal(BigInteger.TEN, 0)
 
         internal fun fromUnscaled(coefficient: String, scale: Int): Decimal =
-            fromUnscaled(BigInteger.parseString(coefficient, 10), scale)
+            fromUnscaled(BigInteger.parseString(coefficient), scale)
 
         internal fun fromUnscaled(coefficient: BigInteger, scale: Int): Decimal = Decimal(coefficient, scale)
 
@@ -267,7 +266,7 @@ class Decimal private constructor(val unscaled: BigInteger, val scale: Int) : Co
             val magnitude = significant.length.toLong() - parsedScale - 1
             // Bound the represented value, so 100E-10002 and 1E-10000 are both valid.
             require(parsedScale in -20_000L..20_000L && (significant.isEmpty() || magnitude in -10_000L..10_000L)) { "Exponent out of range" }
-            val unscaled = BigInteger.parseString(digits, 10).let { if (negative) it.negate() else it }
+            val unscaled = BigInteger.parseString(digits).let { if (negative) it.negate() else it }
             return Decimal(unscaled, parsedScale.toInt())
         }
     }

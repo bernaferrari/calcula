@@ -66,6 +66,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bernaferrari.calculator.resources.*
+import com.bernaferrari.calculator.domain.input.Calculator
 import com.bernaferrari.calculator.domain.model.CalculationHistory
 import com.bernaferrari.calculator.ui.theme.GoogleSansFlex
 import com.bernaferrari.calculator.platform.formatDate
@@ -315,7 +316,19 @@ private fun TapeEntry(
             }
             Box(Modifier.align(Alignment.BottomEnd)) {
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                    DropdownMenuItem(text = { Text(stringResource(Res.string.tape_copy_result)) }, onClick = { menu = false; onCopy(entry.result) })
+                    val exact = remember(entry.exactResult, entry.resultOperand, entry.result) {
+                        Calculator.exactResultForCopy(entry)
+                    }
+                    DropdownMenuItem(
+                        text = { Text(stringResource(if (exact == null) Res.string.tape_copy_result else Res.string.tape_copy_decimal)) },
+                        onClick = { menu = false; onCopy(entry.result) },
+                    )
+                    if (exact != null) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(Res.string.tape_copy_exact)) },
+                            onClick = { menu = false; onCopy(exact) },
+                        )
+                    }
                     DropdownMenuItem(text = { Text(stringResource(Res.string.tape_edit)) }, onClick = { menu = false; onEditExpression(entry) })
                     DropdownMenuItem(
                         text = { Text(stringResource(if (entry.note == null) Res.string.tape_note_add else Res.string.tape_note_edit)) },

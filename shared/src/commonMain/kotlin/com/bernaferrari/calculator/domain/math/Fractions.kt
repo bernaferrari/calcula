@@ -1,6 +1,5 @@
 package com.bernaferrari.calculator.domain.math
 
-import com.ionspin.kotlin.bignum.integer.BigInteger
 
 /** A fraction in lowest terms; [numerator] carries the sign. */
 data class Fraction(val numerator: BigInteger, val denominator: BigInteger)

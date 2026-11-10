@@ -4,6 +4,7 @@ import com.bernaferrari.calculator.clearAndAwait
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModelStore
 import com.bernaferrari.calculator.data.*
+import com.bernaferrari.calculator.domain.input.Calculator
 import com.bernaferrari.calculator.domain.input.Key
 import com.bernaferrari.calculator.domain.model.*
 import kotlinx.coroutines.CoroutineDispatcher
@@ -77,6 +78,30 @@ class CalculatorViewModelTest {
         runCurrent()
         assertEquals("7", saved.get<String>("text"))
         assertEquals(2, history.getHistoryCount())
+    }
+
+    @Test fun tapePersistsTheExactResultAlongsideTheDisplayedDecimal() = runTest {
+        val calculator = vm()
+        calculator.loadExpression("1÷3")
+        calculator.onKey(Key.EQUALS)
+
+        val entry = StoredHistoryRepository(store).getAllHistory().first().single()
+        assertEquals("0.333333333333333", entry.result)
+        assertEquals("1⁄3", entry.exactResult)
+        assertEquals("1/3", Calculator.exactResultForCopy(entry.copy(resultOperand = null)))
+    }
+
+    @Test fun moreDigitsRequestsProgressivelyLargerBatches() = runTest {
+        val calculator = vm()
+        calculator.loadExpression("1÷3")
+        calculator.onKey(Key.EQUALS)
+
+        for (digits in listOf(120, 500, 1_000)) {
+            calculator.onMoreDigits()
+            val result = calculator.state.first().extendedDisplay
+            assertEquals(digits, result?.significantDigits)
+            assertEquals("0." + "3".repeat(digits), result?.text)
+        }
     }
 
     @Test fun reopeningUnchangedHistoryRetainsItsOriginalAngleMode() = runTest {

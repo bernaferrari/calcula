@@ -23,11 +23,12 @@ internal object CalculatorWork {
         return Calculator.previewDisplay(editor, angle, decimals, notation, context::ensureActive)
     }
 
-    suspend fun moreDigits(editor: Editor, digits: Int): NumericDisplay? {
+    suspend fun moreDigits(editor: Editor, digits: Int, afterDigits: Int): NumericDisplay? {
         val worker = remote
-        if (worker != null) return worker(Request(Kind.DIGITS, editor.text, editor.saveAnswer(), digits = digits))?.display
+        if (worker != null) return worker(Request(Kind.DIGITS, editor.text, editor.saveAnswer(),
+            digits = digits, afterDigits = afterDigits))?.display
         val context = currentCoroutineContext()
-        return Calculator.moreDigits(editor, digits, context::ensureActive)
+        return Calculator.moreDigits(editor, digits, afterDigits, context::ensureActive)
     }
 
     suspend fun equals(state: CalcState): Pair<CalcState, Outcome> {
@@ -104,13 +105,14 @@ internal object CalculatorWork {
         val functions: List<UserFunction> = emptyList(),
         val rpn: RpnInput? = null,
         val savedExpression: String? = null,
+        val afterDigits: Int = 15,
     ) {
         fun run(): Reply {
             UserFunctions.all = functions
             val editor = Editor(text).restoreAnswer(answer).copy(savedExpression = savedExpression)
             return when (kind) {
                 Kind.PREVIEW -> Reply(display = Calculator.previewDisplay(editor, angle, decimals, notation))
-                Kind.DIGITS -> Reply(display = Calculator.moreDigits(editor, digits))
+                Kind.DIGITS -> Reply(display = Calculator.moreDigits(editor, digits, afterDigits))
                 Kind.RPN -> {
                     val input = rpn ?: return Reply()
                     val state = RpnState(input.stack.map(::Decimal), input.entry, input.lift,

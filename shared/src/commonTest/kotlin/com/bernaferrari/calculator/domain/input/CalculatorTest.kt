@@ -1,8 +1,12 @@
 package com.bernaferrari.calculator.domain.input
 
 import com.bernaferrari.calculator.domain.math.CalcError
+import com.bernaferrari.calculator.domain.math.CalcEngine
+import com.bernaferrari.calculator.domain.model.AngleUnit
+import com.bernaferrari.calculator.domain.model.CalculationHistory
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.test.Test
 
@@ -173,6 +177,31 @@ class CalculatorTest {
         assertEquals(NumericDisplay("0." + "3".repeat(60), approximate = true, significantDigits = 60), Calculator.moreDigits(third.editor, 60))
         val two = type(Key.D1, Key.PLUS, Key.D1, Key.EQUALS)
         assertEquals(NumericDisplay("2", approximate = false), Calculator.resultDisplay(two.editor)?.decimal)
+    }
+
+    @Test fun tapeCopyRecoversExactResultsFromOlderSavedAnswers() {
+        fun entryFor(expression: String): CalculationHistory {
+            val result = Calculator.press(CalcState(editor = Editor(expression)), Key.EQUALS).first.editor
+            return CalculationHistory(expression = expression, result = result.text, resultOperand = result.saveAnswer())
+        }
+
+        val radical = entryFor("1÷√2")
+        val copied = assertNotNull(Calculator.exactResultForCopy(radical))
+        assertEquals("√2/2", copied)
+        assertEquals(CalcEngine.evaluate(radical.expression), CalcEngine.evaluate(copied))
+        assertNull(Calculator.exactResultForCopy(radical.copy(resultOperand = null)))
+        assertNull(Calculator.exactResultForCopy(entryFor("sin(10)")))
+        assertNull(Calculator.exactResultForCopy(entryFor("2+2")))
+    }
+
+    @Test fun moreDigitsRetriesUntilSmallNonzeroResultsCanBeShown() {
+        val input = CalcState(editor = Editor("cos(1E−200)−1"), angleUnit = AngleUnit.RADIANS)
+        val result = Calculator.press(input, Key.EQUALS).first
+        assertEquals(NumericDisplay("0", approximate = true), Calculator.resultDisplay(result.editor)?.decimal)
+        assertEquals(
+            NumericDisplay("−5E−401", approximate = true, significantDigits = 120),
+            Calculator.moreDigits(result.editor, 120),
+        )
     }
 
     @Test fun moreDigitsRefinesBeyondTheOldConstantAndDisplayLimits() {

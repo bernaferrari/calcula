@@ -23,30 +23,12 @@ internal class DecimalConstants(private val checkpoint: () -> Unit) {
     }
 
     private fun machin(precision: MathContext): Value {
-        // Machin's formula, evaluated in fixed point. Integer division floors each
-        // positive term exactly, so each term contributes less than one unit of error.
-        val scale = precision.precision + 8
-        val unit = SeriesInteger.powerOfTen(scale)
-        fun atanReciprocal(divisor: Int): Pair<SeriesInteger, Int> {
-            var power = unit / divisor
-            var sum = SeriesInteger.zero
-            var count = 0
-            while (!power.isZero()) {
-                checkpoint()
-                val term = power / (2 * count + 1)
-                if (term.isZero()) break
-                sum = if (count % 2 == 0) sum + term else sum - term
-                count++
-                power /= divisor * divisor
-            }
-            // The alternating tail is below the first omitted term, which is below one unit.
-            return sum to count + 1
-        }
-        val (a, aError) = atanReciprocal(5)
-        val (b, bError) = atanReciprocal(239)
-        val center = (a * 16 - b * 4).toDecimal(scale)
-        val error = Decimal(16 * aError + 4 * bError).scaleByPowerOfTen(-scale)
-        return CalcEngine.roundedValue(center, error, precision)
+        // Machin's formula.
+        val a = OddPowerSeries.reciprocal(5, precision, alternating = true, checkpoint)
+        val b = OddPowerSeries.reciprocal(239, precision, alternating = true, checkpoint)
+        val center = a.v.multiply(Decimal(16)).subtract(b.v.multiply(Decimal(4)))
+        val radius = DecimalError.add(a.error?.multiply(Decimal(16)), b.error?.multiply(Decimal(4)))
+        return CalcEngine.roundedValue(center, radius, precision)
     }
 
     fun e(context: MathContext): Value {
@@ -54,7 +36,7 @@ internal class DecimalConstants(private val checkpoint: () -> Unit) {
         return get(Constant.E, context) {
             // Each integer term is floor(10^scale / n!). The remaining tail is below two units.
             val scale = context.precision + 8
-            var term = SeriesInteger.powerOfTen(scale)
+            var term = BigInteger.TEN.pow(scale)
             var sum = term
             var n = 1
             while (!term.isZero()) {
@@ -70,7 +52,7 @@ internal class DecimalConstants(private val checkpoint: () -> Unit) {
     fun lnTwo(context: MathContext): Value {
         if (context.precision <= 175) return lnTwo
         return get(Constant.LN_TWO, context) {
-            DecimalLogarithm.nearOne(Decimal.ONE, context, checkpoint)
+            logFromReciprocal(3, context)
         }
     }
 
@@ -79,10 +61,15 @@ internal class DecimalConstants(private val checkpoint: () -> Unit) {
         return get(Constant.LN_TEN, context) {
             // 10 = 2³ × 1.25.
             val three = Value(Decimal(3), symbolic = null)
-            val quarter = DecimalLogarithm.nearOne(Decimal("0.25"), context, checkpoint)
+            val quarter = logFromReciprocal(9, context)
             lnTwo(context).multiply(three, context).add(quarter, context)
         }
     }
+
+    // ln((d + 1) / (d - 1)) = 2 atanh(1 / d).
+    private fun logFromReciprocal(divisor: Int, context: MathContext): Value =
+        OddPowerSeries.reciprocal(divisor, context, alternating = false, checkpoint)
+            .multiply(Value(Decimal(2), symbolic = null), context)
 
     private companion object {
         private val PI = Decimal("3.14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534211706798214808651328230664709384460955058223172535940812848111745028410270193852112")

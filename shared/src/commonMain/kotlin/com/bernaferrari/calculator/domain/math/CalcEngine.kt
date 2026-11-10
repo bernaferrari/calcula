@@ -1,7 +1,6 @@
 package com.bernaferrari.calculator.domain.math
 
 import com.bernaferrari.calculator.domain.model.AngleUnit
-import com.ionspin.kotlin.bignum.integer.BigInteger
 import kotlin.math.abs
 import kotlin.time.TimeSource
 import kotlin.time.Duration.Companion.milliseconds
@@ -48,6 +47,7 @@ object CalcEngine {
         displaySettled: ((Value) -> Boolean)? = null,
         timeBudgetMillis: Long = 600,
         requestedDigits: Int? = null,
+        startingDigits: Int? = null,
     ): Value {
         val started = TimeSource.Monotonic.markNow()
         val checkpoint = {
@@ -62,9 +62,22 @@ object CalcEngine {
         val tree = if (retained != null || answer?.tree == null) parsed else
             Parser(Tokenizer.tokenize(expression, Token.Num(answer.v, answer.error, answer.symbolic)), angleUnit, checkpoint).parseAll()
         val constants = DecimalConstants(checkpoint)
-        val initialPrecision = requestedDigits?.let { it.coerceIn(16, MAX_REFINEMENT_DIGITS) + 12 } ?: MC.precision
-        val passes = if (requestedDigits == null) listOf(initialPrecision, 80, 160)
-            else listOf(initialPrecision, initialPrecision * 2)
+        val passes = if (requestedDigits == null) {
+            sequenceOf(MC.precision, 80, 160)
+        } else {
+            val target = requestedDigits.coerceIn(16, MAX_REFINEMENT_DIGITS) + 12
+            val first = startingDigits?.let { (it + 12).coerceIn(28, target) } ?: target
+            val limit = 2 * (MAX_REFINEMENT_DIGITS + 12)
+            // Complete a smaller batch before attempting the target. If cancellation eats
+            // the guard digits, continue beyond the target under the same deadline.
+            generateSequence(first) { precision ->
+                when {
+                    precision < target -> minOf(precision * 2, target)
+                    precision < limit -> minOf(precision * 2, limit)
+                    else -> null
+                }
+            }
+        }
         var last: Value? = null
         for (precision in passes) {
             val context = MathContext(precision, RoundingMode.HALF_EVEN, constants)
@@ -656,9 +669,9 @@ object CalcEngine {
             squarings++
         }
         val scale = work.precision + 8
-        val unit = SeriesInteger.powerOfTen(scale)
-        val x = if (argument.precision() - argument.scale() <= -scale) SeriesInteger.zero
-            else SeriesInteger.fromUnscaled(argument.setScale(scale, RoundingMode.DOWN).unscaled)
+        val unit = BigInteger.TEN.pow(scale)
+        val x = if (argument.precision() - argument.scale() <= -scale) BigInteger.ZERO
+            else argument.setScale(scale, RoundingMode.DOWN).unscaled
         var term = unit
         var sum = unit
         var index = 1
@@ -703,13 +716,30 @@ object CalcEngine {
         val divisor = Decimal(degree)
         val weight = Decimal(degree - 1)
         var guess = Decimal.ONE.scaleByPowerOfTen(magnitude.floorDiv(degree) + 1)
-        repeat(24) {
-            val denominator = if (degree == 2) guess else guess.multiply(guess, context)
-            val next = guess.multiply(weight, context).add(x.divide(denominator, context), context).divide(divisor, context)
-            if (next == guess) return next
+        fun step(current: Decimal, radicand: Decimal, work: MathContext): Decimal {
+            context.constants?.check()
+            val denominator = if (degree == 2) current else current.multiply(current, work)
+            val correction = radicand.divide(denominator, work)
+            return current.multiply(weight, work).add(correction, work).divide(divisor, work)
+        }
+
+        val target = context.precision + 6
+        var digits = minOf(20, target)
+        val seedContext = context.withPrecision(digits)
+        val seedRadicand = x.round(seedContext)
+        for (iteration in 0 until 24) {
+            val next = step(guess, seedRadicand, seedContext)
+            if (next == guess) break
             guess = next
         }
-        return guess
+        while (digits < target) {
+            // Keep a few digits below the precision Newton's quadratic convergence provides.
+            digits = minOf(2 * digits - 4, target)
+            val work = context.withPrecision(digits)
+            guess = step(guess, x.round(work), work)
+        }
+        val work = context.withPrecision(target)
+        return step(guess, x.round(work), work).round(context)
     }
 
     private fun factorial(x: Decimal, checkCancelled: () -> Unit, context: MathContext): Value {

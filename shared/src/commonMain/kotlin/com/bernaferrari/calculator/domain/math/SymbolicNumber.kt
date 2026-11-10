@@ -2,7 +2,6 @@ package com.bernaferrari.calculator.domain.math
 
 import com.bernaferrari.calculator.domain.math.CalcEngine.Value
 import com.bernaferrari.calculator.domain.model.AngleUnit
-import com.ionspin.kotlin.bignum.integer.BigInteger
 import kotlin.math.abs
 
 /** A small sum of reduced rational multiples of supported factors. Null hands an operation to Decimal. */
@@ -114,8 +113,8 @@ internal data class SymbolicNumber private constructor(private val terms: Map<Fa
         if (a * a == n && b * b == d) return create(a, b)
         // sqrt(n/d) = sqrt(n*d)/d.
         val radicand = n * d
-        if (radicand > MAX_RADICAND) return null
-        return rootTerm(BigInteger.ONE, d, radicand.longValue(), 2)
+        if (radicand > BigInteger.fromInt(MAX_RADICAND)) return null
+        return rootTerm(BigInteger.ONE, d, radicand.longValue(exactRequired = true), 2)
     }
 
     fun cubeRoot(): SymbolicNumber? {
@@ -125,14 +124,14 @@ internal data class SymbolicNumber private constructor(private val terms: Map<Fa
         if (numerator.pow(3) == n && denominator.pow(3) == d) return create(numerator, denominator)
         // cbrt(n/d) = cbrt(n*d²)/d.
         val radicand = n.abs() * d * d
-        if (radicand > MAX_RADICAND) return null
-        return rootTerm(BigInteger.fromInt(n.signum()), d, radicand.longValue(), 3)
+        if (radicand > BigInteger.fromInt(MAX_RADICAND)) return null
+        return rootTerm(BigInteger.fromInt(n.signum()), d, radicand.longValue(exactRequired = true), 3)
     }
 
     fun naturalLog(): SymbolicNumber? {
         val tag = factor
         if (tag is Factor.Constant && !tag.pi && n == d) return fromDecimal(Decimal(tag.power))
-        if (tag != Factor.One || n.signum() <= 0 || n > MAX_RADICAND || d > MAX_RADICAND) return null
+        if (tag != Factor.One || n.signum() <= 0 || n > BigInteger.fromInt(MAX_RADICAND) || d > BigInteger.fromInt(MAX_RADICAND)) return null
 
         val factors = mutableMapOf<Factor, Fraction>()
         fun factorize(value: Int, sign: Int) {

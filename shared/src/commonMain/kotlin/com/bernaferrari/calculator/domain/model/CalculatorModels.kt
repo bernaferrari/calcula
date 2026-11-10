@@ -16,6 +16,8 @@ data class CalculationHistory(
     val approximate: Boolean = false,
     /** Captures the evaluated expression for re-opening an unchanged tape entry. */
     val resultOperand: String? = null,
+    /** Exact form of the result when it differs from the decimal on the tape. */
+    val exactResult: String? = null,
 )
 
 enum class AngleUnit {

@@ -9,6 +9,8 @@
     <string name="error_syntax">Expression incomplète</string>
     <string name="error_overflow">Nombre trop grand</string>
     <string name="tape_copy_result">Copier le résultat</string>
+    <string name="tape_copy_decimal">Copier la valeur décimale</string>
+    <string name="tape_copy_exact">Copier le résultat exact</string>
     <string name="tape_edit">Modifier le calcul</string>
     <string name="tape_delete">Supprimer</string>
     <string name="copied">Copié</string>

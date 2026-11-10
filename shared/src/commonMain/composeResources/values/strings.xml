@@ -15,6 +15,8 @@
     <string name="show_exact_result">Show exact form</string>
     <string name="show_decimal_result">Show decimal</string>
     <string name="tape_copy_result">Copy result</string>
+    <string name="tape_copy_decimal">Copy decimal</string>
+    <string name="tape_copy_exact">Copy exact result</string>
     <string name="tape_edit">Edit calculation</string>
     <string name="tape_delete">Delete</string>
     <string name="copied">Copied</string>

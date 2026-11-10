@@ -301,18 +301,25 @@ class CalculatorViewModel(
         if (!snapshot.resultShown || Calculator.resultDisplay(snapshot.editor)?.canRefine != true) return
         if (detailJob?.isActive == true || !extended.value.canRequestMore) return
         val previous = extended.value.number
-        val requested = minOf((previous?.significantDigits ?: 0) + 30, CalcEngine.MAX_REFINEMENT_DIGITS)
+        val previousDigits = previous?.significantDigits ?: 15
+        val requested = when {
+            previousDigits < 120 -> 120
+            previousDigits < 500 -> 500
+            previousDigits < 1_000 -> 1_000
+            else -> minOf(previousDigits + 500, CalcEngine.MAX_REFINEMENT_DIGITS)
+        }
         detailJob = viewModelScope.launch {
             val result = withContext(evaluationDispatcher) {
-                CalculatorWork.moreDigits(snapshot.editor, requested)
+                CalculatorWork.moreDigits(snapshot.editor, requested, previousDigits)
             }
             if (calc.value.editor == snapshot.editor && calc.value.resultShown) {
                 val settledDigits = result?.significantDigits ?: 0
-                val improved = settledDigits > (previous?.significantDigits ?: 15)
-                extended.value = ExtendedDisplay(
-                    if (improved) result else previous,
-                    improved && result?.approximate == true && settledDigits < CalcEngine.MAX_REFINEMENT_DIGITS,
-                )
+                if (settledDigits > previousDigits) {
+                    extended.value = ExtendedDisplay(
+                        result,
+                        result?.approximate == true && settledDigits < CalcEngine.MAX_REFINEMENT_DIGITS,
+                    )
+                }
             }
         }
     }
@@ -333,7 +340,8 @@ class CalculatorViewModel(
                 viewModelScope.launch {
                     historyRepository.insertCalculation(
                         CalculationHistory(expression = outcome.expression, result = outcome.result, answerOperand = outcome.answerOperand,
-                            approximate = outcome.approximate, resultOperand = next.editor.saveAnswer()),
+                            approximate = outcome.approximate, resultOperand = next.editor.saveAnswer(),
+                            exactResult = Calculator.resultDisplay(next.editor)?.exactForm),
                     )
                 }
             }

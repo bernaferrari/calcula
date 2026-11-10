@@ -2,7 +2,6 @@ package com.bernaferrari.calculator.domain.math
 
 import com.bernaferrari.calculator.domain.math.CalcEngine.Value
 import com.bernaferrari.calculator.domain.model.AngleUnit
-import com.ionspin.kotlin.bignum.integer.BigInteger
 
 /** Decimal trig with explicit range-reduction and series error. */
 internal class DecimalTrig(private val context: MathContext, private val checkpoint: () -> Unit) {
@@ -172,7 +171,7 @@ internal class DecimalTrig(private val context: MathContext, private val checkpo
             reduced = reduced.divide(denominator, work)
             doubling *= 2
         }
-        val series = atanSeries(reduced, work).multiply(number(doubling), work)
+        val series = OddPowerSeries.evaluate(reduced, work, alternating = true, checkpoint).multiply(number(doubling), work)
         val principal = if (reciprocal) constants.pi(work).divide(two, work).add(series.negate(), work) else series
         val inputError = input.error?.let { radius ->
             if (radius.signum() == 0) Decimal.ZERO
@@ -184,26 +183,6 @@ internal class DecimalTrig(private val context: MathContext, private val checkpo
         }
         val result = principal.copy(error = DecimalError.add(principal.error, inputError))
         return if (input.v.signum() < 0) result.negate() else result
-    }
-
-    private fun atanSeries(input: Value, precision: MathContext): Value {
-        if (upper(input) > Decimal("0.5")) throw DomainNeedsPrecision()
-        val square = input.multiply(input, precision)
-        val cutoff = input.v.abs().scaleByPowerOfTen(-precision.precision)
-        var sum = input
-        var power = input
-        var denominator = 3
-        var subtract = true
-        while (true) {
-            checkpoint()
-            power = power.multiply(square, precision)
-            val term = power.divide(number(denominator), precision)
-            val upper = upper(term)
-            if (upper < cutoff) return withTail(sum, upper)
-            sum = sum.add(if (subtract) term.negate() else term, precision)
-            subtract = !subtract
-            denominator += 2
-        }
     }
 
     private fun series(center: Decimal, cosine: Boolean, alternating: Boolean): Value {
@@ -231,8 +210,8 @@ internal class DecimalTrig(private val context: MathContext, private val checkpo
 
     private fun fixedPointSeries(center: Decimal, cosine: Boolean, alternating: Boolean): Value {
         val scale = work.precision + 8
-        val unit = SeriesInteger.powerOfTen(scale)
-        val x = SeriesInteger.fromUnscaled(center.abs().setScale(scale, RoundingMode.DOWN).unscaled)
+        val unit = BigInteger.TEN.pow(scale)
+        val x = center.abs().setScale(scale, RoundingMode.DOWN).unscaled
         val square = x * x / unit
         var term = if (cosine) unit else x
         var sum = term

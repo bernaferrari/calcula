@@ -9,6 +9,8 @@
     <string name="error_syntax">式が不完全です</string>
     <string name="error_overflow">数値が大きすぎます</string>
     <string name="tape_copy_result">結果をコピー</string>
+    <string name="tape_copy_decimal">小数値をコピー</string>
+    <string name="tape_copy_exact">正確な結果をコピー</string>
     <string name="tape_edit">計算を編集</string>
     <string name="tape_delete">削除</string>
     <string name="copied">コピーしました</string>
