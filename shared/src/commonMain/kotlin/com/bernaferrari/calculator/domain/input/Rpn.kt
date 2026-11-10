@@ -30,12 +30,15 @@ sealed interface RpnOutcome {
     data object None : RpnOutcome
     data object Cleared : RpnOutcome
     /** An operation ran: [expression] is how it reads in the expression language, for the tape. */
-    data class Evaluated(val expression: String, val result: String) : RpnOutcome
+    data class Evaluated(val expression: String, val result: String, val approximate: Boolean = false) : RpnOutcome
     data class Failed(val error: CalcError) : RpnOutcome
 }
 
 object Rpn {
-    fun press(state: RpnState, key: Key): Pair<RpnState, RpnOutcome> {
+    fun requiresEvaluation(key: Key): Boolean = key in BINARY || key in UNARY ||
+        key == Key.PERCENT || key == Key.E || key == Key.PI
+
+    fun press(state: RpnState, key: Key, checkCancelled: () -> Unit = {}): Pair<RpnState, RpnOutcome> {
         val s = state.copy(error = null)
         return when (key) {
             in DIGITS -> typed(s, DIGITS.getValue(key)) to RpnOutcome.None
@@ -53,30 +56,36 @@ object Rpn {
             Key.LPAREN -> commit(s).let { c -> c.copy(stack = c.stack.drop(1) + c.stack.take(1), lift = true) } to RpnOutcome.None
             Key.RPAREN -> commit(s).let { c -> c.copy(stack = c.stack.takeLast(1) + c.stack.dropLast(1), lift = true) } to RpnOutcome.None
             Key.NEGATE -> negate(s) to RpnOutcome.None
-            Key.PI -> push(s, "π")
-            Key.E -> push(s, "e")
-            in BINARY -> binary(s, BINARY.getValue(key))
-            in UNARY -> unary(s, UNARY.getValue(key))
+            Key.PI -> push(s, "π", checkCancelled)
+            Key.E -> push(s, "e", checkCancelled)
+            in BINARY -> binary(s, BINARY.getValue(key), checkCancelled)
+            in UNARY -> unary(s, UNARY.getValue(key), checkCancelled)
             Key.PERCENT -> {
                 // y × x%, keeping y: 200 ↵ 10 % gives 20 with 200 still there to add it to.
                 val c = commit(s)
                 val y = c.stack.getOrNull(1) ?: return c to RpnOutcome.None
-                run(c, "${text(y)}×${text(c.stack.firstOrNull() ?: Decimal.ZERO)}÷100", consumed = 1)
+                run(c, "${text(y)}×${text(c.stack.firstOrNull() ?: Decimal.ZERO)}÷100", consumed = 1, checkCancelled)
             }
             else -> s to RpnOutcome.None
         }
     }
 
     /** The library uses the same operation path as a keypad function. */
-    fun applyFunction(state: RpnState, function: String): Pair<RpnState, RpnOutcome> {
+    fun applyFunction(state: RpnState, function: String, checkCancelled: () -> Unit = {}): Pair<RpnState, RpnOutcome> {
         val current = commit(state.copy(error = null))
         val x = current.stack.firstOrNull() ?: Decimal.ZERO
-        return run(current, "$function(${text(x)})", consumed = 1)
+        return run(current, "$function(${text(x)})", consumed = 1, checkCancelled)
     }
 
     /** Puts a number (a result from the tape, memory) on the stack. */
-    fun pushNumber(state: RpnState, number: String): RpnState {
-        val value = CalcEngine.evaluateOrNull(number) ?: return state
+    fun pushNumber(state: RpnState, number: String, checkCancelled: () -> Unit = {}): RpnState {
+        val value = try {
+            CalcEngine.evaluateValue(number, state.angleUnit, checkCancelled = checkCancelled).displayValue
+        } catch (_: CalcException) {
+            return state
+        } catch (_: ArithmeticException) {
+            return state
+        }
         val c = commit(state)
         val base = if (c.lift) c.stack else c.stack.drop(1)
         return c.copy(stack = listOf(value) + base, lift = true, error = null)
@@ -125,31 +134,32 @@ object Rpn {
         return s.copy(stack = listOf(x.negate()) + s.stack.drop(1))
     }
 
-    private fun push(s: RpnState, constant: String): Pair<RpnState, RpnOutcome> {
+    private fun push(s: RpnState, constant: String, checkCancelled: () -> Unit): Pair<RpnState, RpnOutcome> {
         val c = commit(s)
         val base = if (c.lift) c.stack else c.stack.drop(1)
-        return c.copy(stack = listOf(CalcEngine.evaluate(constant)) + base, lift = true) to RpnOutcome.None
+        return c.copy(stack = listOf(CalcEngine.evaluateValue(constant, s.angleUnit, checkCancelled = checkCancelled).displayValue) + base, lift = true) to RpnOutcome.None
     }
 
-    private fun binary(s: RpnState, template: String): Pair<RpnState, RpnOutcome> {
+    private fun binary(s: RpnState, template: String, checkCancelled: () -> Unit): Pair<RpnState, RpnOutcome> {
         val c = commit(s)
         val x = c.stack.getOrElse(0) { Decimal.ZERO }
         val y = c.stack.getOrElse(1) { Decimal.ZERO }
-        return run(c, template.replace("Y", text(y)).replace("X", text(x)), consumed = 2)
+        return run(c, template.replace("Y", text(y)).replace("X", text(x)), consumed = 2, checkCancelled)
     }
 
-    private fun unary(s: RpnState, template: String): Pair<RpnState, RpnOutcome> {
+    private fun unary(s: RpnState, template: String, checkCancelled: () -> Unit): Pair<RpnState, RpnOutcome> {
         val c = commit(s)
         val x = c.stack.getOrElse(0) { Decimal.ZERO }
-        return run(c, template.replace("X", text(x)), consumed = 1)
+        return run(c, template.replace("X", text(x)), consumed = 1, checkCancelled)
     }
 
     /** Evaluates [expression] and replaces the [consumed] top values with its result. */
-    private fun run(c: RpnState, expression: String, consumed: Int): Pair<RpnState, RpnOutcome> = try {
-        val value = CalcEngine.evaluate(expression, c.angleUnit)
-        val result = Calculator.formatResult(value, c.decimalPlaces, c.notation)
-        val shown = CalcEngine.evaluate(result)
-        c.copy(stack = listOf(shown) + c.stack.drop(consumed), lift = true) to RpnOutcome.Evaluated(expression, result)
+    private fun run(c: RpnState, expression: String, consumed: Int, checkCancelled: () -> Unit): Pair<RpnState, RpnOutcome> = try {
+        val value = CalcEngine.evaluateValue(expression, c.angleUnit, checkCancelled = checkCancelled)
+        val result = Calculator.formatResult(value.displayValue, c.decimalPlaces, c.notation)
+        val shown = Decimal(result.replace('−', '-'))
+        val approximate = !value.provenExact || !value.exact || shown != value.v
+        c.copy(stack = listOf(shown) + c.stack.drop(consumed), lift = true) to RpnOutcome.Evaluated(expression, result, approximate)
     } catch (e: CalcException) {
         c.copy(error = e.error) to RpnOutcome.Failed(e.error)
     } catch (e: ArithmeticException) {

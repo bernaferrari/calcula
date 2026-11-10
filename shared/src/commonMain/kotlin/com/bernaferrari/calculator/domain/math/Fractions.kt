@@ -48,9 +48,12 @@ object Fractions {
      * denominators for decimals that end anyway (59.97 is clearer than 5997⁄100).
      */
     fun worthShowing(x: Decimal): Fraction? {
-        if (x.isInteger()) return null
-        val f = of(x) ?: return null
-        if (f.denominator == BigInteger.ONE) return null
+        if (x.abs() < MIN_FRACTION || x.isInteger()) return null
+        return of(x)?.let(::worthShowing)
+    }
+
+    internal fun worthShowing(f: Fraction): Fraction? {
+        if (f.denominator == BigInteger.ONE || f.denominator > BigInteger.fromInt(1000)) return null
         val terminates = f.denominator.let { var q = it; for (p in listOf(2, 5)) { val b = BigInteger.fromInt(p); while (q.rem(b).isZero()) q = q.divide(b) }; q == BigInteger.ONE }
         return if (!terminates || f.denominator <= BigInteger.fromInt(64)) f else null
     }
@@ -68,5 +71,6 @@ object Fractions {
         }
     }
 
+    private val MIN_FRACTION = Decimal("0.001")
     private val TOLERANCE = BigInteger.TEN.pow(30)
 }

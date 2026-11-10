@@ -295,9 +295,8 @@ private fun TapeEntry(
                     style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 22.sp, textAlign = TextAlign.End),
                     color = colors.onSurfaceVariant,
                 )
-                // The "=" always closes the question, so "1+1 =" reads as asked-and-answered even while
-                // the answer is still the big number below; the answer joins the line later.
-                Text("  =", style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 22.sp), color = colors.outline, maxLines = 1)
+                // Keep the relationship visible while the answer animates onto the tape.
+                Text(if (entry.approximate) "  ≈" else "  =", style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 22.sp), color = colors.outline, maxLines = 1)
                 AnimatedVisibility(
                     visible = showResult,
                     enter = if (LocalReduceMotion.current) fadeIn() else expandHorizontally(spring(stiffness = Spring.StiffnessMediumLow), expandFrom = Alignment.Start) + fadeIn(tween(220, delayMillis = 60)),

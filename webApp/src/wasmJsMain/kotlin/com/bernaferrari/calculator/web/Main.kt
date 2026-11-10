@@ -11,6 +11,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.platform.Font
 import androidx.compose.ui.window.ComposeViewport
 import com.bernaferrari.calculator.App
+import com.bernaferrari.calculator.platform.initializeCalculatorWorker
 import com.bernaferrari.calculator.resources.Res
 import kotlinx.browser.document
 
@@ -20,6 +21,7 @@ import kotlinx.browser.document
  */
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
+    if (initializeCalculatorWorker()) return
     ComposeViewport {
         val resolver = LocalFontFamilyResolver.current
         var ready by remember { mutableStateOf(false) }

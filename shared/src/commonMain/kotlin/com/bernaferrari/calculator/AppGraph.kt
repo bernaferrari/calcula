@@ -17,4 +17,4 @@ object AppGraph {
 }
 
 /** Shown in Settings → About. Keep in step with the Android versionName and the iOS bundle version. */
-const val APP_VERSION = "3.0"
+const val APP_VERSION = "1.0"

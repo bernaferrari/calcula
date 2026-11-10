@@ -1,12 +1,88 @@
 package com.bernaferrari.calculator.domain.input
 
+import com.bernaferrari.calculator.domain.math.CalcEngine
+import com.bernaferrari.calculator.domain.math.CalcError
+import com.bernaferrari.calculator.domain.math.CalcException
+import com.bernaferrari.calculator.domain.math.Decimal
+import com.bernaferrari.calculator.domain.math.Expression
+import com.bernaferrari.calculator.domain.math.SymbolicNumber
 import com.bernaferrari.calculator.domain.math.Tokenizer
 import com.bernaferrari.calculator.domain.math.UserFunctions
+import com.bernaferrari.calculator.domain.model.AngleUnit
 
 /** An expression being typed, with the cursor as an index into [text]. */
-data class Editor(val text: String = "", val cursor: Int = text.length) {
+data class Editor(
+    val text: String = "",
+    val cursor: Int = text.length,
+    internal val answer: AnswerOperand? = null,
+    internal val savedExpression: String? = null,
+) {
     val left: Char? get() = text.getOrNull(cursor - 1)
     val isEmpty: Boolean get() = text.isEmpty()
+
+    fun saveAnswer(): String? = answer?.let {
+        val value = it.value.v
+        val error = it.value.error?.let { radius -> "${radius.unscaled},${radius.scale()}" }.orEmpty()
+        val stored = "${it.start}:${it.end}:$error:${value.scale()}:${value.unscaled}"
+        val symbol = it.value.symbolic?.save().orEmpty()
+        val tree = it.value.tree?.let(Expression::save)
+        if (tree != null) "$stored:$symbol:$tree" else if (symbol.isNotEmpty()) "$stored:$symbol" else stored
+    }
+
+    fun restoreAnswer(saved: String?): Editor {
+        val fields = saved?.split(':', limit = 7) ?: return this
+        if (fields.size < 5) return this
+        val (savedStart, savedEnd, savedError, savedScale, coefficient) = fields
+        val start = savedStart.toIntOrNull() ?: return this
+        val end = savedEnd.toIntOrNull() ?: return this
+        if (start !in 0 until end || end > text.length) return this
+        val error = when (savedError) {
+            "", "false" -> null
+            "true" -> Decimal.ZERO
+            else -> {
+                val fields = savedError.split(',')
+                if (fields.size != 2) return this
+                val scale = fields[1].toIntOrNull() ?: return this
+                runCatching { Decimal.fromUnscaled(fields[0], scale) }.getOrNull()?.takeIf { it.signum() >= 0 } ?: return this
+            }
+        }
+        val scale = savedScale.toIntOrNull() ?: return this
+        val value = runCatching { Decimal.fromUnscaled(coefficient, scale) }.getOrNull() ?: return this
+        val symbolic = fields.getOrNull(5)?.let(SymbolicNumber::restore)
+        return copy(answer = AnswerOperand(start, end, CalcEngine.Value(value, error = error, symbolic = symbolic,
+            tree = fields.getOrNull(6)?.let(Expression::restore))))
+    }
+
+    internal fun evaluate(
+        expression: String, angle: AngleUnit, checkCancelled: () -> Unit,
+        displaySettled: ((CalcEngine.Value) -> Boolean)? = null,
+        timeBudgetMillis: Long = 600,
+    ): CalcEngine.Value {
+        if (expression == text) {
+            savedExpression?.let(Expression::restore)?.let { tree ->
+                return CalcEngine.evaluateValue(Tokenizer.BOUND_ANSWER.toString(), angle,
+                    CalcEngine.Value(Decimal.ZERO, tree = tree), checkCancelled, displaySettled, timeBudgetMillis)
+            }
+        }
+        val operand = answer
+        if (Tokenizer.BOUND_ANSWER in expression) throw CalcException(CalcError.SYNTAX)
+        val bound = if (operand == null) expression else
+            expression.replaceRange(operand.start, operand.end, Tokenizer.BOUND_ANSWER.toString())
+        return CalcEngine.evaluateValue(bound, angle, operand?.value, checkCancelled, displaySettled, timeBudgetMillis)
+    }
+
+    internal fun wrapAnswer(): Editor = Editor("($text)", answer = answer?.shift(1))
+
+    companion object {
+        /** Keep the unrounded value when an older tape row reaches the recipe storage budget. */
+        internal fun withoutTree(saved: String?): String? = saved?.split(':', limit = 7)?.take(6)?.joinToString(":")
+    }
+}
+
+/** The displayed number's range and its unrounded value. */
+@ConsistentCopyVisibility
+data class AnswerOperand internal constructor(internal val start: Int, internal val end: Int, internal val value: CalcEngine.Value) {
+    internal fun shift(by: Int): AnswerOperand = copy(start = start + by, end = end + by)
 }
 
 /**
@@ -153,6 +229,21 @@ object ExpressionEditor {
 
     private fun insert(e: Editor, s: String): Editor = replace(e, e.cursor, e.cursor, s)
 
-    private fun replace(e: Editor, start: Int, end: Int, s: String): Editor =
-        Editor(e.text.substring(0, start) + s + e.text.substring(end), start + s.length)
+    private fun replace(e: Editor, start: Int, end: Int, s: String): Editor {
+        val text = e.text.replaceRange(start, end, s)
+        val answer = e.answer?.let {
+            when {
+                end <= it.start -> it.shift(s.length - (end - start))
+                start >= it.end -> it
+                else -> null
+            }
+        }?.takeIf {
+            // Drop the binding when an adjacent edit joins the displayed number.
+            val before = text.getOrNull(it.start - 1)
+            val numberStart = it.start + if (text[it.start] == '−') 1 else 0
+            (before == null || (!before.isDigit() && before != '.')) &&
+                Tokenizer.numberEnd(text, numberStart) == it.end
+        }
+        return Editor(text, start + s.length, answer)
+    }
 }

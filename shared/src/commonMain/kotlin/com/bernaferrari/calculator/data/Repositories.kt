@@ -1,6 +1,7 @@
 package com.bernaferrari.calculator.data
 
 import com.bernaferrari.calculator.domain.math.UserFunctions
+import com.bernaferrari.calculator.domain.input.Editor
 import com.bernaferrari.calculator.domain.model.ColorStyle
 import com.bernaferrari.calculator.domain.model.FlickHints
 import com.bernaferrari.calculator.domain.model.AngleUnit
@@ -17,29 +18,101 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.update
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.longOrNull
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.builtins.serializer
+import com.bernaferrari.calculator.domain.math.UserFunction
+import com.bernaferrari.calculator.domain.model.Memory
+import com.bernaferrari.calculator.domain.model.Usage
+import com.bernaferrari.calculator.domain.programmer.ProgEntry
 
 private val json = Json {
     ignoreUnknownKeys = true
     encodeDefaults = false
 }
 
-/** Settings as one JSON document; unknown or missing fields fall back to defaults. */
+private val lenientJson = Json(json) { coerceInputValues = true }
+
+private fun <T> Json.decodeOrNull(serializer: KSerializer<T>, element: JsonElement): T? =
+    try {
+        decodeFromJsonElement(serializer, element)
+    } catch (_: IllegalArgumentException) {
+        null
+    }
+
+private fun <T> recoverList(serializer: KSerializer<T>, element: JsonElement): JsonArray? =
+    (element as? JsonArray)?.let { rows -> JsonArray(rows.filter { lenientJson.decodeOrNull(serializer, it) != null }) }
+
+private fun <T> recoverFields(
+    serializer: KSerializer<T>,
+    source: JsonObject,
+    recoverField: (String, JsonElement) -> JsonElement? = { _, value -> value },
+): JsonObject = buildJsonObject {
+    for ((name, raw) in source) {
+        val value = recoverField(name, raw) ?: continue
+        if (lenientJson.decodeOrNull(serializer, JsonObject(mapOf(name to value))) != null) put(name, value)
+    }
+}
+
+/** Keep each unreadable original before replacing the working copy with recovered data. */
+private fun StringStore.preserveUnreadable(key: String, raw: String) {
+    val base = "${key}_recovery"
+    var backupKey = base
+    var index = 2
+    while (true) {
+        val previous = get(backupKey)
+        if (previous == raw) return
+        if (previous == null) {
+            put(backupKey, raw)
+            return
+        }
+        backupKey = "${base}_${index++}"
+    }
+}
+
+/** Settings as one JSON document; a damaged field falls back independently. */
 class StoredPreferencesRepository(private val store: StringStore) : PreferencesRepository {
+    private val original = store.get(KEY)
+    private val source = original?.let { runCatching { json.parseToJsonElement(it) }.getOrNull() }
+    private val decoded = source?.let { json.decodeOrNull(UserPreferences.serializer(), it) }
     private val state = MutableStateFlow(
-        (store.get(KEY)?.let { runCatching { json.decodeFromString<UserPreferences>(it) }.getOrNull() } ?: UserPreferences())
+        (decoded ?: recoverPreferences(source as? JsonObject))
             .let { if (it.palette == AppPalette.GRAPHITE) it.copy(palette = AppPalette.INDIGO, colorStyle = ColorStyle.NEUTRAL) else it },
     ).also { UserFunctions.all = it.value.functions }
+    private val writes = Mutex()
 
     override fun getUserPreferences(): Flow<UserPreferences> = state
 
-    private fun edit(change: (UserPreferences) -> UserPreferences) {
-        state.update(change)
+    private fun recoverPreferences(source: JsonObject?): UserPreferences {
+        if (source == null) return UserPreferences()
+        val recovered = recoverFields(UserPreferences.serializer(), source) { name, value ->
+            when (name) {
+                "memories" -> recoverList(Memory.serializer(), value)
+                "functions" -> recoverList(UserFunction.serializer(), value)
+                "programmerTape" -> recoverList(ProgEntry.serializer(), value)
+                "statsData" -> recoverList(String.serializer(), value)
+                "usage" -> (value as? JsonObject)?.let { recoverFields(Usage.serializer(), it) }
+                else -> value
+            }
+        }
+        return lenientJson.decodeFromJsonElement(recovered)
+    }
+
+    private suspend fun edit(change: (UserPreferences) -> UserPreferences) = writes.withLock {
+        val next = change(state.value)
+        if (original != null && decoded == null) store.preserveUnreadable(KEY, original)
+        store.put(KEY, json.encodeToString(next))
         // The person's functions are part of the language everywhere, so the engine hears at once.
-        UserFunctions.all = state.value.functions
-        store.put(KEY, json.encodeToString(state.value))
+        UserFunctions.all = next.functions
+        state.value = next
     }
 
     override suspend fun updateThemeMode(themeMode: ThemeMode) = edit { it.copy(themeMode = themeMode) }
@@ -65,15 +138,28 @@ class StoredPreferencesRepository(private val store: StringStore) : PreferencesR
 
 /** The tape, newest first, capped so it never grows without bound. */
 class StoredHistoryRepository(private val store: StringStore) : CalculatorRepository {
-    private val entries = MutableStateFlow(
-        store.get(KEY)?.let { runCatching { json.decodeFromString<List<CalculationHistory>>(it) }.getOrNull() }.orEmpty(),
-    )
+    private val original = store.get(KEY)
+    private val source = original?.let { runCatching { json.parseToJsonElement(it) as? JsonArray }.getOrNull() }
+    private val recovered = source.orEmpty().mapNotNull { json.decodeOrNull(CalculationHistory.serializer(), it) }
+    private val damaged = original != null && (source == null || recovered.size != source.size)
+    private val entries = MutableStateFlow(recovered)
 
     private val writes = Mutex()
-    private var lastId = maxOf(store.get(ID_KEY)?.toLongOrNull() ?: 0L, entries.value.maxOfOrNull { it.id } ?: 0L)
+    private var lastId = maxOf(
+        store.get(ID_KEY)?.toLongOrNull() ?: 0L,
+        source.orEmpty().maxOfOrNull { ((it as? JsonObject)?.get("id") as? JsonPrimitive)?.longOrNull ?: 0L } ?: 0L,
+    )
 
     private suspend fun edit(change: (List<CalculationHistory>) -> List<CalculationHistory>) = writes.withLock {
-        val next = change(entries.value).sortedByDescending(CalculationHistory::timestamp).take(LIMIT)
+        var replayBudget = REPLAY_BUDGET
+        val next = change(entries.value).sortedByDescending(CalculationHistory::timestamp).take(LIMIT).map { entry ->
+            val size = entry.answerOperand.orEmpty().length + entry.resultOperand.orEmpty().length
+            if (size <= replayBudget) {
+                replayBudget -= size
+                entry
+            } else entry.copy(answerOperand = Editor.withoutTree(entry.answerOperand), resultOperand = null)
+        }
+        if (damaged && original != null) store.preserveUnreadable(KEY, original)
         // Reserve IDs before saving entries. A failed write may skip an ID, but cannot reuse one.
         store.put(ID_KEY, lastId.toString())
         store.put(KEY, json.encodeToString(next))
@@ -107,6 +193,7 @@ class StoredHistoryRepository(private val store: StringStore) : CalculatorReposi
         const val KEY = "history"
         const val ID_KEY = "history_last_id"
         const val LIMIT = 500
+        const val REPLAY_BUDGET = 512_000
     }
 }
 

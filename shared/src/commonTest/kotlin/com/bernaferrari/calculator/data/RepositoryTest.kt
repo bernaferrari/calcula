@@ -49,6 +49,31 @@ class RepositoryTest {
         assertTrue(loaded.reduceMotion)
     }
 
+    @Test fun damagedFieldsLeaveHealthySettingsAndKeepTheOriginal() = runTest {
+        val store = MemoryStringStore()
+        val original = """{"angleUnit":"FUTURE","decimalPlaces":"bad","memories":[{"value":"9"},{}],"usage":{"calculations":12}}"""
+        store.put("preferences", original)
+        val repository = StoredPreferencesRepository(store)
+        val recovered = repository.getUserPreferences().first()
+        assertEquals(AngleUnit.DEGREES, recovered.angleUnit)
+        assertEquals(listOf(Memory("9")), recovered.memories)
+        assertEquals(12, recovered.usage.calculations)
+        repository.updateReduceMotion(true)
+        assertEquals(recovered.copy(reduceMotion = true), StoredPreferencesRepository(store).getUserPreferences().first())
+        assertEquals(original, store.get("preferences_recovery"))
+    }
+
+    @Test fun damagedHistoryRowDoesNotHideOtherEntries() = runTest {
+        val store = MemoryStringStore()
+        val original = """[{"id":4,"expression":"1+1","result":"2"},{"id":5,"expression":"bad"}]"""
+        store.put("history", original)
+        val repository = StoredHistoryRepository(store)
+        assertEquals(listOf("2"), repository.getAllHistory().first().map { it.result })
+        repository.insertCalculation(CalculationHistory(expression = "2+2", result = "4"))
+        assertEquals(setOf("2", "4"), StoredHistoryRepository(store).getAllHistory().first().map { it.result }.toSet())
+        assertEquals(original, store.get("history_recovery"))
+    }
+
     @Test fun legacyGraphitePreferenceMigratesToNeutralWithoutLosingSettings() = runTest {
         val store = MemoryStringStore()
         store.put("preferences", """{"palette":"GRAPHITE","colorStyle":"VIBRANT","decimalPlaces":3}""")

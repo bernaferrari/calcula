@@ -26,7 +26,7 @@ class ReviewAuditTest {
         val prefs = StoredPreferencesRepository(store)
         prefs.update { it.copy(rpn = true, functions = listOf(UserFunction("double", "x*2"))) }
         val saved = SavedStateHandle(mapOf("rpn_stack" to arrayOf("3", "7", "9")))
-        val vm = CalculatorViewModel(StoredHistoryRepository(store), prefs, saved)
+        val vm = CalculatorViewModel(StoredHistoryRepository(store), prefs, saved, UnconfinedTestDispatcher())
         models.put("calc", vm)
         vm.onInsertText("double(")
         assertEquals(listOf("6", "7", "9"), saved.get<Array<String>>("rpn_stack")!!.toList())
@@ -37,7 +37,7 @@ class ReviewAuditTest {
         val prefs = StoredPreferencesRepository(store)
         prefs.update { it.copy(rpn = true, angleUnit = AngleUnit.RADIANS, functions = listOf(UserFunction("wave", "sin(x)"))) }
         val saved = SavedStateHandle(mapOf("rpn_stack" to arrayOf("1")))
-        val vm = CalculatorViewModel(StoredHistoryRepository(store), prefs, saved)
+        val vm = CalculatorViewModel(StoredHistoryRepository(store), prefs, saved, UnconfinedTestDispatcher())
         models.put("calc", vm)
         vm.onInsertText("wave(")
         val actual = saved.get<Array<String>>("rpn_stack")!!.first().toDouble()
@@ -78,7 +78,7 @@ class ReviewAuditTest {
         val store = MemoryStringStore()
         val prefs = StoredPreferencesRepository(store)
         prefs.update { it.copy(rpn = true, notation = Notation.SCIENTIFIC) }
-        val vm = CalculatorViewModel(StoredHistoryRepository(store), prefs, SavedStateHandle())
+        val vm = CalculatorViewModel(StoredHistoryRepository(store), prefs, SavedStateHandle(), UnconfinedTestDispatcher())
         models.put("calc", vm)
         listOf(Key.D2, Key.EQUALS, Key.D3, Key.PLUS).forEach(vm::onKey)
         val state = vm.state.first { it.rpn }

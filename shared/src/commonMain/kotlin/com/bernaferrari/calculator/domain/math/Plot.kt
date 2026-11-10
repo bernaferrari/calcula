@@ -219,6 +219,7 @@ private class PlotParser(private val tokens: List<Token>, private val angle: Ang
         "sinh" -> Field { x, y -> sinh(a.at(x, y)) }
         "cosh" -> Field { x, y -> cosh(a.at(x, y)) }
         "tanh" -> Field { x, y -> tanh(a.at(x, y)) }
+        "exp" -> Field { x, y -> kotlin.math.exp(a.at(x, y)) }
         "ln" -> Field { x, y -> ln(a.at(x, y)) }
         "log" -> Field { x, y -> log10(a.at(x, y)) }
         "abs" -> Field { x, y -> abs(a.at(x, y)) }

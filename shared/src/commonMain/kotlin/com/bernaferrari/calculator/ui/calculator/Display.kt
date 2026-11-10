@@ -24,6 +24,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.ui.unit.em
 import com.bernaferrari.calculator.ui.theme.GoogleSansFlex
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -47,6 +48,8 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
@@ -65,6 +68,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -72,6 +76,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
@@ -108,6 +113,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bernaferrari.calculator.resources.*
 import com.bernaferrari.calculator.domain.input.Outcome
+import com.bernaferrari.calculator.domain.input.NumericDisplay
+import com.bernaferrari.calculator.domain.input.ResultDisplay
 import com.bernaferrari.calculator.domain.input.Span
 import com.bernaferrari.calculator.domain.math.CalcError
 import com.bernaferrari.calculator.domain.model.CalculationHistory
@@ -129,7 +136,9 @@ private data class Entry(
     val generation: Int,
     val angleUnit: AngleUnit,
     val selection: Span?,
-    val fraction: String?,
+    val resultDisplay: ResultDisplay?,
+    val extendedDisplay: NumericDisplay?,
+    val previewApproximate: Boolean,
     val memory: String?,
 )
 
@@ -162,6 +171,7 @@ fun CalculatorDisplay(
     onOpenMemory: () -> Unit = {},
     /** Tapping the preview (`= 52`) takes it, like pressing `=`. */
     onEvaluate: () -> Unit = {},
+    onMoreDigits: () -> Unit = {},
     /** The status bar's height when the display runs up behind it; the tape scrolls under it. */
     topInset: Dp = 0.dp,
 ) {
@@ -215,7 +225,7 @@ fun CalculatorDisplay(
             )
             val entry = Entry(
                 state.text, state.cursor, state.resultShown, state.preview, state.error, state.openParentheses, state.generation, state.angleUnit, state.selection,
-                state.fraction, state.memory,
+                state.resultDisplay, state.extendedDisplay, state.previewApproximate, state.memory,
             )
             // History mode is about the past: the live entry steps aside until the keypad returns.
             AnimatedVisibility(
@@ -270,6 +280,7 @@ fun CalculatorDisplay(
                     onCopy = { haptics.heavy(); onCopy(it) },
                     onRecallMemory = { haptics.tap(); onRecallMemory() },
                     onEvaluate = onEvaluate,
+                    onMoreDigits = onMoreDigits,
                     modifier = Modifier.offset { IntOffset(shake.value.roundToInt(), 0) },
                 )
             }
@@ -292,18 +303,31 @@ private fun LiveEntry(
     onCopy: (String) -> Unit,
     onRecallMemory: () -> Unit,
     onEvaluate: () -> Unit,
+    onMoreDigits: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.colorScheme
     val formatColors = DisplayFormatter.Colors(operator = colors.primary, function = colors.onSurfaceVariant, ghost = colors.outlineVariant)
+    val result = entry.resultDisplay
+    val exactForm = result?.exactForm
+    var showExact by remember(entry.generation, entry.text) { mutableStateOf(false) }
+    val extended = entry.extendedDisplay
+    val digitsScroll = rememberScrollState()
+    val requestMore by rememberUpdatedState(onMoreDigits)
+    LaunchedEffect(extended, result?.canRefine, showExact) {
+        if (extended == null || result?.canRefine != true || showExact) return@LaunchedEffect
+        snapshotFlow { digitsScroll.maxValue > 0 && digitsScroll.value == digitsScroll.maxValue && !digitsScroll.isScrollInProgress }
+            .collect { atEnd -> if (atEnd) requestMore() }
+    }
     val formatted = remember(entry.text, entry.openParentheses, formatColors) {
         formatter.format(entry.text, if (entry.resultShown) 0 else entry.openParentheses, formatColors, breakable = true)
     }
     // Like any Android text field: double-tap selects a number or function, hold selects it all,
     // and the system bar offers copy, cut, paste and select all. The selection lives in the
     // calculator (keys act on it); here it's turned into display offsets. Empty = paste only.
-    val raw = { offset: Int -> formatted.displayToRaw[offset.coerceIn(0, formatted.displayToRaw.lastIndex)] }
-    val display = { offset: Int -> formatted.rawToDisplay[offset.coerceIn(0, entry.text.length)] }
+    val prefixLength = if (result == null) 0 else 2
+    val raw = { offset: Int -> formatted.displayToRaw[(offset - prefixLength).coerceIn(0, formatted.displayToRaw.lastIndex)] }
+    val display = { offset: Int -> formatted.rawToDisplay[offset.coerceIn(0, entry.text.length)] + prefixLength }
     val selection = entry.selection?.let { TextRange(display(it.start), display(it.end)) }
     val currentOnSelect by rememberUpdatedState(onSelect)
     val select = { range: TextRange? ->
@@ -356,14 +380,31 @@ private fun LiveEntry(
                     // Nothing to select yet, but holding still offers paste.
                     .pointerInput(Unit) { detectTapGestures(onLongPress = { select(TextRange(0)) }) },
             )
+        } else if (showExact && exactForm != null) {
+            FitText(
+                "= $exactForm", entryStyle(maxFontSize, GoogleSansFlex).copy(color = colors.onSurface),
+                maxSize = maxFontSize, minSize = 18.sp, modifier = Modifier.fillMaxWidth(),
+            )
+        } else if (result != null && extended != null) {
+            Row(Modifier.fillMaxWidth().horizontalScroll(digitsScroll), horizontalArrangement = Arrangement.End) {
+                Text(
+                    (if (extended.approximate) "≈ " else "= ") + formatter.number(extended.text),
+                    style = entryStyle(32.sp, GoogleSansFlex),
+                    color = colors.onSurface,
+                    maxLines = 1,
+                )
+            }
         } else {
             ExpressionText(
-                text = formatted.text,
+                text = if (result == null) formatted.text else buildAnnotatedString {
+                    append(if (result.decimal.approximate) "≈ " else "= ")
+                    append(formatted.text)
+                },
                 cursor = if (entry.resultShown) null else formatted.rawToDisplay[entry.cursor.coerceIn(0, entry.text.length)],
                 maxFontSize = maxFontSize,
                 color = colors.onSurface,
                 onTap = { displayOffset ->
-                    val raw = formatted.displayToRaw[displayOffset.coerceIn(0, formatted.displayToRaw.lastIndex)]
+                    val raw = raw(displayOffset)
                     if (entry.selection != null) select(null)
                     if (raw != entry.cursor || entry.resultShown) {
                         onCursorTick()
@@ -391,16 +432,29 @@ private fun LiveEntry(
                     textAlign = TextAlign.End,
                     modifier = Modifier.weight(1f),
                 )
-                // A result that's a simple fraction says so, quietly: 0.375 is also ³⁄₈.
-                entry.resultShown && entry.fraction != null -> Text(
-                    fractionText(entry.fraction),
-                    style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 30.sp, color = colors.onSurfaceVariant, textAlign = TextAlign.End),
-                    maxLines = 1,
-                    modifier = Modifier.weight(1f).padding(start = 12.dp),
-                )
+                result != null -> {
+                    if (result.canRefine) {
+                        TextButton(onClick = { showExact = false; onMoreDigits() }) {
+                            Text(stringResource(Res.string.more_result_digits))
+                        }
+                    }
+                    if (exactForm != null) {
+                        FitText(
+                            if (showExact) (if (result.decimal.approximate) "≈ " else "= ") + formatter.number(result.decimal.text)
+                            else "= $exactForm",
+                            style = TextStyle(fontFamily = GoogleSansFlex, color = colors.onSurfaceVariant, textAlign = TextAlign.End),
+                            maxSize = 28.sp,
+                            minSize = 16.sp,
+                            modifier = Modifier.weight(1f).padding(start = 12.dp).clickable(
+                                onClickLabel = stringResource(if (showExact) Res.string.show_decimal_result else Res.string.show_exact_result),
+                                onClick = { showExact = !showExact },
+                            ).padding(vertical = 8.dp),
+                        )
+                    }
+                }
                 // Long answers shrink to fit rather than running off the edge.
                 entry.preview != null -> FitText(
-                    "= " + formatter.number(entry.preview),
+                    (if (entry.previewApproximate) "≈ " else "= ") + formatter.number(entry.preview),
                     style = TextStyle(
                         fontFamily = GoogleSansFlex,
                         fontWeight = FontWeight.Normal,
@@ -426,20 +480,7 @@ private val TRIG = listOf("sin", "cos", "tan")
 
 private val LocalOpenMemory = staticCompositionLocalOf<() -> Unit> { {} }
 
-/** `2 3/8` set as a fraction: small numerator raised, a slash, small denominator on the line. */
-private fun fractionText(fraction: String): AnnotatedString = buildAnnotatedString {
-    append("= ")
-    val whole = fraction.substringBefore(' ', "")
-    val rest = fraction.substringAfter(' ')
-    if (whole.isNotEmpty()) append("$whole\u2009")
-    val (numerator, denominator) = rest.split('/').let { (if (it[0].startsWith("−")) { append("−"); it[0].drop(1) } else it[0]) to it[1] }
-    withStyle(SpanStyle(fontSize = 0.62.em, baselineShift = BaselineShift(0.42f))) { append(numerator) }
-    withStyle(SpanStyle(fontSize = 0.9.em)) { append("/") }
-    withStyle(SpanStyle(fontSize = 0.62.em)) { append(denominator) }
-}
 
-/** What memory holds, when it holds something: an "M" and the number. Tap to recall, hold for all of them. */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun MemoryChip(memory: String?, formatter: DisplayFormatter, onRecall: () -> Unit) {
     val onOpen = LocalOpenMemory.current
@@ -552,6 +593,8 @@ private fun CalcError.message(): StringResource = when (this) {
     CalcError.DOMAIN -> Res.string.error_domain
     CalcError.SYNTAX -> Res.string.error_syntax
     CalcError.OVERFLOW -> Res.string.error_overflow
+    CalcError.TIME_LIMIT -> Res.string.error_time_limit
+    CalcError.PRECISION_LIMIT -> Res.string.error_precision_limit
 }
 
 private fun entryStyle(size: TextUnit, family: FontFamily) = TextStyle(

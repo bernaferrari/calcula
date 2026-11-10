@@ -93,6 +93,88 @@ class CalculatorTest {
         assertEquals("7", type(Key.D7, from = done).editor.text)
     }
 
+    @Test fun chainingUsesTheUnroundedResult() {
+        val third = type(Key.D1, Key.DIVIDE, Key.D3, Key.EQUALS)
+        val one = type(Key.TIMES, Key.D3, Key.EQUALS, from = third)
+        assertEquals("1", one.editor.text)
+        assertEquals("0", type(Key.MINUS, Key.D1, Key.EQUALS, from = one).editor.text)
+    }
+
+    @Test fun fixedDecimalPlacesOnlyRoundTheDisplay() {
+        val third = type(Key.D1, Key.D0, Key.DIVIDE, Key.D3, Key.EQUALS, from = CalcState(decimalPlaces = 2))
+        assertEquals("3.33", third.editor.text)
+        assertEquals("10", type(Key.TIMES, Key.D3, Key.EQUALS, from = third).editor.text)
+    }
+
+    @Test fun subtractingOneChangesTheDisplayedLargeInteger() {
+        val large = type(Key.D2, Key.POWER, Key.D6, Key.D4, Key.EQUALS)
+        val expression = type(Key.MINUS, Key.D1, from = large)
+        val expected = "1.8446744073709551615E19"
+        assertEquals(expected, Calculator.preview(expression.editor, expression.angleUnit, expression.decimalPlaces, expression.notation))
+        val less = type(Key.EQUALS, from = expression)
+        assertEquals(expected, less.editor.text)
+        assertEquals("1.8446744073709551614E19", type(Key.EQUALS, from = less).editor.text)
+    }
+
+    @Test fun editingTheContinuedOperandUsesTheEditedText() {
+        val third = type(Key.D1, Key.DIVIDE, Key.D3, Key.EQUALS, from = CalcState(decimalPlaces = 2))
+        val expression = type(Key.TIMES, Key.D3, from = third)
+        val edited = ExpressionEditor.replaceRange(expression.editor, 3, 4, "2")
+        assertEquals("0.32×3", edited.text)
+        assertEquals("0.96", type(Key.EQUALS, from = expression.copy(editor = edited)).editor.text)
+    }
+
+    @Test fun repeatedEqualsUsesTheUnroundedResult() {
+        val rounded = type(Key.D1, Key.DIVIDE, Key.D3, Key.EQUALS, from = CalcState(decimalPlaces = 2))
+        val ninth = type(Key.EQUALS, from = rounded)
+        assertEquals("0.11", ninth.editor.text)
+        assertEquals("1", type(Key.TIMES, Key.D9, Key.EQUALS, from = ninth).editor.text)
+    }
+
+    @Test fun retriesWhenDifferentExponentialTreesLoseDisplayDigits() {
+        val (state, outcome) = Calculator.press(CalcState(editor = Editor("exp(100)+42−exp(50)²")), Key.EQUALS)
+        assertEquals("42", state.editor.text)
+        assertEquals(true, (outcome as Outcome.Evaluated).approximate)
+    }
+
+    @Test fun chainingReplaysTheSavedExpressionWithItsOriginalFunction() {
+        val before = com.bernaferrari.calculator.domain.math.UserFunctions.all
+        try {
+            com.bernaferrari.calculator.domain.math.UserFunctions.all =
+                listOf(com.bernaferrari.calculator.domain.math.UserFunction("testfn", "exp(x)+42"))
+            val (first, _) = Calculator.press(CalcState(editor = Editor("testfn(100)")), Key.EQUALS)
+            val restored = first.copy(editor = Editor(first.editor.text).restoreAnswer(first.editor.saveAnswer()))
+            com.bernaferrari.calculator.domain.math.UserFunctions.all =
+                listOf(com.bernaferrari.calculator.domain.math.UserFunction("testfn", "0"))
+            val subtract = Calculator.press(restored, Key.MINUS).first
+            val (result, outcome) = Calculator.press(Calculator.insertText(subtract, "exp(100)"), Key.EQUALS)
+            assertEquals("42", result.editor.text)
+            assertEquals(false, (outcome as Outcome.Evaluated).approximate)
+        } finally {
+            com.bernaferrari.calculator.domain.math.UserFunctions.all = before
+        }
+    }
+
+    @Test fun chainedTrigRetainsItsOriginalAngleMode() {
+        val (result, _) = Calculator.press(CalcState(editor = Editor("sin(45)")), Key.EQUALS)
+        val restored = result.copy(
+            editor = Editor(result.editor.text).restoreAnswer(result.editor.saveAnswer()),
+            angleUnit = com.bernaferrari.calculator.domain.model.AngleUnit.RADIANS,
+        )
+        val continued = Calculator.press(restored, Key.TIMES).first
+        assertEquals("1", Calculator.press(Calculator.insertText(continued, "√2"), Key.EQUALS).first.editor.text)
+    }
+
+    @Test fun decimalAndExactViewsHaveDifferentPrecisionLabels() {
+        val third = type(Key.D1, Key.DIVIDE, Key.D3, Key.EQUALS)
+        val display = Calculator.resultDisplay(third.editor)
+        assertEquals(NumericDisplay("0.333333333333333", approximate = true), display?.decimal)
+        assertEquals("1⁄3", display?.exactForm)
+        assertEquals(NumericDisplay("0." + "3".repeat(60), approximate = true), Calculator.moreDigits(third.editor, 60))
+        val two = type(Key.D1, Key.PLUS, Key.D1, Key.EQUALS)
+        assertEquals(NumericDisplay("2", approximate = false), Calculator.resultDisplay(two.editor)?.decimal)
+    }
+
     @Test fun negativeResultIsParenthesizedForPowers() {
         val done = type(Key.D2, Key.MINUS, Key.D7, Key.EQUALS)
         assertEquals("(−5)²", type(Key.SQUARE, from = done).editor.text)

@@ -9,6 +9,11 @@
     <string name="error_domain">Undefined for this value</string>
     <string name="error_syntax">Incomplete expression</string>
     <string name="error_overflow">Number too large</string>
+    <string name="error_time_limit">Calculation took too long</string>
+    <string name="error_precision_limit">Calculation needs more precision</string>
+    <string name="more_result_digits">More digits</string>
+    <string name="show_exact_result">Show exact form</string>
+    <string name="show_decimal_result">Show decimal</string>
     <string name="tape_copy_result">Copy result</string>
     <string name="tape_edit">Edit calculation</string>
     <string name="tape_delete">Delete</string>

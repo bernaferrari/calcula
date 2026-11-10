@@ -29,7 +29,7 @@ class EditingRegressionTest {
     @Test fun cursorStepLetsYouEditTheResult() {
         val saved = SavedStateHandle()
         val store = MemoryStringStore()
-        val vm = CalculatorViewModel(StoredHistoryRepository(store), StoredPreferencesRepository(store), saved)
+        val vm = CalculatorViewModel(StoredHistoryRepository(store), StoredPreferencesRepository(store), saved, UnconfinedTestDispatcher())
         models.put("calc", vm)
         listOf(Key.D3, Key.PLUS, Key.D9, Key.EQUALS).forEach(vm::onKey)
         assertTrue(vm.onCursorStep(-1))
@@ -39,7 +39,7 @@ class EditingRegressionTest {
     @Test fun cursorJumpLetsYouEditTheResult() {
         val saved = SavedStateHandle()
         val store = MemoryStringStore()
-        val vm = CalculatorViewModel(StoredHistoryRepository(store), StoredPreferencesRepository(store), saved)
+        val vm = CalculatorViewModel(StoredHistoryRepository(store), StoredPreferencesRepository(store), saved, UnconfinedTestDispatcher())
         models.put("calc", vm)
         listOf(Key.D3, Key.PLUS, Key.D9, Key.EQUALS).forEach(vm::onKey)
         assertTrue(vm.onCursorJump(-1))

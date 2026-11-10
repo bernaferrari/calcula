@@ -2,6 +2,9 @@ package com.bernaferrari.calculator.domain.input
 
 import com.bernaferrari.calculator.domain.model.Notation
 import com.bernaferrari.calculator.domain.math.Decimal
+import com.bernaferrari.calculator.domain.math.DecimalError
+import com.bernaferrari.calculator.domain.math.MathContext
+import kotlinx.serialization.Serializable
 import com.bernaferrari.calculator.domain.math.RoundingMode
 
 import com.bernaferrari.calculator.domain.math.CalcEngine
@@ -64,18 +67,23 @@ data class CalcState(
     val notation: Notation = Notation.NORMAL,
 )
 
+@Serializable
+data class NumericDisplay(val text: String, val approximate: Boolean)
+
+data class ResultDisplay(val decimal: NumericDisplay, val exactForm: String?, val canRefine: Boolean)
+
 sealed interface Outcome {
     data object None : Outcome
     data object Cleared : Outcome
-    data class Evaluated(val expression: String, val result: String) : Outcome
+    data class Evaluated(val expression: String, val result: String, val answerOperand: String? = null, val approximate: Boolean = false) : Outcome
     data class Failed(val error: CalcError) : Outcome
 }
 
 /** The calculator's state machine: a key press in, the next state (and what happened) out. */
 object Calculator {
-    fun press(state: CalcState, key: Key): Pair<CalcState, Outcome> {
-        state.selection?.let { return pressOnSelection(state.copy(selection = null), key, it) }
-        if (key == Key.EQUALS) return evaluate(state)
+    fun press(state: CalcState, key: Key, checkCancelled: () -> Unit = {}): Pair<CalcState, Outcome> {
+        state.selection?.let { return pressOnSelection(state.copy(selection = null), key, it, checkCancelled) }
+        if (key == Key.EQUALS) return evaluate(state, checkCancelled)
         if (key == Key.CLEAR) return state.copy(editor = Editor(), resultShown = false, error = null) to Outcome.Cleared
         if (key == Key.INVERSE) return state.copy(inverse = !state.inverse) to Outcome.None
 
@@ -86,7 +94,7 @@ object Calculator {
             key != Key.TIMES && key != Key.DIVIDE
         ) {
             // (−5)² rather than −5², which would square first.
-            editor = Editor("(${editor.text})")
+            editor = editor.wrapAnswer()
         }
 
         val edited = edit(editor, key, state.inverse)
@@ -98,12 +106,12 @@ object Calculator {
      * and functions wrap it, powers and postfixes apply to it as a whole, ⌫ deletes it, and
      * anything else types over it.
      */
-    private fun pressOnSelection(state: CalcState, key: Key, selection: Span): Pair<CalcState, Outcome> {
+    private fun pressOnSelection(state: CalcState, key: Key, selection: Span, checkCancelled: () -> Unit): Pair<CalcState, Outcome> {
         val text = state.editor.text
         val start = selection.start.coerceIn(0, text.length)
         val end = selection.end.coerceIn(start, text.length)
         val inner = text.substring(start, end)
-        if (inner.isEmpty() || key in SELECTION_IGNORED) return press(state, key)
+        if (inner.isEmpty() || key in SELECTION_IGNORED) return press(state, key, checkCancelled)
         fun put(replacement: String) =
             state.copy(editor = ExpressionEditor.replaceRange(state.editor, start, end, replacement), resultShown = false, error = null) to Outcome.None
         return when (key) {
@@ -168,7 +176,17 @@ object Calculator {
     }
 
     /** The value shown under the expression while typing, or null when it would add nothing. */
-    fun preview(text: String, angleUnit: AngleUnit, decimalPlaces: Int = AUTO_DECIMALS, notation: Notation = Notation.NORMAL): String? {
+    fun preview(text: String, angleUnit: AngleUnit, decimalPlaces: Int = AUTO_DECIMALS, notation: Notation = Notation.NORMAL): String? =
+        preview(Editor(text), angleUnit, decimalPlaces, notation)
+
+    fun preview(
+        editor: Editor, angleUnit: AngleUnit, decimalPlaces: Int, notation: Notation, checkCancelled: () -> Unit = {},
+    ): String? = previewDisplay(editor, angleUnit, decimalPlaces, notation, checkCancelled)?.text
+
+    fun previewDisplay(
+        editor: Editor, angleUnit: AngleUnit, decimalPlaces: Int, notation: Notation, checkCancelled: () -> Unit = {},
+    ): NumericDisplay? {
+        val text = editor.text
         if (isPlainNumber(text)) return null
         var candidate = text
         // While an operator is dangling ("5+3×"), preview what's complete so far.
@@ -176,8 +194,66 @@ object Calculator {
             candidate = candidate.dropLast(1)
         }
         if (candidate.isEmpty() || isPlainNumber(candidate)) return null
-        val value = CalcEngine.evaluateOrNull(candidate, angleUnit) ?: return null
-        return formatResult(value, decimalPlaces, notation)
+        val value = try {
+            editor.evaluate(candidate, angleUnit, checkCancelled,
+                displaySettled = { settles(it, decimalPlaces, notation) }, timeBudgetMillis = 220)
+        } catch (e: CalcException) {
+            return null
+        } catch (e: ArithmeticException) {
+            return null
+        }
+        val formatted = formatAnswer(value, editor.answer?.value, decimalPlaces, notation)
+        return NumericDisplay(formatted, !representsExactly(value, formatted))
+    }
+
+    fun resultDisplay(editor: Editor): ResultDisplay? {
+        val answer = editor.answer?.value ?: return null
+        val approximate = !representsExactly(answer, editor.text)
+        val usefulFraction = answer.symbolic?.fraction?.let(Fractions::worthShowing) != null
+        val exactForm = if (answer.provenExact && (approximate || usefulFraction)) {
+            (answer.symbolic?.exactText() ?: answer.v.takeIf { it.precision() <= 120 }?.let(NumberFormatter::exact))
+                ?.takeIf { it.length <= 120 }
+        } else null
+        return ResultDisplay(NumericDisplay(editor.text, approximate), exactForm,
+            approximate && answer.retryable && answer.error != null && answer.tree != null)
+    }
+
+    fun moreDigits(editor: Editor, digits: Int, checkCancelled: () -> Unit = {}): NumericDisplay? {
+        val answer = editor.answer?.value ?: return null
+        if (!answer.retryable || answer.error == null || answer.tree == null) return null
+        val requested = digits.coerceIn(15, 120)
+        val refined = try {
+            CalcEngine.evaluateValue(Tokenizer.BOUND_ANSWER.toString(), AngleUnit.DEGREES, answer, checkCancelled,
+                displaySettled = { intervalAgrees(it, requested) { value -> NumberFormatter.format(value, requested) } })
+        } catch (_: CalcException) {
+            return null
+        } catch (_: ArithmeticException) {
+            return null
+        }
+        for (precision in requested downTo 16) {
+            checkCancelled()
+            if (intervalAgrees(refined, precision) { NumberFormatter.format(it, precision) }) {
+                val text = NumberFormatter.format(refined.displayValue, precision)
+                return NumericDisplay(text, !representsExactly(refined, text))
+            }
+        }
+        return null
+    }
+
+    private fun representsExactly(value: CalcEngine.Value, text: String): Boolean =
+        value.provenExact && value.exact && runCatching { Decimal(text.replace('−', '-')) == value.v }.getOrDefault(false)
+
+    private fun settles(value: CalcEngine.Value, decimals: Int, notation: Notation): Boolean =
+        intervalAgrees(value, maxOf(15, decimals + 17)) { formatResult(it, decimals, notation) }
+
+    private fun intervalAgrees(value: CalcEngine.Value, digits: Int, format: (Decimal) -> String): Boolean {
+        val radius = value.error ?: return false
+        if (radius.signum() == 0) return true
+        if (value.v.signum() == 0 || value.v.abs() <= radius) return false
+        // Widen tiny radii before aligning scales. The wider interval is still conservative.
+        val guard = DecimalError.roundingUnit(value.v, MathContext(digits + 4))
+        val width = maxOf(radius, guard)
+        return format(value.v.subtract(width)) == format(value.v.add(width))
     }
 
     fun isPlainNumber(text: String): Boolean {
@@ -191,21 +267,28 @@ object Calculator {
         Key.CUBE, Key.RECIPROCAL, Key.ROOT,
     )
 
-    private fun evaluate(state: CalcState): Pair<CalcState, Outcome> {
+    private fun evaluate(state: CalcState, checkCancelled: () -> Unit): Pair<CalcState, Outcome> {
         val text = state.editor.text
         if (state.resultShown && state.repeatTail != null) {
-            return evaluate(state.copy(editor = Editor(parenthesizeNegative(text) + state.repeatTail), resultShown = false))
+            val editor = if (text.startsWith("−")) state.editor.wrapAnswer() else state.editor
+            return evaluate(state.copy(editor = ExpressionEditor.insertRaw(editor, state.repeatTail), resultShown = false), checkCancelled)
         }
         if (text.isEmpty() || state.resultShown || isPlainNumber(text)) return state to Outcome.None
         val closed = text + ")".repeat(ExpressionEditor.openParentheses(text).coerceAtLeast(0))
         return try {
-            val value = CalcEngine.evaluate(closed, state.angleUnit)
-            val result = formatResult(value, state.decimalPlaces, state.notation)
+            val answer = state.editor.evaluate(closed, state.angleUnit, checkCancelled,
+                displaySettled = { settles(it, state.decimalPlaces, state.notation) })
+            val value = answer.displayValue
+            val result = formatAnswer(answer, state.editor.answer?.value, state.decimalPlaces, state.notation)
             // Explicit rounding can change the value, so its original fraction would contradict the display.
-            val fraction = if (state.decimalPlaces >= 0 && CalcEngine.evaluate(result) != value) null
-                else Fractions.worthShowing(value)?.let(Fractions::format)
-            state.copy(editor = Editor(result), resultShown = true, error = null, repeatTail = repeatTail(closed), fraction = fraction) to
-                Outcome.Evaluated(closed, result)
+            val fraction = when {
+                state.decimalPlaces >= 0 && CalcEngine.evaluate(result) != value -> null
+                answer.symbolic != null -> answer.symbolic.fraction?.let(Fractions::worthShowing)
+                else -> Fractions.worthShowing(value)
+            }?.let(Fractions::format)
+            val editor = Editor(result, answer = AnswerOperand(0, result.length, answer))
+            state.copy(editor = editor, resultShown = true, error = null, repeatTail = repeatTail(closed), fraction = fraction) to
+                Outcome.Evaluated(closed, result, state.editor.saveAnswer(), approximate = !representsExactly(answer, result))
         } catch (e: CalcException) {
             state.copy(error = e.error) to Outcome.Failed(e.error)
         } catch (e: ArithmeticException) {
@@ -230,7 +313,21 @@ object Calculator {
         return match.value
     }
 
-    private fun parenthesizeNegative(text: String) = if (text.startsWith("−")) "($text)" else text
+    private fun formatAnswer(
+        answer: CalcEngine.Value,
+        previous: CalcEngine.Value?,
+        decimalPlaces: Int,
+        notation: Notation,
+    ): String {
+        val value = answer.displayValue
+        val formatted = formatResult(value, decimalPlaces, notation)
+        if (previous == null) return formatted
+        // Show a small exact integer change even when both values round to the same display.
+        return if (notation == Notation.NORMAL && answer.exact && previous.exact &&
+            value != previous.v && value.isInteger() && previous.v.isInteger() &&
+            formatted == formatResult(previous.v, decimalPlaces, notation)
+        ) NumberFormatter.exact(value) else formatted
+    }
 
     private fun edit(e: Editor, key: Key, inverse: Boolean): Editor = with(ExpressionEditor) {
         when (key) {

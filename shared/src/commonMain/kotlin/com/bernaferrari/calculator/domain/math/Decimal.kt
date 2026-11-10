@@ -3,7 +3,7 @@ package com.bernaferrari.calculator.domain.math
 import com.ionspin.kotlin.bignum.integer.BigInteger
 import kotlin.math.max
 
-enum class RoundingMode { HALF_EVEN, HALF_UP, DOWN }
+enum class RoundingMode { HALF_EVEN, HALF_UP, DOWN, UP }
 
 data class MathContext(val precision: Int, val roundingMode: RoundingMode = RoundingMode.HALF_EVEN)
 
@@ -36,11 +36,26 @@ class Decimal private constructor(val unscaled: BigInteger, val scale: Int) : Co
         return Decimal(rescaled(s).add(other.rescaled(s)), s)
     }
 
-    fun add(other: Decimal, mc: MathContext): Decimal = add(other).round(mc)
+    fun add(other: Decimal, mc: MathContext): Decimal = dominantAddend(other, mc) ?: add(other).round(mc)
+
+    /** If both operands are nonzero, the larger may already be the correctly rounded sum. */
+    internal fun dominantAddend(other: Decimal, mc: MathContext): Decimal? {
+        if (signum() == 0 || other.signum() == 0) return null
+        if (mc.roundingMode == RoundingMode.DOWN && signum() != other.signum()) return null
+        if (mc.roundingMode == RoundingMode.UP && signum() == other.signum()) return null
+        val digits = precision()
+        val otherDigits = other.precision()
+        val gap = (digits.toLong() - scale) - (otherDigits.toLong() - other.scale)
+        return when {
+            gap > mc.precision.toLong() + 1 && digits <= mc.precision -> this
+            -gap > mc.precision.toLong() + 1 && otherDigits <= mc.precision -> other
+            else -> null
+        }
+    }
 
     fun subtract(other: Decimal): Decimal = add(other.negate())
 
-    fun subtract(other: Decimal, mc: MathContext): Decimal = subtract(other).round(mc)
+    fun subtract(other: Decimal, mc: MathContext): Decimal = add(other.negate(), mc)
 
     fun multiply(other: Decimal): Decimal = Decimal(unscaled.multiply(other.unscaled), scale + other.scale)
 
@@ -78,18 +93,32 @@ class Decimal private constructor(val unscaled: BigInteger, val scale: Int) : Co
         return Decimal(unscaled.pow(n), scale * n)
     }
 
-    fun pow(n: Int, mc: MathContext): Decimal {
-        if (n == 0) return ONE
+    fun pow(n: Int, mc: MathContext): Decimal = powWithRounding(n, mc).first
+
+    internal fun powWithRounding(n: Int, mc: MathContext): Pair<Decimal, Boolean> {
+        if (n == 0) return ONE to false
         val work = MathContext(mc.precision + 10, mc.roundingMode)
+        var wasRounded = false
+        fun round(value: Decimal, context: MathContext): Decimal {
+            val rounded = value.round(context)
+            if (!wasRounded && rounded !== value && rounded != value) wasRounded = true
+            return rounded
+        }
+
         var result = ONE
         var base = this
         var e = kotlin.math.abs(n)
         while (e > 0) {
-            if (e and 1 == 1) result = result.multiply(base, work)
+            if (e and 1 == 1) result = round(result.multiply(base), work)
             e = e shr 1
-            if (e > 0) base = base.multiply(base, work)
+            if (e > 0) base = round(base.multiply(base), work)
         }
-        return if (n < 0) ONE.divide(result, mc) else result.round(mc)
+        if (n < 0) {
+            val reciprocal = ONE.divide(result, mc)
+            return reciprocal to (wasRounded || reciprocal.multiply(result) != ONE)
+        }
+        val rounded = round(result, mc)
+        return rounded to wasRounded
     }
 
     fun round(mc: MathContext): Decimal {
@@ -171,6 +200,11 @@ class Decimal private constructor(val unscaled: BigInteger, val scale: Int) : Co
         val ONE = Decimal(BigInteger.ONE, 0)
         val TEN = Decimal(BigInteger.TEN, 0)
 
+        internal fun fromUnscaled(coefficient: String, scale: Int): Decimal =
+            fromUnscaled(BigInteger.parseString(coefficient, 10), scale)
+
+        internal fun fromUnscaled(coefficient: BigInteger, scale: Int): Decimal = Decimal(coefficient, scale)
+
         private val powers = List(64) { BigInteger.TEN.pow(it) }
 
         private fun pow10(n: Int): BigInteger =
@@ -182,6 +216,7 @@ class Decimal private constructor(val unscaled: BigInteger, val scale: Int) : Co
             if (r.isZero() || mode == RoundingMode.DOWN) return q
             val twice = r.abs().multiply(BigInteger.TWO).compareTo(b)
             val up = when {
+                mode == RoundingMode.UP -> true
                 twice > 0 -> true
                 twice < 0 -> false
                 mode == RoundingMode.HALF_UP -> true

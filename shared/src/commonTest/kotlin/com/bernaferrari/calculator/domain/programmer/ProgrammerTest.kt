@@ -27,7 +27,21 @@ class ProgrammerTest {
         assertEquals("FF", Programmer.format(-1, Base.HEX, WordSize.BYTE))
         assertEquals(-1L, Programmer.value(type(ProgKey.NOT, ProgKey.D0, from = byte)))
         // Digits that don't fit the word aren't taken.
-        assertEquals("255", Programmer.display(type(ProgKey.D2, ProgKey.D5, ProgKey.D5, ProgKey.D5, from = byte)))
+        assertEquals("255", Programmer.display(type(ProgKey.D2, ProgKey.D5, ProgKey.D5, ProgKey.D5, from = byte.copy(signed = false))))
+    }
+
+    @Test fun signedDecimalEntryDisplaysItsWrappedValue() {
+        val byte = ProgState(word = WordSize.BYTE)
+        val entered = type(ProgKey.D2, ProgKey.D0, ProgKey.D0, from = byte)
+        assertEquals("−56", Programmer.display(entered))
+        assertEquals(-56L, Programmer.value(entered))
+    }
+
+    @Test fun oversizedShiftsUseTheWordSize() {
+        assertEquals(0L, Programmer.value(type(ProgKey.D1, ProgKey.SHL, ProgKey.D6, ProgKey.D4)))
+        val byte = ProgState(word = WordSize.BYTE)
+        assertEquals(0L, Programmer.value(type(ProgKey.D1, ProgKey.SHL, ProgKey.D8, from = byte)))
+        assertEquals(-1L, Programmer.value(type(ProgKey.MINUS, ProgKey.D2, ProgKey.SHR, ProgKey.D8, from = byte)))
     }
 
     @Test fun basesConvertAndLimitDigits() {

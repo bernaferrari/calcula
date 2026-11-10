@@ -108,6 +108,20 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.foundation.focusable
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.Key as HardwareKey
+import androidx.compose.ui.input.key.KeyEvent
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isAltPressed
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isMetaPressed
+import androidx.compose.ui.input.key.isShiftPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.key.utf16CodePoint
 import com.bernaferrari.calculator.platform.systemConfirmsCopy
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bernaferrari.calculator.resources.*
@@ -168,6 +182,26 @@ fun CalculatorScreen(
             viewModel.onSwipeHintSeen()
         }
     }
+    val keyFocus = remember { FocusRequester() }
+    LaunchedEffect(library, gestureHelp) {
+        if (library == null && !gestureHelp) keyFocus.requestFocus()
+    }
+    val keyboard = Modifier.focusRequester(keyFocus).onKeyEvent { event ->
+        if (library != null || gestureHelp || event.type != KeyEventType.KeyDown ||
+            event.isCtrlPressed || event.isMetaPressed || event.isAltPressed
+        ) return@onKeyEvent false
+        if (!state.rpn && !event.isShiftPressed) {
+            when (event.key) {
+                HardwareKey.DirectionLeft -> return@onKeyEvent viewModel.onCursorStep(-1)
+                HardwareKey.DirectionRight -> return@onKeyEvent viewModel.onCursorStep(1)
+            }
+        }
+        val key = calculatorKey(event) ?: return@onKeyEvent false
+        haptics.tap()
+        viewModel.onKey(key)
+        true
+    }.focusable()
+
     if (gestureHelp) GestureHelpDialog { gestureHelp = false }
     LaunchedEffect(Unit) {
         viewModel.removed.collect { entries ->
@@ -185,7 +219,7 @@ fun CalculatorScreen(
         scope.launch {
             val history = viewModel.historyForExport()
             shareText(history.reversed().joinToString("\n\n") { entry ->
-                listOfNotNull(entry.note, formatter.format(entry.expression, 0, null).text.text + " = " + formatter.number(entry.result)).joinToString("\n")
+                listOfNotNull(entry.note, formatter.format(entry.expression, 0, null).text.text + (if (entry.approximate) " ≈ " else " = ") + formatter.number(entry.result)).joinToString("\n")
             })
         }
     }
@@ -221,6 +255,7 @@ fun CalculatorScreen(
             onRecallMemory = { viewModel.onMemory(MemoryOp.RECALL) },
             onOpenMemory = { library = LibraryTab.MEMORY },
             onEvaluate = { viewModel.onKey(Key.EQUALS) },
+            onMoreDigits = viewModel::onMoreDigits,
             modifier = modifier,
         )
     }
@@ -399,6 +434,7 @@ fun CalculatorScreen(
         Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface)
+            .then(keyboard)
             .twoFingerHistory({ currentHistoryOpen }) { open -> if (!splitWindow) { haptics.tap(); historyOpen = open } },
     ) {
         val landscape = maxWidth > maxHeight && maxHeight < 600.dp
@@ -675,4 +711,60 @@ private fun Modifier.twoFingerHistory(historyOpen: () -> Boolean, onHistory: (Bo
             }
         } while (event.changes.any { it.pressed })
     }
+}
+
+
+private fun calculatorKey(event: KeyEvent): Key? {
+    when (event.key) {
+        HardwareKey.Enter, HardwareKey.NumPadEnter -> return Key.EQUALS
+        HardwareKey.Backspace, HardwareKey.Delete -> return Key.DELETE
+        HardwareKey.Escape -> return Key.CLEAR
+        HardwareKey.NumPadAdd -> return Key.PLUS
+        HardwareKey.NumPadSubtract -> return Key.MINUS
+        HardwareKey.NumPadMultiply -> return Key.TIMES
+        HardwareKey.NumPadDivide -> return Key.DIVIDE
+        HardwareKey.NumPadDot -> return Key.DOT
+    }
+    val char = event.utf16CodePoint.takeIf { it in 1..Char.MAX_VALUE.code }?.toChar()
+    calculatorCharacterKey(char)?.let { return it }
+    if (char != null) return null
+    return when (event.key) {
+        HardwareKey.Equals -> if (event.isShiftPressed) Key.PLUS else Key.EQUALS
+        HardwareKey.Minus -> Key.MINUS
+        HardwareKey.Slash -> Key.DIVIDE
+        HardwareKey.Period, HardwareKey.Comma -> Key.DOT
+        else -> if (!event.isShiftPressed) {
+            val index = hardwareDigits.indexOf(event.key).takeIf { it >= 0 } ?: numpadDigits.indexOf(event.key)
+            calculatorDigits.getOrNull(index)
+        } else null
+    }
+}
+
+private val calculatorDigits = listOf(Key.D0, Key.D1, Key.D2, Key.D3, Key.D4, Key.D5, Key.D6, Key.D7, Key.D8, Key.D9)
+private val hardwareDigits = listOf(
+    HardwareKey.Zero, HardwareKey.One, HardwareKey.Two, HardwareKey.Three, HardwareKey.Four,
+    HardwareKey.Five, HardwareKey.Six, HardwareKey.Seven, HardwareKey.Eight, HardwareKey.Nine,
+)
+private val numpadDigits = listOf(
+    HardwareKey.NumPad0, HardwareKey.NumPad1, HardwareKey.NumPad2, HardwareKey.NumPad3, HardwareKey.NumPad4,
+    HardwareKey.NumPad5, HardwareKey.NumPad6, HardwareKey.NumPad7, HardwareKey.NumPad8, HardwareKey.NumPad9,
+)
+
+internal fun calculatorCharacterKey(char: Char?): Key? = when (char) {
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> calculatorDigits[char.digitToInt()]
+    '.', ',' -> Key.DOT
+    '+' -> Key.PLUS
+    '-', '−' -> Key.MINUS
+    '*', '×' -> Key.TIMES
+    '/', '÷' -> Key.DIVIDE
+    '%' -> Key.PERCENT
+    '^' -> Key.POWER
+    '!' -> Key.FACTORIAL
+    'e' -> Key.E
+    'π' -> Key.PI
+    '√' -> Key.SQRT
+    '(' -> Key.LPAREN
+    ')' -> Key.RPAREN
+    '=' -> Key.EQUALS
+    else -> null
 }

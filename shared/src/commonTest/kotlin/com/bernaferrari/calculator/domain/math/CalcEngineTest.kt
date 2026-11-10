@@ -41,6 +41,78 @@ class CalcEngineTest {
         assertEquals("0", eval("sinh(0)"))
     }
 
+    @Test fun cancellationHidesArithmeticRoundingResidue() {
+        val expressions = listOf("1÷3×3−1", "3^−1×3−1", "√2×√2−2", "sin(30)−0.5", "tan(45)−1", "log₂(1024)−10")
+        for (expression in expressions) {
+            assertEquals("0", eval(expression), expression)
+        }
+    }
+
+    @Test fun exactDifferencesAndSmallValuesSurviveCancellationHandling() {
+        assertEquals("1E−39", eval("1.000000000000000000000000000000000000001−1"))
+        assertEquals("1E−40", eval("1E−40+0"))
+        assertEquals("1", eval("1E35+1−1E35"))
+        assertEquals("1E−16", eval("1.0000000000000001−1"))
+        assertEquals("1E−15", eval("sin(90)−0.999999999999999"))
+    }
+
+    @Test fun powersOfTwoHaveExactBinaryLogarithms() {
+        assertEquals(Decimal(10), CalcEngine.evaluate("log₂(1024)"))
+        assertEquals(Decimal(-3), CalcEngine.evaluate("log₂(0.125)"))
+        assertEquals("1.58496250072116", eval("log₂(3)"))
+    }
+
+    @Test fun symbolicIdentitiesUseExactArithmetic() {
+        val third = CalcEngine.evaluateValue("1÷3", AngleUnit.DEGREES)
+        assertEquals("1", third.symbolic?.fraction?.numerator.toString())
+        assertEquals("3", third.symbolic?.fraction?.denominator.toString())
+        for (expression in listOf("1÷3×3−1", "√2×√8−4", "√8−2√2", "2π−2π", "3e−e−2e", "sin(45)×√2−1")) {
+            val value = CalcEngine.evaluateValue(expression, AngleUnit.DEGREES)
+            assertEquals(Decimal.ZERO, value.v, expression)
+            assertEquals(Decimal.ZERO, value.error, expression)
+        }
+        assertEquals("0", eval("sin(π÷6)−0.5", AngleUnit.RADIANS))
+        assertEquals("0", eval("tan(π÷4)−1", AngleUnit.RADIANS))
+        assertEquals("0", eval("(2÷3)^−2−2.25"))
+        assertEquals("1", eval("10^100+1−10^100"))
+    }
+
+    @Test fun decimalRootCancellationUsesThePropagatedRadius() {
+        val root = CalcEngine.evaluateValue("√1000003", AngleUnit.DEGREES)
+        assertEquals(null, root.symbolic)
+        assertEquals(true, root.error?.signum() == 1)
+        assertEquals("0", eval("√1000003×√1000003−1000003"))
+        assertEquals("−1E−19", eval("√1000003×√1000003−1000003.0000000000000000001"))
+    }
+
+    @Test fun boundedArithmeticHandlesExtremeMagnitudes() {
+        assertEquals("4.14935960343785E9130", eval("3000!"))
+        assertEquals("1E9999", eval("1E9999+1E−9999"))
+        assertEquals(eval("9^9999"), eval("9^9999+1"))
+    }
+
+    @Test fun repeatedSubexpressionsCancelOnlyAfterDomainValidation() {
+        val value = CalcEngine.evaluateValue("e^100+42−exp(100)", AngleUnit.DEGREES)
+        assertEquals(Decimal(42), value.v)
+        assertEquals(true, value.provenExact)
+        assertError("(1÷0)+42−(1÷0)", CalcError.DIVIDE_BY_ZERO)
+        assertError("√(−1)+42−√(−1)", CalcError.DOMAIN)
+        assertEquals("110", eval("100+10%"))
+        assertEquals("100.1", eval("100+(10%)"))
+    }
+
+    @Test fun scientificExponentialKeepsTinyNonzeroResults() {
+        val formatted = eval("exp(−10000)")
+        assertEquals("1.13548386531474E−4343", formatted)
+    }
+
+    @Test fun evaluationObservesTheTimeBudget() {
+        val failure = kotlin.test.assertFailsWith<CalcException> {
+            CalcEngine.evaluateValue("1+1", AngleUnit.DEGREES, timeBudgetMillis = 0)
+        }
+        assertEquals(CalcError.TIME_LIMIT, failure.error)
+    }
+
     @Test fun arithmetic() {
         assertEquals("3", eval("1+2"))
         assertEquals("0.3", eval("0.1+0.2"))
@@ -117,6 +189,76 @@ class CalcEngineTest {
         assertEquals("1", eval("ln(e)"))
         assertError("ln(0)", CalcError.DOMAIN)
         assertError("log(−1)", CalcError.DOMAIN)
+    }
+
+    @Test fun logarithmRetainsTinyDifferencesOnEitherSideOfOne() {
+        assertEquals("1E−20", eval("ln(1+1E−20)"))
+        assertEquals("−1E−20", eval("ln(1−1E−20)"))
+        assertEquals("4.34294481903252E−21", eval("log(1+1E−20)"))
+        assertEquals("1.44269504088896E−20", eval("log₂(1+1E−20)"))
+    }
+
+    @Test fun logarithmRetriesWhenItsArgumentStraddlesZero() {
+        assertEquals("3.73766961828337", eval("ln(exp(100)+42−exp(50)²)"))
+        assertEquals("0.0238095238095238", eval("1÷(exp(100)+42−exp(50)²)"))
+        assertError("ln(exp(100)−42−exp(50)²)", CalcError.DOMAIN)
+    }
+
+    @Test fun fractionalPowersUseTheUnroundedInput() {
+        assertEquals("5E−21", eval("(1+1E−20)^0.5−1"))
+        assertEquals("4", eval("(−8)^(2÷3)"))
+        assertError("(−8)^0.5", CalcError.DOMAIN)
+    }
+
+    @Test fun rationalRootPowersKeepExactForms() {
+        val expressions = mapOf(
+            "4^0.5" to "2", "0^0.5" to "0", "8^(1÷3)" to "2", "27^(2÷3)" to "9", "0.25^0.5" to "0.5",
+            "2^0.5×2^0.5−2" to "0", "2^(1÷2)×2^(1÷2)" to "2", "(−8)^(2÷3)" to "4",
+        )
+        for ((expression, expected) in expressions) {
+            val result = CalcEngine.evaluateValue(expression, AngleUnit.DEGREES)
+            assertEquals(Decimal(expected), result.v, expression)
+            assertEquals(true, result.provenExact, expression)
+        }
+    }
+
+    @Test fun piSquaredRetainsARefinableRadius() {
+        val result = CalcEngine.evaluateValue("π^2", AngleUnit.DEGREES, displaySettled = { false })
+        val radius = kotlin.test.assertNotNull(result.error)
+        assertEquals(true, result.retryable)
+        assertEquals(true, radius < Decimal("1E-150"))
+    }
+
+    @Test fun logarithmAndInverseTrigHaveExactIdentities() {
+        for ((expression, expected) in mapOf(
+            "ln(1)" to "0", "ln(e)" to "1", "ln(e^3)" to "3",
+            "sin⁻¹(0.5)" to "30", "cos⁻¹(0)" to "90", "tan⁻¹(1)" to "45",
+        )) {
+            val result = CalcEngine.evaluateValue(expression, AngleUnit.DEGREES)
+            assertEquals(Decimal(expected), result.v, expression)
+            assertEquals(true, result.provenExact, expression)
+        }
+    }
+
+    @Test fun largeAnglesAndFactorialsKeepTheirUsefulPrecision() {
+        assertEquals(eval("sin(280)"), eval("sin(1E9999)"))
+        assertEquals(eval("sin(π÷7)", AngleUnit.RADIANS), eval("sin((10^200+1÷7)×π)", AngleUnit.RADIANS))
+        val exact = CalcEngine.evaluateValue("100!÷98!", AngleUnit.DEGREES)
+        assertEquals(Decimal(9900), exact.v)
+        assertEquals(true, exact.provenExact)
+        assertEquals("1.42857142857143E9998", eval("floor(1E9999÷7)"))
+    }
+
+    @Test fun integerPowerUnderflowRoundsToZero() {
+        assertEquals("0", eval("0.5^100000"))
+        assertEquals("0", eval("2^−100000"))
+        assertError("2^100000", CalcError.OVERFLOW)
+    }
+
+    @Test fun spacedDigitsAndCommasRequireInputNormalization() {
+        assertError("1,5", CalcError.SYNTAX)
+        assertError("1 000", CalcError.SYNTAX)
+        assertEquals("3", eval("1 + 2"))
     }
 
     @Test fun errors() {

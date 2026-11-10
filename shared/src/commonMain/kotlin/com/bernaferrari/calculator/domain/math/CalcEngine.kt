@@ -3,11 +3,15 @@ package com.bernaferrari.calculator.domain.math
 import com.bernaferrari.calculator.domain.model.AngleUnit
 import com.ionspin.kotlin.bignum.integer.BigInteger
 import kotlin.math.abs
-import kotlin.math.pow
+import kotlin.time.TimeSource
+import kotlin.time.Duration.Companion.milliseconds
+import com.bernaferrari.calculator.domain.math.Expression.Companion.fitsBudget
 
-enum class CalcError { DIVIDE_BY_ZERO, DOMAIN, SYNTAX, OVERFLOW }
+enum class CalcError { DIVIDE_BY_ZERO, DOMAIN, SYNTAX, OVERFLOW, TIME_LIMIT, PRECISION_LIMIT }
 
 class CalcException(val error: CalcError) : Exception(error.name)
+
+internal class DomainNeedsPrecision : Exception()
 
 /**
  * Evaluates the calculator's expression language.
@@ -23,24 +27,66 @@ class CalcException(val error: CalcError) : Exception(error.name)
  * Missing closing parentheses at the end are closed automatically. Percent is "smart":
  * `a + b%` adds b percent of a, while `a × b%` multiplies by b/100.
  *
- * Arithmetic, powers with integer exponents, roots and factorials are exact (40 significant
- * digits); transcendental functions go through Double and are rounded when formatted.
+ * Evaluation starts at 40 digits and can retry the same tree at higher precision.
  */
 object CalcEngine {
     internal val MC = MathContext(40, RoundingMode.HALF_EVEN)
+    private val PRECISION_PASSES = listOf(MC, MathContext(80), MathContext(160))
 
-    private val PI = Decimal("3.141592653589793238462643383279502884197")
-    private val E = Decimal("2.718281828459045235360287471352662497757")
+    private val PI = Decimal("3.14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534211706798214808651328230664709384460955058223172535940812848111745028410270193852112")
+    private val E = Decimal("2.71828182845904523536028747135266249775724709369995957496696762772407663035354759457138217852516642742746639193200305992181741359662904357290033429526059563073813232862794349076")
+    private val constantRadius = Decimal("1E-175")
+    internal val piApproximation = Value(PI, error = constantRadius)
+    private val eApproximation = Value(E, error = constantRadius)
     private val HUNDRED = Decimal(100)
     private val LIMIT = Decimal.ONE.scaleByPowerOfTen(10_000)
 
-    fun evaluate(expression: String, angleUnit: AngleUnit = AngleUnit.DEGREES): Decimal {
-        val tokens = Tokenizer.tokenize(expression)
+    fun evaluate(expression: String, angleUnit: AngleUnit = AngleUnit.DEGREES): Decimal =
+        evaluateValue(expression, angleUnit).displayValue
+
+    // A bound answer is a single operand in the editor, with its own captured expression tree.
+    internal fun evaluateValue(
+        expression: String,
+        angleUnit: AngleUnit,
+        answer: Value? = null,
+        checkCancelled: () -> Unit = {},
+        displaySettled: ((Value) -> Boolean)? = null,
+        timeBudgetMillis: Long = 600,
+    ): Value {
+        val started = TimeSource.Monotonic.markNow()
+        val checkpoint = {
+            checkCancelled()
+            if (started.elapsedNow() >= timeBudgetMillis.milliseconds) throw CalcException(CalcError.TIME_LIMIT)
+        }
+        checkpoint()
+        val tokens = Tokenizer.tokenize(expression, answer?.let { Token.Num(it.v, it.error, it.symbolic, it.tree) })
         if (tokens.isEmpty()) throw CalcException(CalcError.SYNTAX)
-        val parser = Parser(tokens, angleUnit)
-        val result = parser.parseAll()
-        if (result.abs() > LIMIT) throw CalcException(CalcError.OVERFLOW)
-        return result
+        val parsed = Parser(tokens, angleUnit, checkpoint).parseAll()
+        val retained = parsed.takeIf { it.fitsBudget() }
+        val tree = if (retained != null || answer?.tree == null) parsed else
+            Parser(Tokenizer.tokenize(expression, Token.Num(answer.v, answer.error, answer.symbolic)), angleUnit, checkpoint).parseAll()
+        var last: Value? = null
+        for (context in PRECISION_PASSES) {
+            val result = try {
+                Evaluation(context, checkpoint).evaluate(tree)
+            } catch (_: DomainNeedsPrecision) {
+                last = null
+                continue
+            } catch (e: CalcException) {
+                if (e.error != CalcError.TIME_LIMIT || last == null) throw e
+                break
+            }
+            if (result.error == null && result.symbolic == null) {
+                last = null
+                if (!result.retryable) break
+                continue
+            }
+            last = result
+            if (displaySettled == null || retained == null || result.exact || !result.retryable || displaySettled(result)) break
+        }
+        val result = last ?: throw CalcException(CalcError.PRECISION_LIMIT)
+        if (result.v.abs() > LIMIT) throw CalcException(CalcError.OVERFLOW)
+        return result.copy(tree = retained ?: tree.takeIf { it.fitsBudget() })
     }
 
     fun evaluateOrNull(expression: String, angleUnit: AngleUnit = AngleUnit.DEGREES): Decimal? =
@@ -52,61 +98,119 @@ object CalcEngine {
             null
         }
 
-    private class Value(val v: Decimal, val percent: Boolean = false)
+    internal data class Value(
+        val v: Decimal,
+        val percent: Boolean = false,
+        val error: Decimal? = Decimal.ZERO,
+        val symbolic: SymbolicNumber? = if (error?.signum() == 0) SymbolicNumber.fromDecimal(v) else null,
+        val defined: Boolean = true,
+        val tree: Expression? = null,
+        val retryable: Boolean = true,
+    ) {
+        val exact: Boolean get() = error?.signum() == 0
+        val displayValue: Decimal get() =
+            if (symbolic == null && error != null && v.abs() <= error) Decimal.ZERO else v
 
-    private class Parser(private val tokens: List<Token>, private val angle: AngleUnit) {
+        val provenExact: Boolean get() = defined && (exact || symbolic != null)
+
+        fun signIsKnown(): Boolean =
+            v.signum() != 0 && (symbolic != null || error?.let { v.abs() > it } == true)
+
+        fun negate(): Value = copy(v = v.negate(), symbolic = symbolic?.negate())
+
+        fun multiply(other: Value, context: MathContext): Value {
+            if (symbolic != null && other.symbolic != null) symbolic.multiply(other.symbolic)?.let { return valueOf(it, context) }
+            return roundedValue(v.multiply(other.v), DecimalError.multiply(v, error, other.v, other.error), context)
+        }
+
+        fun divide(other: Value, context: MathContext): Value {
+            if (symbolic != null && other.symbolic != null) symbolic.divide(other.symbolic)?.let { return valueOf(it, context) }
+            val radius = other.error
+            if (radius != null && radius.signum() > 0 && other.v.abs() <= radius) {
+                throw DomainNeedsPrecision()
+            }
+            val quotient = divide(v, other.v, context)
+            return Value(quotient, error = DecimalError.divide(v, error, other.v, other.error, quotient))
+        }
+
+        fun add(other: Value, context: MathContext): Value {
+            if (symbolic != null && other.symbolic != null) symbolic.add(other.symbolic)?.let { return valueOf(it, context) }
+            if (v.signum() == 0 && exact) return other.copy(percent = false)
+            if (other.v.signum() == 0 && other.exact) return copy(percent = false)
+            val radius = DecimalError.add(error, other.error)
+            v.dominantAddend(other.v, context)?.let { dominant ->
+                val discarded = if (dominant === v) other.v else v
+                return Value(dominant, error = DecimalError.add(radius, discarded.abs()))
+            }
+            return roundedValue(v.add(other.v), radius, context)
+        }
+    }
+
+    private fun valueOf(number: SymbolicNumber, context: MathContext): Value =
+        number.approximation(piApproximation, eApproximation, context)
+
+    internal fun roundedValue(value: Decimal, error: Decimal?, context: MathContext): Value {
+        val rounded = value.round(context)
+        return Value(rounded, error = DecimalError.round(value, rounded, error))
+    }
+
+    private class Parser(
+        private val tokens: List<Token>, private val angle: AngleUnit, private val checkCancelled: () -> Unit,
+    ) {
         private var pos = 0
 
         private fun peek(): Token? = tokens.getOrNull(pos)
 
-        private fun next(): Token = tokens.getOrNull(pos++) ?: throw CalcException(CalcError.SYNTAX)
+        private fun next(): Token {
+            checkCancelled()
+            return tokens.getOrNull(pos++) ?: throw CalcException(CalcError.SYNTAX)
+        }
 
-        fun parseAll(): Decimal {
-            val value = additive().v
+        fun parseAll(): Expression {
+            val value = additive()
             if (pos != tokens.size) throw CalcException(CalcError.SYNTAX)
             return value
         }
 
-        private fun additive(): Value {
+        private fun additive(): Expression {
             var left = multiplicative()
             while (true) {
                 val op = (peek() as? Token.Op)?.symbol
                 if (op != '+' && op != '−') break
                 pos++
                 val right = multiplicative()
-                val amount = if (right.percent) left.v.multiply(right.v, MC) else right.v
-                left = Value(if (op == '+') left.v.add(amount, MC) else left.v.subtract(amount, MC))
+                left = Expression.Binary(op, left, right)
             }
             return left
         }
 
-        private fun multiplicative(): Value {
+        private fun multiplicative(): Expression {
             var left = unary()
             while (true) {
                 val token = peek()
                 when {
                     token is Token.Op && token.symbol == '×' -> {
                         pos++
-                        left = Value(left.v.multiply(unary().v, MC))
+                        left = Expression.Binary('×', left, unary())
                     }
                     token is Token.Op && token.symbol == '÷' -> {
                         pos++
-                        left = Value(divide(left.v, unary().v))
+                        left = Expression.Binary('÷', left, unary())
                     }
                     token != null && token.startsOperand() -> {
-                        left = Value(left.v.multiply(power().v, MC))
+                        left = Expression.Binary('×', left, power())
                     }
                     else -> return left
                 }
             }
         }
 
-        private fun unary(): Value {
+        private fun unary(): Expression {
             val token = peek()
             if (token is Token.Op && token.symbol == '−') {
                 pos++
                 val inner = unary()
-                return Value(inner.v.negate(), inner.percent)
+                return Expression.Unary("−", inner)
             }
             if (token is Token.Op && token.symbol == '+') {
                 pos++
@@ -115,59 +219,54 @@ object CalcEngine {
             return power()
         }
 
-        private fun power(): Value {
+        private fun power(): Expression {
             val base = postfix()
             val token = peek()
             if (token is Token.Op && token.symbol == '^') {
                 pos++
                 if (peek() == null) throw CalcException(CalcError.SYNTAX)
-                return Value(pow(base.v, unary().v))
+                val exponent = unary()
+                return Expression.Binary('^', base, exponent)
             }
             return base
         }
 
-        private fun postfix(): Value {
+        private fun postfix(): Expression {
             var value = primary()
             while (true) {
                 val token = peek() as? Token.Postfix ?: return value
                 pos++
-                value = when (token.symbol) {
-                    "%" -> Value(value.v.divide(HUNDRED, MC), percent = true)
-                    "!" -> Value(factorial(value.v))
-                    "²" -> Value(value.v.multiply(value.v, MC))
-                    "³" -> Value(value.v.pow(3, MC))
-                    "⁻¹" -> Value(divide(Decimal.ONE, value.v))
-                    else -> throw CalcException(CalcError.SYNTAX)
-                }
+                checkCancelled()
+                value = Expression.Unary(token.symbol, value)
             }
         }
 
-        private fun primary(): Value {
+        private fun primary(): Expression {
             return when (val token = next()) {
-                is Token.Num -> Value(token.value)
-                is Token.Const -> Value(if (token.name == "π") PI else E)
-                is Token.LParen -> Value(group())
+                is Token.Num -> token.tree?.let { if (it.isPercent()) Expression.Unary("group", it) else it } ?: Expression.Number(
+                    token.value.unscaled.toString(), token.value.scale(), Expression.encodeRadius(token.error), token.symbolic?.save(),
+                )
+                is Token.Const -> Expression.Constant(token.name)
+                is Token.LParen -> group().let { if (it.isPercent()) Expression.Unary("group", it) else it }
                 is Token.Func -> {
                     val arg = if (peek() is Token.LParen) {
                         pos++
                         group()
                     } else {
-                        power().v
+                        power()
                     }
-                    Value(applyFunction(token.name, arg))
+                    if (token.name == "exp") Expression.Binary('^', Expression.Constant("e"), arg)
+                    else Expression.Call(token.name, arg, angle)
                 }
-                is Token.Root -> {
-                    val arg = postfix().v
-                    Value(if (token.degree == 2) sqrt(arg) else cbrt(arg))
-                }
+                is Token.Root -> Expression.Unary(if (token.degree == 2) "√" else "∛", postfix())
                 else -> throw CalcException(CalcError.SYNTAX)
             }
         }
 
         /** Parses the inside of a parenthesis; the closing one is optional at the very end. */
-        private fun group(): Decimal {
+        private fun group(): Expression {
             if (peek() == null) throw CalcException(CalcError.SYNTAX)
-            val inner = additive().v
+            val inner = additive()
             when (peek()) {
                 is Token.RParen -> pos++
                 null -> Unit
@@ -176,82 +275,208 @@ object CalcEngine {
             return inner
         }
 
-        private fun applyFunction(name: String, x: Decimal): Decimal = when (name) {
-            "sin" -> trig(x) { kotlin.math.sin(it) }
-            "cos" -> trig(x) { kotlin.math.cos(it) }
-            "tan" -> tan(x)
-            "sin⁻¹" -> inverseTrig(x) { kotlin.math.asin(it) }
-            "cos⁻¹" -> inverseTrig(x) { kotlin.math.acos(it) }
-            "tan⁻¹" -> inverseTrig(x) { kotlin.math.atan(it) }
-            "sinh" -> fromDouble(kotlin.math.sinh(x.toDouble()))
-            "cosh" -> fromDouble(kotlin.math.cosh(x.toDouble()))
-            "tanh" -> fromDouble(kotlin.math.tanh(x.toDouble()))
-            "ln" -> {
-                if (x.signum() <= 0) throw CalcException(CalcError.DOMAIN)
-                fromDouble(ln(x))
+    }
+
+    private fun Expression.isPercent(): Boolean = this is Expression.Unary &&
+        (op == "%" || (op == "−" && input.isPercent()))
+
+    private class Evaluation(private val context: MathContext, private val checkCancelled: () -> Unit) {
+        private val trig by lazy(LazyThreadSafetyMode.NONE) { DecimalTrig(context, checkCancelled) }
+
+        fun evaluate(node: Expression, simplifyAdditions: Boolean = true): Value {
+            checkCancelled()
+            return when (node) {
+                is Expression.Number -> node.value().let { it.symbolic?.let(::symbolicValue) ?: it }
+                is Expression.Constant -> symbolicValue(if (node.name == "π") SymbolicNumber.PI else SymbolicNumber.E)
+                is Expression.Unary -> unary(node)
+                is Expression.Binary -> if (node.isAdditive()) {
+                    if (simplifyAdditions) additive(node) else binary(node, simplifyAdditions = false)
+                } else binary(node)
+                is Expression.Call -> {
+                    val power = node.input as? Expression.Binary
+                    if (node.name == "ln" && power?.op == '^' && power.left == Expression.Constant("e")) {
+                        return evaluate(power.right).copy(percent = false)
+                    }
+                    val arg = evaluate(node.input)
+                    functionValue(node.name, arg, node.angle).let {
+                        it.copy(defined = arg.defined && it.defined && domainIsKnown(node.name, arg),
+                            retryable = arg.retryable && it.retryable)
+                    }
+                }
             }
-            "log" -> {
-                if (x.signum() <= 0) throw CalcException(CalcError.DOMAIN)
-                exactLog10(x) ?: fromDouble(ln(x) / kotlin.math.ln(10.0))
-            }
-            "abs" -> x.abs()
-            "sinh⁻¹" -> fromDouble(kotlin.math.asinh(x.toDouble()))
-            "cosh⁻¹" -> {
-                if (x < Decimal(1)) throw CalcException(CalcError.DOMAIN)
-                fromDouble(kotlin.math.acosh(x.toDouble()))
-            }
-            "tanh⁻¹" -> {
-                if (x.abs() >= Decimal(1)) throw CalcException(CalcError.DOMAIN)
-                fromDouble(kotlin.math.atanh(x.toDouble()))
-            }
-            // The reciprocals keep the exact zeros and poles of their sine and cosine.
-            "sec" -> reciprocal(applyFunction("cos", x))
-            "csc" -> reciprocal(applyFunction("sin", x))
-            // cos ÷ sin rather than 1 ÷ tan, so cot(90°) is exactly 0 instead of a pole.
-            "cot" -> applyFunction("cos", x).let { c -> applyFunction("sin", x).let { s -> if (s.signum() == 0) throw CalcException(CalcError.DOMAIN) else c.divide(s, MC) } }
-            // Rounding stays exact on the decimal itself: floor(−2.5) is −3, round(2.5) is 3.
-            "floor" -> whole(x, up = false)
-            "ceil" -> whole(x, up = true)
-            "round" -> x.setScale(0, RoundingMode.HALF_UP)
-            "sgn" -> Decimal(x.signum())
-            "log₂" -> {
-                if (x.signum() <= 0) throw CalcException(CalcError.DOMAIN)
-                fromDouble(ln(x) / kotlin.math.ln(2.0))
-            }
-            else -> throw CalcException(CalcError.SYNTAX)
         }
 
-        private fun toRadians(x: Decimal): Double =
-            if (angle == AngleUnit.DEGREES) x.remainder(Decimal(360)).toDouble() * kotlin.math.PI / 180.0 else x.toDouble()
+        private fun Expression.isAdditive(): Boolean = this is Expression.Binary &&
+            (op == '+' || op == '−') && !right.isPercent()
 
-        /** Degrees that land exactly on an axis (0, 90, 180, 270) get exact answers. */
-        private fun quadrant(x: Decimal): Int? {
-            if (angle != AngleUnit.DEGREES) return null
-            val r = x.remainder(Decimal(360)).let { if (it.signum() < 0) it.add(Decimal(360)) else it }
-            val q = r.divideAndRemainder(Decimal(90))
-            return if (q[1].signum() == 0) q[0].toInt() else null
-        }
-
-        private fun trig(x: Decimal, f: (Double) -> Double): Decimal {
-            val result = f(toRadians(x))
-            // sin(π) in radians is 1.2e-16 in Double; treat noise around an exact zero as zero.
-            if (abs(result) < 1e-15 && abs(x.toDouble()) > 1e-3) return Decimal.ZERO
-            return fromDouble(result)
-        }
-
-        private fun tan(x: Decimal): Decimal {
-            when (quadrant(x)) {
-                0, 2 -> return Decimal.ZERO
-                1, 3 -> throw CalcException(CalcError.DOMAIN)
+        private fun additive(node: Expression.Binary): Value {
+            val terms = mutableListOf<Pair<Expression, Boolean>>()
+            fun collect(expression: Expression, positive: Boolean) {
+                if (expression is Expression.Binary && expression.isAdditive()) {
+                    collect(expression.left, positive)
+                    collect(expression.right, if (expression.op == '+') positive else !positive)
+                } else terms += expression to positive
             }
-            val cos = kotlin.math.cos(toRadians(x))
-            if (abs(cos) < 1e-15) throw CalcException(CalcError.DOMAIN)
-            return trig(x) { kotlin.math.tan(it) }
+            collect(node, true)
+            val cancelled = BooleanArray(terms.size)
+            val values = mutableMapOf<Expression, Value>()
+            val waiting = mutableMapOf<Pair<Expression, Boolean>, ArrayDeque<Int>>()
+            for ((index, term) in terms.withIndex()) {
+                val (expression, positive) = term
+                val match = waiting[expression to !positive]?.removeLastOrNull()
+                if (match == null) {
+                    waiting.getOrPut(term) { ArrayDeque() }.addLast(index)
+                } else {
+                    val value = values.getOrPut(expression) { evaluate(expression) }
+                    // A repeated invalid subtree still throws. An unproven domain can't justify a rewrite.
+                    if (!value.defined) return binary(node, simplifyAdditions = false)
+                    cancelled[index] = true
+                    cancelled[match] = true
+                }
+            }
+            if (cancelled.none { it }) return binary(node, simplifyAdditions = false)
+            var result = Value(Decimal.ZERO)
+            for ((index, term) in terms.withIndex()) {
+                if (!cancelled[index]) {
+                    val value = values.getOrPut(term.first) { evaluate(term.first) }
+                    result = result.add(if (term.second) value else value.negate(), context)
+                }
+            }
+            val remaining = terms.indices.filterNot { cancelled[it] }.map { values.getValue(terms[it].first) }
+            return result.copy(defined = remaining.all { it.defined }, retryable = remaining.all { it.retryable })
         }
 
-        private fun reciprocal(x: Decimal): Decimal {
-            if (x.signum() == 0) throw CalcException(CalcError.DOMAIN)
-            return Decimal(1).divide(x, MC)
+        private fun binary(node: Expression.Binary, simplifyAdditions: Boolean = true): Value {
+            val a = evaluate(node.left, simplifyAdditions)
+            val b = evaluate(node.right, simplifyAdditions)
+            val result = when (node.op) {
+                '+', '−' -> {
+                    val amount = if (b.percent) a.multiply(b, context) else b
+                    a.add(if (node.op == '+') amount else amount.negate(), context)
+                }
+                '×' -> a.multiply(b, context)
+                '÷' -> a.divide(b, context)
+                '^' -> powerOf(a, b, context, checkCancelled)
+                else -> throw CalcException(CalcError.SYNTAX)
+            }
+            val defined = a.defined && b.defined && when (node.op) {
+                '÷' -> b.signIsKnown()
+                '^' -> (a.v.signum() > 0 && a.signIsKnown()) ||
+                    (b.exact && b.v.isInteger() && (b.v.signum() >= 0 || a.signIsKnown())) ||
+                    (a.exact && a.v.signum() == 0 && b.v.signum() > 0 && b.signIsKnown()) ||
+                    (a.v.signum() < 0 && a.signIsKnown() && oddDenominator(b) != null)
+                else -> true
+            }
+            return result.copy(defined = defined, retryable = a.retryable && b.retryable && result.retryable)
+        }
+
+        private fun unary(node: Expression.Unary): Value {
+            val value = evaluate(node.input)
+            val result = when (node.op) {
+                "−" -> value.negate()
+                "group" -> value.copy(percent = false)
+                "%" -> value.divide(Value(HUNDRED), context).copy(percent = true)
+                "!" -> {
+                    if (!value.exact) throw DomainNeedsPrecision()
+                    factorial(value.v, checkCancelled, context)
+                }
+                "²" -> value.multiply(value, context)
+                "³" -> powerOf(value, Value(Decimal(3)), context, checkCancelled)
+                "⁻¹" -> Value(Decimal.ONE).divide(value, context).copy(defined = value.signIsKnown())
+                "√", "∛" -> root(value, if (node.op == "√") 2 else 3)
+                else -> throw CalcException(CalcError.SYNTAX)
+            }
+            return result.copy(defined = value.defined && result.defined, retryable = value.retryable && result.retryable)
+        }
+
+        private fun root(value: Value, degree: Int): Value {
+            val exact = if (degree == 2) value.symbolic?.squareRoot() else value.symbolic?.cubeRoot()
+            if (exact != null) return symbolicValue(exact)
+            val center = if (degree == 2) sqrt(value.v, context) else cbrt(value.v, context)
+            return Value(center, error = DecimalError.root(value.v, value.error, center, degree),
+                defined = degree == 3 || value.exact || (value.v.signum() > 0 && value.signIsKnown()))
+        }
+
+        private fun symbolicValue(number: SymbolicNumber): Value = valueOf(number, context)
+
+        private fun domainIsKnown(name: String, arg: Value): Boolean = when (name) {
+            "ln", "log", "log₂" -> arg.v.signum() > 0 && arg.signIsKnown()
+            "sin⁻¹", "cos⁻¹", "cosh⁻¹", "tanh⁻¹", "tan", "sec", "csc", "cot" -> arg.error != null
+            else -> true
+        }
+
+        private fun functionValue(name: String, arg: Value, angle: AngleUnit): Value {
+            if (name == "abs") return if (arg.v.signum() < 0) arg.negate().copy(percent = false) else arg.copy(percent = false)
+            if (name == "sin" || name == "cos" || name == "tan") {
+                arg.symbolic?.trig(name, angle)?.let { return symbolicValue(it) }
+                return trig.circular(name, arg, angle)
+            }
+            if (name == "sin⁻¹" || name == "cos⁻¹" || name == "tan⁻¹") {
+                arg.symbolic?.inverseTrig(name, angle)?.let { return symbolicValue(it) }
+                return trig.inverse(name, arg, angle)
+            }
+            when (name) {
+                "sec" -> return reciprocal(Value(Decimal.ONE), functionValue("cos", arg, angle))
+                "csc" -> return reciprocal(Value(Decimal.ONE), functionValue("sin", arg, angle))
+                "cot" -> return reciprocal(functionValue("cos", arg, angle), functionValue("sin", arg, angle))
+                "sinh", "cosh", "tanh", "sinh⁻¹", "cosh⁻¹", "tanh⁻¹" -> return trig.hyperbolic(name, arg)
+            }
+            val exact = when (name) {
+                "log" -> exactLog10(arg.v)
+                "log₂" -> exactLog2(arg.v)
+                else -> null
+            }
+            if (exact != null && arg.exact) return Value(exact)
+            if (name == "ln") return DecimalLogarithm.natural(arg, context, checkCancelled)
+            if (name == "log" || name == "log₂") {
+                val work = MathContext(context.precision + 8)
+                val natural = DecimalLogarithm.natural(arg, work, checkCancelled)
+                val base = if (name == "log") DecimalLogarithm.lnTen else DecimalLogarithm.lnTwo
+                val result = natural.divide(base, work)
+                return roundedValue(result.v, result.error, context).copy(retryable = natural.retryable)
+            }
+            return integerFunction(name, arg)
+        }
+
+        private fun integerFunction(name: String, arg: Value): Value {
+            if (name == "sgn") {
+                return when {
+                    arg.exact || arg.signIsKnown() -> Value(Decimal(arg.v.signum()))
+                    arg.error != null -> Value(Decimal.ZERO, error = Decimal.ONE)
+                    else -> Value(Decimal(arg.v.signum()), error = null)
+                }
+            }
+            fun rounded(value: Decimal): Decimal {
+                if (value.scale() <= 0) return value
+                return when (name) {
+                    "floor" -> whole(value, up = false)
+                    "ceil" -> whole(value, up = true)
+                    "round" -> value.setScale(0, RoundingMode.HALF_UP)
+                    else -> throw CalcException(CalcError.SYNTAX)
+                }
+            }
+            val center = rounded(arg.v)
+            if (arg.exact) return Value(center)
+            val radius = arg.error ?: return Value(center, error = null)
+            if (name == "round" && arg.v.scale() <= 0 && radius < Decimal("0.5")) return Value(center)
+            // Endpoints can be extremely far apart in scale. Keep a bound without expanding
+            // a thousands-of-digits integer merely to test whether the two endpoints agree.
+            val centerDigits = arg.v.precision().toLong() - arg.v.scale()
+            val radiusDigits = radius.precision().toLong() - radius.scale()
+            if (abs(centerDigits - radiusDigits) <= context.precision.toLong() + 12) {
+                val lower = rounded(arg.v.subtract(radius))
+                val upper = rounded(arg.v.add(radius))
+                if (lower == upper) return Value(lower)
+            }
+            // Rounding to an integer changes the input by at most one.
+            return Value(center, error = DecimalError.add(radius, Decimal(2)))
+        }
+
+        private fun reciprocal(numerator: Value, denominator: Value): Value {
+            val radius = denominator.error
+            if (radius != null && radius.signum() > 0 && denominator.v.abs() <= radius) throw DomainNeedsPrecision()
+            if (denominator.v.signum() == 0) throw CalcException(CalcError.DOMAIN)
+            return numerator.divide(denominator, context)
         }
 
         /** The integer at or below [x] (or at or above, when [up]), without leaving decimals. */
@@ -265,32 +490,14 @@ object CalcEngine {
             }
         }
 
-        private fun inverseTrig(x: Decimal, f: (Double) -> Double): Decimal {
-            val r = f(x.toDouble())
-            if (r.isNaN()) throw CalcException(CalcError.DOMAIN)
-            return fromDouble(if (angle == AngleUnit.DEGREES) r * 180.0 / kotlin.math.PI else r)
-        }
     }
 
     private fun Token.startsOperand(): Boolean =
         this is Token.Num || this is Token.Const || this is Token.Var || this is Token.LParen || this is Token.Func || this is Token.Root
 
-    private fun fromDouble(d: Double): Decimal {
-        if (d.isNaN()) throw CalcException(CalcError.DOMAIN)
-        if (d.isInfinite()) throw CalcException(CalcError.OVERFLOW)
-        return Decimal.fromDouble(d)
-    }
-
-    private fun divide(a: Decimal, b: Decimal): Decimal {
+    private fun divide(a: Decimal, b: Decimal, context: MathContext): Decimal {
         if (b.signum() == 0) throw CalcException(CalcError.DIVIDE_BY_ZERO)
-        return a.divide(b, MC)
-    }
-
-    /** ln for any magnitude, avoiding Double overflow on huge Decimals. */
-    private fun ln(x: Decimal): Double {
-        val digits = x.precision() - x.scale() - 1
-        val mantissa = x.movePointLeft(digits).toDouble()
-        return kotlin.math.ln(mantissa) + digits * kotlin.math.ln(10.0)
+        return a.divide(b, context)
     }
 
     private fun exactLog10(x: Decimal): Decimal? {
@@ -298,76 +505,198 @@ object CalcEngine {
         return if (stripped.unscaled == BigInteger.ONE) Decimal(-stripped.scale()) else null
     }
 
-    private fun pow(base: Decimal, exponent: Decimal): Decimal {
-        if (exponent.signum() == 0) return Decimal.ONE
-        if (base.signum() == 0) {
-            if (exponent.signum() < 0) throw CalcException(CalcError.DIVIDE_BY_ZERO)
-            return Decimal.ZERO
+    private fun exactLog2(x: Decimal): Decimal? {
+        if (x.signum() <= 0) return null
+        val stripped = x.stripTrailingZeros()
+        val coefficient = stripped.unscaled
+        val scale = stripped.scale()
+        if (scale < 0) return null
+        if (scale == 0) {
+            val exponent = coefficient.bitLength() - 1
+            return Decimal(exponent).takeIf { coefficient == BigInteger.ONE.shl(exponent) }
         }
-        val integer = exponent.stripTrailingZeros().let { it.scale() <= 0 }
-        if (integer && base.abs() == Decimal.ONE) {
-            val odd = exponent.remainder(Decimal(2)) != Decimal.ZERO
-            return if (base.signum() < 0 && odd) Decimal.ONE.negate() else Decimal.ONE
-        }
-        if (integer && exponent.abs() <= Decimal(Int.MAX_VALUE)) {
-            val n = exponent.toInt()
-            // Use log magnitude, not digit count: 1.00001^20000 is only about 1.22.
-            // Leave a small guard band for the estimate; evaluate checks the actual result.
-            val magnitude = ln(base.abs()) / kotlin.math.ln(10.0) * n
-            if (abs(magnitude) > 10_050) throw CalcException(CalcError.OVERFLOW)
-            return base.pow(n, MC)
-        }
-        // An integer outside the bounded power budget must not become a fractional root.
-        if (integer) throw CalcException(CalcError.OVERFLOW)
-        if (base.signum() < 0) {
-            // Odd roots of negatives are real: (−8)^(1/3) = −2.
-            val reciprocal = Decimal.ONE.divide(exponent, MC).round(MathContext(12))
-            val isOddRoot = reciprocal.stripTrailingZeros().scale() <= 0 &&
-                !reciprocal.toBigInteger().rem(BigInteger.TWO).isZero()
-            if (isOddRoot) return pow(base.negate(), exponent).negate()
-            throw CalcException(CalcError.DOMAIN)
-        }
-        val log = ln(base) * exponent.toDouble()
-        if (log > 23_000) throw CalcException(CalcError.OVERFLOW)
-        if (log < -23_000) return Decimal.ZERO
-        // Split into 10^k × 10^frac so huge results don't overflow Double.
-        val log10 = log / kotlin.math.ln(10.0)
-        val k = kotlin.math.floor(log10)
-        return fromDouble(10.0.pow(log10 - k)).scaleByPowerOfTen(k.toInt())
+        // A reciprocal power of two has the decimal representation 5^scale × 10^−scale.
+        val bits = coefficient.bitLength()
+        // 2.321928 < log₂(5) < 2.321929. This filter only rejects impossible candidates.
+        val low = scale.toLong() * 2_321_928 / 1_000_000 + 1
+        val high = scale.toLong() * 2_321_929 / 1_000_000 + 1
+        if (bits.toLong() !in low..high) return null
+        return Decimal(-scale).takeIf { coefficient == BigInteger.fromInt(5).pow(scale) }
     }
 
-    private fun sqrt(x: Decimal): Decimal {
+    private fun oddDenominator(exponent: Value): Fraction? =
+        exponent.symbolic?.fraction?.takeIf { !it.denominator.rem(BigInteger.TWO).isZero() }
+
+    private fun powerOf(base: Value, exponent: Value, context: MathContext, checkCancelled: () -> Unit): Value {
+        if (base.symbolic != null && exponent.symbolic != null) {
+            base.symbolic.pow(exponent.symbolic)?.let { return valueOf(it, context) }
+        }
+        if (exponent.exact && exponent.v.signum() == 0) return Value(Decimal.ONE)
+        val integer = exponent.exact && exponent.v.isInteger()
+        if ((!integer || exponent.v.signum() < 0) && base.error?.let {
+                it.signum() > 0 && base.v.abs() <= it
+            } == true
+        ) throw DomainNeedsPrecision()
+        if (base.v.signum() == 0 && base.exact) {
+            if (!exponent.signIsKnown()) throw DomainNeedsPrecision()
+            if (exponent.v.signum() < 0) throw CalcException(CalcError.DIVIDE_BY_ZERO)
+            return Value(Decimal.ZERO)
+        }
+        if (base.symbolic == SymbolicNumber.E) return exponential(exponent, context, checkCancelled)
+        if (integer) {
+            return integerPower(base, exponent.v, context, checkCancelled)
+        }
+
+        val negative = base.v.signum() < 0
+        val fraction = if (negative) oddDenominator(exponent) ?: throw CalcException(CalcError.DOMAIN) else null
+        val work = MathContext(context.precision + 8)
+        val magnitude = if (negative) base.negate() else base
+        val logarithm = DecimalLogarithm.natural(magnitude, work, checkCancelled)
+        val argument = logarithm.multiply(exponent, work).copy(retryable = logarithm.retryable && exponent.retryable)
+        val result = exponential(argument, context, checkCancelled)
+        return if (fraction != null && !fraction.numerator.rem(BigInteger.TWO).isZero()) result.negate() else result
+    }
+
+    private fun integerPower(base: Value, exponent: Decimal, context: MathContext, checkpoint: () -> Unit): Value {
+        val magnitude = base.v.abs()
+        if (magnitude == Decimal.ONE && base.exact) {
+            val odd = exponent.remainder(Decimal(2)) != Decimal.ZERO
+            return Value(if (base.v.signum() < 0 && odd) Decimal.ONE.negate() else Decimal.ONE)
+        }
+        if (exponent.abs() > Decimal(Int.MAX_VALUE)) throw CalcException(CalcError.OVERFLOW)
+        val n = exponent.toInt()
+        // A decade bound avoids evaluating a logarithm for ordinary integer powers.
+        val decade = magnitude.precision().toLong() - magnitude.scale() - 1
+        val low = minOf(decade * n, (decade + 1) * n)
+        val high = maxOf(decade * n, (decade + 1) * n)
+        if (base.exact && low > 10_050) throw CalcException(CalcError.OVERFLOW)
+        if (base.exact && high < -10_050) return underflow()
+        if (magnitude.signum() != 0 && (low < -10_050 || high > 10_050)) {
+            val work = MathContext(24)
+            val absoluteBase = if (base.v.signum() < 0) base.negate() else base
+            val logarithm = DecimalLogarithm.natural(absoluteBase, work, checkpoint)
+            val estimate = logarithm.divide(DecimalLogarithm.lnTen, work).multiply(Value(Decimal(n)), work)
+            val radius = estimate.error ?: throw DomainNeedsPrecision()
+            if (estimate.v.subtract(radius) > Decimal(10_050)) throw CalcException(CalcError.OVERFLOW)
+            if (estimate.v.add(radius) < Decimal(-10_050)) return underflow()
+            if (estimate.v.abs() > Decimal(10_050)) throw DomainNeedsPrecision()
+        }
+        val work = MathContext(context.precision + 12)
+        val one = Value(Decimal.ONE, symbolic = null)
+        var factor = Value(base.v, error = base.error, symbolic = null)
+        var result = one
+        var remaining = abs(n)
+        while (remaining != 0) {
+            checkpoint()
+            if (remaining and 1 == 1) result = result.multiply(factor, work)
+            remaining = remaining shr 1
+            if (remaining != 0) factor = factor.multiply(factor, work)
+        }
+        if (n < 0) result = one.divide(result, work)
+        return roundedValue(result.v, result.error, context).copy(retryable = base.retryable)
+    }
+
+    private fun underflow() = Value(Decimal.ZERO, error = Decimal("1E-10000"), retryable = false)
+
+    internal fun exponential(input: Value, context: MathContext, checkCancelled: () -> Unit): Value {
+        if (input.exact && input.v.signum() == 0) return Value(Decimal.ONE)
+        val half = Decimal("0.5")
+        val uncertainty = input.error
+        if (uncertainty != null && uncertainty > half) throw DomainNeedsPrecision()
+        if (input.v > Decimal(23_030)) throw CalcException(CalcError.OVERFLOW)
+        if (input.v < Decimal(-23_030)) {
+            val radius = input.error
+            if (radius != null && input.v.add(radius) <= Decimal(-23_030)) {
+                return underflow()
+            }
+            throw DomainNeedsPrecision()
+        }
+
+        // Evaluate a positive reduced argument, then square back and invert for negative inputs.
+        val work = MathContext(context.precision + 12)
+        var argument = input.v.abs()
+        var squarings = 0
+        while (argument > half) {
+            argument = argument.multiply(half)
+            squarings++
+        }
+        val reduced = Value(argument, symbolic = null)
+        val cutoff = Decimal.ONE.scaleByPowerOfTen(-work.precision)
+        var term = Value(Decimal.ONE, symbolic = null)
+        var total = term
+        var index = 1
+        while (true) {
+            checkCancelled()
+            term = term.multiply(reduced, work).divide(Value(Decimal(index), symbolic = null), work)
+            val upper = DecimalError.add(term.v, term.error) ?: error("Unbounded exponential term")
+            if (upper < cutoff) {
+                // On [0, 1/2], each remaining term is at most half its predecessor.
+                total = total.copy(error = DecimalError.add(total.error, upper.multiply(Decimal(2))))
+                break
+            }
+            total = total.add(term, work)
+            index++
+        }
+        repeat(squarings) {
+            checkCancelled()
+            total = total.multiply(total, work)
+        }
+        if (input.v.signum() < 0) total = Value(Decimal.ONE, symbolic = null).divide(total, work)
+        val radius = if (uncertainty != null) {
+            // e^r < 2 for r <= 1/2, so the derivative is at most twice the centre's upper bound.
+            val upper = DecimalError.add(total.v.abs(), total.error)
+            DecimalError.add(total.error, upper?.multiply(uncertainty)?.multiply(Decimal(2)))
+        } else null
+        return roundedValue(total.v, radius, context)
+    }
+
+    internal fun sqrt(x: Decimal, context: MathContext = MC): Decimal {
         if (x.signum() < 0) throw CalcException(CalcError.DOMAIN)
+        return positiveRoot(x, 2, context)
+    }
+
+    private fun cbrt(x: Decimal, context: MathContext): Decimal {
+        val root = positiveRoot(x.abs(), 3, context)
+        return if (x.signum() < 0) root.negate() else root
+    }
+
+    private fun positiveRoot(x: Decimal, degree: Int, context: MathContext): Decimal {
         if (x.signum() == 0) return Decimal.ZERO
-        val digits = x.precision() - x.scale()
-        // Initial guess from Double (rescaled to stay in range), then Newton iterations.
-        val half = digits / 2
-        var guess = Decimal.fromDouble(kotlin.math.sqrt(x.movePointLeft(half * 2).toDouble())).movePointRight(half)
-        val two = Decimal(2)
-        repeat(8) { guess = guess.add(x.divide(guess, MC), MC).divide(two, MC) }
+        val magnitude = x.precision() - x.scale() - 1
+        val divisor = Decimal(degree)
+        val weight = Decimal(degree - 1)
+        var guess = Decimal.ONE.scaleByPowerOfTen(magnitude.floorDiv(degree) + 1)
+        repeat(24) {
+            val denominator = if (degree == 2) guess else guess.multiply(guess, context)
+            val next = guess.multiply(weight, context).add(x.divide(denominator, context), context).divide(divisor, context)
+            if (next == guess) return next
+            guess = next
+        }
         return guess
     }
 
-    private fun cbrt(x: Decimal): Decimal {
-        if (x.signum() == 0) return Decimal.ZERO
-        val negative = x.signum() < 0
-        val a = x.abs()
-        val digits = a.precision() - a.scale()
-        val third = digits / 3
-        var guess = Decimal.fromDouble(kotlin.math.cbrt(a.movePointLeft(third * 3).toDouble())).movePointRight(third)
-        val three = Decimal(3)
-        repeat(8) {
-            guess = guess.multiply(Decimal(2), MC).add(a.divide(guess.multiply(guess, MC), MC), MC).divide(three, MC)
-        }
-        return if (negative) guess.negate() else guess
-    }
-
-    private fun factorial(x: Decimal): Decimal {
+    private fun factorial(x: Decimal, checkCancelled: () -> Unit, context: MathContext): Value {
         val stripped = x.stripTrailingZeros()
         if (x.signum() < 0 || stripped.scale() > 0) throw CalcException(CalcError.DOMAIN)
         if (x > Decimal(3000)) throw CalcException(CalcError.OVERFLOW)
-        var result = BigInteger.ONE
-        for (i in 2..x.toInt()) result = result.multiply(BigInteger.fromInt(i))
-        return Decimal(result).round(MC)
+        val last = x.toInt()
+        var exact = BigInteger.ONE
+        var next = 2
+        while (next <= last) {
+            checkCancelled()
+            val product = exact * next
+            if (product.bitLength() > SymbolicNumber.MAX_BITS) break
+            exact = product
+            next++
+        }
+        if (next > last) return Value(Decimal(exact))
+
+        val work = MathContext(context.precision + 12)
+        var result = roundedValue(Decimal(exact), Decimal.ZERO, work)
+        for (i in next..last) {
+            checkCancelled()
+            result = result.multiply(Value(Decimal(i), symbolic = null), work)
+        }
+        return roundedValue(result.v, result.error, context)
     }
 }

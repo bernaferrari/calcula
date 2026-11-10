@@ -2,7 +2,7 @@ package com.bernaferrari.calculator.domain.math
 
 
 internal sealed interface Token {
-    data class Num(val value: Decimal) : Token
+    data class Num(val value: Decimal, val error: Decimal? = Decimal.ZERO, val symbolic: SymbolicNumber? = null, val tree: Expression? = null) : Token
     data class Op(val symbol: Char) : Token
     data class Postfix(val symbol: String) : Token
     data class Func(val name: String) : Token
@@ -22,17 +22,19 @@ internal sealed interface Token {
  */
 internal object Tokenizer {
     /**
-     * Longest names first so `sinh⁻¹` wins over `sinh`, `sinh` over `sin` and `log₂` over `log`. None
-     * may start with `e`, `x` or `y`: those read as the constant and the variables before any name.
+     * Longest names first so `sinh⁻¹` wins over `sinh`, `sinh` over `sin` and `log₂` over `log`. The tokenizer
+     * also recognizes the parenthesized `exp(` alias before the constant `e`.
      */
     val FUNCTIONS = listOf(
-        "sinh⁻¹", "cosh⁻¹", "tanh⁻¹", "sin⁻¹", "cos⁻¹", "tan⁻¹", "floor", "round", "sinh", "cosh", "tanh", "ceil", "log₂", "sin", "cos", "tan", "sec", "csc", "cot", "sgn", "log", "abs", "ln",
+        "sinh⁻¹", "cosh⁻¹", "tanh⁻¹", "sin⁻¹", "cos⁻¹", "tan⁻¹", "floor", "round", "sinh", "cosh", "tanh", "ceil", "log₂", "sin", "cos", "tan", "sec", "csc", "cot", "sgn", "log", "abs", "ln", "exp",
     )
 
     /** The graph's slider parameters, in the order they are handed out. */
     const val PARAMETERS = "abcd"
 
-    fun tokenize(raw: String): List<Token> {
+    const val BOUND_ANSWER = '\uE000'
+
+    fun tokenize(raw: String, answer: Token.Num? = null): List<Token> {
         // The person's own functions are rewritten into what they mean first.
         val input = UserFunctions.expand(raw)
         ExpressionLimits.check(input)
@@ -42,8 +44,14 @@ internal object Tokenizer {
             if (tokens.size >= 256) throw CalcException(CalcError.SYNTAX)
             val c = input[i]
             when {
-                c.isWhitespace() || c == ',' -> i++
+                c.isWhitespace() -> i++
+                c == BOUND_ANSWER && answer != null -> {
+                    tokens += answer
+                    i++
+                }
                 c in '0'..'9' || c == '.' -> {
+                    // A gap inside digits is ambiguous without the input locale.
+                    if (tokens.lastOrNull() is Token.Num) throw CalcException(CalcError.SYNTAX)
                     val end = numberEnd(input, i)
                     tokens += Token.Num(parseNumber(input.substring(i, end)))
                     i = end
@@ -60,6 +68,7 @@ internal object Tokenizer {
                 c == '√' -> { tokens += Token.Root(2); i++ }
                 c == '∛' -> { tokens += Token.Root(3); i++ }
                 c == 'π' -> { tokens += Token.Const("π"); i++ }
+                input.startsWith("exp(", i) -> { tokens += Token.Func("exp"); i += 3 }
                 c == 'e' -> { tokens += Token.Const("e"); i++ }
                 c == 'x' || c == 'y' -> { tokens += Token.Var(c); i++ }
                 else -> {

@@ -44,7 +44,7 @@ class FollowupRegressionTest {
         val prefs = StoredPreferencesRepository(store)
         prefs.update { it.copy(rpn = true, decimalPlaces = 2) }
         val saved = SavedStateHandle(mapOf("rpn_stack" to arrayOf("2")))
-        val vm = CalculatorViewModel(StoredHistoryRepository(store), prefs, saved)
+        val vm = CalculatorViewModel(StoredHistoryRepository(store), prefs, saved, UnconfinedTestDispatcher())
         models.put("calculator", vm)
         vm.onInsertText("√(")
         assertEquals("1.41", saved.get<Array<String>>("rpn_stack")!!.first())
@@ -55,7 +55,7 @@ class FollowupRegressionTest {
         prefs.update { it.copy(rpn = true) }
         val history = StoredHistoryRepository(store)
         val saved = SavedStateHandle(mapOf("rpn_stack" to arrayOf("9")))
-        val vm = CalculatorViewModel(history, prefs, saved)
+        val vm = CalculatorViewModel(history, prefs, saved, UnconfinedTestDispatcher())
         models.put("calculator", vm)
         vm.onInsertText("√(")
         assertEquals("3", history.getAllHistory().first().single().result)
@@ -70,7 +70,7 @@ class FollowupRegressionTest {
         val prefs = StoredPreferencesRepository(store)
         prefs.update { it.copy(rpn = true) }
         val saved = SavedStateHandle(mapOf("rpn_stack" to arrayOf("1.234567890123456E5000")))
-        val vm = CalculatorViewModel(StoredHistoryRepository(store), prefs, saved)
+        val vm = CalculatorViewModel(StoredHistoryRepository(store), prefs, saved, UnconfinedTestDispatcher())
         models.put("calculator", vm)
         vm.onInsertText("abs(")
         assertEquals(Decimal("1.23456789012346E5000"), Decimal(saved.get<Array<String>>("rpn_stack")!!.first()))

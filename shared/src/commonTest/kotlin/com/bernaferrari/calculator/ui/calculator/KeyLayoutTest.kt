@@ -1,5 +1,8 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import com.bernaferrari.calculator.domain.input.CalcState
+import com.bernaferrari.calculator.domain.input.Calculator
+
 import com.bernaferrari.calculator.domain.input.Key
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -32,4 +35,12 @@ class KeyLayoutTest {
         assertNull(FlickCatalog.import("hello", slots))
         assertNull(FlickCatalog.import("""{"keys":{"NOPE.tap":"key:SIN"}}""", slots))
     }
+    @Test fun keyboardCharactersUseTheCalculatorInputPath() {
+        val input = "1 000+1,5="
+        val state = input.mapNotNull(::calculatorCharacterKey).fold(CalcState()) { current, key ->
+            Calculator.press(current, key).first
+        }
+        assertEquals("1001.5", state.editor.text)
+    }
+
 }

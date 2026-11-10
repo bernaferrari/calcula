@@ -56,7 +56,14 @@ object Programmer {
             val last = tokens.lastOrNull()
             return if (last != null && isNumber(last)) {
                 val next = if (last == "0") key.text else last + key.text
-                if (parse(next, s.base, s.word) == null) s else s.copy(tokens = tokens.dropLast(1) + next, resultShown = false)
+                val value = parse(next, s.base, s.word) ?: return s
+                val before = tokens.dropLast(1)
+                val updated = if (s.base == Base.DEC && s.signed && value < 0) {
+                    val negative = before.lastOrNull() == "−u"
+                    val prefix = if (negative) before.dropLast(1) else before
+                    prefix + tokensFor(if (negative) wrap(-value, s.word) else value, s.base, s.word, s.signed)
+                } else before + next
+                s.copy(tokens = updated, resultShown = false)
             } else if (last == ")") s
             else s.copy(tokens = tokens + key.text, resultShown = false)
         }
@@ -82,9 +89,10 @@ object Programmer {
                 last != null && isNumber(last) -> {
                     val value = parse(last, s.base, s.word) ?: return s
                     val before = s.tokens.dropLast(1)
-                    if (before.lastOrNull() == "−u") s.copy(tokens = before.dropLast(1) + last)
-                    else if (s.base == Base.DEC && s.signed) s.copy(tokens = before + "−u" + last, resultShown = false)
-                    else s.copy(tokens = before + format(wrap(-value, s.word), s.base, s.word, s.signed), resultShown = false)
+                    val negative = before.lastOrNull() == "−u"
+                    val prefix = if (negative) before.dropLast(1) else before
+                    val negated = wrap(if (negative) value else -value, s.word)
+                    s.copy(tokens = prefix + tokensFor(negated, s.base, s.word, s.signed), resultShown = false)
                 }
                 else -> s
             }
@@ -125,18 +133,12 @@ object Programmer {
 
     /** Tokens rewritten from one base to another, each number keeping its value. */
     fun inBase(tokens: List<String>, from: Base, to: Base, word: WordSize, signed: Boolean = true): List<String> {
-        // Only signed decimal writes a minus; elsewhere a negative is its two's complement.
-        val keepsMinus = to == Base.DEC && signed
-        return tokens.flatMapIndexed { i, t ->
-            if (!isNumber(t)) return@flatMapIndexed listOf(t)
-            var v = parse(t, from, word) ?: 0L
-            // A negative typed in decimal can't keep its minus in hex: fold it into the number.
+        return tokens.flatMapIndexed { i, token ->
+            if (token == "−u" && tokens.getOrNull(i + 1)?.let(::isNumber) == true) return@flatMapIndexed emptyList()
+            if (!isNumber(token)) return@flatMapIndexed listOf(token)
+            val value = parse(token, from, word) ?: 0L
             val negated = tokens.getOrNull(i - 1) == "−u"
-            if (negated && !keepsMinus) v = wrap(-v, word)
-            tokensFor(v, to, word, signed)
-        }.let { out ->
-            if (keepsMinus) out
-            else out.filterIndexed { i, t -> !(t == "−u" && out.getOrNull(i + 1)?.let(::isNumber) == true) }
+            tokensFor(if (negated) wrap(-value, word) else value, to, word, signed)
         }
     }
 
@@ -275,9 +277,15 @@ object Programmer {
             while (peek() == "<<" || peek() == ">>" || peek() == "ROL" || peek() == "ROR") {
                 val op = tokens[pos++]
                 val n = add()
+                val count = if (signed) n.coerceIn(0L, word.bits.toLong()).toInt()
+                    else unsigned(n).coerceAtMost(word.bits.toULong()).toInt()
                 v = when (op) {
-                    "<<" -> w(v shl n.coerceIn(0L, 63L).toInt())
-                    ">>" -> w(if (signed) v shr n.coerceIn(0L, 63L).toInt() else (v.toULong() and (if (word.bits == 64) ULong.MAX_VALUE else (1uL shl word.bits) - 1uL)).shr(n.coerceIn(0L, 63L).toInt()).toLong())
+                    "<<" -> if (count >= word.bits) 0L else w(v shl count)
+                    ">>" -> when {
+                        count >= word.bits -> if (signed && v < 0) -1L else 0L
+                        signed -> w(v shr count)
+                        else -> w((unsigned(v) shr count).toLong())
+                    }
                     // Rotations wrap around the word: what leaves one end comes back at the other.
                     else -> rotate(v, if (op == "ROL") n else -n)
                 }

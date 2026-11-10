@@ -2,6 +2,8 @@ package com.bernaferrari.calculator.widget
 
 import android.content.Context
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,13 +49,19 @@ import com.bernaferrari.calculator.domain.input.CalcState
 import com.bernaferrari.calculator.domain.input.Calculator
 import com.bernaferrari.calculator.domain.input.Editor
 import com.bernaferrari.calculator.domain.input.Key
+import com.bernaferrari.calculator.domain.input.NumericDisplay
 import com.bernaferrari.calculator.domain.input.Outcome
 import com.bernaferrari.calculator.domain.model.CalculationHistory
 import com.bernaferrari.calculator.ui.calculator.DisplayFormatter
 import com.bernaferrari.calculator.ui.calculator.separators
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 
 private val TEXT = stringPreferencesKey("text")
+private val ANSWER = stringPreferencesKey("answer")
 private val REPEAT_TAIL = stringPreferencesKey("repeat_tail")
 private val RESULT = booleanPreferencesKey("result")
 private val ERROR = booleanPreferencesKey("error")
@@ -80,6 +88,16 @@ class CalculatorWidget : GlanceAppWidget() {
         val state = currentState<Preferences>()
         val text = state[TEXT].orEmpty()
         val resultShown = state[RESULT] ?: false
+        val answer = state[ANSWER]
+        val error = state[ERROR] == true
+        val preview = if (resultShown || error) null else key(text, answer, angle, decimals, notation) {
+            produceState<NumericDisplay?>(null) {
+                value = withContext(Dispatchers.Default) {
+                    val coroutine = currentCoroutineContext()
+                    Calculator.previewDisplay(Editor(text).restoreAnswer(answer), angle, decimals, notation, coroutine::ensureActive)
+                }
+            }.value
+        }
         val size = LocalSize.current
         val colors = GlanceTheme.colors
         val keyGap = 3.dp
@@ -87,8 +105,9 @@ class CalculatorWidget : GlanceAppWidget() {
             GlanceModifier.fillMaxSize().background(colors.widgetBackground).cornerRadius(28.dp).padding(8.dp),
         ) {
             // The display; tapping it opens the app.
-            val shown = if (text.isEmpty()) "0" else formatter.format(text, 0, null).text.text
-            val preview = if (resultShown || state[ERROR] == true) null else Calculator.preview(text, angle, decimals, notation)?.let(formatter::number)
+            val number = if (text.isEmpty()) "0" else formatter.format(text, 0, null).text.text
+            val result = if (resultShown) Calculator.resultDisplay(Editor(text).restoreAnswer(answer)) else null
+            val shown = if (result == null) number else (if (result.decimal.approximate) "≈ " else "= ") + number
             Column(
                 GlanceModifier.fillMaxWidth().defaultWeight().padding(horizontal = 12.dp, vertical = 4.dp).clickable(actionStartActivity<MainActivity>()),
                 horizontalAlignment = Alignment.End,
@@ -105,7 +124,7 @@ class CalculatorWidget : GlanceAppWidget() {
                     modifier = GlanceModifier.fillMaxWidth(),
                 )
                 Text(
-                    if (state[ERROR] == true) "—" else preview?.let { "= $it" } ?: " ",
+                    if (error) "—" else preview?.let { (if (it.approximate) "≈ " else "= ") + formatter.number(it.text) } ?: " ",
                     maxLines = 1,
                     style = TextStyle(fontSize = 16.sp, color = colors.onSurfaceVariant, textAlign = TextAlign.End),
                     modifier = GlanceModifier.fillMaxWidth(),
@@ -169,24 +188,31 @@ class KeyAction : ActionCallback {
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
         val key = parameters[KEY]?.let { runCatching { Key.valueOf(it) }.getOrNull() } ?: return
         val prefs = AppGraph.preferences.getUserPreferences().first()
-        var evaluated: Outcome.Evaluated? = null
-        updateAppWidgetState(context, glanceId) { state ->
-            val current = CalcState(
-                editor = Editor(state[TEXT].orEmpty()),
-                resultShown = state[RESULT] ?: false,
-                angleUnit = prefs.angleUnit,
-                decimalPlaces = prefs.decimalPlaces,
-                notation = prefs.notation,
-                repeatTail = state[REPEAT_TAIL],
-            )
-            val (next, outcome) = Calculator.press(current, key)
-            next.repeatTail?.let { state[REPEAT_TAIL] = it } ?: state.remove(REPEAT_TAIL)
-            state[TEXT] = next.editor.text
-            state[RESULT] = next.resultShown
-            state[ERROR] = next.error != null
-            evaluated = outcome as? Outcome.Evaluated
+        var evaluated: CalculationHistory? = null
+        withContext(Dispatchers.Default) {
+            val coroutine = currentCoroutineContext()
+            updateAppWidgetState(context, glanceId) { state ->
+                val current = CalcState(
+                    editor = Editor(state[TEXT].orEmpty()).restoreAnswer(state[ANSWER]),
+                    resultShown = state[RESULT] ?: false,
+                    angleUnit = prefs.angleUnit,
+                    decimalPlaces = prefs.decimalPlaces,
+                    notation = prefs.notation,
+                    repeatTail = state[REPEAT_TAIL],
+                )
+                val (next, outcome) = Calculator.press(current, key, coroutine::ensureActive)
+                next.repeatTail?.let { state[REPEAT_TAIL] = it } ?: state.remove(REPEAT_TAIL)
+                next.editor.saveAnswer()?.let { state[ANSWER] = it } ?: state.remove(ANSWER)
+                state[TEXT] = next.editor.text
+                state[RESULT] = next.resultShown
+                state[ERROR] = next.error != null
+                evaluated = (outcome as? Outcome.Evaluated)?.let {
+                    CalculationHistory(expression = it.expression, result = it.result, answerOperand = it.answerOperand,
+                        approximate = it.approximate, resultOperand = next.editor.saveAnswer())
+                }
+            }
         }
-        evaluated?.let { AppGraph.history.insertCalculation(CalculationHistory(expression = it.expression, result = it.result)) }
+        evaluated?.let { AppGraph.history.insertCalculation(it) }
         CalculatorWidget().update(context, glanceId)
     }
 }
