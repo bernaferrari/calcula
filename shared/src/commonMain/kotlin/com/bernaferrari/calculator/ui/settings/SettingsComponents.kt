@@ -92,6 +92,19 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.layout.layout
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.tween
+import com.bernaferrari.calculator.ui.calculator.FitText
 import com.bernaferrari.calculator.domain.model.AppPalette
 import com.bernaferrari.calculator.ui.theme.availablePalettes
 import com.bernaferrari.calculator.ui.theme.paletteColorScheme
@@ -155,6 +168,14 @@ private fun RowText(title: String, subtitle: String?, modifier: Modifier = Modif
 
 private val RowPadding = PaddingValues(horizontal = 20.dp, vertical = 14.dp)
 
+/** Decoration only: the row's title already says what the picture shows. */
+@Composable
+private fun RowPicture(picture: (@Composable () -> Unit)?) {
+    if (picture == null) return
+    Box(Modifier.clearAndSetSemantics {}) { picture() }
+    Spacer(Modifier.width(14.dp))
+}
+
 @Composable
 fun SwitchRow(
     position: SegmentPosition,
@@ -162,9 +183,12 @@ fun SwitchRow(
     subtitle: String?,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
+    /** A small drawing of what the switch changes, where one says more than the words. */
+    picture: (@Composable () -> Unit)? = null,
 ) {
     RowSurface(position, interaction = Modifier.toggleable(checked, role = Role.Switch, onValueChange = onCheckedChange)) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.heightIn(min = 60.dp).padding(RowPadding)) {
+            RowPicture(picture)
             RowText(title, subtitle, Modifier.weight(1f))
             Spacer(Modifier.width(16.dp))
             Switch(checked = checked, onCheckedChange = null)
@@ -181,9 +205,11 @@ fun ActionRow(
     showChevron: Boolean = true,
     onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
+    picture: (@Composable () -> Unit)? = null,
 ) {
     RowSurface(position, modifier, interaction = if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.heightIn(min = 60.dp).padding(RowPadding)) {
+            RowPicture(picture)
             RowText(title, subtitle, Modifier.weight(1f), titleColor = if (destructive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface)
             if (onClick != null && showChevron) {
                 Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -192,9 +218,12 @@ fun ActionRow(
     }
 }
 
-/** A setting with a few exclusive values: its name, what the choice does, and a quiet segmented control. */
+/**
+ * A setting whose values are easier shown than named: each option is a small picture of what it
+ * does, captioned; the chosen one wears the ring the color styles use and rounds off toward a pill.
+ */
 @Composable
-fun <T> ChoiceRow(
+fun <T> PictureChoiceRow(
     position: SegmentPosition,
     title: String,
     options: List<T>,
@@ -202,12 +231,116 @@ fun <T> ChoiceRow(
     label: @Composable (T) -> String,
     onSelect: (T) -> Unit,
     subtitle: String? = null,
+    pictureHeight: Dp = 56.dp,
+    picture: @Composable (T) -> Unit,
 ) {
+    val haptics = LocalHapticFeedback.current
     RowSurface(position) {
-        Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             RowText(title, subtitle)
-            SegmentedControl(options, selected, label, onSelect)
+            // The ring sits 4dp outside each picture; pulling the row out by that keeps pictures on the text's margin.
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth().outset(4.dp).selectableGroup()) {
+                options.forEach { option ->
+                    val chosen = option == selected
+                    val ring by animateDpAsState(if (chosen) 2.dp else 0.dp, motionSpec(spring(dampingRatio = Spring.DampingRatioMediumBouncy)), label = "ring")
+                    // The chosen picture also rounds off toward a pill, as a key does under the finger:
+                    // shape, not only the ring, says which one is picked.
+                    val corner by animateDpAsState(if (chosen) 24.dp else 12.dp, motionSpec(spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow)), label = "corner")
+                    val caption by animateColorAsState(if (chosen) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, label = "caption")
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .selectable(selected = chosen, role = Role.RadioButton, interactionSource = remember { MutableInteractionSource() }, indication = null) {
+                                if (!chosen) {
+                                    haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                                    onSelect(option)
+                                }
+                            },
+                    ) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(pictureHeight + 8.dp)
+                                // Fades in with its width, so an unchosen picture has no hairline left over.
+                                .border(ring.coerceAtLeast(0.dp), MaterialTheme.colorScheme.primary.copy(alpha = (ring / 2.dp).coerceIn(0f, 1f)), RoundedCornerShape((corner + 4.dp).coerceAtLeast(0.dp)))
+                                .padding(4.dp)
+                                .clip(RoundedCornerShape(corner.coerceAtLeast(0.dp)))
+                                .background(MaterialTheme.colorScheme.surface)
+                                .clearAndSetSemantics {},
+                        ) { picture(option) }
+                        Text(label(option), style = MaterialTheme.typography.labelMedium, color = caption, maxLines = 1, softWrap = false)
+                    }
+                }
+            }
         }
+    }
+}
+
+/** Lets a child run [by] past its parent's content edge on each side. */
+private fun Modifier.outset(by: Dp) = layout { measurable, constraints ->
+    val extra = by.roundToPx()
+    val placeable = measurable.measure(constraints.copy(minWidth = constraints.minWidth + extra * 2, maxWidth = constraints.maxWidth + extra * 2))
+    layout(constraints.maxWidth, placeable.height) { placeable.place(-extra, 0) }
+}
+
+/**
+ * How numbers are written, as one card: a small display working out [expression], and under it
+ * the controls that shape its [result]. Change any of them and the answer on the display changes.
+ */
+@Composable
+fun NumberFormatRow(position: SegmentPosition, expression: String, result: String, controls: @Composable () -> Unit) {
+    val reduceMotion = LocalReduceMotion.current
+    RowSurface(position) {
+        Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(
+                horizontalAlignment = Alignment.End,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 10.dp)
+                    // One sentence for screen readers, announced as it changes.
+                    .clearAndSetSemantics {
+                        contentDescription = "$expression = $result"
+                        liveRegion = LiveRegionMode.Polite
+                    },
+            ) {
+                Text(expression, style = MaterialTheme.typography.bodyMedium.copy(fontFamily = GoogleSansFlex), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                AnimatedContent(
+                    result,
+                    transitionSpec = {
+                        if (reduceMotion) fadeIn(snap()) togetherWith fadeOut(snap())
+                        else (fadeIn(tween(180, delayMillis = 60)) + slideInVertically { it / 3 }) togetherWith (fadeOut(tween(90)) + slideOutVertically { -it / 3 })
+                    },
+                    contentAlignment = Alignment.CenterEnd,
+                    label = "result",
+                    modifier = Modifier.fillMaxWidth().height(44.dp),
+                ) { shown ->
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.CenterEnd) {
+                        FitText(
+                            shown,
+                            style = TextStyle(fontFamily = GoogleSansFlex, color = MaterialTheme.colorScheme.onSurface, textAlign = TextAlign.End),
+                            maxSize = 32.sp,
+                            minSize = 14.sp,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+                }
+            }
+            controls()
+        }
+    }
+}
+
+/** One of the controls in a card that holds several: a small caption, then the options. */
+@Composable
+fun <T> LabeledChoice(title: String, options: List<T>, selected: T, label: @Composable (T) -> String, onSelect: (T) -> Unit) {
+    Column {
+        Text(title, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        SegmentedControl(options, selected, label, onSelect)
     }
 }
 

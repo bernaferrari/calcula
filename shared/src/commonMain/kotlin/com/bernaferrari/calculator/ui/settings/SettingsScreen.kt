@@ -120,6 +120,13 @@ class SettingsViewModel(
 
 private val DecimalChoices = listOf(AUTO_DECIMALS, 2, 4, 6, 10)
 
+/**
+ * The sum on the Numbers card's display. Its answer, 66,666.666…, has digits to group, decimals to
+ * round, and an exponent (4) that scientific and engineering notation write differently.
+ */
+private const val SampleDividend = "200000"
+private val SampleQuotient = Decimal(SampleDividend).divide(Decimal(3), MathContext(40))
+
 @Composable
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
@@ -183,29 +190,32 @@ fun SettingsScreen(
                 )
             }
 
-            // Three short groups instead of one long one: how it calculates, how numbers look, what the keys do.
+            // Three short groups, and every setting shows what it does: the options are pictures of
+            // their own effect, so nobody has to go back to the keypad to see what changed.
             SettingsSection(
                 stringResource(Res.string.settings_calculator),
                 listOf(
                     { p ->
-                        ChoiceRow(
+                        PictureChoiceRow(
                             p, stringResource(Res.string.settings_angle_unit),
                             listOf(AngleUnit.DEGREES, AngleUnit.RADIANS), prefs.angleUnit,
                             label = { stringResource(if (it == AngleUnit.DEGREES) Res.string.settings_degrees else Res.string.settings_radians) },
                             onSelect = viewModel::setAngleUnit,
-                        )
+                        ) { AnglePicture(radians = it == AngleUnit.RADIANS) }
                     },
                     { p ->
-                        ChoiceRow(
+                        PictureChoiceRow(
                             p, stringResource(Res.string.settings_entry),
                             listOf(false, true), prefs.rpn,
                             label = { stringResource(if (it) Res.string.settings_entry_rpn else Res.string.settings_entry_algebraic) },
                             onSelect = viewModel::setRpn,
                             subtitle = stringResource(if (prefs.rpn) Res.string.settings_entry_rpn_summary else Res.string.settings_entry_algebraic_summary),
-                        )
+                        ) { EntryPicture(rpn = it) }
                     },
                     { p ->
-                        SwitchRow(p, stringResource(Res.string.settings_show_tape), stringResource(Res.string.settings_show_tape_description), prefs.showHistory, viewModel::setShowHistory)
+                        SwitchRow(p, stringResource(Res.string.settings_show_tape), stringResource(Res.string.settings_show_tape_description), prefs.showHistory, viewModel::setShowHistory) {
+                            TapeThumbnail(prefs.showHistory)
+                        }
                     },
                 ),
             )
@@ -214,52 +224,45 @@ fun SettingsScreen(
                 stringResource(Res.string.settings_numbers),
                 listOf(
                     { p ->
-                        ChoiceRow(
-                            p, stringResource(Res.string.settings_decimal_places),
-                            DecimalChoices, if (prefs.decimalPlaces in DecimalChoices) prefs.decimalPlaces else AUTO_DECIMALS,
-                            label = { if (it == AUTO_DECIMALS) stringResource(Res.string.settings_decimals_full) else it.toString() },
-                            onSelect = viewModel::setDecimalPlaces,
-                            // A live example says more than "Auto" ever could.
-                            subtitle = decimalsExample(prefs.decimalPlaces, prefs.decimalSeparator),
-                        )
-                    },
-                    { p ->
-                        ChoiceRow(
-                            p, stringResource(Res.string.settings_notation),
-                            Notation.entries.toList(), prefs.notation,
-                            label = {
-                                stringResource(
+                        val formatter = DisplayFormatter(prefs.decimalSeparator.separators())
+                        NumberFormatRow(
+                            p,
+                            expression = formatter.number(SampleDividend) + " ÷ 3",
+                            result = formatter.number(Calculator.formatResult(SampleQuotient, prefs.decimalPlaces, prefs.notation)),
+                        ) {
+                            LabeledChoice(
+                                stringResource(Res.string.settings_decimal_places),
+                                DecimalChoices, if (prefs.decimalPlaces in DecimalChoices) prefs.decimalPlaces else AUTO_DECIMALS,
+                                label = { if (it == AUTO_DECIMALS) stringResource(Res.string.settings_decimals_full) else it.toString() },
+                                onSelect = viewModel::setDecimalPlaces,
+                            )
+                            LabeledChoice(
+                                stringResource(Res.string.settings_notation),
+                                Notation.entries.toList(), prefs.notation,
+                                label = {
+                                    stringResource(
+                                        when (it) {
+                                            Notation.NORMAL -> Res.string.settings_notation_normal
+                                            Notation.SCIENTIFIC -> Res.string.settings_notation_sci
+                                            Notation.ENGINEERING -> Res.string.settings_notation_eng
+                                        },
+                                    )
+                                },
+                                onSelect = viewModel::setNotation,
+                            )
+                            LabeledChoice(
+                                stringResource(Res.string.settings_decimal_separator),
+                                DecimalSeparator.entries.toList(), prefs.decimalSeparator,
+                                label = {
                                     when (it) {
-                                        Notation.NORMAL -> Res.string.settings_notation_normal
-                                        Notation.SCIENTIFIC -> Res.string.settings_notation_sci
-                                        Notation.ENGINEERING -> Res.string.settings_notation_eng
-                                    },
-                                )
-                            },
-                            onSelect = viewModel::setNotation,
-                            // The same number each way says it best.
-                            subtitle = "1234567.8 → " + DisplayFormatter(prefs.decimalSeparator.separators()).number(
-                                Calculator.formatResult(Decimal("1234567.8"), prefs.decimalPlaces, prefs.notation),
-                            ),
-                        )
-                    },
-                    { p ->
-                        ChoiceRow(
-                            p, stringResource(Res.string.settings_decimal_separator),
-                            DecimalSeparator.entries.toList(), prefs.decimalSeparator,
-                            label = {
-                                when (it) {
-                                    DecimalSeparator.AUTO -> stringResource(Res.string.settings_separator_region)
-                                    DecimalSeparator.DOT -> "1,234.5"
-                                    DecimalSeparator.COMMA -> "1.234,5"
-                                }
-                            },
-                            onSelect = viewModel::setDecimalSeparator,
-                            subtitle = stringResource(
-                                Res.string.settings_separator_example,
-                                DisplayFormatter(prefs.decimalSeparator.separators()).number("1234567.8"),
-                            ),
-                        )
+                                        DecimalSeparator.AUTO -> stringResource(Res.string.settings_separator_region)
+                                        DecimalSeparator.DOT -> "1,234.5"
+                                        DecimalSeparator.COMMA -> "1.234,5"
+                                    }
+                                },
+                                onSelect = viewModel::setDecimalSeparator,
+                            )
+                        }
                     },
                 ),
             )
@@ -268,7 +271,7 @@ fun SettingsScreen(
                 stringResource(Res.string.settings_keypad),
                 listOf(
                     { p ->
-                        ChoiceRow(
+                        PictureChoiceRow(
                             p, stringResource(Res.string.settings_flick_hints),
                             FlickHints.entries, prefs.hints,
                             label = {
@@ -282,13 +285,18 @@ fun SettingsScreen(
                                 )
                             },
                             onSelect = viewModel::setFlickHints,
-                        )
+                            pictureHeight = 60.dp,
+                        ) { HintPicture(it) }
                     },
                     { p ->
-                        SwitchRow(p, stringResource(Res.string.settings_memory_keys), stringResource(Res.string.settings_memory_keys_summary), prefs.memoryKeys, viewModel::setMemoryKeys)
+                        SwitchRow(p, stringResource(Res.string.settings_memory_keys), stringResource(Res.string.settings_memory_keys_summary), prefs.memoryKeys, viewModel::setMemoryKeys) {
+                            MemoryThumbnail(prefs.memoryKeys)
+                        }
                     },
                     { p ->
-                        ActionRow(p, stringResource(Res.string.settings_customize_keys), stringResource(Res.string.settings_customize_keys_summary), onClick = onOpenCustomizeKeys)
+                        ActionRow(p, stringResource(Res.string.settings_customize_keys), stringResource(Res.string.settings_customize_keys_summary), onClick = onOpenCustomizeKeys) {
+                            KeysThumbnail()
+                        }
                     },
                 ),
             )
@@ -371,11 +379,4 @@ internal fun AppPalette.title(): StringResource = when (this) {
     AppPalette.PINK -> Res.string.palette_pink
     AppPalette.PURPLE -> Res.string.palette_purple
     AppPalette.GRAPHITE -> Res.string.palette_graphite
-}
-
-/** "2 ÷ 3 = 0.67", in the chosen decimals and separators. */
-private fun decimalsExample(decimals: Int, separator: DecimalSeparator): String {
-    val two = Decimal(2).divide(Decimal(3), MathContext(40))
-    val formatter = DisplayFormatter(separator.separators())
-    return "2 ÷ 3 = " + formatter.number(Calculator.formatResult(two, decimals))
 }
