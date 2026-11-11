@@ -10,7 +10,9 @@
     "ja-JP",
     "pt-BR",
     "zh-CN",
-    "zh-TW"
+    "zh-TW",
+    "ko-KR",
+    "id"
   ],
   "defaultLocale": "en-US",
   "writeAssets": false,
@@ -63,6 +65,9 @@
     "margin": 12,
     "visible": 0.7,
     "layouts": {
+      "tablet10": {
+        "cut": true
+      },
       "stack": false,
       "compare": false,
       "hero": {

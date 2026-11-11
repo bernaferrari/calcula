@@ -1,0 +1,27 @@
+Setiap tombol punya fungsi tambahan.
+
+Calcula memudahkan hitungan sehari-hari dan memberi akses cepat ke fungsi ilmiah. Usap tombol angka ke atas atau ke bawah untuk membuka sin, cos, log, pangkat dua, akar, dan lainnya. Nama fungsi tertera di tombol sehingga Anda bisa menemukannya dengan cepat.
+
+LIHAT HASIL SAAT MENGETIK
+Gunakan aritmetika desimal eksak, perhitungan persentase, dan tampilan pecahan. Edit ekspresi seperti teks biasa, geser kursor, serta urungkan atau ulangi perubahan.
+
+GUNAKAN KEMBALI RIWAYAT
+Riwayat perhitungan ada di atas papan tombol. Gunakan kembali hasil, tambahkan catatan, atau bagikan perhitungan sebagai teks. Di tablet atau layar besar, riwayat tampil di panel di samping papan tombol.
+
+GAMBAR FUNGSI DAN PERSAMAAN
+Plot hingga enam fungsi atau persamaan. Geser pengatur parameter dan periksa akar serta titik balik. Buka kembali grafik terbaru atau bagikan sebagai gambar.
+
+KONVERSI SATUAN
+Konversi panjang, massa, suhu, luas, volume, kecepatan, waktu, data, energi, dan tekanan. Ambil nilai dari kalkulator, lalu gunakan kembali hasil konversinya.
+
+SESUAIKAN PAPAN TOMBOL
+Pilih mode terang atau gelap, palet warna, atau warna wallpaper yang didukung. Pratinjau empat gaya warna, ubah ukuran tombol, dan atur petunjuk fungsi. Sesuaikan aksi tombol dan usapan, buat fungsi sendiri, serta gunakan konstanta ilmiah dan memori bernama.
+
+HITUNGAN LANJUTAN
+Gunakan tumpukan RPN, notasi ilmiah atau teknik, dan tombol memori. Mode programmer mendukung basis heksadesimal, desimal, oktal, dan biner, dengan operasi bitwise dan bit yang dapat diketuk. Statistik menampilkan rata-rata, median, simpangan baku, dan rentang.
+
+COCOK UNTUK BERBAGAI LAYAR
+Tata letak menyesuaikan ponsel, tablet, dan jendela yang lebih besar. Widget layar utama Android memudahkan akses ke kalkulator.
+
+PRIVASI
+Tanpa iklan, akun, atau pelacakan. Semua perhitungan berlangsung di perangkat Anda. Kami tidak mengumpulkan perhitungan atau data penggunaan Anda.

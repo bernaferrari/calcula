@@ -166,7 +166,7 @@
   "tablet10": [
     {
       "feature": "01-every-key",
-      "layout": "flick",
+      "layout": "one flick",
       "vars": {
         "--block": "#F4D94A"
       },
@@ -180,7 +180,7 @@
     },
     {
       "feature": "02-graph",
-      "layout": "center",
+      "layout": "one",
       "vars": {
         "--block": "#AFC0F5"
       },
@@ -194,7 +194,7 @@
     },
     {
       "feature": "03-convert",
-      "layout": "pair",
+      "layout": "one",
       "vars": {
         "--block": "#9DDCCB"
       },
@@ -202,27 +202,23 @@
         {
           "raw": "tablet10/03-convert.png",
           "role": "primary"
-        },
-        {
-          "raw": "tablet10/08-programmer-portrait.png",
-          "role": "secondary"
         }
       ],
       "file": "tablet10/tablet10-03-convert.jpg"
     },
     {
       "feature": "04-customize",
-      "layout": "pair customize-pair",
+      "layout": "duo",
       "vars": {
         "--block": "#EFA9A0"
       },
       "devices": [
         {
-          "raw": "tablet10/09-appearance-portrait.png",
+          "raw": "tablet10/04-customize.png",
           "role": "primary"
         },
         {
-          "raw": "tablet7/04-customize.png",
+          "raw": "tablet10/09-appearance-portrait.png",
           "role": "secondary"
         }
       ],
@@ -230,7 +226,7 @@
     },
     {
       "feature": "05-more-room",
-      "layout": "room",
+      "layout": "duo flip",
       "vars": {
         "--block": "#BFD8A8"
       },

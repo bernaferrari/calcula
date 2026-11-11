@@ -1,0 +1,268 @@
+{
+  "generatedAt": "2026-11-11T20:45:23.650Z",
+  "campaign": "A little flick goes a long way",
+  "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
+  "assets": [
+    {
+      "file": "phone/phone-01-every-key.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 213318,
+      "alt": "Calcula dengan label fungsi ilmiah dan pintasan sin yang diperbesar",
+      "sources": [
+        "raw/phone/01-every-key.png"
+      ]
+    },
+    {
+      "file": "phone/phone-02-graph.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 239579,
+      "alt": "Grafik sinus dan lingkaran dengan pengatur parameter",
+      "sources": [
+        "raw/phone/02-graph.png"
+      ]
+    },
+    {
+      "file": "phone/phone-03-convert.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 170547,
+      "alt": "Konverter mengubah 22 °C menjadi 71,6 °F",
+      "sources": [
+        "raw/phone/03-convert.png"
+      ]
+    },
+    {
+      "file": "phone/phone-04-programmer.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 217082,
+      "alt": "Mode programmer bertema gelap menampilkan C0 FFEE dan nilai desimalnya",
+      "sources": [
+        "raw/phone/05-programmer.png"
+      ]
+    },
+    {
+      "file": "phone/phone-05-statistics.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 230434,
+      "alt": "Rata-rata, median, jumlah, banyak data, dan simpangan baku dari delapan nilai",
+      "sources": [
+        "raw/phone/06-statistics.png"
+      ]
+    },
+    {
+      "file": "phone/phone-06-customize.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 222574,
+      "alt": "Pengaturan tampilan, pilihan warna, dan penyesuaian tombol",
+      "sources": [
+        "raw/phone/04-customize.png",
+        "raw/phone/07-appearance.png"
+      ]
+    },
+    {
+      "file": "phone/phone-07-more-room.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 214773,
+      "alt": "Calcula di tablet lanskap dengan riwayat di samping papan tombol, dan tampilan ponsel",
+      "sources": [
+        "raw/tablet10/01-every-key.png",
+        "raw/phone/01-every-key.png"
+      ]
+    },
+    {
+      "file": "tablet7/tablet7-01-every-key.jpg",
+      "width": 1200,
+      "height": 1920,
+      "bytes": 225151,
+      "alt": "Tablet 7 inci dengan riwayat di samping papan tombol dan pintasan sin yang diperbesar",
+      "sources": [
+        "raw/tablet7/01-every-key.png"
+      ]
+    },
+    {
+      "file": "tablet7/tablet7-02-graph.jpg",
+      "width": 1200,
+      "height": 1920,
+      "bytes": 248680,
+      "alt": "Fungsi dan lingkaran pada tablet 7 inci",
+      "sources": [
+        "raw/tablet7/02-graph.png"
+      ]
+    },
+    {
+      "file": "tablet7/tablet7-03-convert.jpg",
+      "width": 1200,
+      "height": 1920,
+      "bytes": 175063,
+      "alt": "Konversi suhu dan mode programmer pada tablet 7 inci",
+      "sources": [
+        "raw/tablet7/03-convert.png"
+      ]
+    },
+    {
+      "file": "tablet7/tablet7-04-customize.jpg",
+      "width": 1200,
+      "height": 1920,
+      "bytes": 251877,
+      "alt": "Pengaturan tampilan dan tombol pada tablet 7 inci",
+      "sources": [
+        "raw/tablet7/07-appearance.png",
+        "raw/tablet7/04-customize.png"
+      ]
+    },
+    {
+      "file": "tablet7/tablet7-05-more-room.jpg",
+      "width": 1200,
+      "height": 1920,
+      "bytes": 234479,
+      "alt": "Tablet 7 inci dalam orientasi lanskap dan potret",
+      "sources": [
+        "raw/tablet7/08-calculator-landscape.png",
+        "raw/tablet7/01-every-key.png"
+      ]
+    },
+    {
+      "file": "tablet10/tablet10-01-every-key.jpg",
+      "width": 1920,
+      "height": 1200,
+      "bytes": 199411,
+      "alt": "Tablet 10 inci dengan riwayat di samping papan tombol dan pintasan sin yang diperbesar",
+      "sources": [
+        "raw/tablet10/01-every-key.png"
+      ]
+    },
+    {
+      "file": "tablet10/tablet10-02-graph.jpg",
+      "width": 1920,
+      "height": 1200,
+      "bytes": 247387,
+      "alt": "Fungsi, lingkaran, dan pengatur parameter di tablet 10 inci",
+      "sources": [
+        "raw/tablet10/02-graph.png"
+      ]
+    },
+    {
+      "file": "tablet10/tablet10-03-convert.jpg",
+      "width": 1920,
+      "height": 1200,
+      "bytes": 161448,
+      "alt": "Konversi satuan dalam lanskap",
+      "sources": [
+        "raw/tablet10/03-convert.png"
+      ]
+    },
+    {
+      "file": "tablet10/tablet10-04-customize.jpg",
+      "width": 1920,
+      "height": 1200,
+      "bytes": 241685,
+      "alt": "Pengaturan tampilan dan penyesuaian tombol berdampingan",
+      "sources": [
+        "raw/tablet10/04-customize.png",
+        "raw/tablet10/09-appearance-portrait.png"
+      ]
+    },
+    {
+      "file": "tablet10/tablet10-05-more-room.jpg",
+      "width": 1920,
+      "height": 1200,
+      "bytes": 225879,
+      "alt": "Riwayat di samping kalkulator dalam lanskap dan tablet yang sama dalam potret",
+      "sources": [
+        "raw/tablet10/01-every-key.png",
+        "raw/tablet10/10-calculator-portrait.png"
+      ]
+    },
+    {
+      "file": "desktop/desktop-01-every-key.jpg",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 105610,
+      "alt": "Calcula dengan pintasan ilmiah dan pratinjau hasil",
+      "sources": [
+        "raw/desktop/01-every-key.png"
+      ]
+    },
+    {
+      "file": "desktop/desktop-02-graph.jpg",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 186147,
+      "alt": "Fungsi, lingkaran, dan pengatur parameter",
+      "sources": [
+        "raw/desktop/02-graph.png"
+      ]
+    },
+    {
+      "file": "desktop/desktop-03-convert.jpg",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 89453,
+      "alt": "Konversi 22 °C ke Fahrenheit",
+      "sources": [
+        "raw/desktop/03-convert.png"
+      ]
+    },
+    {
+      "file": "desktop/desktop-07-appearance.jpg",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 116648,
+      "sources": [
+        "raw/desktop/07-appearance.png"
+      ]
+    },
+    {
+      "file": "graphics/feature-graphic.png",
+      "width": 1024,
+      "height": 500,
+      "bytes": 68718,
+      "sources": [
+        "raw/phone/01-every-key.png"
+      ]
+    },
+    {
+      "file": "graphics/app-icon.png",
+      "width": 512,
+      "height": 512,
+      "bytes": 195020,
+      "alt": "Ikon aplikasi Calcula"
+    },
+    {
+      "file": "showcase/01-every-key.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 213318,
+      "alt": "Calcula dengan label fungsi ilmiah dan pintasan sin yang diperbesar",
+      "sources": [
+        "raw/phone/01-every-key.png"
+      ]
+    },
+    {
+      "file": "showcase/02-graph.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 243480,
+      "alt": "Grafik sinus dan lingkaran dengan pengatur parameter",
+      "sources": [
+        "raw/phone/10-graph-amber.png"
+      ]
+    },
+    {
+      "file": "showcase/03-convert.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 174908,
+      "alt": "Konverter mengubah 22 °C menjadi 71,6 °F",
+      "sources": [
+        "raw/phone/11-convert-amber.png"
+      ]
+    }
+  ]
+}

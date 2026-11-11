@@ -44,20 +44,20 @@ header p{margin:26px 0 0;font-size:40px;line-height:1.24;letter-spacing:-.5px;wh
 :is(.phone,.showcase) .stack .primary{left:240px;top:-700px;width:600px}
 :is(.phone,.showcase) .stack .secondary{left:240px;top:1180px;width:600px}
 
-/* 10-inch: copy left, product on a block right */
-.tablet10 header{top:0;bottom:0;left:96px;right:auto;width:600px;display:flex;flex-direction:column;justify-content:center}
-.tablet10 h1{font-size:108px;letter-spacing:-5px}
-.tablet10 header p{font-size:34px}
-.tablet10 .brand{top:48px;left:96px}
-.tablet10 .block{left:720px;top:120px;width:1140px;height:960px}
-.tablet10 .flick .primary,.tablet10 .center .primary{left:770px;top:250px;width:1040px}
-.tablet10 .flick .key{left:640px;top:760px;width:250px}
-.tablet10 .pair .primary{left:770px;top:200px;width:820px}
-.tablet10 .pair .secondary{left:1460px;top:380px;width:360px}
-.tablet10 .customize-pair .primary{left:790px;top:230px;width:470px}
-.tablet10 .customize-pair .secondary{left:1320px;top:230px;width:470px}
-.tablet10 .room .primary{left:770px;top:200px;width:1040px}
-.tablet10 .room .secondary{left:1560px;top:500px;width:280px;z-index:3}
+/* 10-inch: the phone system turned on its side. The headline and its supporting line share the top of the card,
+   the same key block runs off the bottom, and the real app stands on it at three quarters of the card's width. */
+.tablet10 header{left:120px;right:120px;top:62px;display:flex;justify-content:space-between;align-items:flex-end;gap:80px}
+.tablet10 h1{flex:none;font-size:100px;letter-spacing:-4.2px}
+.tablet10 header p{flex:none;margin:0 0 8px;font-size:36px;text-align:right}
+.tablet10 .brand{left:auto;right:120px;top:70px}
+.tablet10 .block{left:120px;top:286px;width:1680px;height:1100px;border-radius:96px}
+.tablet10 .one .primary{left:250px;top:352px;width:1420px}
+.tablet10 .flick .key{left:150px;top:880px;width:270px}
+/* Two views: a landscape tablet with a portrait one stepping in front of its empty side (flip: on the left). */
+.tablet10 .duo .primary{left:190px;top:436px;width:1280px}
+.tablet10 .duo .secondary{left:1170px;top:352px;width:560px;z-index:3}
+.tablet10 .duo.flip .primary{left:450px}
+.tablet10 .duo.flip .secondary{left:190px}
 
 .feature .brand{left:52px;top:44px;font-size:24px}.feature header{left:52px;top:125px;right:310px}.feature h1{font-size:80px;line-height:.98;letter-spacing:-3px}.feature header p{font-size:27px;margin-top:25px}.feature .primary{left:760px;top:40px;width:230px}.feature .block{display:none}
 .icon,.icon body,.icon .campaign{background:transparent}.icon .app-icon{position:absolute;inset:0;width:100%;height:100%;display:block}

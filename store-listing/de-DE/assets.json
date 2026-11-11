@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-11T16:21:54.349Z",
+  "generatedAt": "2026-11-11T20:45:23.536Z",
   "campaign": "A little flick goes a long way",
   "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
   "assets": [
@@ -131,7 +131,7 @@
       "file": "tablet10/tablet10-01-every-key.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 205737,
+      "bytes": 202385,
       "alt": "Ein kleiner Wisch. — Streiche für die wissenschaftliche Funktion.",
       "sources": [
         "raw/tablet10/01-every-key.png"
@@ -141,7 +141,7 @@
       "file": "tablet10/tablet10-02-graph.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 236296,
+      "bytes": 255582,
       "alt": "Sieh die Kurve entstehen. — Funktionen zeichnen. Parameter verschieben.",
       "sources": [
         "raw/tablet10/02-graph.png"
@@ -151,29 +151,28 @@
       "file": "tablet10/tablet10-03-convert.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 185899,
+      "bytes": 170499,
       "alt": "Von °C nach °F. — Einheiten umrechnen, während du eingibst.",
       "sources": [
-        "raw/tablet10/03-convert.png",
-        "raw/tablet10/08-programmer-portrait.png"
+        "raw/tablet10/03-convert.png"
       ]
     },
     {
       "file": "tablet10/tablet10-04-customize.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 252126,
+      "bytes": 254718,
       "alt": "Dein Rechner, deine Tasten. — Deine Farben. Deine Kurzbefehle.",
       "sources": [
-        "raw/tablet10/09-appearance-portrait.png",
-        "raw/tablet7/04-customize.png"
+        "raw/tablet10/04-customize.png",
+        "raw/tablet10/09-appearance-portrait.png"
       ]
     },
     {
       "file": "tablet10/tablet10-05-more-room.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 206547,
+      "bytes": 226464,
       "alt": "Mehr Platz für mehr. — Verlauf neben der Rechnung auf Tablets und Foldables.",
       "sources": [
         "raw/tablet10/01-every-key.png",

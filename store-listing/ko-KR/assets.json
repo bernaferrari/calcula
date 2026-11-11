@@ -1,0 +1,268 @@
+{
+  "generatedAt": "2026-11-11T20:45:23.638Z",
+  "campaign": "A little flick goes a long way",
+  "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
+  "assets": [
+    {
+      "file": "phone/phone-01-every-key.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 211120,
+      "alt": "키에 공학용 함수 이름이 표시되고 sin 단축키를 확대한 Calcula",
+      "sources": [
+        "raw/phone/01-every-key.png"
+      ]
+    },
+    {
+      "file": "phone/phone-02-graph.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 224317,
+      "alt": "사인 함수와 원, 슬라이더로 조절하는 매개변수",
+      "sources": [
+        "raw/phone/02-graph.png"
+      ]
+    },
+    {
+      "file": "phone/phone-03-convert.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 162875,
+      "alt": "섭씨 22도를 화씨 71.6도로 변환하는 단위 변환기",
+      "sources": [
+        "raw/phone/03-convert.png"
+      ]
+    },
+    {
+      "file": "phone/phone-04-programmer.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 188833,
+      "alt": "다크 테마 프로그래머 모드의 16진수 C0 FFEE와 10진수 값",
+      "sources": [
+        "raw/phone/05-programmer.png"
+      ]
+    },
+    {
+      "file": "phone/phone-05-statistics.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 205874,
+      "alt": "데이터 8개의 평균, 중앙값, 합계, 개수, 표준편차",
+      "sources": [
+        "raw/phone/06-statistics.png"
+      ]
+    },
+    {
+      "file": "phone/phone-06-customize.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 205677,
+      "alt": "색상 견본, 스타일 미리보기, 키 동작 설정",
+      "sources": [
+        "raw/phone/04-customize.png",
+        "raw/phone/07-appearance.png"
+      ]
+    },
+    {
+      "file": "phone/phone-07-more-room.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 205640,
+      "alt": "가로 방향 태블릿에서는 기록이 키패드 옆에 표시되고 휴대전화에서는 별도로 표시됩니다",
+      "sources": [
+        "raw/tablet10/01-every-key.png",
+        "raw/phone/01-every-key.png"
+      ]
+    },
+    {
+      "file": "tablet7/tablet7-01-every-key.jpg",
+      "width": 1200,
+      "height": 1920,
+      "bytes": 226101,
+      "alt": "7인치 태블릿에서 키패드 옆에 표시되는 기록과 확대된 sin 단축키",
+      "sources": [
+        "raw/tablet7/01-every-key.png"
+      ]
+    },
+    {
+      "file": "tablet7/tablet7-02-graph.jpg",
+      "width": 1200,
+      "height": 1920,
+      "bytes": 234819,
+      "alt": "7인치 태블릿에서 그린 함수와 원",
+      "sources": [
+        "raw/tablet7/02-graph.png"
+      ]
+    },
+    {
+      "file": "tablet7/tablet7-03-convert.jpg",
+      "width": 1200,
+      "height": 1920,
+      "bytes": 168042,
+      "alt": "7인치 태블릿의 온도 변환과 프로그래머 모드",
+      "sources": [
+        "raw/tablet7/03-convert.png"
+      ]
+    },
+    {
+      "file": "tablet7/tablet7-04-customize.jpg",
+      "width": 1200,
+      "height": 1920,
+      "bytes": 233437,
+      "alt": "7인치 태블릿의 모양과 키 설정",
+      "sources": [
+        "raw/tablet7/07-appearance.png",
+        "raw/tablet7/04-customize.png"
+      ]
+    },
+    {
+      "file": "tablet7/tablet7-05-more-room.jpg",
+      "width": 1200,
+      "height": 1920,
+      "bytes": 227333,
+      "alt": "가로와 세로 화면을 비교한 7인치 태블릿",
+      "sources": [
+        "raw/tablet7/08-calculator-landscape.png",
+        "raw/tablet7/01-every-key.png"
+      ]
+    },
+    {
+      "file": "tablet10/tablet10-01-every-key.jpg",
+      "width": 1920,
+      "height": 1200,
+      "bytes": 201027,
+      "alt": "10인치 태블릿에서 키패드 옆에 표시되는 기록과 확대된 sin 단축키",
+      "sources": [
+        "raw/tablet10/01-every-key.png"
+      ]
+    },
+    {
+      "file": "tablet10/tablet10-02-graph.jpg",
+      "width": 1920,
+      "height": 1200,
+      "bytes": 238754,
+      "alt": "10인치 태블릿의 함수, 원, 매개변수 슬라이더",
+      "sources": [
+        "raw/tablet10/02-graph.png"
+      ]
+    },
+    {
+      "file": "tablet10/tablet10-03-convert.jpg",
+      "width": 1920,
+      "height": 1200,
+      "bytes": 156979,
+      "alt": "가로 화면의 단위 변환",
+      "sources": [
+        "raw/tablet10/03-convert.png"
+      ]
+    },
+    {
+      "file": "tablet10/tablet10-04-customize.jpg",
+      "width": 1920,
+      "height": 1200,
+      "bytes": 231671,
+      "alt": "나란히 배치한 모양 설정과 키 맞춤설정",
+      "sources": [
+        "raw/tablet10/04-customize.png",
+        "raw/tablet10/09-appearance-portrait.png"
+      ]
+    },
+    {
+      "file": "tablet10/tablet10-05-more-room.jpg",
+      "width": 1920,
+      "height": 1200,
+      "bytes": 223025,
+      "alt": "가로 화면의 기록 패널과 같은 태블릿의 세로 화면",
+      "sources": [
+        "raw/tablet10/01-every-key.png",
+        "raw/tablet10/10-calculator-portrait.png"
+      ]
+    },
+    {
+      "file": "desktop/desktop-01-every-key.jpg",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 105610,
+      "alt": "공학용 단축키와 결과 미리보기",
+      "sources": [
+        "raw/desktop/01-every-key.png"
+      ]
+    },
+    {
+      "file": "desktop/desktop-02-graph.jpg",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 186147,
+      "alt": "함수, 원, 매개변수 슬라이더",
+      "sources": [
+        "raw/desktop/02-graph.png"
+      ]
+    },
+    {
+      "file": "desktop/desktop-03-convert.jpg",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 89453,
+      "alt": "섭씨 22도를 화씨로 변환",
+      "sources": [
+        "raw/desktop/03-convert.png"
+      ]
+    },
+    {
+      "file": "desktop/desktop-07-appearance.jpg",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 116648,
+      "sources": [
+        "raw/desktop/07-appearance.png"
+      ]
+    },
+    {
+      "file": "graphics/feature-graphic.png",
+      "width": 1024,
+      "height": 500,
+      "bytes": 58240,
+      "sources": [
+        "raw/phone/01-every-key.png"
+      ]
+    },
+    {
+      "file": "graphics/app-icon.png",
+      "width": 512,
+      "height": 512,
+      "bytes": 195020,
+      "alt": "Calcula 앱 아이콘"
+    },
+    {
+      "file": "showcase/01-every-key.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 211120,
+      "alt": "키에 공학용 함수 이름이 표시되고 sin 단축키를 확대한 Calcula",
+      "sources": [
+        "raw/phone/01-every-key.png"
+      ]
+    },
+    {
+      "file": "showcase/02-graph.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 228016,
+      "alt": "사인 함수와 원, 슬라이더로 조절하는 매개변수",
+      "sources": [
+        "raw/phone/10-graph-amber.png"
+      ]
+    },
+    {
+      "file": "showcase/03-convert.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 167386,
+      "alt": "섭씨 22도를 화씨 71.6도로 변환하는 단위 변환기",
+      "sources": [
+        "raw/phone/11-convert-amber.png"
+      ]
+    }
+  ]
+}

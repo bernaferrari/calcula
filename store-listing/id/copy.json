@@ -1,0 +1,92 @@
+{
+  "01-every-key": {
+    "title": "Usap\nsebentar.",
+    "body": "Usap tombol ke atas\nuntuk fungsi ilmiah.",
+    "alt": "Calcula dengan label fungsi ilmiah dan pintasan sin yang diperbesar",
+    "key": "Pintasan sin yang diperbesar di atas tombol 7"
+  },
+  "02-graph": {
+    "title": "Lihat grafik\nberubah.",
+    "body": "Plot fungsi. Geser\nuntuk mengubah parameter.",
+    "alt": "Grafik sinus dan lingkaran dengan pengatur parameter"
+  },
+  "03-convert": {
+    "title": "Dari °C\nke °F.",
+    "body": "Satuan dikonversi\nsaat Anda mengetik.",
+    "alt": "Konverter mengubah 22 °C menjadi 71,6 °F"
+  },
+  "04-customize": {
+    "title": "Warna dan\ntombol Anda.",
+    "body": "Pilih warna\ndan pintasan.",
+    "alt": "Pengaturan tampilan, pilihan warna, dan penyesuaian tombol"
+  },
+  "05-more-room": {
+    "title": "Ruang lebih\nluas.",
+    "body": "Riwayat di samping kalkulator\ndi tablet dan ponsel lipat.",
+    "alt": "Calcula di tablet lanskap dengan riwayat di samping papan tombol, dan tampilan ponsel"
+  },
+  "desktop/01-every-key": {
+    "alt": "Calcula dengan pintasan ilmiah dan pratinjau hasil"
+  },
+  "desktop/02-graph": {
+    "alt": "Fungsi, lingkaran, dan pengatur parameter"
+  },
+  "desktop/03-convert": {
+    "alt": "Konversi 22 °C ke Fahrenheit"
+  },
+  "07-appearance": {
+    "alt": "Pengaturan tampilan dengan pratinjau warna dan gaya"
+  },
+  "feature-graphic": {
+    "title": "Satu usapan.\nLebih banyak fungsi.",
+    "body": "Fungsi ilmiah dalam satu usapan."
+  },
+  "app-icon": {
+    "alt": "Ikon aplikasi Calcula"
+  },
+  "tablet7/01-every-key": {
+    "alt": "Tablet 7 inci dengan riwayat di samping papan tombol dan pintasan sin yang diperbesar"
+  },
+  "tablet7/02-graph": {
+    "alt": "Fungsi dan lingkaran pada tablet 7 inci"
+  },
+  "tablet7/03-convert": {
+    "alt": "Konversi suhu dan mode programmer pada tablet 7 inci"
+  },
+  "tablet7/04-customize": {
+    "alt": "Pengaturan tampilan dan tombol pada tablet 7 inci"
+  },
+  "tablet7/05-more-room": {
+    "alt": "Tablet 7 inci dalam orientasi lanskap dan potret",
+    "note": "Potret.\nLanskap."
+  },
+  "tablet10/01-every-key": {
+    "alt": "Tablet 10 inci dengan riwayat di samping papan tombol dan pintasan sin yang diperbesar"
+  },
+  "tablet10/02-graph": {
+    "alt": "Fungsi, lingkaran, dan pengatur parameter di tablet 10 inci"
+  },
+  "tablet10/03-convert": {
+    "alt": "Konversi satuan dalam lanskap"
+  },
+  "tablet10/04-customize": {
+    "alt": "Pengaturan tampilan dan penyesuaian tombol berdampingan"
+  },
+  "tablet10/05-more-room": {
+    "alt": "Riwayat di samping kalkulator dalam lanskap dan tablet yang sama dalam potret",
+    "note": "Potret.\nLanskap."
+  },
+  "05-programmer": {
+    "title": "Heksadesimal\njadi mudah.",
+    "body": "Bit, pergeseran,\ndan basis bilangan.",
+    "alt": "Mode programmer bertema gelap menampilkan C0 FFEE dan nilai desimalnya"
+  },
+  "06-statistics": {
+    "title": "Angka dalam\nringkasan.",
+    "body": "Rata-rata, median,\ndan sebaran data.",
+    "alt": "Rata-rata, median, jumlah, banyak data, dan simpangan baku dari delapan nilai"
+  },
+  "readme-hero": {
+    "tagline": "Usap tombol. *Buka fungsi.*"
+  }
+}

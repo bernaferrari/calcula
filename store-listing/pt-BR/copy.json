@@ -85,5 +85,8 @@
     "title": "Números\nem resumo.",
     "body": "Média, mediana e dispersão\nde relance.",
     "alt": "Estatísticas de uma lista de números"
+  },
+  "readme-hero": {
+    "tagline": "Deslize uma tecla. *Descubra uma função.*"
   }
 }
