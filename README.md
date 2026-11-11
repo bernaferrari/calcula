@@ -36,7 +36,9 @@
   <img src="store-listing/en-US/readme/customize.jpg" width="100%" alt="Calcula appearance settings and customizable key shortcuts">
 </p>
 
-Choose light or dark, your wallpaper's colors or a color family, and a style you can preview before applying. Keep the function labels, switch to small dots, or hide the hints, and drag the bar above the keys to resize them. When you want more, assign your own key shortcuts, save named memories, define functions such as `tip(x) = x × 0.18`, or switch to reverse Polish notation.
+Choose light or dark, your wallpaper's colors or a color family, and a style you can preview before applying. Show function labels, use dots, hide the hints, or choose Half for labels above the keys and dots below. Drag the bar above the keys to resize them. You can also assign your own key shortcuts, save named memories, define functions such as `tip(x) = x × 0.18`, or switch to reverse Polish notation.
+
+On Android, Calcula is available in English, Brazilian Portuguese, French, German, Indonesian, Italian, Japanese, Korean, Simplified Chinese, Spanish, and Traditional Chinese.
 
 ## On a bigger screen
 
