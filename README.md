@@ -26,7 +26,7 @@
 </p>
 
 - **Functions on the keys.** Flick up for the function written above a key, down for its partner. Trigonometry, logs, roots, powers, π and more, with no second screen of buttons.
-- **Exact answers.** Decimal arithmetic keeps `0.1 + 0.2` at `0.3`. Percentages work the way you expect: `200 + 10%` gives `220`. Simple fractions appear beside decimal results.
+- **Exact answers.** `0.1 + 0.2` is `0.3` and `√2 × √2 − 2` is `0`, with no stray digits at the end. A result with an exact form, such as `2√2` or a fraction, can show it, and a rounded result can be extended to thousands of digits. Percentages work the way you expect: `200 + 10%` gives `220`.
 - **Room to correct yourself.** Move the cursor, select part of an expression, wrap it in a function, or undo. Past calculations can be reused, edited, and given a note.
 - **Tools when you need them.** Graph functions and equations, convert units, work in any number base, or summarize a list of values.
 

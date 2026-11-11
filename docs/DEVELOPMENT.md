@@ -44,6 +44,19 @@ cd calcula
 | `store-listing/` | Play listing text, screenshots and icon sources |
 | `fastlane/`, `scripts/setup-play-api.sh` | Play listing upload and API setup |
 
+## How the engine computes
+
+The engine is in `shared/src/commonMain/.../domain/math/`; `CalcEngine` is the entry point.
+
+- **Two kinds of value.** A result is either exact or bounded. Exact means a reduced fraction, optionally times π, e or a square or cube root (`SymbolicNumber`). Bounded means a `Decimal` centre with an error radius that the true value is guaranteed to lie within (`DecimalError`). A function must return one or the other.
+- **Precision retry.** The parser keeps the expression tree (`Expression`). Evaluation starts at 40 digits and re-runs the same tree at 80 and 160 when cancellation eats the digits. "More digits" re-runs it at up to 4,096.
+- **Series.** `exp`, `ln`, the trig functions and their inverses are summed as series, mostly in fixed point on big integers, and each adds its truncation error to the radius (`DecimalLogarithm`, `DecimalTrig`, `DecimalConstants`). π, e, ln 2 and ln 10 are computed on demand past about 170 digits.
+- **No `Double`.** Evaluation never goes through `Double`. Only graphing does (`Plot`, `KeyPoints`).
+- **Big integers.** `BigInteger` is expect/actual: `java.math.BigInteger` on Android, ionspin bignum on iOS and web, so high precision is slower there.
+- **Time limits.** Every evaluation carries a deadline and gives up with `TIME_LIMIT` instead of blocking. Loops over big numbers must call the checkpoint they are given.
+
+`DecimalTranscendentalTest` guards the radius. It checks results against reference values and checks that the 40-digit and 160-digit intervals for seeded random expressions overlap. A result shown as exact is a promise, so keep those tests passing when you touch a series or an error bound.
+
 ## Before you push
 
 ```bash
@@ -51,7 +64,7 @@ cd calcula
 ./gradlew :shared:compileKotlinWasmJs :shared:compileKotlinIosSimulatorArm64
 ```
 
-There is no CI, so these checks are local only. The tests cover evaluation, history delete and undo, preferences, state restore and decimal arithmetic; the differential tests use a fixed seed, so failures reproduce. The report is at `shared/build/reports/tests/testAndroidHostTest/index.html`.
+There is no CI, so these checks are local only. The tests cover evaluation, history delete and undo, preferences, state restore, decimal arithmetic and the error bounds of the series; the differential tests use a fixed seed, so failures reproduce. The report is at `shared/build/reports/tests/testAndroidHostTest/index.html`.
 
 Nothing checks the UI. When you change it, try large fonts, reduced motion, both flick directions, history undo after a new calculation, and graph pan, zoom, trace and export.
 
@@ -68,7 +81,7 @@ Screenshot Studio lives in `store-listing/studio/`. It's synced from `~/Document
 ## Good to know
 
 - The application id is `com.bernaferrari.calcula`; the Kotlin namespace is still `com.bernaferrari.calculator`. The old Calculator++ listing is a different app, so nothing carries over from it.
-- Release signing is not in Gradle. `upload-keystore.properties` is gitignored; never commit it or any keystore.
+- Release signing loads the gitignored `upload-keystore.properties`, or an external file selected with `CALCULA_SIGNING_PROPERTIES`. It contains `storeFile`, `storePassword`, `keyAlias`, and `keyPassword`. The local configuration reuses Change Detection's keystore and credentials; never commit the properties file or keystore. Build with `./gradlew :androidApp:bundleRelease`. Without a signing configuration, release artifacts are unsigned.
 - The Gradle root project is still named `CalculatorPlusPlus`.
 - Run capture and the `store-listing/verify-programmer-*.py` checks only on a disposable emulator. They change emulator settings, and leave the normal app's data alone.
 - `app/`, `old-app/` and the `*reference-ui/` folders are untracked local leftovers, not part of the build.
