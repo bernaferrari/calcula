@@ -18,3 +18,5 @@ calculatorpp.zip
 
 # Signing secrets never go in git
 upload-keystore.properties
+*.jks
+*.keystore

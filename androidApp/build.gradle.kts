@@ -1,6 +1,21 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose)
+}
+
+val releaseSigningFile = providers.environmentVariable("CALCULA_SIGNING_PROPERTIES")
+    .orNull?.let { rootProject.file(it) } ?: rootProject.file("upload-keystore.properties")
+val releaseSigning = Properties().apply {
+    if (releaseSigningFile.isFile) releaseSigningFile.inputStream().use(::load)
+}
+val releaseKeystore = releaseSigning.getProperty("storeFile")?.let { rootProject.file(it) }
+if (releaseSigningFile.isFile) {
+    check(releaseKeystore?.isFile == true &&
+        listOf("keyAlias", "keyPassword", "storePassword").all {
+            !releaseSigning.getProperty(it).isNullOrBlank()
+        }) { "Release signing configuration is incomplete: ${releaseSigningFile.name}" }
 }
 
 android {
@@ -15,8 +30,19 @@ android {
         applicationId = "com.bernaferrari.calcula"
         minSdk = 26
         targetSdk = 37
-        versionCode = 200
+        versionCode = 4
         versionName = "1.0"
+    }
+
+    signingConfigs {
+        if (releaseSigningFile.isFile) {
+            create("release") {
+                storeFile = releaseKeystore
+                storePassword = releaseSigning.getProperty("storePassword")
+                keyAlias = releaseSigning.getProperty("keyAlias")
+                keyPassword = releaseSigning.getProperty("keyPassword")
+            }
+        }
     }
 
     buildTypes {
@@ -26,9 +52,10 @@ android {
             matchingFallbacks += "debug"
         }
         release {
+            signingConfig = signingConfigs.findByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
 
