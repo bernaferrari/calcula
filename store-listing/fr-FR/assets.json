@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-30T03:46:43.543Z",
+  "generatedAt": "2026-11-11T16:21:54.368Z",
   "campaign": "A little flick goes a long way",
   "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
   "assets": [
@@ -7,7 +7,7 @@
       "file": "phone/phone-01-every-key.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 229101,
+      "bytes": 229594,
       "alt": "Un simple glissement. — Glissez sur une touche pour sa fonction scientifique.",
       "sources": [
         "raw/phone/01-every-key.png"
@@ -17,7 +17,7 @@
       "file": "phone/phone-02-graph.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 262201,
+      "bytes": 262497,
       "alt": "Voyez la courbe prendre forme. — Tracez des fonctions et déplacez les paramètres.",
       "sources": [
         "raw/phone/02-graph.png"
@@ -27,7 +27,7 @@
       "file": "phone/phone-03-convert.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 167078,
+      "bytes": 167750,
       "alt": "De °C en °F. — Convertissez les unités pendant la saisie.",
       "sources": [
         "raw/phone/03-convert.png"
@@ -47,7 +47,7 @@
       "file": "phone/phone-05-statistics.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 232498,
+      "bytes": 231975,
       "alt": "Les chiffres en résumé. — Moyenne, médiane et dispersion en un coup d’œil.",
       "sources": [
         "raw/phone/06-statistics.png"
@@ -57,7 +57,7 @@
       "file": "phone/phone-06-customize.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 227748,
+      "bytes": 227510,
       "alt": "Votre style, vos touches. — Vos couleurs. Vos raccourcis.",
       "sources": [
         "raw/phone/04-customize.png",
@@ -68,7 +68,7 @@
       "file": "phone/phone-07-more-room.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 231295,
+      "bytes": 231454,
       "alt": "Plus de place pour calculer. — L’historique à côté du clavier sur tablette ou pliable.",
       "sources": [
         "raw/tablet10/01-every-key.png",
@@ -79,7 +79,7 @@
       "file": "tablet7/tablet7-01-every-key.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 241292,
+      "bytes": 241312,
       "alt": "Un simple glissement. — Glissez sur une touche pour sa fonction scientifique.",
       "sources": [
         "raw/tablet7/01-every-key.png"
@@ -89,7 +89,7 @@
       "file": "tablet7/tablet7-02-graph.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 270272,
+      "bytes": 270509,
       "alt": "Voyez la courbe prendre forme. — Tracez des fonctions et déplacez les paramètres.",
       "sources": [
         "raw/tablet7/02-graph.png"
@@ -99,7 +99,7 @@
       "file": "tablet7/tablet7-03-convert.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 170391,
+      "bytes": 171373,
       "alt": "De °C en °F. — Convertissez les unités pendant la saisie.",
       "sources": [
         "raw/tablet7/03-convert.png"
@@ -109,7 +109,7 @@
       "file": "tablet7/tablet7-04-customize.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 253707,
+      "bytes": 256431,
       "alt": "Votre style, vos touches. — Vos couleurs. Vos raccourcis.",
       "sources": [
         "raw/tablet7/07-appearance.png",
@@ -120,7 +120,7 @@
       "file": "tablet7/tablet7-05-more-room.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 251515,
+      "bytes": 251589,
       "alt": "Plus de place pour calculer. — L’historique à côté du clavier sur tablette ou pliable.",
       "sources": [
         "raw/tablet7/08-calculator-landscape.png",
@@ -131,7 +131,7 @@
       "file": "tablet10/tablet10-01-every-key.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 216437,
+      "bytes": 216518,
       "alt": "Un simple glissement. — Glissez sur une touche pour sa fonction scientifique.",
       "sources": [
         "raw/tablet10/01-every-key.png"
@@ -141,7 +141,7 @@
       "file": "tablet10/tablet10-02-graph.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 236382,
+      "bytes": 236610,
       "alt": "Voyez la courbe prendre forme. — Tracez des fonctions et déplacez les paramètres.",
       "sources": [
         "raw/tablet10/02-graph.png"
@@ -151,7 +151,7 @@
       "file": "tablet10/tablet10-03-convert.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 176470,
+      "bytes": 177126,
       "alt": "De °C en °F. — Convertissez les unités pendant la saisie.",
       "sources": [
         "raw/tablet10/03-convert.png",
@@ -162,7 +162,7 @@
       "file": "tablet10/tablet10-04-customize.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 249210,
+      "bytes": 249052,
       "alt": "Votre style, vos touches. — Vos couleurs. Vos raccourcis.",
       "sources": [
         "raw/tablet10/09-appearance-portrait.png",
@@ -173,7 +173,7 @@
       "file": "tablet10/tablet10-05-more-room.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 211972,
+      "bytes": 212144,
       "alt": "Plus de place pour calculer. — L’historique à côté du clavier sur tablette ou pliable.",
       "sources": [
         "raw/tablet10/01-every-key.png",
@@ -184,7 +184,7 @@
       "file": "desktop/desktop-01-every-key.jpg",
       "width": 1920,
       "height": 1080,
-      "bytes": 105239,
+      "bytes": 105610,
       "alt": "Un simple glissement. — Glissez sur une touche pour sa fonction scientifique.",
       "sources": [
         "raw/desktop/01-every-key.png"
@@ -194,7 +194,7 @@
       "file": "desktop/desktop-02-graph.jpg",
       "width": 1920,
       "height": 1080,
-      "bytes": 185647,
+      "bytes": 186147,
       "alt": "Voyez la courbe prendre forme. — Tracez des fonctions et déplacez les paramètres.",
       "sources": [
         "raw/desktop/02-graph.png"
@@ -204,7 +204,7 @@
       "file": "desktop/desktop-03-convert.jpg",
       "width": 1920,
       "height": 1080,
-      "bytes": 87616,
+      "bytes": 89453,
       "alt": "De °C en °F. — Convertissez les unités pendant la saisie.",
       "sources": [
         "raw/desktop/03-convert.png"
@@ -214,7 +214,7 @@
       "file": "desktop/desktop-07-appearance.jpg",
       "width": 1920,
       "height": 1080,
-      "bytes": 115260,
+      "bytes": 116648,
       "sources": [
         "raw/desktop/07-appearance.png"
       ]
@@ -223,7 +223,7 @@
       "file": "graphics/feature-graphic.png",
       "width": 1024,
       "height": 500,
-      "bytes": 71235,
+      "bytes": 71261,
       "sources": [
         "raw/phone/01-every-key.png"
       ]
@@ -234,6 +234,36 @@
       "height": 512,
       "bytes": 195020,
       "alt": "Un simple glissement. — Glissez sur une touche pour sa fonction scientifique."
+    },
+    {
+      "file": "showcase/01-every-key.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 229594,
+      "alt": "Un simple glissement. — Glissez sur une touche pour sa fonction scientifique.",
+      "sources": [
+        "raw/phone/01-every-key.png"
+      ]
+    },
+    {
+      "file": "showcase/02-graph.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 266304,
+      "alt": "Voyez la courbe prendre forme. — Tracez des fonctions et déplacez les paramètres.",
+      "sources": [
+        "raw/phone/10-graph-amber.png"
+      ]
+    },
+    {
+      "file": "showcase/03-convert.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 172256,
+      "alt": "De °C en °F. — Convertissez les unités pendant la saisie.",
+      "sources": [
+        "raw/phone/11-convert-amber.png"
+      ]
     }
   ]
 }

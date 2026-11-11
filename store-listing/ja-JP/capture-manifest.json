@@ -1,14 +1,14 @@
 {
   "source": "adb exec-out screencap from the Android Resizable_Experimental emulator",
   "locale": "ja-JP",
-  "commit": "fa1f7ef63390322e06cef9824fb91afa64a354ff",
-  "apkSha256": "f4c66aced6c4a83a46619b22b84d426e6f83360169948cb6b8652269af9544cd",
+  "commit": "5fbd644b651a992acfb47ca3690badd0648630cb",
+  "apkSha256": "5d7896f64cc8b81354b013e9a8903dbc8c5432ffd7156d9aaf470a04533f39dd",
   "serial": "emulator-5578",
   "systemUi": "real status bar with 09:41 clock; full battery/Wi-Fi; gesture navigation pill",
   "captures": [
     {
       "file": "ja-JP/raw/phone/01-every-key.png",
-      "sha256": "79c6bf2c0b4303e8668485152f691d8bbaaca0bb5dc94314e22524b795b832c8",
+      "sha256": "ddddd5ceb63e8359b3b969e288b30596403f1afe487d3c29fe3af1ba7691564b",
       "scene": "calculator",
       "palette": "AMBER",
       "width": 1080,
@@ -17,7 +17,7 @@
     },
     {
       "file": "ja-JP/raw/phone/02-graph.png",
-      "sha256": "7915e240e838cf5893afa8085ceae929097117958828a96991b0d482f2146791",
+      "sha256": "e916ee0867b3674ac42ca000804c8e38e4ddcfaeed523f5bd925eb9ce7439735",
       "scene": "graph",
       "palette": "BLUE",
       "width": 1080,
@@ -62,7 +62,7 @@
     },
     {
       "file": "ja-JP/raw/phone/07-appearance.png",
-      "sha256": "500c4bad28d35bc3a7572d11f5ba803c64c08f19cdcde7acbc4b6839b35be33d",
+      "sha256": "0ead6bfa41b87accd2fb63d6c17ed90be0f4abf5e7e71854536c44bdd1d9d400",
       "scene": "appearance",
       "palette": "PURPLE",
       "width": 1080,
@@ -80,7 +80,7 @@
     },
     {
       "file": "ja-JP/raw/phone/10-graph-amber.png",
-      "sha256": "d693d8ae743aa8ff22a326a1842aa8f3b6fc75b407ab02af561fdc7b147d139c",
+      "sha256": "18897421ca94c76184c423003e0e8ff377d4b3b4622708c0c77b8645991bc894",
       "scene": "graph",
       "palette": "AMBER",
       "width": 1080,
@@ -89,7 +89,7 @@
     },
     {
       "file": "ja-JP/raw/phone/11-convert-amber.png",
-      "sha256": "d6f7281d5a01731ba988fa87432fa4324744fa1b9a8b3e4415d58c125653cee3",
+      "sha256": "73b52818d720a38f2f72af74da73dfb6bda8a1e8d5ebb5fe57ce0e9c70d56ef0",
       "scene": "converter",
       "palette": "AMBER",
       "width": 1080,

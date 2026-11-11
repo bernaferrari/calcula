@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-30T03:47:06.740Z",
+  "generatedAt": "2026-11-11T16:21:54.394Z",
   "campaign": "A little flick goes a long way",
   "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
   "assets": [
@@ -7,7 +7,7 @@
       "file": "phone/phone-01-every-key.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 225583,
+      "bytes": 225002,
       "alt": "Calculadora com atalhos científicos por deslize",
       "sources": [
         "raw/phone/01-every-key.png"
@@ -17,7 +17,7 @@
       "file": "phone/phone-02-graph.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 251088,
+      "bytes": 251455,
       "alt": "Gráfico de funções com parâmetros ajustáveis",
       "sources": [
         "raw/phone/02-graph.png"
@@ -27,7 +27,7 @@
       "file": "phone/phone-03-convert.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 175630,
+      "bytes": 176197,
       "alt": "Conversor de temperatura de Celsius para Fahrenheit",
       "sources": [
         "raw/phone/03-convert.png"
@@ -47,7 +47,7 @@
       "file": "phone/phone-05-statistics.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 225253,
+      "bytes": 225279,
       "alt": "Estatísticas de uma lista de números",
       "sources": [
         "raw/phone/06-statistics.png"
@@ -57,7 +57,7 @@
       "file": "phone/phone-06-customize.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 224113,
+      "bytes": 223897,
       "alt": "Configurações de aparência e atalhos personalizados",
       "sources": [
         "raw/phone/04-customize.png",
@@ -68,7 +68,7 @@
       "file": "phone/phone-07-more-room.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 238337,
+      "bytes": 238248,
       "alt": "Calculadora em tablet com histórico ao lado",
       "sources": [
         "raw/tablet10/01-every-key.png",
@@ -79,7 +79,7 @@
       "file": "tablet7/tablet7-01-every-key.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 237903,
+      "bytes": 237937,
       "alt": "Calculadora com atalhos científicos por deslize em tablet de 7 polegadas",
       "sources": [
         "raw/tablet7/01-every-key.png"
@@ -89,7 +89,7 @@
       "file": "tablet7/tablet7-02-graph.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 257918,
+      "bytes": 258260,
       "alt": "Gráfico de funções com parâmetros ajustáveis em tablet de 7 polegadas",
       "sources": [
         "raw/tablet7/02-graph.png"
@@ -99,7 +99,7 @@
       "file": "tablet7/tablet7-03-convert.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 177623,
+      "bytes": 178538,
       "alt": "Conversor de temperatura de Celsius para Fahrenheit em tablet de 7 polegadas",
       "sources": [
         "raw/tablet7/03-convert.png"
@@ -109,7 +109,7 @@
       "file": "tablet7/tablet7-04-customize.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 251421,
+      "bytes": 253763,
       "alt": "Configurações de aparência e atalhos personalizados em tablet de 7 polegadas",
       "sources": [
         "raw/tablet7/07-appearance.png",
@@ -120,7 +120,7 @@
       "file": "tablet7/tablet7-05-more-room.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 257529,
+      "bytes": 257177,
       "alt": "Calculadora em tablet com histórico ao lado em tablet de 7 polegadas",
       "sources": [
         "raw/tablet7/08-calculator-landscape.png",
@@ -131,7 +131,7 @@
       "file": "tablet10/tablet10-01-every-key.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 212659,
+      "bytes": 212689,
       "alt": "Calculadora com atalhos científicos por deslize em tablet de 10 polegadas",
       "sources": [
         "raw/tablet10/01-every-key.png"
@@ -141,7 +141,7 @@
       "file": "tablet10/tablet10-02-graph.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 235246,
+      "bytes": 235352,
       "alt": "Gráfico de funções com parâmetros ajustáveis em tablet de 10 polegadas",
       "sources": [
         "raw/tablet10/02-graph.png"
@@ -151,7 +151,7 @@
       "file": "tablet10/tablet10-03-convert.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 180445,
+      "bytes": 181087,
       "alt": "Conversor de temperatura de Celsius para Fahrenheit em tablet de 10 polegadas",
       "sources": [
         "raw/tablet10/03-convert.png",
@@ -162,7 +162,7 @@
       "file": "tablet10/tablet10-04-customize.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 249211,
+      "bytes": 248507,
       "alt": "Configurações de aparência e atalhos personalizados em tablets lado a lado",
       "sources": [
         "raw/tablet10/09-appearance-portrait.png",
@@ -173,7 +173,7 @@
       "file": "tablet10/tablet10-05-more-room.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 216330,
+      "bytes": 216382,
       "alt": "Calculadora em tablet com histórico ao lado em tablet de 10 polegadas",
       "sources": [
         "raw/tablet10/01-every-key.png",
@@ -184,7 +184,7 @@
       "file": "desktop/desktop-01-every-key.jpg",
       "width": 1920,
       "height": 1080,
-      "bytes": 107752,
+      "bytes": 108075,
       "alt": "Calculadora com atalhos científicos",
       "sources": [
         "raw/desktop/01-every-key.png"
@@ -194,7 +194,7 @@
       "file": "desktop/desktop-02-graph.jpg",
       "width": 1920,
       "height": 1080,
-      "bytes": 187380,
+      "bytes": 187554,
       "alt": "Gráficos com parâmetros interativos",
       "sources": [
         "raw/desktop/02-graph.png"
@@ -204,7 +204,7 @@
       "file": "desktop/desktop-03-convert.jpg",
       "width": 1920,
       "height": 1080,
-      "bytes": 90879,
+      "bytes": 92181,
       "alt": "Conversão de Celsius para Fahrenheit",
       "sources": [
         "raw/desktop/03-convert.png"
@@ -214,7 +214,7 @@
       "file": "desktop/desktop-07-appearance.jpg",
       "width": 1920,
       "height": 1080,
-      "bytes": 118542,
+      "bytes": 119640,
       "sources": [
         "raw/desktop/07-appearance.png"
       ]
@@ -223,7 +223,7 @@
       "file": "graphics/feature-graphic.png",
       "width": 1024,
       "height": 500,
-      "bytes": 65318,
+      "bytes": 65264,
       "sources": [
         "raw/phone/01-every-key.png"
       ]
@@ -234,6 +234,36 @@
       "height": 512,
       "bytes": 195020,
       "alt": "Ícone do Calcula"
+    },
+    {
+      "file": "showcase/01-every-key.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 225002,
+      "alt": "Calculadora com atalhos científicos por deslize",
+      "sources": [
+        "raw/phone/01-every-key.png"
+      ]
+    },
+    {
+      "file": "showcase/02-graph.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 255132,
+      "alt": "Gráfico de funções com parâmetros ajustáveis",
+      "sources": [
+        "raw/phone/10-graph-amber.png"
+      ]
+    },
+    {
+      "file": "showcase/03-convert.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 180533,
+      "alt": "Conversor de temperatura de Celsius para Fahrenheit",
+      "sources": [
+        "raw/phone/11-convert-amber.png"
+      ]
     }
   ]
 }

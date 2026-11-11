@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-30T03:47:22.658Z",
+  "generatedAt": "2026-11-11T16:21:54.412Z",
   "campaign": "A little flick goes a long way",
   "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
   "assets": [
@@ -7,7 +7,7 @@
       "file": "phone/phone-01-every-key.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 230665,
+      "bytes": 231145,
       "alt": "輕輕一滑， 功能更多。 — 滑動按鍵即可使用 科學函數。",
       "sources": [
         "raw/phone/01-every-key.png"
@@ -17,7 +17,7 @@
       "file": "phone/phone-02-graph.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 240911,
+      "bytes": 241213,
       "alt": "讓曲線 呈現眼前。 — 繪製函數，拖動 參數查看變化。",
       "sources": [
         "raw/phone/02-graph.png"
@@ -27,7 +27,7 @@
       "file": "phone/phone-03-convert.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 165410,
+      "bytes": 166152,
       "alt": "從 °C 到 °F。 — 輸入的同時 換算單位。",
       "sources": [
         "raw/phone/03-convert.png"
@@ -47,7 +47,7 @@
       "file": "phone/phone-05-statistics.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 233367,
+      "bytes": 232805,
       "alt": "數字統計， 一目瞭然。 — 快速查看平均值、 中位數和分散程度。",
       "sources": [
         "raw/phone/06-statistics.png"
@@ -57,7 +57,7 @@
       "file": "phone/phone-06-customize.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 234759,
+      "bytes": 234523,
       "alt": "你的鍵盤， 你的風格。 — 你的顏色。 你的捷徑。",
       "sources": [
         "raw/phone/04-customize.png",
@@ -68,7 +68,7 @@
       "file": "phone/phone-07-more-room.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 225404,
+      "bytes": 225552,
       "alt": "更多空間， 更多計算。 — 平板和摺疊螢幕上 歷史紀錄與鍵盤並排。",
       "sources": [
         "raw/tablet10/01-every-key.png",
@@ -79,7 +79,7 @@
       "file": "tablet7/tablet7-01-every-key.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 245584,
+      "bytes": 245619,
       "alt": "輕輕一滑， 功能更多。 — 滑動按鍵即可使用 科學函數。",
       "sources": [
         "raw/tablet7/01-every-key.png"
@@ -89,7 +89,7 @@
       "file": "tablet7/tablet7-02-graph.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 251506,
+      "bytes": 251912,
       "alt": "讓曲線 呈現眼前。 — 繪製函數，拖動 參數查看變化。",
       "sources": [
         "raw/tablet7/02-graph.png"
@@ -99,7 +99,7 @@
       "file": "tablet7/tablet7-03-convert.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 169979,
+      "bytes": 171051,
       "alt": "從 °C 到 °F。 — 輸入的同時 換算單位。",
       "sources": [
         "raw/tablet7/03-convert.png"
@@ -109,7 +109,7 @@
       "file": "tablet7/tablet7-04-customize.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 260783,
+      "bytes": 263354,
       "alt": "你的鍵盤， 你的風格。 — 你的顏色。 你的捷徑。",
       "sources": [
         "raw/tablet7/07-appearance.png",
@@ -131,7 +131,7 @@
       "file": "tablet10/tablet10-01-every-key.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 217861,
+      "bytes": 217963,
       "alt": "輕輕一滑， 功能更多。 — 滑動按鍵即可使用 科學函數。",
       "sources": [
         "raw/tablet10/01-every-key.png"
@@ -141,7 +141,7 @@
       "file": "tablet10/tablet10-02-graph.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 236438,
+      "bytes": 236648,
       "alt": "讓曲線 呈現眼前。 — 繪製函數，拖動 參數查看變化。",
       "sources": [
         "raw/tablet10/02-graph.png"
@@ -151,7 +151,7 @@
       "file": "tablet10/tablet10-03-convert.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 175186,
+      "bytes": 175833,
       "alt": "從 °C 到 °F。 — 輸入的同時 換算單位。",
       "sources": [
         "raw/tablet10/03-convert.png",
@@ -162,7 +162,7 @@
       "file": "tablet10/tablet10-04-customize.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 254784,
+      "bytes": 254633,
       "alt": "你的鍵盤， 你的風格。 — 你的顏色。 你的捷徑。",
       "sources": [
         "raw/tablet10/09-appearance-portrait.png",
@@ -173,7 +173,7 @@
       "file": "tablet10/tablet10-05-more-room.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 213442,
+      "bytes": 213445,
       "alt": "更多空間， 更多計算。 — 平板和摺疊螢幕上 歷史紀錄與鍵盤並排。",
       "sources": [
         "raw/tablet10/01-every-key.png",
@@ -184,7 +184,7 @@
       "file": "desktop/desktop-01-every-key.jpg",
       "width": 1920,
       "height": 1080,
-      "bytes": 105239,
+      "bytes": 105610,
       "alt": "輕輕一滑， 功能更多。 — 滑動按鍵即可使用 科學函數。",
       "sources": [
         "raw/desktop/01-every-key.png"
@@ -194,7 +194,7 @@
       "file": "desktop/desktop-02-graph.jpg",
       "width": 1920,
       "height": 1080,
-      "bytes": 185647,
+      "bytes": 186147,
       "alt": "讓曲線 呈現眼前。 — 繪製函數，拖動 參數查看變化。",
       "sources": [
         "raw/desktop/02-graph.png"
@@ -204,7 +204,7 @@
       "file": "desktop/desktop-03-convert.jpg",
       "width": 1920,
       "height": 1080,
-      "bytes": 87616,
+      "bytes": 89453,
       "alt": "從 °C 到 °F。 — 輸入的同時 換算單位。",
       "sources": [
         "raw/desktop/03-convert.png"
@@ -214,7 +214,7 @@
       "file": "desktop/desktop-07-appearance.jpg",
       "width": 1920,
       "height": 1080,
-      "bytes": 115260,
+      "bytes": 116648,
       "sources": [
         "raw/desktop/07-appearance.png"
       ]
@@ -223,7 +223,7 @@
       "file": "graphics/feature-graphic.png",
       "width": 1024,
       "height": 500,
-      "bytes": 68716,
+      "bytes": 68737,
       "sources": [
         "raw/phone/01-every-key.png"
       ]
@@ -234,6 +234,36 @@
       "height": 512,
       "bytes": 195020,
       "alt": "輕輕一滑， 功能更多。 — 滑動按鍵即可使用 科學函數。"
+    },
+    {
+      "file": "showcase/01-every-key.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 231145,
+      "alt": "輕輕一滑， 功能更多。 — 滑動按鍵即可使用 科學函數。",
+      "sources": [
+        "raw/phone/01-every-key.png"
+      ]
+    },
+    {
+      "file": "showcase/02-graph.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 244942,
+      "alt": "讓曲線 呈現眼前。 — 繪製函數，拖動 參數查看變化。",
+      "sources": [
+        "raw/phone/10-graph-amber.png"
+      ]
+    },
+    {
+      "file": "showcase/03-convert.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 170563,
+      "alt": "從 °C 到 °F。 — 輸入的同時 換算單位。",
+      "sources": [
+        "raw/phone/11-convert-amber.png"
+      ]
     }
   ]
 }

@@ -1,14 +1,14 @@
 {
   "source": "adb exec-out screencap from the Android Resizable_Experimental emulator",
   "locale": "en-US",
-  "commit": "fa1f7ef63390322e06cef9824fb91afa64a354ff",
-  "apkSha256": "f4c66aced6c4a83a46619b22b84d426e6f83360169948cb6b8652269af9544cd",
+  "commit": "5fbd644b651a992acfb47ca3690badd0648630cb",
+  "apkSha256": "5d7896f64cc8b81354b013e9a8903dbc8c5432ffd7156d9aaf470a04533f39dd",
   "serial": "emulator-5578",
   "systemUi": "real status bar with 09:41 clock; full battery/Wi-Fi; gesture navigation pill",
   "captures": [
     {
       "file": "en-US/raw/desktop/01-every-key.png",
-      "sha256": "78bcc260c6d8cc0c6f26f53dd95087c32a1c4629dd6eec1ba91e06dc54b3fcdc",
+      "sha256": "f895b6c0b79536942fa122445703fcbea849a487d0847703989a53a7408a0021",
       "scene": "calculator",
       "palette": "AMBER",
       "width": 1920,
@@ -17,7 +17,7 @@
     },
     {
       "file": "en-US/raw/desktop/02-graph.png",
-      "sha256": "ec4df00aad98a1c2432dd6249748e38b6285b01ca653f317231f74d2139c22e1",
+      "sha256": "7750d51142db8a5c43044ae8b582084a7b4b8c91d13cb018d609e1ed29c822b1",
       "scene": "graph",
       "palette": "BLUE",
       "width": 1920,
@@ -26,7 +26,7 @@
     },
     {
       "file": "en-US/raw/desktop/03-convert.png",
-      "sha256": "2ab2723cf53bddc253eaea1777a46582ace1326431e43eeda4684a73827bb4bd",
+      "sha256": "0362794626d20097c7969a94e3a44beb6cb46aa36ca1aea3588f7735f4e82fc8",
       "scene": "converter",
       "palette": "BLUE",
       "width": 1920,
@@ -35,7 +35,7 @@
     },
     {
       "file": "en-US/raw/desktop/07-appearance.png",
-      "sha256": "abcf30f2f9fc552dd92e0234e0e5676ba371f2460c85473c34ab9e4f82a3818f",
+      "sha256": "4f10767c22253740b307c62c21776939fea909dbc87fbd60d93c02bcff63fee4",
       "scene": "appearance",
       "palette": "PURPLE",
       "width": 1920,
@@ -44,7 +44,7 @@
     },
     {
       "file": "en-US/raw/phone/01-every-key.png",
-      "sha256": "5eb7735f176bedbe2fce2dd80be716ee618a4f23d97038b881748c0fed58c078",
+      "sha256": "bc5f3f3ff94eaf29b0a8d1fe70100eecad892d69db5350058669b920d19ef6f4",
       "scene": "calculator",
       "palette": "AMBER",
       "width": 1080,
@@ -53,7 +53,7 @@
     },
     {
       "file": "en-US/raw/phone/02-graph.png",
-      "sha256": "15c4ea5e33b789d449c0104ef11a9ca65c598c4e71465d368b2d7af3a7185874",
+      "sha256": "7cbc9c154f55bfccd4fcd9747a3c38fbbbc829ea32843c9f982a50b45561df31",
       "scene": "graph",
       "palette": "BLUE",
       "width": 1080,
@@ -98,7 +98,7 @@
     },
     {
       "file": "en-US/raw/phone/07-appearance.png",
-      "sha256": "c0f1942be665d564d5396e6d5b0d48f0c7d9b709d3c4ef94550111eb916b0200",
+      "sha256": "05924ff9450e41bf7cc74da00c0d973c882e775fc93c4c3192e14c63f8d94c4f",
       "scene": "appearance",
       "palette": "PURPLE",
       "width": 1080,
@@ -116,7 +116,7 @@
     },
     {
       "file": "en-US/raw/phone/10-graph-amber.png",
-      "sha256": "d90d0eb982543499a25c23275d01ee35850f0081f59dbc2c77fcf29af769f646",
+      "sha256": "b49b92cd901775ec9283c6607b13dffe2f6d809fbd3289641ab85e2e99926aa7",
       "scene": "graph",
       "palette": "AMBER",
       "width": 1080,
@@ -134,7 +134,7 @@
     },
     {
       "file": "en-US/raw/tablet10/01-every-key.png",
-      "sha256": "c5f73241c6a6bc14d82457ab471333ae87d0e5cc915bcec265b5a6124955c628",
+      "sha256": "8866d5b4689bf9fb38231219214c831e398ffeef6d079fa754e8e45f38927f60",
       "scene": "calculator",
       "palette": "AMBER",
       "width": 1920,
@@ -143,7 +143,7 @@
     },
     {
       "file": "en-US/raw/tablet10/02-graph.png",
-      "sha256": "fad05a48eff739bcb96985d25e2b342ccb17b4c3dc795ca47e85d07937df03bb",
+      "sha256": "754408fc95cba83e3d6e6106adb0c324dda998befa1fd9057a906ade704eed7e",
       "scene": "graph",
       "palette": "BLUE",
       "width": 1920,
@@ -152,7 +152,7 @@
     },
     {
       "file": "en-US/raw/tablet10/03-convert.png",
-      "sha256": "e7f16ee5310e25475f091de19260b293ffd2e940faef2b79f99918d17c7c5ef8",
+      "sha256": "b2fdd3e7fc9c3bdad3f54d4de71f9946afe2280a96cd14055dbc83d1379d9b67",
       "scene": "converter",
       "palette": "BLUE",
       "width": 1920,
@@ -161,7 +161,7 @@
     },
     {
       "file": "en-US/raw/tablet10/04-customize.png",
-      "sha256": "069b1206e159ab0232944c518f0488646113955d792fe831fd253edadce77879",
+      "sha256": "23c20bb4d88e2d7820f38a03acc80ba9364b3edc3b743d833c8aa8f93220bbaf",
       "scene": "customize",
       "palette": "AMBER",
       "width": 1920,
@@ -170,7 +170,7 @@
     },
     {
       "file": "en-US/raw/tablet10/08-programmer-portrait.png",
-      "sha256": "c3eb0d451faf0ed4e82c84cf0206d38302005e780a18fcacb36f7b077750d200",
+      "sha256": "2dc96de617e135bf7ab34393231111f94db6a64e1935de32e0e6a362b6be056b",
       "scene": "programmer",
       "palette": "TEAL",
       "width": 1200,
@@ -179,7 +179,7 @@
     },
     {
       "file": "en-US/raw/tablet10/09-appearance-portrait.png",
-      "sha256": "62469d9f8f045f07571bf81fe9fe684415b7f59328e2089bdb0e091d0cf89b08",
+      "sha256": "d324614c4363e9a07abbdc01db8b05ddca4a4058485535d2d2ddf1663e26b21c",
       "scene": "appearance",
       "palette": "PURPLE",
       "width": 1200,
@@ -188,7 +188,7 @@
     },
     {
       "file": "en-US/raw/tablet10/10-calculator-portrait.png",
-      "sha256": "269280f5b2e6a6bb9cf2f5918f1761c7f934b116e303a4ed3c347d6934e449d7",
+      "sha256": "9719b5ffa874ad5022cdc3b97bcb9eb17e1f49e946d996a9b2360a558b9e29fc",
       "scene": "calculator",
       "palette": "AMBER",
       "width": 1200,
@@ -197,7 +197,7 @@
     },
     {
       "file": "en-US/raw/tablet10/11-appearance-readme.png",
-      "sha256": "62469d9f8f045f07571bf81fe9fe684415b7f59328e2089bdb0e091d0cf89b08",
+      "sha256": "d324614c4363e9a07abbdc01db8b05ddca4a4058485535d2d2ddf1663e26b21c",
       "scene": "appearance",
       "palette": "PURPLE",
       "width": 1200,
@@ -206,7 +206,7 @@
     },
     {
       "file": "en-US/raw/tablet7/01-every-key.png",
-      "sha256": "6100080a7bc34b69c2bb1da032e3e65542134c7b98306dfc398ca365dbb4896a",
+      "sha256": "bdac1eb0588d16f4711020b4c73fc866dfd80de20989c57fa591f23126fd5607",
       "scene": "calculator",
       "palette": "AMBER",
       "width": 1200,
@@ -215,7 +215,7 @@
     },
     {
       "file": "en-US/raw/tablet7/02-graph.png",
-      "sha256": "298a5c7f45307fdfe0a7ccf03b747751c45bcb8ade83d593e9f0ac2010776cff",
+      "sha256": "31c8b1a2e4051f426ce274bb3c26ec3db858d0e60b25c03d7f2ad209ee7e5468",
       "scene": "graph",
       "palette": "BLUE",
       "width": 1200,
@@ -224,7 +224,7 @@
     },
     {
       "file": "en-US/raw/tablet7/03-convert.png",
-      "sha256": "46e2cef6ad255dad189ad0f4756f7d25fcb3709c49403453f0fb0b2d7736c7a9",
+      "sha256": "26f65b19a8accd96fcaf9e2ee549af8138dc8ac4c07628a09db7304c685eb865",
       "scene": "converter",
       "palette": "BLUE",
       "width": 1200,
@@ -233,7 +233,7 @@
     },
     {
       "file": "en-US/raw/tablet7/04-customize.png",
-      "sha256": "de7b80929ce6b7a1b1f01a703b33ed150eef40a1cc252b7d5370fd968a5ccf27",
+      "sha256": "43b24ec5f3d031407aba7c72e381a737018710b7687e52383dfdbca1ea46a672",
       "scene": "customize",
       "palette": "AMBER",
       "width": 1200,
@@ -242,7 +242,7 @@
     },
     {
       "file": "en-US/raw/tablet7/05-programmer.png",
-      "sha256": "1b626383ffb780b93252612bf589cddab292540d95f8d9475c5c4a8da4db2ddb",
+      "sha256": "b58ff7afbe3874c436de2a5f50dbd8795f042d6410bf57e8af99b2aac9db5473",
       "scene": "programmer",
       "palette": "TEAL",
       "width": 1200,
@@ -251,7 +251,7 @@
     },
     {
       "file": "en-US/raw/tablet7/07-appearance.png",
-      "sha256": "762a9eac8313dd4af9b7549c24f3403f5062ef9c5c96cb58d6e19c9813458346",
+      "sha256": "8d9dbf7d3179cfd35b97b48d5737ceff92b989b8ff02922b50821de4ebf81027",
       "scene": "appearance",
       "palette": "PURPLE",
       "width": 1200,
@@ -260,7 +260,7 @@
     },
     {
       "file": "en-US/raw/tablet7/08-calculator-landscape.png",
-      "sha256": "83693f30400716f35075ab83a10f85b91a03ae35f619247590c81edc98a2fbe7",
+      "sha256": "2fa3a4f99fb85bad37d7b38c94d56cc93ac9c31dfa19e6663340b0dd46dc259e",
       "scene": "calculator",
       "palette": "AMBER",
       "width": 1920,

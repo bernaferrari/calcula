@@ -1,14 +1,14 @@
 {
   "source": "adb exec-out screencap from the Android Resizable_Experimental emulator",
   "locale": "zh-CN",
-  "commit": "fa1f7ef63390322e06cef9824fb91afa64a354ff",
-  "apkSha256": "f4c66aced6c4a83a46619b22b84d426e6f83360169948cb6b8652269af9544cd",
+  "commit": "5fbd644b651a992acfb47ca3690badd0648630cb",
+  "apkSha256": "5d7896f64cc8b81354b013e9a8903dbc8c5432ffd7156d9aaf470a04533f39dd",
   "serial": "emulator-5578",
   "systemUi": "real status bar with 09:41 clock; full battery/Wi-Fi; gesture navigation pill",
   "captures": [
     {
       "file": "zh-CN/raw/phone/01-every-key.png",
-      "sha256": "3142059597839430c1bb7cc3e6517afa2e96922febe6562838257f7d69bc685d",
+      "sha256": "ba59920690ac2afb104df643237b105b4b60751629587a7c6aac53ea858d293a",
       "scene": "calculator",
       "palette": "AMBER",
       "width": 1080,
@@ -17,7 +17,7 @@
     },
     {
       "file": "zh-CN/raw/phone/02-graph.png",
-      "sha256": "8985a58c278c2840171f8452e8855e76d2ac70f8aee8f5e2a3b98e9ce11bb487",
+      "sha256": "8539f1a86f3c0711089ba38a200ac68ccd61e2e31c1c747d87fb7f8b6f17323a",
       "scene": "graph",
       "palette": "BLUE",
       "width": 1080,
@@ -26,7 +26,7 @@
     },
     {
       "file": "zh-CN/raw/phone/03-convert.png",
-      "sha256": "ee62f44f1369d407090e1225bf3044ddb8460825de6311d005f3c783a859931f",
+      "sha256": "6b16edb92c9430623e3c9861711634b166b7a559e23701dc95424f0661a1989e",
       "scene": "converter",
       "palette": "BLUE",
       "width": 1080,
@@ -35,7 +35,7 @@
     },
     {
       "file": "zh-CN/raw/phone/04-customize.png",
-      "sha256": "e94e24f4b7fcfbdabc37fedb93a35028724b6bdbf85bcaf9aadedec351e2b957",
+      "sha256": "478bb26c2a324b281bc59d5e2389049e214a8af93d2c810abfd2e44fd04ce0b8",
       "scene": "customize",
       "palette": "AMBER",
       "width": 1080,
@@ -44,7 +44,7 @@
     },
     {
       "file": "zh-CN/raw/phone/05-programmer.png",
-      "sha256": "343c30b0c30d7f50502ad5f29f6188493cc6955ff3eb84a9c9c3fcd53e3c24e7",
+      "sha256": "4b488b686b88a4d3804503773a2ff217e203c1920b2252701078401aaa37ff7f",
       "scene": "programmer",
       "palette": "TEAL",
       "width": 1080,
@@ -53,7 +53,7 @@
     },
     {
       "file": "zh-CN/raw/phone/06-statistics.png",
-      "sha256": "2531ae03e4bd586a56ff27e572d42a68ab797be5c62f1a886504d0324b9c8dbf",
+      "sha256": "700f6e7d6aebd253ab6ae0b3384a7ae62ba22652ccef9a65b7af95cb10e92940",
       "scene": "statistics",
       "palette": "AMBER",
       "width": 1080,
@@ -62,7 +62,7 @@
     },
     {
       "file": "zh-CN/raw/phone/07-appearance.png",
-      "sha256": "8c67e63f9142b1b43b9906ab2478bd0b872a29412e731d3662c61562e056d499",
+      "sha256": "3e246ce8f8757d615d0efee32834c8d0d0709455254702227059ac23568cd26d",
       "scene": "appearance",
       "palette": "PURPLE",
       "width": 1080,
@@ -71,7 +71,7 @@
     },
     {
       "file": "zh-CN/raw/phone/08-programmer-blue.png",
-      "sha256": "786e775ddeb59ac9de8b6a756c7d393ef82549d48fcdb538ba8d8cbfd9ba81f6",
+      "sha256": "e10125993cfccb91b5f4e5efb8e699e9fb7d5d4453f05ffb80c6af4a5dbbe508",
       "scene": "programmer",
       "palette": "BLUE",
       "width": 1080,
@@ -80,7 +80,7 @@
     },
     {
       "file": "zh-CN/raw/phone/10-graph-amber.png",
-      "sha256": "f8eb3f83eb127ade5601284d47cd732c6e44f17019e56ec8c1fe02cfaed72f93",
+      "sha256": "26106d822bf71849a564130aee5b7cfa82c1ed2e588d5f0124402efa1c15f07e",
       "scene": "graph",
       "palette": "AMBER",
       "width": 1080,
@@ -89,7 +89,7 @@
     },
     {
       "file": "zh-CN/raw/phone/11-convert-amber.png",
-      "sha256": "56bc9d60e589e83bb4ebdd3caa16d36d0419f11674ffadd977625f4d1534e5b9",
+      "sha256": "d7bb8f7ab3b1907797bef0fe6c9f754fc59d2033a31dff4c82bd57866fdd2a66",
       "scene": "converter",
       "palette": "AMBER",
       "width": 1080,

@@ -1,14 +1,14 @@
 {
   "source": "adb exec-out screencap from the Android Resizable_Experimental emulator",
   "locale": "es-ES",
-  "commit": "6e36064c7545c59a40a20ade52450d15538bca33",
-  "apkSha256": "e3e4032a4a7b3ad1e120c98466e6a348997b1c3c430984ee3a746da835a2f5ac",
+  "commit": "5fbd644b651a992acfb47ca3690badd0648630cb",
+  "apkSha256": "5d7896f64cc8b81354b013e9a8903dbc8c5432ffd7156d9aaf470a04533f39dd",
   "serial": "emulator-5578",
   "systemUi": "real status bar with 09:41 clock; full battery/Wi-Fi; gesture navigation pill",
   "captures": [
     {
       "file": "es-ES/raw/desktop/01-every-key.png",
-      "sha256": "f0451b648cf57c5f894b83520257dac3c8c205b82104ca592c7991a656ffacc6",
+      "sha256": "565307fe0128415330ba3e9f18c32fca16d8acaf8552d847a3834161049c42f8",
       "scene": "calculator",
       "palette": "AMBER",
       "width": 1920,
@@ -17,7 +17,7 @@
     },
     {
       "file": "es-ES/raw/desktop/02-graph.png",
-      "sha256": "ffb6c59ad8dc863608ccedd58d5489f77d70ae949ec67991f00e1521308ad8b3",
+      "sha256": "2781d00b642c534879f5fa480e57682c7eebe3ef628457c9e715fa6c081484fb",
       "scene": "graph",
       "palette": "BLUE",
       "width": 1920,
@@ -26,7 +26,7 @@
     },
     {
       "file": "es-ES/raw/desktop/03-convert.png",
-      "sha256": "875b428614a8efb01f62e5c4e022bb15f7355e0a86c61d12d80a74de5be57f15",
+      "sha256": "0a988f014738f0e4188b84858f668e46f456a4daa8e3e31bcb7c43e5c8c27cae",
       "scene": "converter",
       "palette": "BLUE",
       "width": 1920,
@@ -35,7 +35,7 @@
     },
     {
       "file": "es-ES/raw/desktop/07-appearance.png",
-      "sha256": "21144e51bf6eb80172e88567cdca6c8be3de43edd3a26542007923bedabff807",
+      "sha256": "effe5e1a12e1bbd7b54ca710060439a5130b7099e6f282947e3cc421936eb9dc",
       "scene": "appearance",
       "palette": "PURPLE",
       "width": 1920,
@@ -43,143 +43,8 @@
       "densityDpi": 200
     },
     {
-      "file": "es-ES/raw/tablet10/01-every-key.png",
-      "sha256": "ad47f56092d2e5157ed8c3c9968ea1a454dd28b72a17b929f59e5721d0ac94dc",
-      "scene": "calculator",
-      "palette": "AMBER",
-      "width": 1920,
-      "height": 1200,
-      "densityDpi": 240
-    },
-    {
-      "file": "es-ES/raw/tablet10/02-graph.png",
-      "sha256": "e1822b47330e323e3f995574c18dd26fbee43d5e7406e8fa8d64cf461aa3fdf3",
-      "scene": "graph",
-      "palette": "BLUE",
-      "width": 1920,
-      "height": 1200,
-      "densityDpi": 240
-    },
-    {
-      "file": "es-ES/raw/tablet10/03-convert.png",
-      "sha256": "355c72df52a97c7979723e20a7a7e1f6d90f6e13ca2a6f7ac7d07cd34650f5ea",
-      "scene": "converter",
-      "palette": "BLUE",
-      "width": 1920,
-      "height": 1200,
-      "densityDpi": 240
-    },
-    {
-      "file": "es-ES/raw/tablet10/04-customize.png",
-      "sha256": "7663694778928ab06bc7b39ba539b38ca48678f86a6da3279fd50f601644ded7",
-      "scene": "customize",
-      "palette": "AMBER",
-      "width": 1920,
-      "height": 1200,
-      "densityDpi": 240
-    },
-    {
-      "file": "es-ES/raw/tablet10/08-programmer-portrait.png",
-      "sha256": "469a3e7348c1da032c8a54fd731ce678f067edbdaa64303e2cd6894f452d7ba8",
-      "scene": "programmer",
-      "palette": "TEAL",
-      "width": 1200,
-      "height": 1920,
-      "densityDpi": 240
-    },
-    {
-      "file": "es-ES/raw/tablet10/09-appearance-portrait.png",
-      "sha256": "b8d061f3cfd89c44c9b268907c53b07539fdc91e61354c38d1f7ae46b96b7afb",
-      "scene": "appearance",
-      "palette": "PURPLE",
-      "width": 1200,
-      "height": 1920,
-      "densityDpi": 240
-    },
-    {
-      "file": "es-ES/raw/tablet10/10-calculator-portrait.png",
-      "sha256": "2c29203f68d3c66b521c31a2fcdaa73e919168f18515989c0e069cc3aebb8ce2",
-      "scene": "calculator",
-      "palette": "AMBER",
-      "width": 1200,
-      "height": 1920,
-      "densityDpi": 240
-    },
-    {
-      "file": "es-ES/raw/tablet10/11-appearance-readme.png",
-      "sha256": "b8d061f3cfd89c44c9b268907c53b07539fdc91e61354c38d1f7ae46b96b7afb",
-      "scene": "appearance",
-      "palette": "PURPLE",
-      "width": 1200,
-      "height": 1920,
-      "densityDpi": 240
-    },
-    {
-      "file": "es-ES/raw/tablet7/01-every-key.png",
-      "sha256": "c60ca355617eecfa0090c6bf96555c0e9dfe0c9c336514273ae24a297d61d1ef",
-      "scene": "calculator",
-      "palette": "AMBER",
-      "width": 1200,
-      "height": 1920,
-      "densityDpi": 320
-    },
-    {
-      "file": "es-ES/raw/tablet7/02-graph.png",
-      "sha256": "790a83d36cebb69df45aba3702a51e4b2a4c00920da3ad3a07d8fffa35efb1bb",
-      "scene": "graph",
-      "palette": "BLUE",
-      "width": 1200,
-      "height": 1920,
-      "densityDpi": 320
-    },
-    {
-      "file": "es-ES/raw/tablet7/03-convert.png",
-      "sha256": "b03a8191e5363e8b6f6eaa9ac046a8cd3d44ac6c3157ff28901a6fd491656d64",
-      "scene": "converter",
-      "palette": "BLUE",
-      "width": 1200,
-      "height": 1920,
-      "densityDpi": 320
-    },
-    {
-      "file": "es-ES/raw/tablet7/04-customize.png",
-      "sha256": "710ee57f9c8ffcc865f991e3bbfb9868a1e94d0af1dae2a6582bfef1e33deae0",
-      "scene": "customize",
-      "palette": "AMBER",
-      "width": 1200,
-      "height": 1920,
-      "densityDpi": 320
-    },
-    {
-      "file": "es-ES/raw/tablet7/05-programmer.png",
-      "sha256": "f5fb9132a2844322cc2e6a915e3f2c20940a6cede738118399d425cd6816e2a4",
-      "scene": "programmer",
-      "palette": "TEAL",
-      "width": 1200,
-      "height": 1920,
-      "densityDpi": 320
-    },
-    {
-      "file": "es-ES/raw/tablet7/07-appearance.png",
-      "sha256": "68086ec3a9b40cfcd80615f746e4749029441717b81636a638dbe7716089f52b",
-      "scene": "appearance",
-      "palette": "PURPLE",
-      "width": 1200,
-      "height": 1920,
-      "densityDpi": 320
-    },
-    {
-      "file": "es-ES/raw/tablet7/08-calculator-landscape.png",
-      "sha256": "123286258778a6a4a2f5aa90712f219ec5b85bad2c1255ed7a4ee34c5f0349d7",
-      "scene": "calculator",
-      "palette": "AMBER",
-      "width": 1920,
-      "height": 1200,
-      "densityDpi": 320
-    },
-    {
       "file": "es-ES/raw/phone/01-every-key.png",
-      "sha256": "5b4e9b26b9e4a4103fc51365874a82c1d3e753bfa4a302b0f1e0ab59bb6eebec",
+      "sha256": "45b7f062e8989c3db40e6e3f185b35e1428b73ec68e1aa22f6f5096b5b119d64",
       "scene": "calculator",
       "palette": "AMBER",
       "width": 1080,
@@ -188,7 +53,7 @@
     },
     {
       "file": "es-ES/raw/phone/02-graph.png",
-      "sha256": "328d0bd76f7a88d9efba47a245b64f037cde08a10ba43a128d83e40bc5de8648",
+      "sha256": "a782c26390c9812ca2307c87a1c9919c59890eea3c208b5b4aff0130eb71b301",
       "scene": "graph",
       "palette": "BLUE",
       "width": 1080,
@@ -197,7 +62,7 @@
     },
     {
       "file": "es-ES/raw/phone/03-convert.png",
-      "sha256": "b6812db462f8d12f0cb605d4cd11766f3b676653e59f02fece2dfc173e618ee5",
+      "sha256": "fef6336bca5ba013d8dcb2cdcb9b0fe1a4a5876ae52e6a365f04541280ae8cbe",
       "scene": "converter",
       "palette": "BLUE",
       "width": 1080,
@@ -206,7 +71,7 @@
     },
     {
       "file": "es-ES/raw/phone/04-customize.png",
-      "sha256": "4bea998f71461fd4b032ff291f7accb7e6d6ab05b0ccb96d5fe0f158176746d0",
+      "sha256": "7c9986704debc2cdf87ce3dd8850d78583b7a1f79a4437a283065cb2d29da848",
       "scene": "customize",
       "palette": "AMBER",
       "width": 1080,
@@ -215,7 +80,7 @@
     },
     {
       "file": "es-ES/raw/phone/05-programmer.png",
-      "sha256": "bb3a797efa7091656c605f26a11732673eb6fe167cdbe107068935d000d6c288",
+      "sha256": "96772e066860af17e33b8e11f63a2040fc1b102854aa0751961b7a15cc1e5f7e",
       "scene": "programmer",
       "palette": "TEAL",
       "width": 1080,
@@ -224,7 +89,7 @@
     },
     {
       "file": "es-ES/raw/phone/06-statistics.png",
-      "sha256": "8acf03e4cf694cab6817f37520cc83a5d4dee27b5e110c736dfc9da1e274b15d",
+      "sha256": "177d3168d97498aeb5213e84f941277b088e1e5cbc21b96771f369f173bed88e",
       "scene": "statistics",
       "palette": "AMBER",
       "width": 1080,
@@ -233,7 +98,7 @@
     },
     {
       "file": "es-ES/raw/phone/07-appearance.png",
-      "sha256": "d7800c1102755d5ec267c9b3eee7c48e15c7dba8fc7e4d0efddcad6006e80ede",
+      "sha256": "7e12626cf93a7dffcb10498c211e11421b82071626d61e90582e8cada301798c",
       "scene": "appearance",
       "palette": "PURPLE",
       "width": 1080,
@@ -242,12 +107,165 @@
     },
     {
       "file": "es-ES/raw/phone/08-programmer-blue.png",
-      "sha256": "c3fccbb2e1454a850e0f09aff70d9315031c1ea028dbac1d56927cb63003336d",
+      "sha256": "8fdf8c9e3b0b0835cbc0ee8c5d037baef7ebd3c9faff2ab35ea60ab48d79b695",
       "scene": "programmer",
       "palette": "BLUE",
       "width": 1080,
       "height": 2340,
       "densityDpi": 400
+    },
+    {
+      "file": "es-ES/raw/phone/10-graph-amber.png",
+      "sha256": "2c74af280e9553529b68234dd9ce52c743c84e81a96fe75edc856556c0d1c85d",
+      "scene": "graph",
+      "palette": "AMBER",
+      "width": 1080,
+      "height": 2340,
+      "densityDpi": 400
+    },
+    {
+      "file": "es-ES/raw/phone/11-convert-amber.png",
+      "sha256": "9f53d17b42accb91dacc19114cda79a8bda4dc5873a59adcea8c6f5aa96694d7",
+      "scene": "converter",
+      "palette": "AMBER",
+      "width": 1080,
+      "height": 2340,
+      "densityDpi": 400
+    },
+    {
+      "file": "es-ES/raw/tablet10/01-every-key.png",
+      "sha256": "99550a3104d9cb053414cd211555ad361e54c3041b9d360ea437d484e24afbd9",
+      "scene": "calculator",
+      "palette": "AMBER",
+      "width": 1920,
+      "height": 1200,
+      "densityDpi": 240
+    },
+    {
+      "file": "es-ES/raw/tablet10/02-graph.png",
+      "sha256": "70e9acede01d1af23835fd93cccef78e4d43c4381895b70c6701c65f2e7c7370",
+      "scene": "graph",
+      "palette": "BLUE",
+      "width": 1920,
+      "height": 1200,
+      "densityDpi": 240
+    },
+    {
+      "file": "es-ES/raw/tablet10/03-convert.png",
+      "sha256": "c4a8d1aeccaa6980599703e58aa0d4c3949ecac07989a488b7d171ca23796988",
+      "scene": "converter",
+      "palette": "BLUE",
+      "width": 1920,
+      "height": 1200,
+      "densityDpi": 240
+    },
+    {
+      "file": "es-ES/raw/tablet10/04-customize.png",
+      "sha256": "465c6b65899e48c1f7becae1d6a376c3c5d541db74e690e1f10e9a4c58c61f9d",
+      "scene": "customize",
+      "palette": "AMBER",
+      "width": 1920,
+      "height": 1200,
+      "densityDpi": 240
+    },
+    {
+      "file": "es-ES/raw/tablet10/08-programmer-portrait.png",
+      "sha256": "97b11c273774f729def953fdb8f4745de0bcad1fb12af633fc4432b3e757ca74",
+      "scene": "programmer",
+      "palette": "TEAL",
+      "width": 1200,
+      "height": 1920,
+      "densityDpi": 240
+    },
+    {
+      "file": "es-ES/raw/tablet10/09-appearance-portrait.png",
+      "sha256": "a0dc318b5d6c13ce27999f59a12d51f0913752d2b9abd3c739e6c6ec83a0817a",
+      "scene": "appearance",
+      "palette": "PURPLE",
+      "width": 1200,
+      "height": 1920,
+      "densityDpi": 240
+    },
+    {
+      "file": "es-ES/raw/tablet10/10-calculator-portrait.png",
+      "sha256": "4e2af99c4a784183f9bd91efc6359a773eae2b369337da34978fdcce51cb17f2",
+      "scene": "calculator",
+      "palette": "AMBER",
+      "width": 1200,
+      "height": 1920,
+      "densityDpi": 240
+    },
+    {
+      "file": "es-ES/raw/tablet10/11-appearance-readme.png",
+      "sha256": "a0dc318b5d6c13ce27999f59a12d51f0913752d2b9abd3c739e6c6ec83a0817a",
+      "scene": "appearance",
+      "palette": "PURPLE",
+      "width": 1200,
+      "height": 1920,
+      "densityDpi": 240
+    },
+    {
+      "file": "es-ES/raw/tablet7/01-every-key.png",
+      "sha256": "9b19c5b8779922eb84f32ee051b4863c8c1d2966415dd9eb212efbf0e53e7211",
+      "scene": "calculator",
+      "palette": "AMBER",
+      "width": 1200,
+      "height": 1920,
+      "densityDpi": 320
+    },
+    {
+      "file": "es-ES/raw/tablet7/02-graph.png",
+      "sha256": "0fc9ef40431e17aa4ca7a0d97ca2f36bf83c329f46cb6b8c96ca72cfadc3ae7c",
+      "scene": "graph",
+      "palette": "BLUE",
+      "width": 1200,
+      "height": 1920,
+      "densityDpi": 320
+    },
+    {
+      "file": "es-ES/raw/tablet7/03-convert.png",
+      "sha256": "be404cecb2b14eb187d07c9fe29a657a213357f5e1ce00a62a95f87123b303a3",
+      "scene": "converter",
+      "palette": "BLUE",
+      "width": 1200,
+      "height": 1920,
+      "densityDpi": 320
+    },
+    {
+      "file": "es-ES/raw/tablet7/04-customize.png",
+      "sha256": "2d10dd221d4f76d608bcfcdb8481a4ed31b3a9a76b05956eff1c277c7f82917f",
+      "scene": "customize",
+      "palette": "AMBER",
+      "width": 1200,
+      "height": 1920,
+      "densityDpi": 320
+    },
+    {
+      "file": "es-ES/raw/tablet7/05-programmer.png",
+      "sha256": "d9ecddc129815f563a1fbff0fe0027e232d65cb5be8d784e8f6857a0282e8b01",
+      "scene": "programmer",
+      "palette": "TEAL",
+      "width": 1200,
+      "height": 1920,
+      "densityDpi": 320
+    },
+    {
+      "file": "es-ES/raw/tablet7/07-appearance.png",
+      "sha256": "25418e007a05919373492d63aee98fb05929bb5b92b37ffdf37ceec7a04b879a",
+      "scene": "appearance",
+      "palette": "PURPLE",
+      "width": 1200,
+      "height": 1920,
+      "densityDpi": 320
+    },
+    {
+      "file": "es-ES/raw/tablet7/08-calculator-landscape.png",
+      "sha256": "0ac434949829e6e4e0c5858c81f0e15dabef0e8effe43e522be7c0ed9e05f807",
+      "scene": "calculator",
+      "palette": "AMBER",
+      "width": 1920,
+      "height": 1200,
+      "densityDpi": 320
     }
   ]
 }

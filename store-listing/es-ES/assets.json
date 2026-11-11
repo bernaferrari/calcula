@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-30T03:46:35.798Z",
+  "generatedAt": "2026-11-11T16:21:54.358Z",
   "campaign": "A little flick goes a long way",
   "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
   "assets": [
@@ -7,7 +7,7 @@
       "file": "phone/phone-01-every-key.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 240151,
+      "bytes": 240149,
       "alt": "Un pequeño deslizamiento. — Desliza una tecla para usar su función científica.",
       "sources": [
         "raw/phone/01-every-key.png"
@@ -17,7 +17,7 @@
       "file": "phone/phone-02-graph.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 243214,
+      "bytes": 243556,
       "alt": "Mira cómo toma forma. — Traza funciones y mueve los parámetros.",
       "sources": [
         "raw/phone/02-graph.png"
@@ -27,7 +27,7 @@
       "file": "phone/phone-03-convert.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 168694,
+      "bytes": 169278,
       "alt": "De °C a °F. — Convierte unidades mientras escribes.",
       "sources": [
         "raw/phone/03-convert.png"
@@ -47,7 +47,7 @@
       "file": "phone/phone-05-statistics.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 225951,
+      "bytes": 225994,
       "alt": "Números en resumen. — Media, mediana y dispersión de un vistazo.",
       "sources": [
         "raw/phone/06-statistics.png"
@@ -57,7 +57,7 @@
       "file": "phone/phone-06-customize.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 223223,
+      "bytes": 223040,
       "alt": "A tu manera, tecla a tecla. — Tus colores. Tus atajos.",
       "sources": [
         "raw/phone/04-customize.png",
@@ -68,7 +68,7 @@
       "file": "phone/phone-07-more-room.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 235018,
+      "bytes": 234885,
       "alt": "Más espacio para calcular. — Historial junto al teclado en tabletas y plegables.",
       "sources": [
         "raw/tablet10/01-every-key.png",
@@ -79,7 +79,7 @@
       "file": "tablet7/tablet7-01-every-key.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 250983,
+      "bytes": 251023,
       "alt": "Un pequeño deslizamiento. — Desliza una tecla para usar su función científica.",
       "sources": [
         "raw/tablet7/01-every-key.png"
@@ -89,7 +89,7 @@
       "file": "tablet7/tablet7-02-graph.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 250709,
+      "bytes": 250831,
       "alt": "Mira cómo toma forma. — Traza funciones y mueve los parámetros.",
       "sources": [
         "raw/tablet7/02-graph.png"
@@ -99,7 +99,7 @@
       "file": "tablet7/tablet7-03-convert.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 171335,
+      "bytes": 172249,
       "alt": "De °C a °F. — Convierte unidades mientras escribes.",
       "sources": [
         "raw/tablet7/03-convert.png"
@@ -109,7 +109,7 @@
       "file": "tablet7/tablet7-04-customize.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 252967,
+      "bytes": 256360,
       "alt": "A tu manera, tecla a tecla. — Tus colores. Tus atajos.",
       "sources": [
         "raw/tablet7/07-appearance.png",
@@ -120,7 +120,7 @@
       "file": "tablet7/tablet7-05-more-room.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 254129,
+      "bytes": 254224,
       "alt": "Más espacio para calcular. — Historial junto al teclado en tabletas y plegables.",
       "sources": [
         "raw/tablet7/08-calculator-landscape.png",
@@ -131,7 +131,7 @@
       "file": "tablet10/tablet10-01-every-key.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 213336,
+      "bytes": 213216,
       "alt": "Un pequeño deslizamiento. — Desliza una tecla para usar su función científica.",
       "sources": [
         "raw/tablet10/01-every-key.png"
@@ -141,7 +141,7 @@
       "file": "tablet10/tablet10-02-graph.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 235104,
+      "bytes": 235319,
       "alt": "Mira cómo toma forma. — Traza funciones y mueve los parámetros.",
       "sources": [
         "raw/tablet10/02-graph.png"
@@ -151,7 +151,7 @@
       "file": "tablet10/tablet10-03-convert.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 175810,
+      "bytes": 176310,
       "alt": "De °C a °F. — Convierte unidades mientras escribes.",
       "sources": [
         "raw/tablet10/03-convert.png",
@@ -162,7 +162,7 @@
       "file": "tablet10/tablet10-04-customize.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 247977,
+      "bytes": 246999,
       "alt": "A tu manera, tecla a tecla. — Tus colores. Tus atajos.",
       "sources": [
         "raw/tablet10/09-appearance-portrait.png",
@@ -173,7 +173,7 @@
       "file": "tablet10/tablet10-05-more-room.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 214457,
+      "bytes": 214411,
       "alt": "Más espacio para calcular. — Historial junto al teclado en tabletas y plegables.",
       "sources": [
         "raw/tablet10/01-every-key.png",
@@ -184,7 +184,7 @@
       "file": "desktop/desktop-01-every-key.jpg",
       "width": 1920,
       "height": 1080,
-      "bytes": 106434,
+      "bytes": 106630,
       "alt": "Un pequeño deslizamiento. — Desliza una tecla para usar su función científica.",
       "sources": [
         "raw/desktop/01-every-key.png"
@@ -194,7 +194,7 @@
       "file": "desktop/desktop-02-graph.jpg",
       "width": 1920,
       "height": 1080,
-      "bytes": 187274,
+      "bytes": 187420,
       "alt": "Mira cómo toma forma. — Traza funciones y mueve los parámetros.",
       "sources": [
         "raw/desktop/02-graph.png"
@@ -204,7 +204,7 @@
       "file": "desktop/desktop-03-convert.jpg",
       "width": 1920,
       "height": 1080,
-      "bytes": 90889,
+      "bytes": 92217,
       "alt": "De °C a °F. — Convierte unidades mientras escribes.",
       "sources": [
         "raw/desktop/03-convert.png"
@@ -214,7 +214,7 @@
       "file": "desktop/desktop-07-appearance.jpg",
       "width": 1920,
       "height": 1080,
-      "bytes": 116493,
+      "bytes": 119237,
       "sources": [
         "raw/desktop/07-appearance.png"
       ]
@@ -223,7 +223,7 @@
       "file": "graphics/feature-graphic.png",
       "width": 1024,
       "height": 500,
-      "bytes": 70165,
+      "bytes": 70162,
       "sources": [
         "raw/phone/01-every-key.png"
       ]
@@ -234,6 +234,36 @@
       "height": 512,
       "bytes": 195020,
       "alt": "Un pequeño deslizamiento. — Desliza una tecla para usar su función científica."
+    },
+    {
+      "file": "showcase/01-every-key.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 240149,
+      "alt": "Un pequeño deslizamiento. — Desliza una tecla para usar su función científica.",
+      "sources": [
+        "raw/phone/01-every-key.png"
+      ]
+    },
+    {
+      "file": "showcase/02-graph.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 247472,
+      "alt": "Mira cómo toma forma. — Traza funciones y mueve los parámetros.",
+      "sources": [
+        "raw/phone/10-graph-amber.png"
+      ]
+    },
+    {
+      "file": "showcase/03-convert.jpg",
+      "width": 1080,
+      "height": 1920,
+      "bytes": 173684,
+      "alt": "De °C a °F. — Convierte unidades mientras escribes.",
+      "sources": [
+        "raw/phone/11-convert-amber.png"
+      ]
     }
   ]
 }

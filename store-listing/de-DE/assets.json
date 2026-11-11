@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-02T17:29:43.158Z",
+  "generatedAt": "2026-11-11T16:21:54.349Z",
   "campaign": "A little flick goes a long way",
   "source": "Actual Android resizable-emulator screenshots with status and gesture-navigation bars; deterministic HTML/CSS framing by Screenshot Studio",
   "assets": [
@@ -7,7 +7,7 @@
       "file": "phone/phone-01-every-key.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 216594,
+      "bytes": 216579,
       "alt": "Ein kleiner Wisch. — Streiche für die wissenschaftliche Funktion.",
       "sources": [
         "raw/phone/01-every-key.png"
@@ -17,7 +17,7 @@
       "file": "phone/phone-02-graph.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 250889,
+      "bytes": 251196,
       "alt": "Sieh die Kurve entstehen. — Funktionen zeichnen. Parameter verschieben.",
       "sources": [
         "raw/phone/02-graph.png"
@@ -57,7 +57,7 @@
       "file": "phone/phone-06-customize.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 233235,
+      "bytes": 233246,
       "alt": "Dein Rechner, deine Tasten. — Deine Farben. Deine Kurzbefehle.",
       "sources": [
         "raw/phone/04-customize.png",
@@ -68,7 +68,7 @@
       "file": "phone/phone-07-more-room.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 216271,
+      "bytes": 216249,
       "alt": "Mehr Platz für mehr. — Verlauf neben der Rechnung auf Tablets und Foldables.",
       "sources": [
         "raw/tablet10/01-every-key.png",
@@ -79,7 +79,7 @@
       "file": "tablet7/tablet7-01-every-key.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 229509,
+      "bytes": 229553,
       "alt": "Ein kleiner Wisch. — Streiche für die wissenschaftliche Funktion.",
       "sources": [
         "raw/tablet7/01-every-key.png"
@@ -89,7 +89,7 @@
       "file": "tablet7/tablet7-02-graph.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 258948,
+      "bytes": 259341,
       "alt": "Sieh die Kurve entstehen. — Funktionen zeichnen. Parameter verschieben.",
       "sources": [
         "raw/tablet7/02-graph.png"
@@ -99,7 +99,7 @@
       "file": "tablet7/tablet7-03-convert.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 182105,
+      "bytes": 182835,
       "alt": "Von °C nach °F. — Einheiten umrechnen, während du eingibst.",
       "sources": [
         "raw/tablet7/03-convert.png"
@@ -109,7 +109,7 @@
       "file": "tablet7/tablet7-04-customize.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 261801,
+      "bytes": 265494,
       "alt": "Dein Rechner, deine Tasten. — Deine Farben. Deine Kurzbefehle.",
       "sources": [
         "raw/tablet7/07-appearance.png",
@@ -120,7 +120,7 @@
       "file": "tablet7/tablet7-05-more-room.jpg",
       "width": 1200,
       "height": 1920,
-      "bytes": 235050,
+      "bytes": 235453,
       "alt": "Mehr Platz für mehr. — Verlauf neben der Rechnung auf Tablets und Foldables.",
       "sources": [
         "raw/tablet7/08-calculator-landscape.png",
@@ -131,7 +131,7 @@
       "file": "tablet10/tablet10-01-every-key.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 205728,
+      "bytes": 205737,
       "alt": "Ein kleiner Wisch. — Streiche für die wissenschaftliche Funktion.",
       "sources": [
         "raw/tablet10/01-every-key.png"
@@ -141,7 +141,7 @@
       "file": "tablet10/tablet10-02-graph.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 235996,
+      "bytes": 236296,
       "alt": "Sieh die Kurve entstehen. — Funktionen zeichnen. Parameter verschieben.",
       "sources": [
         "raw/tablet10/02-graph.png"
@@ -151,7 +151,7 @@
       "file": "tablet10/tablet10-03-convert.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 185318,
+      "bytes": 185899,
       "alt": "Von °C nach °F. — Einheiten umrechnen, während du eingibst.",
       "sources": [
         "raw/tablet10/03-convert.png",
@@ -162,7 +162,7 @@
       "file": "tablet10/tablet10-04-customize.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 252674,
+      "bytes": 252126,
       "alt": "Dein Rechner, deine Tasten. — Deine Farben. Deine Kurzbefehle.",
       "sources": [
         "raw/tablet10/09-appearance-portrait.png",
@@ -173,7 +173,7 @@
       "file": "tablet10/tablet10-05-more-room.jpg",
       "width": 1920,
       "height": 1200,
-      "bytes": 206529,
+      "bytes": 206547,
       "alt": "Mehr Platz für mehr. — Verlauf neben der Rechnung auf Tablets und Foldables.",
       "sources": [
         "raw/tablet10/01-every-key.png",
@@ -184,7 +184,7 @@
       "file": "desktop/desktop-01-every-key.jpg",
       "width": 1920,
       "height": 1080,
-      "bytes": 106473,
+      "bytes": 106458,
       "alt": "Ein kleiner Wisch. — Streiche für die wissenschaftliche Funktion.",
       "sources": [
         "raw/desktop/01-every-key.png"
@@ -194,7 +194,7 @@
       "file": "desktop/desktop-02-graph.jpg",
       "width": 1920,
       "height": 1080,
-      "bytes": 187415,
+      "bytes": 187605,
       "alt": "Sieh die Kurve entstehen. — Funktionen zeichnen. Parameter verschieben.",
       "sources": [
         "raw/desktop/02-graph.png"
@@ -204,7 +204,7 @@
       "file": "desktop/desktop-03-convert.jpg",
       "width": 1920,
       "height": 1080,
-      "bytes": 92580,
+      "bytes": 94045,
       "alt": "Von °C nach °F. — Einheiten umrechnen, während du eingibst.",
       "sources": [
         "raw/desktop/03-convert.png"
@@ -214,7 +214,7 @@
       "file": "desktop/desktop-07-appearance.jpg",
       "width": 1920,
       "height": 1080,
-      "bytes": 116512,
+      "bytes": 118699,
       "sources": [
         "raw/desktop/07-appearance.png"
       ]
@@ -223,7 +223,7 @@
       "file": "graphics/feature-graphic.png",
       "width": 1024,
       "height": 500,
-      "bytes": 65144,
+      "bytes": 65141,
       "sources": [
         "raw/phone/01-every-key.png"
       ]
@@ -239,7 +239,7 @@
       "file": "showcase/01-every-key.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 216594,
+      "bytes": 216579,
       "alt": "Ein kleiner Wisch. — Streiche für die wissenschaftliche Funktion.",
       "sources": [
         "raw/phone/01-every-key.png"
@@ -249,7 +249,7 @@
       "file": "showcase/02-graph.jpg",
       "width": 1080,
       "height": 1920,
-      "bytes": 254755,
+      "bytes": 254977,
       "alt": "Sieh die Kurve entstehen. — Funktionen zeichnen. Parameter verschieben.",
       "sources": [
         "raw/phone/10-graph-amber.png"
