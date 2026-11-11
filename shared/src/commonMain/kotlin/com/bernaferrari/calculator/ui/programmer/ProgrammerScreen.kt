@@ -124,6 +124,7 @@ import com.bernaferrari.calculator.domain.programmer.ProgState
 import com.bernaferrari.calculator.domain.programmer.Programmer
 import com.bernaferrari.calculator.domain.programmer.WordSize
 import com.bernaferrari.calculator.domain.repository.PreferencesRepository
+import com.bernaferrari.calculator.domain.model.FlickHints
 import com.bernaferrari.calculator.resources.*
 import com.bernaferrari.calculator.ui.calculator.FitText
 import com.bernaferrari.calculator.ui.calculator.Haptics
@@ -767,8 +768,7 @@ private fun RowScope.ProgKeyCell(spec: PKey, enabled: Boolean, haptics: Haptics,
         onClick = { if (enabled) onKey(spec.key) },
         onLongClick = if (spec.key == ProgKey.DELETE) ({ haptics.heavy(); onKey(ProgKey.CLEAR) }) else null,
         up = up,
-        labelFlicks = up != null,
-        showDots = false,
+        hints = FlickHints.LABELS,
         modifier = Modifier.weight(spec.weight).fillMaxHeight()
             .then(if (spec.tone == Tone.Hex) Modifier.clipToBounds() else Modifier)
             .graphicsLayer { this.alpha = alpha * fade },

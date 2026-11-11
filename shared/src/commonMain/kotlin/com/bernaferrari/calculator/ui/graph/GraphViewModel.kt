@@ -12,6 +12,7 @@ import com.bernaferrari.calculator.domain.input.Calculator
 import com.bernaferrari.calculator.domain.input.Editor
 import com.bernaferrari.calculator.domain.input.ExpressionEditor
 import com.bernaferrari.calculator.domain.input.Key
+import com.bernaferrari.calculator.domain.library.Constant
 import com.bernaferrari.calculator.domain.math.Curve
 import com.bernaferrari.calculator.domain.math.UserFunctions
 import com.bernaferrari.calculator.domain.model.AngleUnit
@@ -57,6 +58,7 @@ data class GraphState(
 ) {
     val activeFunction: GraphFunction get() = functions[active.coerceIn(0, functions.lastIndex)]
     val canAdd: Boolean get() = functions.size < MAX_FUNCTIONS && functions.none { it.text.isBlank() }
+    val canPickExample: Boolean get() = canAdd || functions.any { it.text.isBlank() }
 
     /** The parameters the functions use right now, each with a slider. */
     val used: List<Char> get() = compilation.resolve(functions, parameters).first
@@ -181,9 +183,17 @@ class GraphViewModel(private val store: GraphStore) : ViewModel() {
         }
     }
 
-    /** Drops a function call or a constant from the library at the cursor. */
+    /** Drops a function call from the library at the cursor. */
     fun onInsertText(text: String) = editActive { editor ->
         Calculator.insertText(CalcState(editor = editor, angleUnit = AngleUnit.RADIANS), text).editor
+    }
+
+    fun onInsertConstant(constant: Constant) = editActive { editor ->
+        val factor = when (constant.id) {
+            "pi", "e", "sqrt2" -> constant.symbol
+            else -> constant.value
+        }
+        ExpressionEditor.insertFactor(editor, factor)
     }
 
     /** Types a parameter's letter where the cursor is, e.g. from its slider. */
@@ -212,8 +222,20 @@ class GraphViewModel(private val store: GraphStore) : ViewModel() {
         }
     }
 
-    /** Fills the active function, e.g. from a quick example. */
-    fun onExample(text: String) = editActive { Editor(text) }
+    /** Fill a blank row or add a curve alongside the current graph. */
+    fun onExample(text: String) = _state.update { state ->
+        val example = GraphFunction(Editor(text))
+        val blank = if (state.activeFunction.text.isBlank()) state.active
+            else state.functions.indexOfFirst { it.text.isBlank() }
+        when {
+            blank >= 0 -> state.copy(
+                functions = state.functions.mapIndexed { index, function -> if (index == blank) example else function },
+                active = blank,
+            )
+            state.canAdd -> state.copy(functions = state.functions + example, active = state.functions.size)
+            else -> state
+        }
+    }
 
     fun onViewport(viewport: Viewport) = _state.update { it.copy(viewport = viewport) }
 

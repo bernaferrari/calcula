@@ -330,7 +330,7 @@ fun CalculatorScreen(
                 // Edge to edge: the tape scrolls up behind the status bar, softly faded, so past
                 // results stay in view under the clock instead of stopping at a solid band.
                 display(Modifier.fillMaxSize(), false, !split, WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
-                SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter))
+                SnackbarHost(snackbar, Modifier.align(Alignment.TopCenter).statusBarsPadding())
             }
             ToolRow(
                 historyOpen = historyOpen,

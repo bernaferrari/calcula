@@ -5,6 +5,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,6 +19,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridScope
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -32,6 +36,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
@@ -56,12 +61,14 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bernaferrari.calculator.data.SavedGraph
+import com.bernaferrari.calculator.domain.input.Editor
 import com.bernaferrari.calculator.platform.formatDate
 import com.bernaferrari.calculator.resources.*
 import com.bernaferrari.calculator.ui.calculator.DisplayFormatter
@@ -137,6 +144,58 @@ private fun GraphThumbnail(graph: GraphState, colors: List<Color>, modifier: Mod
         if (x0 in 0f..size.width) drawLine(axes, Offset(x0, 0f), Offset(x0, size.height), 1.dp.toPx())
         if (y0 in 0f..size.height) drawLine(axes, Offset(0f, y0), Offset(size.width, y0), 1.dp.toPx())
         drawCurves(graph, colors, xMin, yMax, unitsPerPx, ::sy, 2.dp.toPx())
+    }
+}
+
+private val GraphExamples = listOf(
+    "x²", "a×sin(b×x)", "x²+y²=9", "x³−x",
+    "ax²+bx+c", "sin(x)÷x", "y²=x", "x²÷9+y²÷4=1",
+)
+
+internal fun LazyGridScope.graphExamples(
+    colors: List<Color>,
+    formatter: DisplayFormatter,
+    enabled: Boolean,
+    onPick: (String) -> Unit,
+) {
+    item(key = "graph-examples", span = { GridItemSpan(maxLineSpan) }) {
+        Column(Modifier.padding(start = 8.dp, top = 16.dp, bottom = 4.dp)) {
+            Text(
+                stringResource(Res.string.graph_examples),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            if (!enabled) Text(
+                stringResource(Res.string.graph_examples_full),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+    items(GraphExamples, key = { it }) { expression ->
+        val graph = remember(expression) {
+            GraphState(functions = listOf(GraphFunction(Editor(expression))), viewport = Viewport(span = 12.0))
+        }
+        Surface(
+            onClick = { onPick(expression) },
+            enabled = enabled,
+            shape = RoundedCornerShape(20.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        ) {
+            Column(
+                Modifier.padding(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                GraphThumbnail(graph, colors, Modifier.fillMaxWidth().aspectRatio(1.75f))
+                Text(
+                    formatter.format(expression, 0, null).text,
+                    style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 15.sp),
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                )
+            }
+        }
     }
 }
 

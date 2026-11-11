@@ -1,7 +1,6 @@
 package com.bernaferrari.calculator.ui.library
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -10,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -72,13 +72,14 @@ private val GROUPS: List<Pair<StringResource, List<More>>> = listOf(
  * known before it's picked. A tap types `name(` at the cursor, like the keys do.
  */
 @Composable
-internal fun MoreTab(onPick: (String) -> Unit) {
+internal fun MoreTab(onPick: (String) -> Unit, moreContent: LazyGridScope.() -> Unit) {
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 104.dp),
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        moreContent()
         GROUPS.forEach { (title, items) ->
             item(key = title.key, span = { GridItemSpan(maxLineSpan) }) {
                 Text(
@@ -97,9 +98,10 @@ internal fun MoreTab(onPick: (String) -> Unit) {
 private fun FunctionCard(f: More, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     Surface(
+        onClick = onClick,
         color = colors.surfaceContainerHigh,
         shape = RoundedCornerShape(20.dp),
-        modifier = Modifier.clickable(onClick = onClick).semantics { contentDescription = f.name },
+        modifier = Modifier.semantics { contentDescription = f.name },
     ) {
         Column(Modifier.padding(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 10.dp)) {
             Text(f.name, style = TextStyle(fontFamily = GoogleSansFlex, fontSize = 22.sp), color = colors.onSurface)

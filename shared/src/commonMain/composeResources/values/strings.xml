@@ -55,6 +55,8 @@
     <string name="unit_energy">Energy</string>
     <string name="unit_pressure">Pressure</string>
     <string name="settings_calculator">Calculator</string>
+    <string name="settings_numbers">Numbers</string>
+    <string name="settings_keypad">Keypad</string>
     <string name="settings_angle_unit">Angle unit</string>
     <string name="settings_degrees">Degrees</string>
     <string name="settings_radians">Radians</string>
@@ -120,6 +122,9 @@
     <string name="graph_share">Share graph</string>
     <string name="graph_library_empty">Graphs you make show up here</string>
     <string name="graph_open_library">Recent graphs</string>
+    <string name="graph_more">Graph tools</string>
+    <string name="graph_examples">Graph examples</string>
+    <string name="graph_examples_full">Remove a curve to add an example.</string>
     <string name="graph_delete">Delete</string>
     <string name="resize_pull_history">Pull down for history</string>
     <string name="resize_release_history">Release for history</string>
@@ -127,6 +132,7 @@
     <string name="resize_release_keypad">Release for keypad</string>
     <string name="settings_flick_hints">Function hints</string>
     <string name="settings_flick_labels">Labels</string>
+    <string name="settings_flick_half">Half</string>
     <string name="settings_flick_dots_option">Dots</string>
     <string name="settings_flick_none">None</string>
     <string name="style_balanced">Balanced</string>

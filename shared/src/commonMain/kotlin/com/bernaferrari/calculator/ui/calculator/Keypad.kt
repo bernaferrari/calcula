@@ -275,7 +275,8 @@ fun MainKeypad(
                         // Names need a roomy key; shorter ones (the graph's) fall back to dots, and
                         // the shortest show nothing. The flicks always work.
                         hints = when {
-                            hints == FlickHints.LABELS && rowHeight >= 60.dp -> FlickHints.LABELS
+                            rowHeight >= 60.dp -> hints
+                            hints == FlickHints.HALF && rowHeight >= 44.dp -> FlickHints.HALF
                             hints != FlickHints.NONE && rowHeight >= 44.dp -> FlickHints.DOTS
                             else -> FlickHints.NONE
                         },
@@ -400,8 +401,7 @@ private fun KeypadKey(
         up = spec.up?.let { Hint(it.label, it.description, enabled = !it.isInert(inert)) { fire(it) } },
         down = spec.down?.let { Hint(it.label, it.description, enabled = !it.isInert(inert)) { fire(it) } },
         // On the ƒ layer the face already names both functions.
-        showDots = hints == FlickHints.DOTS && !onLayer,
-        labelFlicks = hints == FlickHints.LABELS && !onLayer,
+        hints = if (onLayer) FlickHints.NONE else hints,
         onLongClick = if (isDelete) ({ haptics.heavy(); onClearAll() }) else null,
         onPressedChange = onPressedChange,
         modifier = modifier,

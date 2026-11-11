@@ -4,12 +4,7 @@ import com.bernaferrari.calculator.ui.topBarInset
 import com.bernaferrari.calculator.ui.TopBar
 import androidx.compose.foundation.layout.Spacer
 import kotlinx.coroutines.flow.StateFlow
-import androidx.compose.material.icons.outlined.Insights
-import androidx.compose.material.icons.outlined.Keyboard
 import com.bernaferrari.calculator.domain.model.Notation
-import androidx.compose.material.icons.outlined.Science
-import androidx.compose.material.icons.outlined.Layers
-import androidx.compose.material.icons.outlined.Memory
 import com.bernaferrari.calculator.ui.theme.hasStyles
 import com.bernaferrari.calculator.domain.model.ColorStyle
 import com.bernaferrari.calculator.domain.model.hints
@@ -30,23 +25,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.outlined.Animation
 import androidx.compose.material.icons.outlined.BrightnessAuto
-import androidx.compose.material.icons.outlined.BrightnessMedium
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.LightMode
-import androidx.compose.material.icons.outlined.DeleteSweep
-import androidx.compose.material.icons.outlined.Description
-import androidx.compose.material.icons.outlined.FormatListNumbered
-import androidx.compose.material.icons.outlined.History
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Language
-import androidx.compose.material.icons.outlined.Palette
-import androidx.compose.material.icons.outlined.SwipeVertical
-import androidx.compose.material.icons.outlined.Vibration
-import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -171,9 +153,8 @@ fun SettingsScreen(
                     stringResource(Res.string.settings_appearance),
                     listOfNotNull(
                         { p ->
-                            // Follow the system, or pin light or dark: the buttons name themselves, so no header.
-                            ChoiceRow(
-                                p, null, null,
+                            ButtonGroupRow(
+                                p,
                                 listOf(ThemeMode.SYSTEM, ThemeMode.LIGHT, ThemeMode.DARK), if (prefs.themeMode == ThemeMode.MATERIAL_YOU) ThemeMode.SYSTEM else prefs.themeMode,
                                 label = {
                                     stringResource(
@@ -184,7 +165,7 @@ fun SettingsScreen(
                                         },
                                     )
                                 },
-                                optionIcon = {
+                                icon = {
                                     when (it) {
                                         ThemeMode.LIGHT -> Icons.Outlined.LightMode
                                         ThemeMode.DARK -> Icons.Outlined.DarkMode
@@ -202,111 +183,123 @@ fun SettingsScreen(
                 )
             }
 
-            run {
-                SettingsSection(
-                    stringResource(Res.string.settings_calculator),
-                    listOf(
-                        { p ->
-                            ChoiceRow(
-                                p, Icons.Outlined.Explore, stringResource(Res.string.settings_angle_unit),
-                                listOf(AngleUnit.DEGREES, AngleUnit.RADIANS), prefs.angleUnit,
-                                label = { stringResource(if (it == AngleUnit.DEGREES) Res.string.settings_degrees else Res.string.settings_radians) },
-                                onSelect = viewModel::setAngleUnit,
-                            )
-                        },
-                        { p ->
-                            ChoiceRow(
-                                p, Icons.Outlined.FormatListNumbered, stringResource(Res.string.settings_decimal_places),
-                                DecimalChoices, if (prefs.decimalPlaces in DecimalChoices) prefs.decimalPlaces else AUTO_DECIMALS,
-                                label = { if (it == AUTO_DECIMALS) stringResource(Res.string.settings_decimals_full) else it.toString() },
-                                onSelect = viewModel::setDecimalPlaces,
-                                // A live example says more than "Auto" ever could.
-                                subtitle = decimalsExample(prefs.decimalPlaces, prefs.decimalSeparator),
-                            )
-                        },
-                        { p ->
-                            ChoiceRow(
-                                p, Icons.Outlined.Science, stringResource(Res.string.settings_notation),
-                                Notation.entries.toList(), prefs.notation,
-                                label = {
-                                    stringResource(
-                                        when (it) {
-                                            Notation.NORMAL -> Res.string.settings_notation_normal
-                                            Notation.SCIENTIFIC -> Res.string.settings_notation_sci
-                                            Notation.ENGINEERING -> Res.string.settings_notation_eng
-                                        },
-                                    )
-                                },
-                                onSelect = viewModel::setNotation,
-                                // The same number each way says it best.
-                                subtitle = "1234567.8 → " + DisplayFormatter(prefs.decimalSeparator.separators()).number(
-                                    Calculator.formatResult(Decimal("1234567.8"), prefs.decimalPlaces, prefs.notation),
-                                ),
-                            )
-                        },
-                        { p ->
-                            ChoiceRow(
-                                p, Icons.Outlined.Language, stringResource(Res.string.settings_decimal_separator),
-                                DecimalSeparator.entries.toList(), prefs.decimalSeparator,
-                                label = {
+            // Three short groups instead of one long one: how it calculates, how numbers look, what the keys do.
+            SettingsSection(
+                stringResource(Res.string.settings_calculator),
+                listOf(
+                    { p ->
+                        ChoiceRow(
+                            p, stringResource(Res.string.settings_angle_unit),
+                            listOf(AngleUnit.DEGREES, AngleUnit.RADIANS), prefs.angleUnit,
+                            label = { stringResource(if (it == AngleUnit.DEGREES) Res.string.settings_degrees else Res.string.settings_radians) },
+                            onSelect = viewModel::setAngleUnit,
+                        )
+                    },
+                    { p ->
+                        ChoiceRow(
+                            p, stringResource(Res.string.settings_entry),
+                            listOf(false, true), prefs.rpn,
+                            label = { stringResource(if (it) Res.string.settings_entry_rpn else Res.string.settings_entry_algebraic) },
+                            onSelect = viewModel::setRpn,
+                            subtitle = stringResource(if (prefs.rpn) Res.string.settings_entry_rpn_summary else Res.string.settings_entry_algebraic_summary),
+                        )
+                    },
+                    { p ->
+                        SwitchRow(p, stringResource(Res.string.settings_show_tape), stringResource(Res.string.settings_show_tape_description), prefs.showHistory, viewModel::setShowHistory)
+                    },
+                ),
+            )
+
+            SettingsSection(
+                stringResource(Res.string.settings_numbers),
+                listOf(
+                    { p ->
+                        ChoiceRow(
+                            p, stringResource(Res.string.settings_decimal_places),
+                            DecimalChoices, if (prefs.decimalPlaces in DecimalChoices) prefs.decimalPlaces else AUTO_DECIMALS,
+                            label = { if (it == AUTO_DECIMALS) stringResource(Res.string.settings_decimals_full) else it.toString() },
+                            onSelect = viewModel::setDecimalPlaces,
+                            // A live example says more than "Auto" ever could.
+                            subtitle = decimalsExample(prefs.decimalPlaces, prefs.decimalSeparator),
+                        )
+                    },
+                    { p ->
+                        ChoiceRow(
+                            p, stringResource(Res.string.settings_notation),
+                            Notation.entries.toList(), prefs.notation,
+                            label = {
+                                stringResource(
                                     when (it) {
-                                        DecimalSeparator.AUTO -> stringResource(Res.string.settings_separator_region)
-                                        DecimalSeparator.DOT -> "1,234.5"
-                                        DecimalSeparator.COMMA -> "1.234,5"
-                                    }
-                                },
-                                onSelect = viewModel::setDecimalSeparator,
-                                subtitle = stringResource(
-                                    Res.string.settings_separator_example,
-                                    DisplayFormatter(prefs.decimalSeparator.separators()).number("1234567.8"),
-                                ),
-                            )
-                        },
-                        { p ->
-                            SwitchRow(p, Icons.Outlined.History, stringResource(Res.string.settings_show_tape), stringResource(Res.string.settings_show_tape_description), prefs.showHistory, viewModel::setShowHistory)
-                        },
-                        { p ->
-                            ChoiceRow(
-                                p, Icons.Outlined.SwipeVertical, stringResource(Res.string.settings_flick_hints),
-                                FlickHints.entries, prefs.hints,
-                                label = {
-                                    stringResource(
-                                        when (it) {
-                                            FlickHints.LABELS -> Res.string.settings_flick_labels
-                                            FlickHints.DOTS -> Res.string.settings_flick_dots_option
-                                            FlickHints.NONE -> Res.string.settings_flick_none
-                                        },
-                                    )
-                                },
-                                onSelect = viewModel::setFlickHints,
-                            )
-                        },
-                        { p ->
-                            ActionRow(p, Icons.Outlined.Keyboard, stringResource(Res.string.settings_customize_keys), stringResource(Res.string.settings_customize_keys_summary), onClick = onOpenCustomizeKeys)
-                        },
-                        { p ->
-                            SwitchRow(p, Icons.Outlined.Memory, stringResource(Res.string.settings_memory_keys), stringResource(Res.string.settings_memory_keys_summary), prefs.memoryKeys, viewModel::setMemoryKeys)
-                        },
-                        { p ->
-                            ChoiceRow(
-                                p, Icons.Outlined.Layers, stringResource(Res.string.settings_entry),
-                                listOf(false, true), prefs.rpn,
-                                label = { stringResource(if (it) Res.string.settings_entry_rpn else Res.string.settings_entry_algebraic) },
-                                onSelect = viewModel::setRpn,
-                                subtitle = stringResource(if (prefs.rpn) Res.string.settings_entry_rpn_summary else Res.string.settings_entry_algebraic_summary),
-                            )
-                        },
-                    ),
-                )
-            }
+                                        Notation.NORMAL -> Res.string.settings_notation_normal
+                                        Notation.SCIENTIFIC -> Res.string.settings_notation_sci
+                                        Notation.ENGINEERING -> Res.string.settings_notation_eng
+                                    },
+                                )
+                            },
+                            onSelect = viewModel::setNotation,
+                            // The same number each way says it best.
+                            subtitle = "1234567.8 → " + DisplayFormatter(prefs.decimalSeparator.separators()).number(
+                                Calculator.formatResult(Decimal("1234567.8"), prefs.decimalPlaces, prefs.notation),
+                            ),
+                        )
+                    },
+                    { p ->
+                        ChoiceRow(
+                            p, stringResource(Res.string.settings_decimal_separator),
+                            DecimalSeparator.entries.toList(), prefs.decimalSeparator,
+                            label = {
+                                when (it) {
+                                    DecimalSeparator.AUTO -> stringResource(Res.string.settings_separator_region)
+                                    DecimalSeparator.DOT -> "1,234.5"
+                                    DecimalSeparator.COMMA -> "1.234,5"
+                                }
+                            },
+                            onSelect = viewModel::setDecimalSeparator,
+                            subtitle = stringResource(
+                                Res.string.settings_separator_example,
+                                DisplayFormatter(prefs.decimalSeparator.separators()).number("1234567.8"),
+                            ),
+                        )
+                    },
+                ),
+            )
+
+            SettingsSection(
+                stringResource(Res.string.settings_keypad),
+                listOf(
+                    { p ->
+                        ChoiceRow(
+                            p, stringResource(Res.string.settings_flick_hints),
+                            FlickHints.entries, prefs.hints,
+                            label = {
+                                stringResource(
+                                    when (it) {
+                                        FlickHints.LABELS -> Res.string.settings_flick_labels
+                                        FlickHints.HALF -> Res.string.settings_flick_half
+                                        FlickHints.DOTS -> Res.string.settings_flick_dots_option
+                                        FlickHints.NONE -> Res.string.settings_flick_none
+                                    },
+                                )
+                            },
+                            onSelect = viewModel::setFlickHints,
+                        )
+                    },
+                    { p ->
+                        SwitchRow(p, stringResource(Res.string.settings_memory_keys), stringResource(Res.string.settings_memory_keys_summary), prefs.memoryKeys, viewModel::setMemoryKeys)
+                    },
+                    { p ->
+                        ActionRow(p, stringResource(Res.string.settings_customize_keys), stringResource(Res.string.settings_customize_keys_summary), onClick = onOpenCustomizeKeys)
+                    },
+                ),
+            )
 
             run {
                 SettingsSection(
                     stringResource(Res.string.settings_feedback),
                     listOf(
-                        { p -> SwitchRow(p, Icons.Outlined.Vibration, stringResource(Res.string.settings_haptics), stringResource(Res.string.settings_haptics_description), prefs.hapticFeedback, viewModel::setHaptics) },
-                        { p -> SwitchRow(p, Icons.AutoMirrored.Outlined.VolumeUp, stringResource(Res.string.settings_sounds), stringResource(Res.string.settings_sounds_description), prefs.soundEnabled, viewModel::setSounds) },
-                        { p -> SwitchRow(p, Icons.Outlined.Animation, stringResource(Res.string.settings_reduce_motion), stringResource(Res.string.settings_reduce_motion_description), prefs.reduceMotion, viewModel::setReduceMotion) },
+                        { p -> SwitchRow(p, stringResource(Res.string.settings_haptics), stringResource(Res.string.settings_haptics_description), prefs.hapticFeedback, viewModel::setHaptics) },
+                        { p -> SwitchRow(p, stringResource(Res.string.settings_sounds), stringResource(Res.string.settings_sounds_description), prefs.soundEnabled, viewModel::setSounds) },
+                        { p -> SwitchRow(p, stringResource(Res.string.settings_reduce_motion), stringResource(Res.string.settings_reduce_motion_description), prefs.reduceMotion, viewModel::setReduceMotion) },
                     ),
                 )
             }
@@ -315,9 +308,9 @@ fun SettingsScreen(
                 SettingsSection(
                     stringResource(Res.string.settings_more),
                     listOf(
-                        { p -> ActionRow(p, Icons.Outlined.Info, stringResource(Res.string.gesture_help_title), onClick = { gestureHelp = true }) },
-                        { p -> ActionRow(p, Icons.Outlined.Insights, stringResource(Res.string.menu_usage), stringResource(Res.string.usage_settings_summary), onClick = onOpenUsage) },
-                        { p -> ActionRow(p, Icons.Outlined.DeleteSweep, stringResource(Res.string.settings_clear_history), destructive = true, showChevron = false, onClick = { confirmClear = true }) },
+                        { p -> ActionRow(p, stringResource(Res.string.gesture_help_title), onClick = { gestureHelp = true }) },
+                        { p -> ActionRow(p, stringResource(Res.string.menu_usage), stringResource(Res.string.usage_settings_summary), onClick = onOpenUsage) },
+                        { p -> ActionRow(p, stringResource(Res.string.settings_clear_history), destructive = true, showChevron = false, onClick = { confirmClear = true }) },
                     ),
                 )
             }
@@ -328,7 +321,7 @@ fun SettingsScreen(
                     listOf(
                         { p ->
                             ActionRow(
-                                p, Icons.Outlined.Info, stringResource(Res.string.about_row),
+                                p, stringResource(Res.string.about_row),
                                 subtitle = stringResource(Res.string.settings_version, APP_VERSION),
                                 onClick = onOpenAbout,
                                 modifier = Modifier.containerTransform("about"),

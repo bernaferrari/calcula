@@ -90,11 +90,6 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.stringResource
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.material.icons.rounded.MoreHoriz
 import com.bernaferrari.calculator.ui.library.LibrarySheet
 import com.bernaferrari.calculator.ui.library.LibraryTab
@@ -172,7 +167,6 @@ fun GraphScreen(
                     onActivate = { haptics.tap(); viewModel.onActivate(it) },
                     onCursor = { index, position -> haptics.tick(); viewModel.onActivate(index); viewModel.onCursorMoved(position) },
                     onRemove = { haptics.heavy(); viewModel.onRemove(it) },
-                    onExample = { haptics.tap(); viewModel.onExample(it) },
                 )
                 ParameterSliders(
                     state = state,
@@ -218,11 +212,8 @@ fun GraphScreen(
                         },
                     ) {
                         LayerSwitch(layer) { haptics.tap(); layer = it }
-                        // With ƒ on, the rest of the functions are one more tap away.
-                        AnimatedVisibility(layer != FunctionLayer.Off, enter = fadeIn() + expandHorizontally(), exit = fadeOut() + shrinkHorizontally()) {
-                            IconButton(onClick = { haptics.tap(); moreOpen = true }) {
-                                Icon(Icons.Rounded.MoreHoriz, contentDescription = stringResource(Res.string.library_more_functions))
-                            }
+                        IconButton(onClick = { haptics.tap(); moreOpen = true }) {
+                            Icon(Icons.Rounded.MoreHoriz, contentDescription = stringResource(Res.string.graph_more))
                         }
                         Spacer(Modifier.weight(1f))
                         if (state.canAdd) {
@@ -295,7 +286,7 @@ fun GraphScreen(
                         Modifier
                             .fillMaxWidth()
                             .heightIn(max = panel)
-                            // When more is below (examples, sliders), the edge fades to say so.
+                            // When more rows or sliders are below, the edge fades to say so.
                             .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
                             .drawWithContent {
                                 drawContent()
@@ -326,6 +317,7 @@ fun GraphScreen(
                 formatter = formatter,
                 haptics = haptics,
                 onInsert = { viewModel.onInsertText(it); if (layer == FunctionLayer.Once) layer = FunctionLayer.Off },
+                onInsertConstant = { viewModel.onInsertConstant(it); if (layer == FunctionLayer.Once) layer = FunctionLayer.Off },
                 onRecallMemory = {},
                 onStoreMemory = {},
                 canStore = false,
@@ -335,6 +327,14 @@ fun GraphScreen(
                 onDeleteFunction = settings::deleteFunction,
                 onDismiss = { moreOpen = false },
                 hints = prefs.hints,
+                moreContent = {
+                    graphExamples(colors, formatter, enabled = state.canPickExample) { expression ->
+                        haptics.tap()
+                        viewModel.onExample(expression)
+                        if (layer == FunctionLayer.Once) layer = FunctionLayer.Off
+                        moreOpen = false
+                    }
+                },
             )
         }
         if (libraryOpen) {

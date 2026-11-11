@@ -25,6 +25,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.input.ImeAction
@@ -50,6 +51,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -60,6 +62,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -70,6 +73,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.BookmarkBorder
+import androidx.compose.material.icons.rounded.Functions
+import androidx.compose.material.icons.rounded.MoreHoriz
+import androidx.compose.material.icons.rounded.Science
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonGroupDefaults
@@ -99,6 +106,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -113,6 +121,8 @@ import com.bernaferrari.calculator.domain.math.UserFunctions
 import com.bernaferrari.calculator.domain.model.Memory
 import com.bernaferrari.calculator.resources.*
 import com.bernaferrari.calculator.ui.calculator.DisplayFormatter
+import com.bernaferrari.calculator.ui.calculator.FunctionLayer
+import com.bernaferrari.calculator.ui.calculator.LayerSwitch
 import com.bernaferrari.calculator.ui.calculator.Haptics
 import com.bernaferrari.calculator.ui.theme.GoogleSansFlex
 import org.jetbrains.compose.resources.StringResource
@@ -144,6 +154,8 @@ fun LibrarySheet(
     hints: FlickHints = FlickHints.DOTS,
     /** The tabs this screen offers: the graph has no memory, for one. */
     tabs: List<LibraryTab> = LibraryTab.entries,
+    moreContent: LazyGridScope.() -> Unit = {},
+    onInsertConstant: (Constant) -> Unit = { onInsert(it.value) },
 ) {
     var tab by remember { mutableStateOf(initialTab) }
     val take: (String) -> Unit = { haptics.tap(); onInsert(it); onDismiss() }
@@ -152,8 +164,12 @@ fun LibrarySheet(
             Tabs(tab, tabs) { haptics.tap(); tab = it }
             AnimatedContent(tab, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "tab", modifier = Modifier.weight(1f)) { current ->
                 when (current) {
-                    LibraryTab.MORE -> MoreTab(take)
-                    LibraryTab.CONSTANTS -> ConstantsTab(formatter, take)
+                    LibraryTab.MORE -> MoreTab(take, moreContent)
+                    LibraryTab.CONSTANTS -> ConstantsTab(formatter) {
+                        haptics.tap()
+                        onInsertConstant(it)
+                        onDismiss()
+                    }
                     LibraryTab.FUNCTIONS -> FunctionsTab(functions, formatter, haptics, onPick = { take("${it.name}(") }, onSave = onSaveFunction, onDelete = onDeleteFunction, hints = hints)
                     LibraryTab.MEMORY -> MemoryTab(
                         memories, formatter,
@@ -171,45 +187,66 @@ fun LibrarySheet(
 
 @Composable
 private fun Tabs(selected: LibraryTab, tabs: List<LibraryTab>, onSelect: (LibraryTab) -> Unit) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-    ) {
-        tabs.forEachIndexed { index, tab ->
-            ToggleButton(
-                checked = tab == selected,
-                onCheckedChange = { if (it) onSelect(tab) },
-                shapes = when (index) {
-                    0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                    tabs.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                    else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                },
-                colors = ToggleButtonDefaults.colors(
-                    checkedContainerColor = MaterialTheme.colorScheme.primary,
-                    checkedContentColor = MaterialTheme.colorScheme.onPrimary,
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                ),
-                modifier = Modifier.weight(1f).height(44.dp),
-            ) {
-                Text(
-                    stringResource(
-                        when (tab) {
-                            LibraryTab.MORE -> Res.string.library_more
-                            LibraryTab.CONSTANTS -> Res.string.library_constants
-                            LibraryTab.FUNCTIONS -> Res.string.library_functions
-                            LibraryTab.MEMORY -> Res.string.library_memory
-                        },
+    val labels = tabs.map { tab ->
+        stringResource(
+            when (tab) {
+                LibraryTab.MORE -> Res.string.library_more
+                LibraryTab.CONSTANTS -> Res.string.library_constants
+                LibraryTab.FUNCTIONS -> Res.string.library_functions
+                LibraryTab.MEMORY -> Res.string.library_memory
+            },
+        )
+    }
+    val labelStyle = MaterialTheme.typography.labelLarge
+    val measurer = rememberTextMeasurer()
+    val gap = ButtonGroupDefaults.ConnectedSpaceBetween
+    val inset = 8.dp
+    BoxWithConstraints(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+        val tabWidth = (maxWidth - gap * (tabs.size - 1)) / tabs.size
+        val labelWidth = with(LocalDensity.current) { (tabWidth - inset * 2).roundToPx() }
+        val compact = labels.any { label ->
+            measurer.measure(label, style = labelStyle, maxLines = 1).size.width > labelWidth
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(gap)) {
+            tabs.forEachIndexed { index, tab ->
+                ToggleButton(
+                    checked = tab == selected,
+                    onCheckedChange = { if (it) onSelect(tab) },
+                    shapes = when (index) {
+                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                        tabs.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                    },
+                    colors = ToggleButtonDefaults.colors(
+                        checkedContainerColor = MaterialTheme.colorScheme.primary,
+                        checkedContentColor = MaterialTheme.colorScheme.onPrimary,
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     ),
-                    maxLines = 1,
-                )
+                    contentPadding = PaddingValues(horizontal = inset),
+                    modifier = Modifier.weight(1f).height(48.dp),
+                ) {
+                    if (compact) {
+                        Icon(
+                            when (tab) {
+                                LibraryTab.MORE -> Icons.Rounded.MoreHoriz
+                                LibraryTab.CONSTANTS -> Icons.Rounded.Science
+                                LibraryTab.FUNCTIONS -> Icons.Rounded.Functions
+                                LibraryTab.MEMORY -> Icons.Rounded.BookmarkBorder
+                            },
+                            contentDescription = labels[index],
+                        )
+                    } else {
+                        Text(labels[index], style = labelStyle, maxLines = 1)
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun ConstantsTab(formatter: DisplayFormatter, onPick: (String) -> Unit) {
+private fun ConstantsTab(formatter: DisplayFormatter, onPick: (Constant) -> Unit) {
     var query by remember { mutableStateOf("") }
     val names = CONSTANTS.associate { it.id to stringResource(it.name()) }
     val shown = CONSTANTS.filter {
@@ -242,7 +279,7 @@ private fun ConstantsTab(formatter: DisplayFormatter, onPick: (String) -> Unit) 
                         },
                         leadingContent = { Symbol(c.symbol) },
                         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                        modifier = Modifier.clickable { onPick(c.value) },
+                        modifier = Modifier.clickable { onPick(c) },
                     )
                 }
             }
@@ -325,6 +362,7 @@ private fun FunctionEditor(
     var name by remember { mutableStateOf("") }
     var body by remember { mutableStateOf(Editor()) }
     var naming by remember { mutableStateOf(true) }
+    var layer by remember { mutableStateOf(FunctionLayer.Off) }
     val focus = LocalFocusManager.current
     val nameFocus = remember { FocusRequester() }
     LaunchedEffect(Unit) { nameFocus.requestFocus() }
@@ -382,7 +420,9 @@ private fun FunctionEditor(
                     style = MaterialTheme.typography.bodyMedium,
                     color = if (name.isNotEmpty() && !validName) scheme.error else scheme.onSurfaceVariant,
                 )
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    if (!naming) LayerSwitch(layer) { next -> haptics.tap(); layer = next }
+                    Spacer(Modifier.weight(1f))
                     TextButton(onClick = onCancel) { Text(stringResource(Res.string.function_cancel)) }
                     TextButton(onClick = { onSave(UserFunction(name, text)) }, enabled = validName && validBody) {
                         Text(stringResource(Res.string.function_save))
@@ -403,14 +443,20 @@ private fun FunctionEditor(
             MainKeypad(
                 decimal = formatter.decimal,
                 haptics = haptics,
-                functionLayer = false,
+                functionLayer = layer != FunctionLayer.Off,
                 onKey = press,
-                onFunctionKey = press,
+                onFunctionKey = { key ->
+                    press(key)
+                    if (layer == FunctionLayer.Once) layer = FunctionLayer.Off
+                },
                 onClearAll = { body = Editor() },
                 hints = hints,
                 variable = true,
                 inert = setOf(Key.UNDO, Key.REDO, Key.VARIABLE_Y),
-                onInsertText = { body = ExpressionEditor.insertRaw(body, it) },
+                onInsertText = {
+                    body = ExpressionEditor.insertRaw(body, it)
+                    if (layer == FunctionLayer.Once) layer = FunctionLayer.Off
+                },
                 bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding(),
                 modifier = Modifier.fillMaxSize().padding(top = 12.dp),
             )

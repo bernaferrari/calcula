@@ -1,5 +1,6 @@
 package com.bernaferrari.calculator.ui.calculator
 
+import com.bernaferrari.calculator.domain.model.FlickHints
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.MutableTransitionState
@@ -102,9 +103,7 @@ fun KeyCell(
     modifier: Modifier = Modifier,
     up: Hint? = null,
     down: Hint? = null,
-    showDots: Boolean = true,
-    /** Names the flicks in small type in the top and bottom corners, for flicks nobody would guess. */
-    labelFlicks: Boolean = false,
+    hints: FlickHints = FlickHints.DOTS,
     pressHaptic: Boolean = true,
     restRadius: androidx.compose.ui.unit.Dp = com.bernaferrari.calculator.ui.theme.KeyRadius,
     onPressedChange: (Boolean) -> Unit = {},
@@ -285,23 +284,41 @@ fun KeyCell(
         // Like the dots, the names belong to the key, not the face: they stay put while the face
         // follows the finger.
         Box(Modifier.matchParentSize().padding(vertical = FaceInset)) {
-            if (labelFlicks) {
-                val small = androidx.compose.ui.text.TextStyle(fontSize = 12.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Medium, fontFamily = com.bernaferrari.calculator.ui.theme.GoogleSansFlex)
-                // Labels name both directions, including inverse functions, so a flick is discoverable.
-                up?.let { Text(it.label, style = small, maxLines = 1, color = content.copy(alpha = if (!it.enabled) 0.25f else if (selection == Swipe.Up) 1f else 0.75f), modifier = Modifier.align(Alignment.TopCenter).offset(y = (-5).dp)) }
-                down?.let { hint ->
-                    Text(hint.label, style = small, maxLines = 1, color = content.copy(alpha = if (!hint.enabled) 0.25f else if (selection == Swipe.Down) 1f else 0.75f), modifier = Modifier.align(Alignment.BottomCenter).offset(y = 5.dp))
+            if (hints == FlickHints.LABELS || hints == FlickHints.HALF) {
+                val compact = with(density) { keyHeight.toDp() } < 60.dp
+                val small = TextStyle(
+                    fontSize = if (compact && hints == FlickHints.HALF) 10.sp else 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = GoogleSansFlex,
+                )
+                up?.let { hint ->
+                    Text(
+                        hint.label,
+                        style = small,
+                        maxLines = 1,
+                        color = content.copy(alpha = if (!hint.enabled) 0.25f else if (selection == Swipe.Up) 1f else 0.75f),
+                        modifier = Modifier.align(Alignment.TopCenter).offset(y = (-5).dp),
+                    )
+                }
+                if (hints == FlickHints.LABELS) down?.let { hint ->
+                    Text(
+                        hint.label,
+                        style = small,
+                        maxLines = 1,
+                        color = content.copy(alpha = if (!hint.enabled) 0.25f else if (selection == Swipe.Down) 1f else 0.75f),
+                        modifier = Modifier.align(Alignment.BottomCenter).offset(y = 5.dp),
+                    )
                 }
             }
         }
-        if (showDots && !labelFlicks) {
+        if (hints == FlickHints.DOTS || hints == FlickHints.HALF) {
             // The dots belong to the key, not the face: they stay put while the face follows the
             // finger, so they never slide past the key's edge. Their gap from the edge grows with
             // the key, 9% of its height, 4 to 8dp: clear of the label on the graph's short keys,
             // not crowded into the corner on tall ones.
             val edge = with(density) { (keyHeight * 0.09f).toDp() }.coerceIn(4.dp, 8.dp)
             Box(Modifier.matchParentSize()) {
-                if (up != null) FlickDot(selection == Swipe.Up, up.enabled, content, Modifier.align(Alignment.TopCenter).offset(y = edge))
+                if (hints == FlickHints.DOTS && up != null) FlickDot(selection == Swipe.Up, up.enabled, content, Modifier.align(Alignment.TopCenter).offset(y = edge))
                 if (down != null) FlickDot(selection == Swipe.Down, down.enabled, content, Modifier.align(Alignment.BottomCenter).offset(y = -edge))
             }
         }

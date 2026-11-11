@@ -47,6 +47,8 @@
     <string name="unit_energy">能量</string>
     <string name="unit_pressure">压强</string>
     <string name="settings_calculator">计算器</string>
+    <string name="settings_numbers">数字</string>
+    <string name="settings_keypad">键盘</string>
     <string name="settings_angle_unit">角度单位</string>
     <string name="settings_degrees">角度</string>
     <string name="settings_radians">弧度</string>
@@ -111,6 +113,9 @@
     <string name="graph_share">分享图表</string>
     <string name="graph_library_empty">你创建的图表会显示在这里</string>
     <string name="graph_open_library">最近的图表</string>
+    <string name="graph_more">绘图工具</string>
+    <string name="graph_examples">图形示例</string>
+    <string name="graph_examples_full">移除一条曲线即可添加示例。</string>
     <string name="graph_delete">删除</string>
     <string name="resize_pull_history">下拉查看历史</string>
     <string name="resize_release_history">松开查看历史</string>
@@ -118,6 +123,7 @@
     <string name="resize_release_keypad">松开显示键盘</string>
     <string name="settings_flick_hints">函数提示</string>
     <string name="settings_flick_labels">标签</string>
+    <string name="settings_flick_half">一半</string>
     <string name="settings_flick_dots_option">圆点</string>
     <string name="settings_flick_none">无</string>
     <string name="style_balanced">均衡</string>

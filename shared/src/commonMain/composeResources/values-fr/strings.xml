@@ -47,6 +47,8 @@
     <string name="unit_energy">Énergie</string>
     <string name="unit_pressure">Pression</string>
     <string name="settings_calculator">Calculatrice</string>
+    <string name="settings_numbers">Nombres</string>
+    <string name="settings_keypad">Clavier</string>
     <string name="settings_angle_unit">Unité d’angle</string>
     <string name="settings_degrees">Degrés</string>
     <string name="settings_radians">Radians</string>
@@ -111,6 +113,9 @@
     <string name="graph_share">Partager le graphique</string>
     <string name="graph_library_empty">Vos graphiques apparaissent ici</string>
     <string name="graph_open_library">Graphiques récents</string>
+    <string name="graph_more">Outils graphiques</string>
+    <string name="graph_examples">Exemples de graphiques</string>
+    <string name="graph_examples_full">Supprimez une courbe pour ajouter un exemple.</string>
     <string name="graph_delete">Supprimer</string>
     <string name="resize_pull_history">Tirez vers le bas pour l’historique</string>
     <string name="resize_release_history">Relâchez pour afficher l’historique</string>
@@ -118,6 +123,7 @@
     <string name="resize_release_keypad">Relâchez pour afficher le clavier</string>
     <string name="settings_flick_hints">Indices de fonctions</string>
     <string name="settings_flick_labels">Libellés</string>
+    <string name="settings_flick_half">Moitié</string>
     <string name="settings_flick_dots_option">Points</string>
     <string name="settings_flick_none">Aucun</string>
     <string name="style_balanced">Équilibré</string>

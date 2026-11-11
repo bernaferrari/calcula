@@ -18,10 +18,10 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,16 +31,14 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -60,6 +58,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -74,9 +73,8 @@ import kotlin.math.floor
 import kotlin.math.log10
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.stringResource
-
-private val QuickExamples = listOf("x²", "a×sin(b×x)", "x²+y²=9", "x³−x", "ax²+bx+c", "sin(x)÷x", "y²=x", "x²÷9+y²÷4=1")
 
 @Composable
 internal fun FunctionList(
@@ -87,7 +85,6 @@ internal fun FunctionList(
     /** A tap inside a function's text: make it active and put the cursor there (a raw offset). */
     onCursor: (index: Int, position: Int) -> Unit,
     onRemove: (Int) -> Unit,
-    onExample: (String) -> Unit,
 ) {
     val scheme = MaterialTheme.colorScheme
     Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -112,12 +109,24 @@ internal fun FunctionList(
             ) {
                 Box(Modifier.size(10.dp).clip(CircleShape).background(colors[index % colors.size]))
                 Spacer(Modifier.width(12.dp))
-                val plain = remember(function.text) { formatter.format(function.text, 0, null) }
+                val plain = remember(function.text, formatter) { formatter.format(function.text, 0, null) }
                 val prefix = if (function.isEquation) 0 else "y = ".length
                 // Where the cursor sits in the drawn text, after the `y = ` prefix.
                 val caret = prefix + if (function.text.isEmpty()) 0 else plain.rawToDisplay[function.editor.cursor.coerceIn(0, function.text.length)]
                 var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
                 val currentPlain by rememberUpdatedState(plain)
+                val scroll = rememberScrollState()
+                val viewport = scroll.viewportSize
+                val caretInset = with(LocalDensity.current) { 2.dp.roundToPx() }
+                LaunchedEffect(active, caret, layout, viewport) {
+                    val textLayout = layout ?: return@LaunchedEffect
+                    if (!active || viewport <= 0 || caret > textLayout.layoutInput.text.length) return@LaunchedEffect
+                    val x = textLayout.getCursorRect(caret).left.roundToInt()
+                    when {
+                        x < scroll.value + caretInset -> scroll.scrollTo(x - caretInset)
+                        x > scroll.value + viewport - caretInset -> scroll.scrollTo(x - viewport + caretInset)
+                    }
+                }
                 // A cursor like any text field's: solid while you type or move it, then blinking.
                 val blink = remember { Animatable(1f) }
                 LaunchedEffect(active, function.text, caret) {
@@ -142,15 +151,18 @@ internal fun FunctionList(
                     style = TextStyle(fontFamily = GoogleSansFlex, fontSize = if (active) 22.sp else 18.sp),
                     color = if (invalid) scheme.error else scheme.onSurface,
                     maxLines = 1,
+                    softWrap = false,
                     onTextLayout = { layout = it },
                     modifier = Modifier
                         .weight(1f)
+                        .horizontalScroll(scroll)
+                        .padding(end = 2.dp)
                         // Tap in the text to put the cursor there, like the calculator's own display.
-                        .pointerInput(index) {
+                        .pointerInput(index, prefix) {
                             detectTapGestures { position ->
                                 val l = layout
                                 val map = currentPlain.displayToRaw
-                                if (l == null || map.isEmpty() || function.text.isEmpty()) {
+                                if (l == null || map.size <= 1) {
                                     onActivate(index)
                                     return@detectTapGestures
                                 }
@@ -176,15 +188,6 @@ internal fun FunctionList(
                     IconButton(onClick = { onRemove(index) }, modifier = Modifier.size(40.dp)) {
                         Icon(Icons.Rounded.Close, contentDescription = stringResource(Res.string.graph_remove), tint = scheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
                     }
-                }
-            }
-        }
-        val active = state.activeFunction
-        if (active.text.isEmpty()) {
-            // Nothing typed yet: a few shapes worth seeing, one tap each.
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(horizontal = 2.dp)) {
-                items(QuickExamples) { example ->
-                    AssistChip(onClick = { onExample(example) }, label = { Text(formatter.format(example, 0, null).text.text) })
                 }
             }
         }

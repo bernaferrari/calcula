@@ -146,6 +146,23 @@ object ExpressionEditor {
 
     fun insertRaw(e: Editor, text: String): Editor = insert(e, text)
 
+    /** Inserts a whole factor at a token boundary, with visible multiplication on either side. */
+    fun insertFactor(e: Editor, factor: String): Editor {
+        val cursor = snap(e.text, e.cursor)
+        var index = 0
+        // Keep a numeric literal intact, including its exponent, when tapping inside it.
+        while (index < cursor) {
+            index = if (e.text[index] in "0123456789.") Tokenizer.numberEnd(e.text, index) else index + 1
+        }
+        val before = e.text.getOrNull(index - 1)
+        val after = e.text.getOrNull(index)
+        val prefix = if (endsOperand(before)) "×" else ""
+        val suffix = if (after != null && (after in 'a'..'z' || after in "0123456789.(π√∛")) "×" else ""
+        return replace(e, index, index, prefix + factor + suffix).let {
+            it.copy(cursor = it.cursor - suffix.length)
+        }
+    }
+
     /** Inserts a number coming from a previous result, parenthesizing negatives where needed. */
     fun insertNumber(e: Editor, number: String): Editor {
         val needsParens = number.startsWith("−") && (e.left != null && e.left != '(')

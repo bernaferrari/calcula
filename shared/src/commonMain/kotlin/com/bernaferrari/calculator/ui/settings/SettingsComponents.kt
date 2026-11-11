@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -59,6 +60,9 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -142,36 +146,27 @@ private fun RowSurface(
 }
 
 @Composable
-private fun RowIcon(icon: ImageVector, tint: Color = MaterialTheme.colorScheme.primary) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(tint.copy(alpha = 0.12f)),
-    ) { Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(22.dp)) }
-}
-
-@Composable
 private fun RowText(title: String, subtitle: String?, modifier: Modifier = Modifier, titleColor: Color = MaterialTheme.colorScheme.onSurface) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text(title, style = MaterialTheme.typography.titleMedium, color = titleColor)
+        Text(title, style = MaterialTheme.typography.bodyLarge, color = titleColor)
         subtitle?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
     }
 }
 
+private val RowPadding = PaddingValues(horizontal = 20.dp, vertical = 14.dp)
+
 @Composable
 fun SwitchRow(
     position: SegmentPosition,
-    icon: ImageVector,
     title: String,
     subtitle: String?,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
     RowSurface(position, interaction = Modifier.toggleable(checked, role = Role.Switch, onValueChange = onCheckedChange)) {
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.heightIn(min = 72.dp).padding(horizontal = 16.dp, vertical = 12.dp)) {
-            RowIcon(icon)
-            Spacer(Modifier.width(16.dp))
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.heightIn(min = 60.dp).padding(RowPadding)) {
             RowText(title, subtitle, Modifier.weight(1f))
-            Spacer(Modifier.width(12.dp))
+            Spacer(Modifier.width(16.dp))
             Switch(checked = checked, onCheckedChange = null)
         }
     }
@@ -180,7 +175,6 @@ fun SwitchRow(
 @Composable
 fun ActionRow(
     position: SegmentPosition,
-    icon: ImageVector,
     title: String,
     subtitle: String? = null,
     destructive: Boolean = false,
@@ -188,11 +182,8 @@ fun ActionRow(
     onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
-    val tint = if (destructive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
     RowSurface(position, modifier, interaction = if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier) {
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.heightIn(min = 72.dp).padding(horizontal = 16.dp, vertical = 12.dp)) {
-            RowIcon(icon, tint)
-            Spacer(Modifier.width(16.dp))
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.heightIn(min = 60.dp).padding(RowPadding)) {
             RowText(title, subtitle, Modifier.weight(1f), titleColor = if (destructive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface)
             if (onClick != null && showChevron) {
                 Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -201,60 +192,133 @@ fun ActionRow(
     }
 }
 
-/** A setting with a few exclusive values, shown as a connected button group under its title. */
+/** A setting with a few exclusive values: its name, what the choice does, and a quiet segmented control. */
 @Composable
 fun <T> ChoiceRow(
     position: SegmentPosition,
-    /** Null for a row whose options say it all (System · Light · Dark): just the buttons. */
-    icon: ImageVector?,
-    title: String?,
+    title: String,
     options: List<T>,
     selected: T,
     label: @Composable (T) -> String,
     onSelect: (T) -> Unit,
     subtitle: String? = null,
-    optionIcon: ((T) -> ImageVector)? = null,
 ) {
     RowSurface(position) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (title != null) Row(verticalAlignment = Alignment.CenterVertically) {
-                if (icon != null) {
-                    RowIcon(icon)
-                    Spacer(Modifier.width(16.dp))
-                }
-                RowText(title, subtitle)
+        Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            RowText(title, subtitle)
+            SegmentedControl(options, selected, label, onSelect)
+        }
+    }
+}
+
+/**
+ * One recessed track with a raised thumb that slides to the chosen option. Deliberately quieter than
+ * a row of filled buttons: a screen of settings should read as a list, not as six calls to action.
+ * The track is drawn 40dp tall inside a 48dp row, so every option keeps a full touch target.
+ */
+@Composable
+private fun <T> SegmentedControl(options: List<T>, selected: T, label: @Composable (T) -> String, onSelect: (T) -> Unit) {
+    val haptics = LocalHapticFeedback.current
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val index = options.indexOf(selected).coerceAtLeast(0)
+    val thumbAt by animateFloatAsState(
+        index.toFloat(),
+        motionSpec(spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMediumLow)),
+        label = "thumb",
+    )
+    // Darker than the row and lighter than it, in light and dark alike: a groove with a raised key in it.
+    val track = MaterialTheme.colorScheme.surfaceDim
+    val thumb = MaterialTheme.colorScheme.surfaceBright
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .drawBehind {
+                val inset = 4.dp.toPx()
+                val gap = 3.dp.toPx()
+                val height = size.height - inset * 2
+                drawRoundRect(track, Offset(0f, inset), Size(size.width, height), CornerRadius(height / 2))
+                val segment = size.width / options.size
+                val start = thumbAt * segment
+                drawRoundRect(
+                    thumb,
+                    Offset((if (rtl) size.width - start - segment else start) + gap, inset + gap),
+                    Size(segment - gap * 2, height - gap * 2),
+                    CornerRadius((height - gap * 2) / 2),
+                )
             }
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-                modifier = Modifier.fillMaxWidth().selectableGroup(),
-            ) {
-                val labels = options.map { label(it) }
-                options.forEachIndexed { index, option ->
-                    // Wider labels ("Auto", "1,234.5") get proportionally wider buttons.
-                    val width = 1f + 0.12f * (labels[index].length - 1).coerceAtLeast(0)
-                    ToggleButton(
-                        checked = option == selected,
-                        onCheckedChange = { if (it) onSelect(option) },
-                        shapes = when (index) {
-                            0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                            options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                            else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                        },
-                        colors = ToggleButtonDefaults.colors(
-                            checkedContainerColor = MaterialTheme.colorScheme.primary,
-                            checkedContentColor = MaterialTheme.colorScheme.onPrimary,
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        ),
-                        modifier = Modifier.weight(width).heightIn(min = 48.dp),
-                    ) {
-                        optionIcon?.let {
-                            // The chosen option trades its icon for a check, as in every app of the family.
-                            Icon(if (option == selected) Icons.Rounded.Check else it(option), contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(8.dp))
+            .selectableGroup(),
+    ) {
+        options.forEach { option ->
+            val chosen = option == selected
+            val color by animateColorAsState(
+                if (chosen) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                label = "label",
+            )
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .selectable(selected = chosen, role = Role.RadioButton, interactionSource = remember { MutableInteractionSource() }, indication = null) {
+                        if (!chosen) {
+                            haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                            onSelect(option)
                         }
-                        Text(labels[index], maxLines = 1, softWrap = false)
-                    }
+                    },
+            ) {
+                Text(
+                    label(option),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = color,
+                    maxLines = 1,
+                    softWrap = false,
+                    modifier = Modifier.padding(horizontal = 6.dp),
+                )
+            }
+        }
+    }
+}
+
+/** Follow the system, or pin light or dark: three buttons that name themselves, so no title. */
+@Composable
+fun <T> ButtonGroupRow(
+    position: SegmentPosition,
+    options: List<T>,
+    selected: T,
+    label: @Composable (T) -> String,
+    icon: (T) -> ImageVector,
+    onSelect: (T) -> Unit,
+) {
+    RowSurface(position) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+            modifier = Modifier.fillMaxWidth().padding(16.dp).selectableGroup(),
+        ) {
+            val labels = options.map { label(it) }
+            options.forEachIndexed { index, option ->
+                // Wider labels get proportionally wider buttons.
+                val width = 1f + 0.12f * (labels[index].length - 1).coerceAtLeast(0)
+                ToggleButton(
+                    checked = option == selected,
+                    onCheckedChange = { if (it) onSelect(option) },
+                    shapes = when (index) {
+                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                        options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                    },
+                    colors = ToggleButtonDefaults.colors(
+                        checkedContainerColor = MaterialTheme.colorScheme.primary,
+                        checkedContentColor = MaterialTheme.colorScheme.onPrimary,
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    ),
+                    modifier = Modifier.weight(width).heightIn(min = 48.dp),
+                ) {
+                    // The chosen option trades its icon for a check, as in every app of the family.
+                    Icon(if (option == selected) Icons.Rounded.Check else icon(option), contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(labels[index], maxLines = 1, softWrap = false)
                 }
             }
         }

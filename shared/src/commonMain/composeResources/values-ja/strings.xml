@@ -47,6 +47,8 @@
     <string name="unit_energy">エネルギー</string>
     <string name="unit_pressure">圧力</string>
     <string name="settings_calculator">電卓</string>
+    <string name="settings_numbers">数値</string>
+    <string name="settings_keypad">キーパッド</string>
     <string name="settings_angle_unit">角度の単位</string>
     <string name="settings_degrees">度</string>
     <string name="settings_radians">ラジアン</string>
@@ -111,6 +113,9 @@
     <string name="graph_share">グラフを共有</string>
     <string name="graph_library_empty">作成したグラフがここに表示されます</string>
     <string name="graph_open_library">最近のグラフ</string>
+    <string name="graph_more">グラフツール</string>
+    <string name="graph_examples">グラフの例</string>
+    <string name="graph_examples_full">例を追加するには曲線を削除してください。</string>
     <string name="graph_delete">削除</string>
     <string name="resize_pull_history">下に引いて履歴を表示</string>
     <string name="resize_release_history">離して履歴を表示</string>
@@ -118,6 +123,7 @@
     <string name="resize_release_keypad">離してキーパッドを表示</string>
     <string name="settings_flick_hints">関数のヒント</string>
     <string name="settings_flick_labels">ラベル</string>
+    <string name="settings_flick_half">半分</string>
     <string name="settings_flick_dots_option">ドット</string>
     <string name="settings_flick_none">なし</string>
     <string name="style_balanced">バランス</string>

@@ -60,8 +60,8 @@ data class UserPreferences(
 /** Labels stay visible by default; only an explicit Settings choice changes the hint style. */
 val UserPreferences.hints: FlickHints get() = flickHints ?: FlickHints.LABELS
 
-/** How a key shows its flick functions: their names above and below, two dots, or nothing. */
-enum class FlickHints { LABELS, DOTS, NONE }
+/** Half labels upward flicks and marks downward flicks with dots. */
+enum class FlickHints { LABELS, HALF, DOTS, NONE }
 
 /**
  * Material Kolor's ways of turning one seed into a whole scheme. People choose by look, not by

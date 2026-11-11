@@ -47,6 +47,8 @@
     <string name="unit_energy">能量</string>
     <string name="unit_pressure">壓力</string>
     <string name="settings_calculator">計算機</string>
+    <string name="settings_numbers">數字</string>
+    <string name="settings_keypad">鍵盤</string>
     <string name="settings_angle_unit">角度單位</string>
     <string name="settings_degrees">角度</string>
     <string name="settings_radians">弧度</string>
@@ -111,6 +113,9 @@
     <string name="graph_share">分享圖表</string>
     <string name="graph_library_empty">你建立的圖表會顯示在這裡</string>
     <string name="graph_open_library">最近的圖表</string>
+    <string name="graph_more">繪圖工具</string>
+    <string name="graph_examples">圖形範例</string>
+    <string name="graph_examples_full">移除一條曲線即可加入範例。</string>
     <string name="graph_delete">刪除</string>
     <string name="resize_pull_history">下拉查看歷史</string>
     <string name="resize_release_history">放開查看歷史</string>
@@ -118,6 +123,7 @@
     <string name="resize_release_keypad">放開顯示鍵盤</string>
     <string name="settings_flick_hints">函數提示</string>
     <string name="settings_flick_labels">標籤</string>
+    <string name="settings_flick_half">一半</string>
     <string name="settings_flick_dots_option">圓點</string>
     <string name="settings_flick_none">無</string>
     <string name="style_balanced">均衡</string>

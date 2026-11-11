@@ -67,6 +67,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -439,17 +440,26 @@ private fun LiveEntry(
                         }
                     }
                     if (exactForm != null) {
-                        FitText(
-                            if (showExact) (if (result.decimal.approximate) "≈ " else "= ") + formatter.number(result.decimal.text)
-                            else "= $exactForm",
-                            style = TextStyle(fontFamily = GoogleSansFlex, color = colors.onSurfaceVariant, textAlign = TextAlign.End),
-                            maxSize = 28.sp,
-                            minSize = 16.sp,
-                            modifier = Modifier.weight(1f).padding(start = 12.dp).clickable(
-                                onClickLabel = stringResource(if (showExact) Res.string.show_decimal_result else Res.string.show_exact_result),
-                                onClick = { showExact = !showExact },
-                            ).padding(vertical = 8.dp),
+                        val alternate = if (showExact) {
+                            (if (result.decimal.approximate) "≈ " else "= ") + formatter.number(result.decimal.text)
+                        } else "= $exactForm"
+                        val switchLabel = stringResource(
+                            if (showExact) Res.string.show_decimal_result else Res.string.show_exact_result,
                         )
+                        Box(Modifier.weight(1f).padding(start = 8.dp), contentAlignment = Alignment.CenterEnd) {
+                            OutlinedButton(
+                                onClick = { showExact = !showExact },
+                                modifier = Modifier.semantics { contentDescription = switchLabel },
+                                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 4.dp),
+                            ) {
+                                FitText(
+                                    alternate,
+                                    style = TextStyle(fontFamily = GoogleSansFlex, color = colors.primary, textAlign = TextAlign.End),
+                                    maxSize = 22.sp,
+                                    minSize = 14.sp,
+                                )
+                            }
+                        }
                     }
                 }
                 // Long answers shrink to fit rather than running off the edge.

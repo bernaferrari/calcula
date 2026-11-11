@@ -47,6 +47,8 @@
     <string name="unit_energy">Energie</string>
     <string name="unit_pressure">Druck</string>
     <string name="settings_calculator">Rechner</string>
+    <string name="settings_numbers">Zahlen</string>
+    <string name="settings_keypad">Tastenfeld</string>
     <string name="settings_angle_unit">Winkeleinheit</string>
     <string name="settings_degrees">Grad</string>
     <string name="settings_radians">Bogenmaß</string>
@@ -111,6 +113,9 @@
     <string name="graph_share">Graph teilen</string>
     <string name="graph_library_empty">Deine Graphen erscheinen hier</string>
     <string name="graph_open_library">Letzte Graphen</string>
+    <string name="graph_more">Diagrammwerkzeuge</string>
+    <string name="graph_examples">Diagrammbeispiele</string>
+    <string name="graph_examples_full">Entferne eine Kurve, um ein Beispiel hinzuzufügen.</string>
     <string name="graph_delete">Löschen</string>
     <string name="resize_pull_history">Nach unten ziehen für den Verlauf</string>
     <string name="resize_release_history">Loslassen für den Verlauf</string>
@@ -118,6 +123,7 @@
     <string name="resize_release_keypad">Loslassen für das Tastenfeld</string>
     <string name="settings_flick_hints">Funktionshinweise</string>
     <string name="settings_flick_labels">Beschriftung</string>
+    <string name="settings_flick_half">Halb</string>
     <string name="settings_flick_dots_option">Punkte</string>
     <string name="settings_flick_none">Keine</string>
     <string name="style_balanced">Ausgewogen</string>
