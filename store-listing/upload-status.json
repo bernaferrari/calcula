@@ -1,0 +1,47 @@
+{
+  "verified_at": "2026-10-30 23:52:30 UTC",
+  "languages": {
+    "en-US": {
+      "icon": 1,
+      "featureGraphic": 1,
+      "phoneScreenshots": 7,
+      "sevenInchScreenshots": 5,
+      "tenInchScreenshots": 5,
+      "desktopScreenshots": 4
+    },
+    "pt-BR": {
+      "icon": 1,
+      "featureGraphic": 1,
+      "phoneScreenshots": 7,
+      "sevenInchScreenshots": 5,
+      "tenInchScreenshots": 5,
+      "desktopScreenshots": 4
+    }
+  },
+  "productionCountries": "All available countries and regions, including Rest of World",
+  "listingStatus": "Changes in review; automatic quick checks running",
+  "productionReleaseDraft": {
+    "name": "1.0",
+    "versionCode": 1,
+    "releaseNotes": [
+      "en-US",
+      "pt-BR"
+    ],
+    "bundleUploaded": true,
+    "bundleSha256": "df462e29743dcd8ea86873ced62a526126bb3677eb51a3c1fe4c2e7669405749",
+    "bundleHashVerifiedByFreshApiRead": true,
+    "savedToPublishingOverview": true
+  },
+  "advertisingId": "No; saved in Play Console",
+  "releaseVerifiedDate": "2026-10-31",
+  "releaseValidation": {
+    "blockingErrors": 0,
+    "warnings": [
+      "Native debug symbols not supplied."
+    ]
+  },
+  "submittedForReview": true,
+  "submissionDate": "2026-10-31",
+  "submittedChanges": 12,
+  "published": false
+}

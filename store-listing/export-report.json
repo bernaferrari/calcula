@@ -1,0 +1,243 @@
+{
+  "ok": true,
+  "cards": [
+    {
+      "locale": "en-US",
+      "kind": "readme",
+      "index": 0,
+      "feature": "readme-hero",
+      "file": "en-US/readme/hero.jpg",
+      "width": 2400,
+      "height": 1260,
+      "bytes": 385840,
+      "notes": [],
+      "layout": {
+        "width": 2400,
+        "height": 1260,
+        "devices": [
+          {
+            "raw": "phone/02-graph.png",
+            "role": "p1",
+            "left": 96,
+            "top": 521,
+            "width": 610,
+            "height": 980
+          },
+          {
+            "raw": "phone/03-convert.png",
+            "role": "p2",
+            "left": 550,
+            "top": 436,
+            "width": 523,
+            "height": 951
+          },
+          {
+            "raw": "phone/09-flick.png",
+            "role": "p3",
+            "left": 1006,
+            "top": 406,
+            "width": 430,
+            "height": 911
+          },
+          {
+            "raw": "phone/08-programmer-blue.png",
+            "role": "p4",
+            "left": 1370,
+            "top": 436,
+            "width": 523,
+            "height": 951
+          },
+          {
+            "raw": "phone/07-appearance.png",
+            "role": "p5",
+            "left": 1736,
+            "top": 521,
+            "width": 610,
+            "height": 980
+          }
+        ],
+        "callouts": []
+      }
+    },
+    {
+      "locale": "en-US",
+      "kind": "readme",
+      "index": 1,
+      "feature": "readme-tools",
+      "file": "en-US/readme/tools.jpg",
+      "width": 2400,
+      "height": 1260,
+      "bytes": 385665,
+      "notes": [],
+      "layout": {
+        "width": 2400,
+        "height": 1260,
+        "devices": [
+          {
+            "raw": "phone/02-graph.png",
+            "role": "graph",
+            "left": 100,
+            "top": 417,
+            "width": 632,
+            "height": 1149
+          },
+          {
+            "raw": "phone/03-convert.png",
+            "role": "convert",
+            "left": 892,
+            "top": 417,
+            "width": 632,
+            "height": 1149
+          },
+          {
+            "raw": "phone/08-programmer-blue.png",
+            "role": "programmer",
+            "left": 1684,
+            "top": 417,
+            "width": 632,
+            "height": 1149
+          }
+        ],
+        "callouts": []
+      }
+    },
+    {
+      "locale": "en-US",
+      "kind": "readme",
+      "index": 2,
+      "feature": "readme-compare",
+      "file": "en-US/readme/before-after.jpg",
+      "width": 2400,
+      "height": 1260,
+      "bytes": 352033,
+      "notes": [],
+      "layout": {
+        "width": 2400,
+        "height": 1260,
+        "devices": [
+          {
+            "raw": "compare/calculatorpp-calculator.png",
+            "role": "before pair1",
+            "left": 150,
+            "top": 110,
+            "width": 450,
+            "height": 967
+          },
+          {
+            "raw": "phone/01-every-key.png",
+            "role": "after pair1",
+            "left": 650,
+            "top": 110,
+            "width": 450,
+            "height": 954
+          },
+          {
+            "raw": "compare/calculatorpp-graph.png",
+            "role": "before pair2",
+            "left": 1300,
+            "top": 110,
+            "width": 450,
+            "height": 967
+          },
+          {
+            "raw": "phone/02-graph.png",
+            "role": "after pair2",
+            "left": 1800,
+            "top": 110,
+            "width": 450,
+            "height": 954
+          }
+        ],
+        "callouts": []
+      }
+    },
+    {
+      "locale": "en-US",
+      "kind": "readme",
+      "index": 3,
+      "feature": "readme-customize",
+      "file": "en-US/readme/customize.jpg",
+      "width": 2400,
+      "height": 1260,
+      "bytes": 334994,
+      "notes": [],
+      "layout": {
+        "width": 2400,
+        "height": 1260,
+        "devices": [
+          {
+            "raw": "tablet10/11-appearance-readme.png",
+            "role": "appearance",
+            "left": 282,
+            "top": 405,
+            "width": 737,
+            "height": 1076
+          },
+          {
+            "raw": "tablet7/04-customize.png",
+            "role": "shortcuts",
+            "left": 1462,
+            "top": 405,
+            "width": 737,
+            "height": 1076
+          }
+        ],
+        "callouts": []
+      }
+    },
+    {
+      "locale": "en-US",
+      "kind": "readme",
+      "index": 4,
+      "feature": "readme-big-screen",
+      "file": "en-US/readme/big-screen.jpg",
+      "width": 2400,
+      "height": 1260,
+      "bytes": 326232,
+      "notes": [],
+      "layout": {
+        "width": 2400,
+        "height": 1260,
+        "devices": [
+          {
+            "raw": "tablet10/01-every-key.png",
+            "role": "history",
+            "left": 120,
+            "top": 481,
+            "width": 980,
+            "height": 621
+          },
+          {
+            "raw": "tablet10/02-graph.png",
+            "role": "graph",
+            "left": 1300,
+            "top": 481,
+            "width": 980,
+            "height": 621
+          }
+        ],
+        "callouts": []
+      }
+    }
+  ],
+  "warnings": [],
+  "locales": [
+    {
+      "locale": "en-US",
+      "cards": 5,
+      "untranslated": 0,
+      "borrowedCaptures": 0,
+      "movedCallouts": 0,
+      "fixedCallouts": 0,
+      "shrunk": 0
+    }
+  ],
+  "finishedAt": "2026-11-16T23:25:59.889Z",
+  "options": {
+    "locales": [
+      "en-US"
+    ],
+    "kind": "readme",
+    "strict": false
+  }
+}
