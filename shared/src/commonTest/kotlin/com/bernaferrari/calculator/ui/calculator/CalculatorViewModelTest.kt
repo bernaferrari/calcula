@@ -29,6 +29,10 @@ class CalculatorViewModelTest {
     ) = CalculatorViewModel(history, preferences, saved, dispatcher).also { models.put("vm${count++}", it) }
     private fun snapshot(saved: SavedStateHandle) = SavedStateHandle(saved.keys().associateWith { saved.get<Any?>(it) })
 
+    @Test fun initialHintStyleMatchesDefaultPreferences() {
+        assertEquals(UserPreferences().hints, vm().state.value.flickHints)
+    }
+
     @Test fun exportIncludesEntriesBeyondDisplayLimit() = runTest {
         repeat(250) { history.insertCalculation(CalculationHistory(expression = "$it+1", result = "${it + 1}")) }
         assertEquals(250, vm().historyForExport().size)

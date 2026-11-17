@@ -72,7 +72,7 @@ data class CalculatorUiState(
     val sounds: Boolean = false,
     val reduceMotion: Boolean = false,
     val showHistory: Boolean = true,
-    val flickHints: FlickHints = FlickHints.DOTS,
+    val flickHints: FlickHints = UserPreferences().hints,
     val swipeHintSeen: Boolean = true,
     val keypadScale: Float = 1f,
     val decimalSeparator: DecimalSeparator = DecimalSeparator.AUTO,
